@@ -89,7 +89,11 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { image, error in
                 DispatchQueue.main.async {
                     let image = image as? UIImage
-                    self.photoImageView.image = image
+                    
+                    let vm = EditPhotoViewModel(selectedPhoto: image)
+                    let vc = EditPhotoViewController(viewModel: vm)
+                    vc.modalPresentationStyle = .fullScreen
+                    self.present(vc, animated: true)
                 }
             }
         }
