@@ -17,11 +17,13 @@ final class EditPhotoViewModel: EditViewModelProtocol {
     private let selectedPhoto: UIImage?
     
     struct Input {
-        
+        let dismissButtonTapped: Observable<Void>
+        let saveButtonTapped: Observable<Void>
     }
     
     struct Output {
         let editedImage: Driver<UIImage?>
+        let dismiss: Driver<Void>
     }
     
     init(selectedPhoto: UIImage?) {
@@ -30,10 +32,19 @@ final class EditPhotoViewModel: EditViewModelProtocol {
     
     func transform(input: Input) -> Output {
         let editedImage = BehaviorRelay<UIImage?>(value: selectedPhoto)
+        let dismiss = PublishRelay<Void>()
+        
+        input.dismissButtonTapped
+            .bind(to: dismiss)
+            .disposed(by: disposeBag)
+        
+        input.saveButtonTapped
+            .bind(to: dismiss)
+            .disposed(by: disposeBag)
         
         return Output(
-            editedImage: editedImage.asDriver(onErrorJustReturn: nil
-            )
+            editedImage: editedImage.asDriver(onErrorJustReturn: nil),
+            dismiss: dismiss.asDriver(onErrorJustReturn: ())
         )
     }
 }

@@ -91,7 +91,7 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
                     let image = image as? UIImage
                     
                     let vm = EditPhotoViewModel(selectedPhoto: image)
-                    let vc = EditPhotoViewController(viewModel: vm)
+                    let vc = UINavigationController(rootViewController: EditPhotoViewController(viewModel: vm))
                     vc.modalPresentationStyle = .fullScreen
                     self.present(vc, animated: true)
                 }
