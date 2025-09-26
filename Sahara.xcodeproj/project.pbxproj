@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		03E2B5CE2E8664E400A8C8DA /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 03E2B5CD2E8664E400A8C8DA /* .gitignore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		03E2B5B52E8664AB00A8C8DA /* Sahara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sahara.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		03E2B5CD2E8664E400A8C8DA /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -45,6 +50,7 @@
 		03E2B5AC2E8664AB00A8C8DA = {
 			isa = PBXGroup;
 			children = (
+				03E2B5CD2E8664E400A8C8DA /* .gitignore */,
 				03E2B5B72E8664AB00A8C8DA /* Sahara */,
 				03E2B5B62E8664AB00A8C8DA /* Products */,
 			);
@@ -122,6 +128,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03E2B5CE2E8664E400A8C8DA /* .gitignore in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
