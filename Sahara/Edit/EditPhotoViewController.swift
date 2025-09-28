@@ -13,6 +13,20 @@ import UIKit
 final class EditPhotoViewController: UIViewController {
     private let photoImageView = UIImageView()
     
+    private let memo: UITextView = {
+        let textView = UITextView()
+        textView.text = "메모를 남기면 사진 뒤쪽에서 메모를 볼 수 있어요! (300자 제한)"
+        return textView
+    }()
+    
+    private let date: UIDatePicker = {
+        let picker = UIDatePicker()
+        picker.date = Date()
+        picker.datePickerMode = .date
+        picker.calendar = .autoupdatingCurrent
+        return picker
+    }()
+    
     private let saveButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
@@ -51,7 +65,9 @@ final class EditPhotoViewController: UIViewController {
     private func bind() {
         let input = EditPhotoViewModel.Input(
             dismissButtonTapped: dismissButton.rx.tap.asObservable(),
-            saveButtonTapped: saveButton.rx.tap.asObservable()
+            saveButtonTapped: saveButton.rx.tap.asObservable(),
+            memoText: memo.rx.text.asObservable(),
+            selectedDate: date.rx.date.asObservable()
         )
         let output = viewModel.transform(input: input)
         
@@ -70,11 +86,25 @@ final class EditPhotoViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(photoImageView)
+        view.addSubview(date)
+        view.addSubview(memo)
 
         photoImageView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(20)
             make.centerX.equalToSuperview()
             make.width.height.equalTo(200)
+        }
+        
+        date.snp.makeConstraints { make in
+            make.top.equalTo(photoImageView.snp.bottom).offset(20)
+            make.centerX.equalToSuperview()
+            make.height.equalTo(100)
+        }
+        
+        memo.snp.makeConstraints { make in
+            make.top.equalTo(date.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(100)
         }
     }
     
