@@ -22,12 +22,16 @@ final class GalleryViewController: UIViewController {
         return button
     }()
     
-    private let photoImageView = UIImageView()
-    
-    private let viewModel: any GalleryViewModelProtocol
+    private lazy var collectionView: UICollectionView = {
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+        collectionView.register(GalleryCell.self, forCellWithReuseIdentifier: GalleryCell.identifier)
+        return collectionView
+    }()
+        
     private let disposeBag = DisposeBag()
+    private let viewModel: GalleryViewModel
     
-    init(viewModel: any GalleryViewModelProtocol) {
+    init(viewModel: GalleryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -46,22 +50,23 @@ final class GalleryViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(addButton)
-        view.addSubview(photoImageView)
-        
+        view.addSubview(collectionView)
+
         addButton.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.bottom.equalToSuperview().inset(20)
+            make.centerX.equalToSuperview()
             make.height.equalTo(44)
         }
         
-        photoImageView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(20)
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(200)
+        collectionView.snp.makeConstraints { make in
+            make.top.horizontalEdges.equalToSuperview()
+            make.bottom.equalTo(addButton.snp.top)
         }
     }
     
     private func bind() {
         let input = GalleryViewModel.Input(
+            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear)).map { _ in },
             addButtonTapped: addButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
@@ -76,6 +81,31 @@ final class GalleryViewController: UIViewController {
                 owner.present(picker, animated: true)
             }
             .disposed(by: disposeBag)
+        
+        output.calendarItems
+            .drive(collectionView.rx.items(
+                cellIdentifier: GalleryCell.identifier,
+                cellType: GalleryCell.self
+            )) { _, item, cell in
+                cell.configure(with: item)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    private func layout() -> UICollectionViewLayout {
+        let itemSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1/7),
+            heightDimension: .fractionalHeight(1)
+        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1),
+            heightDimension: .fractionalHeight(1/5)
+        )
+        
+        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        return UICollectionViewCompositionalLayout(section: section)
     }
 }
 
