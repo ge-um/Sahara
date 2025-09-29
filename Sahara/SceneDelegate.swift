@@ -18,7 +18,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: scene)
         
         let vm = GalleryViewModel()
-        window?.rootViewController = GalleryViewController(viewModel: vm)
+        let vc = GalleryViewController(viewModel: vm)
+        window?.rootViewController = UINavigationController(rootViewController: vc)
         window?.makeKeyAndVisible()
     }
 

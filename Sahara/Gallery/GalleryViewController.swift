@@ -63,13 +63,21 @@ final class GalleryViewController: UIViewController {
             make.bottom.equalTo(addButton.snp.top)
         }
     }
-    
+
     private func bind() {
         let input = GalleryViewModel.Input(
             viewWillAppear: rx.methodInvoked(#selector(viewWillAppear)).map { _ in },
             addButtonTapped: addButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
+        
+        collectionView.rx.modelSelected(DayItem.self)
+            .compactMap { $0.date }
+            .bind(with: self) { owner, date in
+                let detailVC = GalleryDetailViewController(date: date)
+                owner.navigationController?.pushViewController(detailVC, animated: true)
+            }
+            .disposed(by: disposeBag)
         
         output.showPhotoPicker
             .drive(with: self) { owner, configuration in
