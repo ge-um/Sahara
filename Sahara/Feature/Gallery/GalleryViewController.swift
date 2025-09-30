@@ -13,6 +13,33 @@ import SnapKit
 import UIKit
 
 final class GalleryViewController: UIViewController {
+    private let monthNavigationView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        return view
+    }()
+    
+    private let previousMonthButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.left"), for: .normal)
+        button.tintColor = .systemBlue
+        return button
+    }()
+    
+    private let currentMonthLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.textAlignment = .center
+        return label
+    }()
+    
+    private let nextMonthButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "chevron.right"), for: .normal)
+        button.tintColor = .systemBlue
+        return button
+    }()
+    
     private let addButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
@@ -55,25 +82,54 @@ final class GalleryViewController: UIViewController {
     private func configureUI() {
         view.backgroundColor = .white
         
-        view.addSubview(addButton)
+        view.addSubview(monthNavigationView)
+        monthNavigationView.addSubview(previousMonthButton)
+        monthNavigationView.addSubview(currentMonthLabel)
+        monthNavigationView.addSubview(nextMonthButton)
         view.addSubview(collectionView)
+        view.addSubview(addButton)
 
+        monthNavigationView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(50)
+        }
+        
+        currentMonthLabel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        
+        previousMonthButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(44)
+        }
+        
+        nextMonthButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(44)
+        }
+        
+        collectionView.snp.makeConstraints { make in
+            make.top.equalTo(monthNavigationView.snp.bottom)
+            make.horizontalEdges.equalToSuperview()
+            make.bottom.equalTo(addButton.snp.top)
+        }
+        
         addButton.snp.makeConstraints { make in
             make.bottom.equalToSuperview().inset(20)
             make.centerX.equalToSuperview()
             make.height.equalTo(44)
-        }
-        
-        collectionView.snp.makeConstraints { make in
-            make.top.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(addButton.snp.top)
         }
     }
 
     private func bind() {
         let input = GalleryViewModel.Input(
             viewWillAppear: rx.methodInvoked(#selector(viewWillAppear)).map { _ in },
-            addButtonTapped: addButton.rx.tap.asObservable()
+            addButtonTapped: addButton.rx.tap.asObservable(),
+            previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
+            nextMonthTapped: nextMonthButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
         
@@ -103,6 +159,10 @@ final class GalleryViewController: UIViewController {
         output.calendarItems
             .map { [CalendarSection(items: $0)] }
             .drive(collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+        
+        output.currentMonthTitle
+            .drive(currentMonthLabel.rx.text)
             .disposed(by: disposeBag)
         
         collectionView.rx.modelSelected(DayItem.self)
