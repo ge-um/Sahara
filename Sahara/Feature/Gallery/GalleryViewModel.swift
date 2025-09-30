@@ -35,7 +35,6 @@ final class GalleryViewModel {
                 self.generateCalendar(for: Date(), photoMemos: photoMemos)
             }
         
-        
         input.addButtonTapped
             .bind(to: showPhotoPicker)
             .disposed(by: disposeBag)
@@ -89,7 +88,6 @@ final class GalleryViewModel {
                 items.append(DayItem(date: date, photoMemos: memosForDay))
             }
         }
-        
         return items
     }
 }
