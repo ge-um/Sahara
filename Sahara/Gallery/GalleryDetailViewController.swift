@@ -5,6 +5,7 @@
 //  Created by 금가경 on 9/29/25.
 //
 
+import SnapKit
 import UIKit
 import RealmSwift
 
@@ -31,7 +32,7 @@ final class GalleryDetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = DateFormatter.localizedString(from: date, dateStyle: .medium, timeStyle: .none)
-        
+        configureUI()
         fetchData()
     }
     
@@ -39,6 +40,10 @@ final class GalleryDetailViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(tableView)
+        
+        tableView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
     
     // TODO: - fetch 말고 애초에 PhotoMemo를?
