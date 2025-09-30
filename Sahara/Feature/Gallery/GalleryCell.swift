@@ -46,6 +46,9 @@ final class GalleryCell: UICollectionViewCell, IsIdentifiable {
             let day = Calendar.current.component(.day, from: date)
             dayLabel.text = "\(day)"
             imageView.image = item.photoMemos.first.flatMap { UIImage(data: $0.imageData) }
+        } else {
+            dayLabel.text = ""
+            imageView.image = nil
         }
     }
 }
