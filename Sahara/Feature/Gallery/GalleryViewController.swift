@@ -11,8 +11,16 @@ import RxSwift
 import RxDataSources
 import SnapKit
 import UIKit
+import MapKit
 
 final class GalleryViewController: UIViewController {
+    private let viewTypeSegmentedControl: UISegmentedControl = {
+        let items = ["날짜별", "장소별", "주제별"]
+        let control = UISegmentedControl(items: items)
+        control.selectedSegmentIndex = 0
+        return control
+    }()
+    
     private let monthNavigationView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
@@ -60,6 +68,8 @@ final class GalleryViewController: UIViewController {
         )
         return collectionView
     }()
+    
+    private let mapView = MKMapView()
         
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
@@ -82,15 +92,23 @@ final class GalleryViewController: UIViewController {
     private func configureUI() {
         view.backgroundColor = .white
         
+        view.addSubview(viewTypeSegmentedControl)
         view.addSubview(monthNavigationView)
         monthNavigationView.addSubview(previousMonthButton)
         monthNavigationView.addSubview(currentMonthLabel)
         monthNavigationView.addSubview(nextMonthButton)
         view.addSubview(collectionView)
+        view.addSubview(mapView)
         view.addSubview(addButton)
 
+        viewTypeSegmentedControl.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(10)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(40)
+        }
+        
         monthNavigationView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(viewTypeSegmentedControl.snp.bottom).offset(10)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(50)
         }
@@ -117,20 +135,38 @@ final class GalleryViewController: UIViewController {
             make.bottom.equalTo(addButton.snp.top)
         }
         
+        mapView.snp.makeConstraints { make in
+            make.top.equalTo(monthNavigationView.snp.bottom)
+            make.horizontalEdges.equalToSuperview()
+            make.bottom.equalTo(addButton.snp.top)
+        }
+        
         addButton.snp.makeConstraints { make in
             make.bottom.equalToSuperview().inset(20)
             make.centerX.equalToSuperview()
             make.height.equalTo(44)
         }
     }
-
+    
     private func bind() {
+        let viewTypeSelected = viewTypeSegmentedControl.rx.selectedSegmentIndex
+            .map { index -> GalleryViewType in
+                switch index {
+                case 0: return .date
+                case 1: return .location
+                case 2: return .theme
+                default: return .date
+                }
+            }
+        
         let input = GalleryViewModel.Input(
             viewWillAppear: rx.methodInvoked(#selector(viewWillAppear)).map { _ in },
             addButtonTapped: addButton.rx.tap.asObservable(),
             previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
-            nextMonthTapped: nextMonthButton.rx.tap.asObservable()
+            nextMonthTapped: nextMonthButton.rx.tap.asObservable(),
+            viewTypeSelected: viewTypeSelected
         )
+
         let output = viewModel.transform(input: input)
         
         let dataSource = RxCollectionViewSectionedReloadDataSource<CalendarSection>(
@@ -165,6 +201,14 @@ final class GalleryViewController: UIViewController {
             .drive(currentMonthLabel.rx.text)
             .disposed(by: disposeBag)
         
+        output.selectedViewType
+            .drive(with: self) { owner, viewType in
+                owner.monthNavigationView.isHidden = viewType != .date
+                owner.collectionView.isHidden = viewType != .date
+                owner.mapView.isHidden = viewType != .location
+            }
+            .disposed(by: disposeBag)
+        
         collectionView.rx.modelSelected(DayItem.self)
             .compactMap { $0.date }
             .bind(with: self) { owner, date in
@@ -178,13 +222,14 @@ final class GalleryViewController: UIViewController {
                 var configuration = PHPickerConfiguration()
                 configuration.selectionLimit = 1
                 configuration.filter = .any(of: [.images])
+                configuration.selection = .ordered
                 let picker = PHPickerViewController(configuration: configuration)
                 picker.delegate = self
                 owner.present(picker, animated: true)
             }
             .disposed(by: disposeBag)
     }
-    
+
     private func layout() -> UICollectionViewLayout {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1/7),
@@ -219,12 +264,13 @@ final class GalleryViewController: UIViewController {
 }
 
 extension GalleryViewController: PHPickerViewControllerDelegate {
+
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
         
-        let itemProvider = results.first?.itemProvider
+        guard let itemProvider = results.first?.itemProvider else { return }
         
-        if let itemProvider = itemProvider, itemProvider.canLoadObject(ofClass: UIImage.self) {
+        if itemProvider.canLoadObject(ofClass: UIImage.self) {
             itemProvider.loadObject(ofClass: UIImage.self) { image, error in
                 DispatchQueue.main.async {
                     let image = image as? UIImage

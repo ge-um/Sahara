@@ -43,10 +43,10 @@ final class EditPhotoViewController: UIViewController {
         return button
     }()
     
-    private let viewModel: any EditViewModelProtocol
+    private let viewModel: EditPhotoViewModel
     private let disposeBag = DisposeBag()
     
-    init(viewModel: any EditViewModelProtocol) {
+    init(viewModel: EditPhotoViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
