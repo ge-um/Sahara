@@ -47,7 +47,7 @@ final class MapPhotoGalleryViewController: UIViewController {
 
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        title = "\(photoMemos.count)개의 사진"
+        title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,

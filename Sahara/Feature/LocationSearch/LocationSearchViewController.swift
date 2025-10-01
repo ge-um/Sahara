@@ -13,7 +13,7 @@ final class LocationSearchViewController: UIViewController {
     // MARK: - UI Components
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
-        searchBar.placeholder = "위치 검색"
+        searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         return searchBar
     }()
@@ -30,7 +30,7 @@ final class LocationSearchViewController: UIViewController {
 
     private let currentLocationButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "현재 위치 사용"
+        config.title = NSLocalizedString("location_search.use_current_location", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.image = UIImage(systemName: "location.fill")
@@ -88,7 +88,7 @@ final class LocationSearchViewController: UIViewController {
     // MARK: - Configure UI
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = "위치 검색"
+        navigationItem.title = NSLocalizedString("location_search.title", comment: "")
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,

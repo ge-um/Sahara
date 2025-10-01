@@ -27,18 +27,18 @@ final class WeekdayHeaderView: UICollectionReusableView, IsIdentifiable {
     private func setupView() {
         backgroundColor = .systemGray6
         addSubview(stackView)
-        
+
         stackView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
-        let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
-        weekdays.forEach { day in
+
+        let weekdayKeys = ["weekday.sunday", "weekday.monday", "weekday.tuesday", "weekday.wednesday", "weekday.thursday", "weekday.friday", "weekday.saturday"]
+        weekdayKeys.enumerated().forEach { index, key in
             let label = UILabel()
-            label.text = day
+            label.text = NSLocalizedString(key, comment: "")
             label.textAlignment = .center
             label.font = .systemFont(ofSize: 14, weight: .semibold)
-            label.textColor = day == "일" ? .systemRed : (day == "토" ? .systemBlue : .label)
+            label.textColor = index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             stackView.addArrangedSubview(label)
         }
     }

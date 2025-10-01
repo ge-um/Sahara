@@ -1,0 +1,79 @@
+/* Common */
+"common.save" = "저장";
+"common.cancel" = "취소";
+"common.done" = "완료";
+"common.share" = "공유";
+"common.ok" = "확인";
+"common.photo_count" = "%d개의 사진";
+
+/* Gallery */
+"gallery.date_view" = "날짜별";
+"gallery.location_view" = "장소별";
+"gallery.theme_view" = "주제별";
+"gallery.month_format" = "yyyy년 MM월";
+
+/* Theme Categories */
+"theme.people" = "사람";
+"theme.food" = "음식";
+"theme.animals" = "동물";
+"theme.nature" = "자연";
+"theme.buildings" = "건물";
+"theme.others" = "기타";
+
+/* Weekdays */
+"weekday.sunday" = "일";
+"weekday.monday" = "월";
+"weekday.tuesday" = "화";
+"weekday.wednesday" = "수";
+"weekday.thursday" = "목";
+"weekday.friday" = "금";
+"weekday.saturday" = "토";
+
+/* Photo Info */
+"photo_info.title" = "사진 정보";
+"photo_info.date" = "날짜";
+"photo_info.memo" = "메모";
+"photo_info.memo_placeholder" = "메모를 입력하세요 (300자 제한)";
+"photo_info.location" = "위치";
+"photo_info.location_placeholder" = "위치를 선택해주세요";
+"photo_info.search_location" = "위치 검색";
+
+/* Photo Detail */
+"photo_detail.no_memo" = "메모가 없습니다.";
+"photo_detail.save_success" = "저장 완료";
+"photo_detail.save_success_message" = "사진이 앨범에 저장되었습니다.";
+"photo_detail.save_failed" = "저장 실패";
+"photo_detail.image_load_error" = "이미지를 불러올 수 없습니다.";
+"photo_detail.swipe_left_hint" = "← 스와이프하여 메모 보기";
+"photo_detail.swipe_right_hint" = "→ 스와이프하여 사진 보기";
+"photo_detail.date_format" = "yyyy년 MM월 dd일 EEEE";
+
+/* Location Search */
+"location_search.title" = "위치 검색";
+"location_search.placeholder" = "위치 검색";
+"location_search.use_current_location" = "현재 위치 사용";
+
+/* Photo Editor */
+"photo_editor.title" = "사진 편집";
+"photo_editor.done" = "완료";
+"photo_editor.cancel" = "취소";
+"photo_editor.sticker" = "스티커";
+"photo_editor.drawing" = "그리기";
+"photo_editor.filter" = "필터";
+"photo_editor.photo" = "사진";
+"photo_editor.crop" = "자르기";
+"photo_editor.apply" = "적용";
+"photo_editor.sticker_search_placeholder" = "스티커 검색";
+"photo_editor.sticker_modal_title" = "스티커";
+
+/* Filters */
+"filter.original" = "원본";
+"filter.noir" = "흑백";
+"filter.sepia" = "세피아";
+"filter.instant" = "빈티지";
+"filter.chrome" = "크롬";
+"filter.fade" = "페이드";
+"filter.mono" = "모노";
+"filter.process" = "프로세스";
+"filter.transfer" = "전송";
+"filter.tonal" = "토널";

@@ -59,8 +59,8 @@ final class PhotoDetailViewModel {
         let dateText = photoMemo
             .map { photoMemo -> String in
                 let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy년 MM월 dd일 EEEE"
-                dateFormatter.locale = Locale(identifier: "ko_KR")
+                dateFormatter.dateFormat = NSLocalizedString("photo_detail.date_format", comment: "")
+                dateFormatter.locale = Locale.current
                 return dateFormatter.string(from: photoMemo.date)
             }
             .asDriver(onErrorJustReturn: "")
@@ -99,10 +99,10 @@ final class PhotoDetailViewModel {
                 if let memo = photoMemo.memo, !memo.isEmpty {
                     return memo
                 } else {
-                    return "메모가 없습니다."
+                    return NSLocalizedString("photo_detail.no_memo", comment: "")
                 }
             }
-            .asDriver(onErrorJustReturn: "메모가 없습니다.")
+            .asDriver(onErrorJustReturn: NSLocalizedString("photo_detail.no_memo", comment: ""))
 
         let shouldFlipToBack = input.swipeLeft
             .asDriver(onErrorJustReturn: ())
@@ -117,12 +117,12 @@ final class PhotoDetailViewModel {
             .withLatestFrom(photoMemo)
             .map { photoMemo -> Result<Void, Error> in
                 guard let image = UIImage(data: photoMemo.imageData) else {
-                    return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "이미지를 불러올 수 없습니다."]))
+                    return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")]))
                 }
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
                 return .success(())
             }
-            .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: "저장에 실패했습니다."])))
+            .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
 
         let shareImage = input.shareButtonTapped
             .withLatestFrom(photoMemo)

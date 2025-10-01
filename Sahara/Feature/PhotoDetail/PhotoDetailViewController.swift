@@ -82,9 +82,9 @@ final class PhotoDetailViewController: UIViewController {
         return label
     }()
 
-    private let swipeHintLabel: UILabel = {
+    private lazy var swipeHintLabel: UILabel = {
         let label = UILabel()
-        label.text = "← 스와이프하여 메모 보기"
+        label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .white.withAlphaComponent(0.7)
         label.textAlignment = .center
@@ -100,9 +100,9 @@ final class PhotoDetailViewController: UIViewController {
         return label
     }()
 
-    private let backSwipeHintLabel: UILabel = {
+    private lazy var backSwipeHintLabel: UILabel = {
         let label = UILabel()
-        label.text = "→ 스와이프하여 사진 보기"
+        label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
@@ -135,7 +135,7 @@ final class PhotoDetailViewController: UIViewController {
         var config = UIButton.Configuration.filled()
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
-        config.title = "저장"
+        config.title = NSLocalizedString("common.save", comment: "")
         config.image = UIImage(systemName: "square.and.arrow.down")
         config.imagePlacement = .leading
         config.imagePadding = 8
@@ -148,7 +148,7 @@ final class PhotoDetailViewController: UIViewController {
         var config = UIButton.Configuration.filled()
         config.baseBackgroundColor = .systemGreen
         config.baseForegroundColor = .white
-        config.title = "공유"
+        config.title = NSLocalizedString("common.share", comment: "")
         config.image = UIImage(systemName: "square.and.arrow.up")
         config.imagePlacement = .leading
         config.imagePadding = 8
@@ -329,11 +329,11 @@ final class PhotoDetailViewController: UIViewController {
                 let alert: UIAlertController
                 switch result {
                 case .success:
-                    alert = UIAlertController(title: "저장 완료", message: "사진이 앨범에 저장되었습니다.", preferredStyle: .alert)
+                    alert = UIAlertController(title: NSLocalizedString("photo_detail.save_success", comment: ""), message: NSLocalizedString("photo_detail.save_success_message", comment: ""), preferredStyle: .alert)
                 case .failure(let error):
-                    alert = UIAlertController(title: "저장 실패", message: error.localizedDescription, preferredStyle: .alert)
+                    alert = UIAlertController(title: NSLocalizedString("photo_detail.save_failed", comment: ""), message: error.localizedDescription, preferredStyle: .alert)
                 }
-                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
                 owner.present(alert, animated: true)
             }
             .disposed(by: disposeBag)

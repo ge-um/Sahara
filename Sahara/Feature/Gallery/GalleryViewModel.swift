@@ -175,8 +175,8 @@ final class GalleryViewModel {
         let currentMonthTitle = currentMonth
             .map { date -> String in
                 let formatter = DateFormatter()
-                formatter.locale = Locale(identifier: "ko_KR")
-                formatter.dateFormat = "yyyy년 MM월"
+                formatter.locale = Locale.current
+                formatter.dateFormat = NSLocalizedString("gallery.month_format", comment: "")
                 return formatter.string(from: date)
             }
         

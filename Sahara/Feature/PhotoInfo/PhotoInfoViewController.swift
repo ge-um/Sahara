@@ -52,7 +52,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = "날짜"
+        label.text = NSLocalizedString("photo_info.date", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -67,7 +67,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.text = "메모"
+        label.text = NSLocalizedString("photo_info.memo", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -75,7 +75,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let memoTextView: UITextView = {
         let textView = UITextView()
-        textView.text = "메모를 입력하세요 (300자 제한)"
+        textView.text = NSLocalizedString("photo_info.memo_placeholder", comment: "")
         textView.textColor = .placeholderText
         textView.font = .systemFont(ofSize: 16)
         textView.backgroundColor = .clear
@@ -92,7 +92,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.text = "위치"
+        label.text = NSLocalizedString("photo_info.location", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -100,7 +100,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let selectedLocationLabel: UILabel = {
         let label = UILabel()
-        label.text = "위치를 선택해주세요"
+        label.text = NSLocalizedString("photo_info.location_placeholder", comment: "")
         label.font = .systemFont(ofSize: 14)
         label.textColor = .tertiaryLabel
         label.numberOfLines = 2
@@ -109,7 +109,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let searchLocationButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "위치 검색"
+        config.title = NSLocalizedString("photo_info.search_location", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.image = UIImage(systemName: "magnifyingglass")
@@ -131,7 +131,7 @@ final class PhotoInfoViewController: UIViewController {
     private let saveButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
-        config.title = "저장"
+        config.title = NSLocalizedString("common.save", comment: "")
         button.configuration = config
         return button
     }()
@@ -139,7 +139,7 @@ final class PhotoInfoViewController: UIViewController {
     private let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
-        config.title = "취소"
+        config.title = NSLocalizedString("common.cancel", comment: "")
         button.configuration = config
         return button
     }()
@@ -346,7 +346,7 @@ final class PhotoInfoViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = "사진 정보"
+        navigationItem.title = NSLocalizedString("photo_info.title", comment: "")
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: saveButton)
     }
@@ -363,7 +363,7 @@ extension PhotoInfoViewController: UITextViewDelegate {
 
     func textViewDidEndEditing(_ textView: UITextView) {
         if textView.text.isEmpty {
-            textView.text = "메모를 입력하세요 (300자 제한)"
+            textView.text = NSLocalizedString("photo_info.memo_placeholder", comment: "")
             textView.textColor = .placeholderText
         }
     }
