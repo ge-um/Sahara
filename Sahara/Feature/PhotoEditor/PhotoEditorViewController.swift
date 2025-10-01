@@ -188,18 +188,23 @@ final class PhotoEditorViewController: UIViewController {
 
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
-    
+
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
     private var currentMode = BehaviorRelay<EditMode>(value: .sticker)
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
-    private var currentEditingImage: UIImage?
     private var croppedImage: UIImage?
     private let context = CIContext()
-    private let filterSelectedRelay = PublishRelay<Int>()
+    private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
+    private let cropAppliedRelay = PublishRelay<(UIImage, CGRect, CGRect)>()
     private let photoSelectedRelay = PublishRelay<UIImage>()
     private let viewWillAppearRelay = PublishRelay<Void>()
+
+    private lazy var dragHandler = PhotoEditorDragHandler(
+        trashIconView: trashIconView,
+        parentView: view
+    )
 
     init(viewModel: PhotoEditorViewModel) {
         self.viewModel = viewModel
@@ -282,6 +287,7 @@ final class PhotoEditorViewController: UIViewController {
             searchQuery: searchQuery,
             stickerSelected: stickerCollectionView.rx.modelSelected(Sticker.self).asObservable(),
             filterSelected: filterSelectedRelay.asObservable(),
+            cropApplied: cropAppliedRelay.asObservable(),
             drawingChanged: Observable.just(()),
             photoSelected: photoSelectedRelay.asObservable(),
             doneButtonTapped: doneButton.rx.tap.map { [weak self] in
@@ -297,7 +303,18 @@ final class PhotoEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.originalImage = image
-                owner.currentEditingImage = image
+            }
+            .disposed(by: disposeBag)
+
+        output.currentEditingImage
+            .drive(with: self) { owner, image in
+                owner.photoImageView.image = image
+            }
+            .disposed(by: disposeBag)
+
+        output.croppedImage
+            .drive(with: self) { owner, image in
+                owner.croppedImage = image
             }
             .disposed(by: disposeBag)
 
@@ -314,12 +331,6 @@ final class PhotoEditorViewController: UIViewController {
         output.selectedSticker
             .drive(with: self) { owner, sticker in
                 owner.addStickerToPhoto(sticker)
-            }
-            .disposed(by: disposeBag)
-
-        output.selectedFilter
-            .drive(with: self) { owner, index in
-                owner.applyFilter(at: index)
             }
             .disposed(by: disposeBag)
 
@@ -348,7 +359,11 @@ final class PhotoEditorViewController: UIViewController {
             .disposed(by: disposeBag)
 
         filterCollectionView.rx.itemSelected
-            .map { $0.item }
+            .withUnretained(self)
+            .map { owner, indexPath -> (Int, UIImage?) in
+                let baseImage = owner.croppedImage ?? owner.originalImage
+                return (indexPath.item, baseImage)
+            }
             .bind(to: filterSelectedRelay)
             .disposed(by: disposeBag)
     }
@@ -362,13 +377,12 @@ final class PhotoEditorViewController: UIViewController {
                                    height: 100)
 
         stickerView.onDragChanged = { [weak self] view in
-            guard let self = self else { return }
-            self.handleDragChanged(view: view)
+            self?.dragHandler.handleDragChanged(view: view)
         }
 
         stickerView.onDragEnded = { [weak self] view in
             guard let self = self else { return }
-            self.handleDragEnded(view: view, in: &self.stickerViews)
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
         }
 
         photoImageView.addSubview(stickerView)
@@ -384,64 +398,18 @@ final class PhotoEditorViewController: UIViewController {
                                 height: 100)
 
         imageView.onDragChanged = { [weak self] view in
-            self?.handleDragChanged(view: view)
+            self?.dragHandler.handleDragChanged(view: view)
         }
 
         imageView.onDragEnded = { [weak self] view in
-            self?.handleDragEnded(view: view, in: &self!.photoViews)
+            guard let self = self else { return }
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
         }
 
         photoImageView.addSubview(imageView)
         photoViews.append(imageView)
     }
 
-    private func handleDragChanged(view: UIView) {
-        let convertedPoint = self.view.convert(view.center, from: view.superview)
-        let trashCenter = CGPoint(x: trashIconView.frame.midX, y: trashIconView.frame.midY)
-        let distance = hypot(convertedPoint.x - trashCenter.x, convertedPoint.y - trashCenter.y)
-
-        if distance < 150 {
-            if trashIconView.isHidden {
-                trashIconView.isHidden = false
-            }
-            let scale = max(1.0, 1.5 - (distance / 150))
-            UIView.animate(withDuration: 0.1) {
-                self.trashIconView.transform = CGAffineTransform(scaleX: scale, y: scale)
-            }
-        } else {
-            UIView.animate(withDuration: 0.1) {
-                self.trashIconView.transform = .identity
-            }
-        }
-    }
-
-    private func handleDragEnded<T: UIView>(view: UIView, in array: inout [T]) {
-        hideTrashIcon()
-
-        let convertedPoint = self.view.convert(view.center, from: view.superview)
-        let trashFrame = trashIconView.frame.insetBy(dx: -20, dy: -20)
-
-        if trashFrame.contains(convertedPoint) {
-            if let index = array.firstIndex(where: { $0 === view }) {
-                array.remove(at: index)
-            }
-
-            UIView.animate(withDuration: 0.3, animations: {
-                view.alpha = 0
-                view.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)
-            }) { _ in
-                view.removeFromSuperview()
-            }
-        }
-    }
-
-    private func hideTrashIcon() {
-        UIView.animate(withDuration: 0.2) {
-            self.trashIconView.transform = .identity
-        } completion: { _ in
-            self.trashIconView.isHidden = true
-        }
-    }
 
     private func updateEditMode(mode: EditMode) {
         searchBar.isHidden = true
@@ -460,36 +428,21 @@ final class PhotoEditorViewController: UIViewController {
         case .sticker:
             searchBar.isHidden = false
             stickerCollectionView.isHidden = false
-            if let cropped = croppedImage {
-                photoImageView.image = cropped
-                currentEditingImage = cropped
-            }
         case .drawing:
             canvasView.isUserInteractionEnabled = true
             toolPicker.setVisible(true, forFirstResponder: canvasView)
-            if let cropped = croppedImage {
-                photoImageView.image = cropped
-                currentEditingImage = cropped
-            }
         case .filter:
             filterCollectionView.isHidden = false
-            if let cropped = croppedImage {
-                photoImageView.image = cropped
-                currentEditingImage = cropped
-            }
         case .photo:
-            if let cropped = croppedImage {
-                photoImageView.image = cropped
-                currentEditingImage = cropped
-            }
+            break
         case .crop:
             cropOverlayView.isHidden = false
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
             modeButtonStackView.isHidden = true
             doneButton.isHidden = true
-            photoImageView.image = originalImage
-            currentEditingImage = originalImage
+            guard let original = originalImage else { return }
+            photoImageView.image = original
             setupCropOverlay()
         }
     }
@@ -511,28 +464,6 @@ final class PhotoEditorViewController: UIViewController {
         }
     }
 
-    private func applyFilter(at index: Int) {
-        let baseImage = croppedImage ?? originalImage
-        guard let baseImage = baseImage else { return }
-
-        if index == 0 {
-            photoImageView.image = baseImage
-            currentEditingImage = baseImage
-            return
-        }
-
-        guard let ciImage = CIImage(image: baseImage),
-              let filter = filters[index].filter else { return }
-
-        filter.setValue(ciImage, forKey: kCIInputImageKey)
-
-        guard let outputImage = filter.outputImage,
-              let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
-
-        let filtered = UIImage(cgImage: cgImage, scale: baseImage.scale, orientation: baseImage.imageOrientation)
-        photoImageView.image = filtered
-        currentEditingImage = filtered
-    }
 
     private func generateFinalImage() -> UIImage {
         let renderer = UIGraphicsImageRenderer(bounds: photoImageView.bounds)
@@ -554,36 +485,12 @@ final class PhotoEditorViewController: UIViewController {
     private func setupCropOverlay() {
         guard let currentImage = photoImageView.image else { return }
 
-        // photoImageView에서 실제 이미지가 표시되는 영역 계산 (scaleAspectFit 고려)
-        let imageSize = currentImage.size
-        let imageViewSize = photoImageView.bounds.size
-
-        let imageAspect = imageSize.width / imageSize.height
-        let viewAspect = imageViewSize.width / imageViewSize.height
-
-        var imageRect = CGRect.zero
-
-        if imageAspect > viewAspect {
-            // 이미지가 더 넓음 - 좌우에 꽉 차고 상하에 여백
-            let displayHeight = imageViewSize.width / imageAspect
-            imageRect = CGRect(
-                x: 0,
-                y: (imageViewSize.height - displayHeight) / 2,
-                width: imageViewSize.width,
-                height: displayHeight
-            )
-        } else {
-            let displayWidth = imageViewSize.height * imageAspect
-            imageRect = CGRect(
-                x: (imageViewSize.width - displayWidth) / 2,
-                y: 0,
-                width: displayWidth,
-                height: imageViewSize.height
-            )
-        }
+        let imageRect = PhotoEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: currentImage.size,
+            in: photoImageView.bounds.size
+        )
 
         cropOverlayView.frame = photoImageView.bounds
-
         cropOverlayView.setCropRect(imageRect)
     }
 
@@ -591,55 +498,12 @@ final class PhotoEditorViewController: UIViewController {
         guard let currentImage = photoImageView.image else { return }
 
         let cropRect = cropOverlayView.cropRect
-        let imageViewBounds = photoImageView.bounds
-
-        let imageSize = currentImage.size
-        let imageViewSize = imageViewBounds.size
-
-        let imageAspect = imageSize.width / imageSize.height
-        let viewAspect = imageViewSize.width / imageViewSize.height
-
-        var imageRect = CGRect.zero
-
-        if imageAspect > viewAspect {
-            let displayHeight = imageViewSize.width / imageAspect
-            imageRect = CGRect(
-                x: 0,
-                y: (imageViewSize.height - displayHeight) / 2,
-                width: imageViewSize.width,
-                height: displayHeight
-            )
-        } else {
-            let displayWidth = imageViewSize.height * imageAspect
-            imageRect = CGRect(
-                x: (imageViewSize.width - displayWidth) / 2,
-                y: 0,
-                width: displayWidth,
-                height: imageViewSize.height
-            )
-        }
-
-        let scaleX = imageSize.width / imageRect.width
-        let scaleY = imageSize.height / imageRect.height
-
-        let scaledCropRect = CGRect(
-            x: (cropRect.origin.x - imageRect.origin.x) * scaleX,
-            y: (cropRect.origin.y - imageRect.origin.y) * scaleY,
-            width: cropRect.size.width * scaleX,
-            height: cropRect.size.height * scaleY
+        let displayedImageRect = PhotoEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: currentImage.size,
+            in: photoImageView.bounds.size
         )
 
-        guard let cgImage = currentImage.cgImage?.cropping(to: scaledCropRect) else { return }
-
-        let cropped = UIImage(
-            cgImage: cgImage,
-            scale: currentImage.scale,
-            orientation: currentImage.imageOrientation
-        )
-
-        croppedImage = cropped
-        photoImageView.image = cropped
-        currentEditingImage = cropped
+        cropAppliedRelay.accept((currentImage, cropRect, displayedImageRect))
         currentMode.accept(.sticker)
     }
 

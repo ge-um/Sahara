@@ -13,12 +13,14 @@ import UIKit
 final class PhotoEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let originalImage: UIImage
+    private let context = CIContext()
 
     struct Input {
         let viewWillAppear: Observable<Void>
         let searchQuery: Observable<String>
         let stickerSelected: Observable<Sticker>
-        let filterSelected: Observable<Int>
+        let filterSelected: Observable<(Int, UIImage?)>
+        let cropApplied: Observable<(UIImage, CGRect, CGRect)>
         let drawingChanged: Observable<Void>
         let photoSelected: Observable<UIImage>
         let doneButtonTapped: Observable<UIImage>
@@ -27,9 +29,11 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
 
     struct Output {
         let originalImage: Driver<UIImage>
+        let currentEditingImage: Driver<UIImage>
+        let croppedImage: Driver<UIImage?>
+        let filteredImage: Driver<UIImage?>
         let stickers: Driver<[Sticker]>
         let selectedSticker: Driver<Sticker>
-        let selectedFilter: Driver<Int>
         let selectedPhoto: Driver<UIImage>
         let navigateToMetadata: Driver<UIImage>
         let dismiss: Driver<Void>
@@ -41,6 +45,9 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let stickersRelay = BehaviorRelay<[Sticker]>(value: [])
+        let currentEditingImageRelay = BehaviorRelay<UIImage>(value: originalImage)
+        let croppedImageRelay = BehaviorRelay<UIImage?>(value: nil)
+        let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)
 
         input.viewWillAppear
             .flatMapLatest { _ in
@@ -93,11 +100,44 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
             .bind(to: stickersRelay)
             .disposed(by: disposeBag)
 
+        // 필터 적용 로직
+        input.filterSelected
+            .withUnretained(self)
+            .compactMap { owner, data -> UIImage? in
+                let (index, baseImage) = data
+                guard let baseImage = baseImage else { return nil }
+
+                if index == 0 {
+                    return baseImage
+                }
+
+                guard let filter = owner.createFilter(at: index) else { return nil }
+                return owner.applyFilter(filter, to: baseImage)
+            }
+            .bind { image in
+                currentEditingImageRelay.accept(image)
+                filteredImageRelay.accept(image)
+            }
+            .disposed(by: disposeBag)
+
+        // 자르기 적용 로직
+        input.cropApplied
+            .compactMap { image, cropRect, displayedRect -> UIImage? in
+                let scaledCropRect = PhotoEditorCropHandler.convertCropRectToImageCoordinates(
+                    cropRect: cropRect,
+                    imageSize: image.size,
+                    displayedImageRect: displayedRect
+                )
+                return PhotoEditorCropHandler.cropImage(image, to: scaledCropRect)
+            }
+            .bind { croppedImage in
+                croppedImageRelay.accept(croppedImage)
+                currentEditingImageRelay.accept(croppedImage)
+            }
+            .disposed(by: disposeBag)
+
         let selectedSticker = input.stickerSelected
             .asDriver(onErrorDriveWith: .empty())
-
-        let selectedFilter = input.filterSelected
-            .asDriver(onErrorJustReturn: 0)
 
         let selectedPhoto = input.photoSelected
             .asDriver(onErrorDriveWith: .empty())
@@ -110,12 +150,49 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
 
         return Output(
             originalImage: Driver.just(originalImage),
+            currentEditingImage: currentEditingImageRelay.asDriver(),
+            croppedImage: croppedImageRelay.asDriver(),
+            filteredImage: filteredImageRelay.asDriver(),
             stickers: stickersRelay.asDriver(),
             selectedSticker: selectedSticker,
-            selectedFilter: selectedFilter,
             selectedPhoto: selectedPhoto,
             navigateToMetadata: navigateToMetadata,
             dismiss: dismiss
         )
+    }
+
+    // MARK: - Private Methods
+    private func createFilter(at index: Int) -> CIFilter? {
+        let filterNames = [
+            nil,
+            "CIPhotoEffectNoir",
+            "CISepiaTone",
+            "CIPhotoEffectInstant",
+            "CIPhotoEffectChrome",
+            "CIPhotoEffectFade",
+            "CIPhotoEffectMono",
+            "CIPhotoEffectProcess",
+            "CIPhotoEffectTransfer",
+            "CIPhotoEffectTonal"
+        ]
+
+        guard index < filterNames.count, let filterName = filterNames[index] else {
+            return nil
+        }
+
+        return CIFilter(name: filterName)
+    }
+
+    private func applyFilter(_ filter: CIFilter, to image: UIImage) -> UIImage? {
+        guard let ciImage = CIImage(image: image) else { return nil }
+
+        filter.setValue(ciImage, forKey: kCIInputImageKey)
+
+        guard let outputImage = filter.outputImage,
+              let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 }
