@@ -37,22 +37,9 @@
 		03E2B5CD2E8664E400A8C8DA /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		03E2B5C72E8664AD00A8C8DA /* Exceptions for "Sahara" folder in "Sahara" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 03E2B5B42E8664AB00A8C8DA /* Sahara */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		03E2B5B72E8664AB00A8C8DA /* Sahara */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				03E2B5C72E8664AD00A8C8DA /* Exceptions for "Sahara" folder in "Sahara" target */,
-			);
 			path = Sahara;
 			sourceTree = "<group>";
 		};
