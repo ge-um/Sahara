@@ -21,7 +21,6 @@ enum EditMode {
 }
 
 final class PhotoEditorViewController: UIViewController {
-    // MARK: - UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
 
@@ -212,7 +211,6 @@ final class PhotoEditorViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Properties
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
     private var stickerViews: [DraggableStickerView] = []
@@ -242,7 +240,6 @@ final class PhotoEditorViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
@@ -250,6 +247,8 @@ final class PhotoEditorViewController: UIViewController {
         setupPencilKit()
         setupGestures()
         bind()
+        updateEditMode()
+        updateModeButtons()
     }
 
     private func setupGestures() {
@@ -269,9 +268,7 @@ final class PhotoEditorViewController: UIViewController {
         canvasView.becomeFirstResponder()
     }
 
-    // MARK: - Bind
     private func bind() {
-        // 모드 전환 버튼
         stickerModeButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.currentMode = .sticker
@@ -310,7 +307,6 @@ final class PhotoEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        // 텍스트 모드에서 photoImageView 탭으로 텍스트 추가
         let textTapGesture = UITapGestureRecognizer()
         photoImageView.addGestureRecognizer(textTapGesture)
 
@@ -326,8 +322,6 @@ final class PhotoEditorViewController: UIViewController {
             .orEmpty
             .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .distinctUntilChanged()
-
-        let finalImageView = PublishSubject<UIView>()
 
         let input = PhotoEditorViewModel.Input(
             viewDidLoad: Observable.just(()),
@@ -383,7 +377,6 @@ final class PhotoEditorViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    // MARK: - Add Sticker
     private func addStickerToPhoto(_ sticker: Sticker) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: sticker)
@@ -398,7 +391,6 @@ final class PhotoEditorViewController: UIViewController {
             let trashCenter = CGPoint(x: self.trashIconView.frame.midX, y: self.trashIconView.frame.midY)
             let distance = hypot(convertedPoint.x - trashCenter.x, convertedPoint.y - trashCenter.y)
 
-            // 150pt 이내로 가까워지면 쓰레기통 표시 및 확대
             if distance < 150 {
                 if self.trashIconView.isHidden {
                     self.trashIconView.isHidden = false
@@ -419,7 +411,7 @@ final class PhotoEditorViewController: UIViewController {
             self.hideTrashIcon()
 
             let convertedPoint = self.view.convert(view.center, from: view.superview)
-            let trashFrame = self.trashIconView.frame.insetBy(dx: -20, dy: -20) // 히트 영역 확대
+            let trashFrame = self.trashIconView.frame.insetBy(dx: -20, dy: -20)
 
             if trashFrame.contains(convertedPoint) {
                 UIView.animate(withDuration: 0.3, animations: {
@@ -500,7 +492,6 @@ final class PhotoEditorViewController: UIViewController {
         guard let originalImage = originalImage else { return }
 
         if index == 0 {
-            // 원본
             photoImageView.image = originalImage
             filteredImage = originalImage
             return
@@ -550,9 +541,9 @@ final class PhotoEditorViewController: UIViewController {
             textField.placeholder = "텍스트를 입력하세요"
         }
 
-        let saveAction = UIAlertAction(title: "확인", style: .default) { [weak self, weak textView] _ in
+        let saveAction = UIAlertAction(title: "확인", style: .default) { _ in
             if let text = alert.textFields?.first?.text, !text.isEmpty {
-                textView?.updateText(text)
+                textView.updateText(text)
             }
         }
 
@@ -674,7 +665,8 @@ final class PhotoEditorViewController: UIViewController {
         photoImageView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(400)
+            let availableHeight = UIScreen.main.bounds.height - 400
+            make.height.equalTo(min(max(availableHeight * 0.5, 200), 350))
         }
 
         canvasView.snp.makeConstraints { make in
@@ -682,12 +674,13 @@ final class PhotoEditorViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(20)
+            make.top.equalTo(photoImageView.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(44)
         }
 
         stickerCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(10)
+            make.top.equalTo(searchBar.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(100)
             make.bottom.equalToSuperview().offset(-20)
