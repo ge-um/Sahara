@@ -13,13 +13,36 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        
+
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
-        
-        let vm = GalleryViewModel()
-        let vc = GalleryViewController(viewModel: vm)
-        window?.rootViewController = UINavigationController(rootViewController: vc)
+
+        // TabBar 설정
+        let tabBarController = UITabBarController()
+
+        // 갤러리 탭
+        let galleryVM = GalleryViewModel()
+        let galleryVC = GalleryViewController(viewModel: galleryVM)
+        let galleryNav = UINavigationController(rootViewController: galleryVC)
+        galleryNav.tabBarItem = UITabBarItem(
+            title: "갤러리",
+            image: UIImage(systemName: "photo.on.rectangle"),
+            selectedImage: UIImage(systemName: "photo.on.rectangle.fill")
+        )
+
+        // 카메라 탭
+        let cameraVC = CameraViewController()
+        cameraVC.tabBarItem = UITabBarItem(
+            title: "카메라",
+            image: UIImage(systemName: "camera"),
+            selectedImage: UIImage(systemName: "camera.fill")
+        )
+
+        tabBarController.viewControllers = [cameraVC, galleryNav]
+        tabBarController.tabBar.tintColor = .systemBlue
+        tabBarController.selectedIndex = 1 // 갤러리 탭을 기본으로 설정
+
+        window?.rootViewController = tabBarController
         window?.makeKeyAndVisible()
     }
 
