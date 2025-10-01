@@ -56,7 +56,6 @@ final class CameraViewController: UIViewController {
 
         guard let captureSession = captureSession else { return }
 
-        // 후면 카메라 설정
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
 
         do {

@@ -34,6 +34,19 @@ final class PhotoInfoViewController: UIViewController {
         return imageView
     }()
 
+    private lazy var photoSelectButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "photo")
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 100, weight: .thin)
+        config.baseForegroundColor = .systemGray3
+        let button = UIButton(configuration: config)
+        button.layer.cornerRadius = 16
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor.systemGray4.cgColor
+        button.backgroundColor = .secondarySystemBackground
+        return button
+    }()
+
     private let dateCard: UIView = {
         let view = UIView()
         view.backgroundColor = .secondarySystemGroupedBackground
@@ -148,6 +161,7 @@ final class PhotoInfoViewController: UIViewController {
     private let viewModel: PhotoInfoViewModel
     private let disposeBag = DisposeBag()
     private var selectedLocation: CLLocation?
+    private var selectedImage: UIImage?
 
     // MARK: - Init
     init(viewModel: PhotoInfoViewModel) {
@@ -205,6 +219,22 @@ final class PhotoInfoViewController: UIViewController {
             .drive(photoImageView.rx.image)
             .disposed(by: disposeBag)
 
+        output.hasImage
+            .drive(with: self) { owner, hasImage in
+                owner.photoImageView.isHidden = !hasImage
+                owner.photoSelectButton.isHidden = hasImage
+                if hasImage {
+                    owner.selectedImage = owner.photoImageView.image
+                }
+            }
+            .disposed(by: disposeBag)
+
+        photoSelectButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.presentPhotoSelectionModal()
+            }
+            .disposed(by: disposeBag)
+
         output.saved
             .drive(with: self) { owner, _ in
                 owner.navigationController?.dismiss(animated: true)
@@ -216,6 +246,36 @@ final class PhotoInfoViewController: UIViewController {
                 owner.navigationController?.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
+    }
+
+    private func presentPhotoSelectionModal() {
+        let photoSelectionVC = PhotoSelectionViewController()
+        photoSelectionVC.onPhotoSelected = { [weak self] image in
+            self?.openPhotoEditor(with: image)
+        }
+        let navController = UINavigationController(rootViewController: photoSelectionVC)
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(navController, animated: true)
+    }
+
+    private func openPhotoEditor(with image: UIImage) {
+        dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            let viewModel = PhotoEditorViewModel(originalImage: image)
+            let editorVC = PhotoEditorViewController(viewModel: viewModel)
+            editorVC.onEditingComplete = { [weak self] editedImage in
+                self?.selectedImage = editedImage
+                self?.photoImageView.image = editedImage
+                self?.photoImageView.isHidden = false
+                self?.photoSelectButton.isHidden = true
+            }
+            let navController = UINavigationController(rootViewController: editorVC)
+            navController.modalPresentationStyle = .fullScreen
+            self.present(navController, animated: true)
+        }
     }
 
     private func presentLocationSearch(locationSubject: PublishSubject<CLLocation>) {
@@ -256,6 +316,7 @@ final class PhotoInfoViewController: UIViewController {
         scrollView.addSubview(contentView)
 
         contentView.addSubview(photoImageView)
+        contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         dateCard.addSubview(dateLabel)
         dateCard.addSubview(datePicker)
@@ -280,6 +341,12 @@ final class PhotoInfoViewController: UIViewController {
         }
 
         photoImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(300)
+        }
+
+        photoSelectButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(300)

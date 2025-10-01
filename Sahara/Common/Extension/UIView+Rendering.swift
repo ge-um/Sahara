@@ -8,7 +8,6 @@
 import UIKit
 
 extension UIView {
-    /// UIView를 UIImage로 렌더링합니다.
     func asImage() -> UIImage? {
         let renderer = UIGraphicsImageRenderer(bounds: bounds)
         return renderer.image { context in

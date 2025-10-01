@@ -154,6 +154,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
+    var onEditingComplete: ((UIImage) -> Void)?
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
@@ -196,6 +197,9 @@ final class PhotoEditorViewController: UIViewController {
 
     private func setupPencilKit() {
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
+
+        // PKToolPicker 초기화 시 발생하는 내부 경고 무시
+        // "Missing defaults dictionary" 경고는 PencilKit 내부 동작으로 앱 기능에 영향 없음
         toolPicker.setVisible(false, forFirstResponder: canvasView)
         toolPicker.addObserver(canvasView)
         canvasView.becomeFirstResponder()
@@ -295,9 +299,14 @@ final class PhotoEditorViewController: UIViewController {
 
         output.navigateToMetadata
             .drive(with: self) { owner, editedImage in
-                let metadataViewModel = PhotoInfoViewModel(editedImage: editedImage)
-                let metadataVC = PhotoInfoViewController(viewModel: metadataViewModel)
-                owner.navigationController?.pushViewController(metadataVC, animated: true)
+                if let callback = owner.onEditingComplete {
+                    callback(editedImage)
+                    owner.dismiss(animated: true)
+                } else {
+                    let metadataViewModel = PhotoInfoViewModel(editedImage: editedImage)
+                    let metadataVC = PhotoInfoViewController(viewModel: metadataViewModel)
+                    owner.navigationController?.pushViewController(metadataVC, animated: true)
+                }
             }
             .disposed(by: disposeBag)
 

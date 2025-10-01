@@ -39,6 +39,10 @@ final class ThemeGalleryViewController: UIViewController {
         analyzePhotos()
     }
 
+    func refreshData() {
+        analyzePhotos()
+    }
+
     private func configureUI() {
         view.backgroundColor = .systemBackground
 

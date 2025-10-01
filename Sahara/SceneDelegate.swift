@@ -17,32 +17,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
 
-        // TabBar 설정
-        let tabBarController = UITabBarController()
-
-        // 갤러리 탭
         let galleryVM = GalleryViewModel()
         let galleryVC = GalleryViewController(viewModel: galleryVM)
-        let galleryNav = UINavigationController(rootViewController: galleryVC)
-        galleryNav.tabBarItem = UITabBarItem(
-            title: "갤러리",
-            image: UIImage(systemName: "photo.on.rectangle"),
-            selectedImage: UIImage(systemName: "photo.on.rectangle.fill")
-        )
+        let navigationController = UINavigationController(rootViewController: galleryVC)
 
-        // 카메라 탭
-        let cameraVC = CameraViewController()
-        cameraVC.tabBarItem = UITabBarItem(
-            title: "카메라",
-            image: UIImage(systemName: "camera"),
-            selectedImage: UIImage(systemName: "camera.fill")
-        )
-
-        tabBarController.viewControllers = [cameraVC, galleryNav]
-        tabBarController.tabBar.tintColor = .systemBlue
-        tabBarController.selectedIndex = 1 // 갤러리 탭을 기본으로 설정
-
-        window?.rootViewController = tabBarController
+        window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
     }
 
