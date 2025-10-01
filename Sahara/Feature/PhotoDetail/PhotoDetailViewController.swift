@@ -5,17 +5,20 @@
 //  Created by 금가경 on 9/26/25.
 //
 
-import MapKit
 import RealmSwift
+import RxCocoa
+import RxSwift
 import SnapKit
 import UIKit
 
 final class PhotoDetailViewController: UIViewController {
-    private let photoMemoId: ObjectId
-    private var photoMemo: PhotoMemo?
-    private let realm = try! Realm()
-
+    private let viewModel: PhotoDetailViewModel
+    private let disposeBag = DisposeBag()
     private var isFrontCardVisible = true
+
+    private let viewDidLoadTrigger = PublishRelay<Void>()
+    private let swipeLeftTrigger = PublishRelay<Void>()
+    private let swipeRightTrigger = PublishRelay<Void>()
 
     private let cardContainerView: UIView = {
         let view = UIView()
@@ -155,7 +158,7 @@ final class PhotoDetailViewController: UIViewController {
     }()
 
     init(photoMemoId: ObjectId) {
-        self.photoMemoId = photoMemoId
+        self.viewModel = PhotoDetailViewModel(photoMemoId: photoMemoId)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -165,11 +168,10 @@ final class PhotoDetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        photoMemo = realm.object(ofType: PhotoMemo.self, forPrimaryKey: photoMemoId)
         configureUI()
-        configureData()
-        setupActions()
         setupGestures()
+        bind()
+        viewDidLoadTrigger.accept(())
     }
 
     private func configureUI() {
@@ -256,67 +258,93 @@ final class PhotoDetailViewController: UIViewController {
         }
     }
 
-    private func configureData() {
-        guard let photoMemo = photoMemo else { return }
-
-        if let image = UIImage(data: photoMemo.imageData) {
-            photoImageView.image = image
-        }
-
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy년 MM월 dd일 EEEE"
-        dateFormatter.locale = Locale(identifier: "ko_KR")
-        dateLabel.text = dateFormatter.string(from: photoMemo.date)
-
-        if let memo = photoMemo.memo, !memo.isEmpty {
-            memoLabel.text = memo
-        } else {
-            memoLabel.text = "메모가 없습니다."
-        }
-
-        if let latitude = photoMemo.latitude,
-           let longitude = photoMemo.longitude {
-            let location = CLLocation(latitude: latitude, longitude: longitude)
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                if let placemark = placemarks?.first {
-                    let address = [
-                        placemark.locality,
-                        placemark.thoroughfare,
-                        placemark.subThoroughfare
-                    ].compactMap { $0 }.joined(separator: " ")
-                    DispatchQueue.main.async {
-                        self?.locationLabel.text = address
-                    }
-                }
-            }
-        } else {
-            locationLabel.text = ""
-        }
-    }
-
-    private func setupActions() {
-        closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
-        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-        shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
-    }
-
     private func setupGestures() {
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeLeft))
         swipeLeft.direction = .left
         cardContainerView.addGestureRecognizer(swipeLeft)
 
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeRight))
         swipeRight.direction = .right
         cardContainerView.addGestureRecognizer(swipeRight)
     }
 
-    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
-        if gesture.direction == .left && isFrontCardVisible {
-            flipToBack()
-        } else if gesture.direction == .right && !isFrontCardVisible {
-            flipToFront()
-        }
+    @objc private func handleSwipeLeft() {
+        guard isFrontCardVisible else { return }
+        swipeLeftTrigger.accept(())
+    }
+
+    @objc private func handleSwipeRight() {
+        guard !isFrontCardVisible else { return }
+        swipeRightTrigger.accept(())
+    }
+
+    private func bind() {
+        let input = PhotoDetailViewModel.Input(
+            viewDidLoad: viewDidLoadTrigger.asObservable(),
+            closeButtonTapped: closeButton.rx.tap.asObservable(),
+            saveButtonTapped: saveButton.rx.tap.asObservable(),
+            shareButtonTapped: shareButton.rx.tap.asObservable(),
+            swipeLeft: swipeLeftTrigger.asObservable(),
+            swipeRight: swipeRightTrigger.asObservable()
+        )
+
+        let output = viewModel.transform(input: input)
+
+        output.photoImage
+            .drive(photoImageView.rx.image)
+            .disposed(by: disposeBag)
+
+        output.dateText
+            .drive(dateLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        output.locationText
+            .drive(locationLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        output.memoText
+            .drive(memoLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        output.shouldFlipToBack
+            .drive(with: self) { owner, _ in
+                owner.flipToBack()
+            }
+            .disposed(by: disposeBag)
+
+        output.shouldFlipToFront
+            .drive(with: self) { owner, _ in
+                owner.flipToFront()
+            }
+            .disposed(by: disposeBag)
+
+        output.shouldDismiss
+            .drive(with: self) { owner, _ in
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        output.saveResult
+            .drive(with: self) { owner, result in
+                let alert: UIAlertController
+                switch result {
+                case .success:
+                    alert = UIAlertController(title: "저장 완료", message: "사진이 앨범에 저장되었습니다.", preferredStyle: .alert)
+                case .failure(let error):
+                    alert = UIAlertController(title: "저장 실패", message: error.localizedDescription, preferredStyle: .alert)
+                }
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                owner.present(alert, animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        output.shareImage
+            .drive(with: self) { owner, image in
+                let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+                activityVC.popoverPresentationController?.sourceView = owner.shareButton
+                owner.present(activityVC, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 
     private func flipToBack() {
@@ -335,34 +363,5 @@ final class PhotoDetailViewController: UIViewController {
         } completion: { _ in
             self.isFrontCardVisible = true
         }
-    }
-
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
-    }
-
-    @objc private func saveButtonTapped() {
-        guard let photoMemo = photoMemo,
-              let image = UIImage(data: photoMemo.imageData) else { return }
-        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
-    }
-
-    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
-        let alert: UIAlertController
-        if let error = error {
-            alert = UIAlertController(title: "저장 실패", message: error.localizedDescription, preferredStyle: .alert)
-        } else {
-            alert = UIAlertController(title: "저장 완료", message: "사진이 앨범에 저장되었습니다.", preferredStyle: .alert)
-        }
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
-    }
-
-    @objc private func shareButtonTapped() {
-        guard let photoMemo = photoMemo,
-              let image = UIImage(data: photoMemo.imageData) else { return }
-        let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-        activityVC.popoverPresentationController?.sourceView = shareButton
-        present(activityVC, animated: true)
     }
 }
