@@ -10,4 +10,5 @@ enum EditMode {
     case drawing
     case filter
     case photo
+    case crop
 }

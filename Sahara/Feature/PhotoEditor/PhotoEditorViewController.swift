@@ -77,6 +77,41 @@ final class PhotoEditorViewController: UIViewController {
         return button
     }()
 
+    private lazy var cropModeButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.title = "자르기"
+        config.baseBackgroundColor = .systemGray4
+        config.baseForegroundColor = .label
+        config.cornerStyle = .medium
+        let button = UIButton(configuration: config)
+        return button
+    }()
+
+    private let cropOverlayView: CropOverlayView = {
+        let view = CropOverlayView()
+        view.isHidden = true
+        return view
+    }()
+
+    private let cropApplyButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.title = "적용"
+        config.baseBackgroundColor = .systemBlue
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        let button = UIButton(configuration: config)
+        button.isHidden = true
+        return button
+    }()
+
+    private let cropCancelButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.title = "취소"
+        let button = UIButton(configuration: config)
+        button.isHidden = true
+        return button
+    }()
+
     private lazy var filterCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -159,6 +194,8 @@ final class PhotoEditorViewController: UIViewController {
     private var currentMode = BehaviorRelay<EditMode>(value: .sticker)
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
+    private var currentEditingImage: UIImage?
+    private var croppedImage: UIImage?
     private let context = CIContext()
     private let filterSelectedRelay = PublishRelay<Int>()
     private let photoSelectedRelay = PublishRelay<UIImage>()
@@ -203,7 +240,10 @@ final class PhotoEditorViewController: UIViewController {
         let filterModeTapped = filterModeButton.rx.tap
             .map { EditMode.filter }
 
-        Observable.merge(stickerModeTapped, drawingModeTapped, filterModeTapped)
+        let cropModeTapped = cropModeButton.rx.tap
+            .map { EditMode.crop }
+
+        Observable.merge(stickerModeTapped, drawingModeTapped, filterModeTapped, cropModeTapped)
             .bind(to: currentMode)
             .disposed(by: disposeBag)
 
@@ -217,6 +257,18 @@ final class PhotoEditorViewController: UIViewController {
         photoModeButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.presentPhotoPicker()
+            }
+            .disposed(by: disposeBag)
+
+        cropApplyButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.applyCrop()
+            }
+            .disposed(by: disposeBag)
+
+        cropCancelButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.currentMode.accept(.sticker)
             }
             .disposed(by: disposeBag)
 
@@ -245,6 +297,7 @@ final class PhotoEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.originalImage = image
+                owner.currentEditingImage = image
             }
             .disposed(by: disposeBag)
 
@@ -397,24 +450,53 @@ final class PhotoEditorViewController: UIViewController {
         canvasView.isUserInteractionEnabled = false
         toolPicker.setVisible(false, forFirstResponder: canvasView)
         photoImageView.isUserInteractionEnabled = true
+        cropOverlayView.isHidden = true
+        cropApplyButton.isHidden = true
+        cropCancelButton.isHidden = true
+        modeButtonStackView.isHidden = false
+        doneButton.isHidden = false
 
         switch mode {
         case .sticker:
             searchBar.isHidden = false
             stickerCollectionView.isHidden = false
+            if let cropped = croppedImage {
+                photoImageView.image = cropped
+                currentEditingImage = cropped
+            }
         case .drawing:
             canvasView.isUserInteractionEnabled = true
             toolPicker.setVisible(true, forFirstResponder: canvasView)
+            if let cropped = croppedImage {
+                photoImageView.image = cropped
+                currentEditingImage = cropped
+            }
         case .filter:
             filterCollectionView.isHidden = false
+            if let cropped = croppedImage {
+                photoImageView.image = cropped
+                currentEditingImage = cropped
+            }
         case .photo:
-            break
+            if let cropped = croppedImage {
+                photoImageView.image = cropped
+                currentEditingImage = cropped
+            }
+        case .crop:
+            cropOverlayView.isHidden = false
+            cropApplyButton.isHidden = false
+            cropCancelButton.isHidden = false
+            modeButtonStackView.isHidden = true
+            doneButton.isHidden = true
+            photoImageView.image = originalImage
+            currentEditingImage = originalImage
+            setupCropOverlay()
         }
     }
 
     private func updateModeButtons(currentMode: EditMode) {
-        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, photoModeButton]
-        let modes: [EditMode] = [.sticker, .drawing, .filter, .photo]
+        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, cropModeButton, photoModeButton]
+        let modes: [EditMode] = [.sticker, .drawing, .filter, .crop, .photo]
 
         for (button, mode) in zip(buttons, modes) {
             var config = button.configuration
@@ -430,14 +512,16 @@ final class PhotoEditorViewController: UIViewController {
     }
 
     private func applyFilter(at index: Int) {
-        guard let originalImage = originalImage else { return }
+        let baseImage = croppedImage ?? originalImage
+        guard let baseImage = baseImage else { return }
 
         if index == 0 {
-            photoImageView.image = originalImage
+            photoImageView.image = baseImage
+            currentEditingImage = baseImage
             return
         }
 
-        guard let ciImage = CIImage(image: originalImage),
+        guard let ciImage = CIImage(image: baseImage),
               let filter = filters[index].filter else { return }
 
         filter.setValue(ciImage, forKey: kCIInputImageKey)
@@ -445,8 +529,9 @@ final class PhotoEditorViewController: UIViewController {
         guard let outputImage = filter.outputImage,
               let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
 
-        let filtered = UIImage(cgImage: cgImage, scale: originalImage.scale, orientation: originalImage.imageOrientation)
+        let filtered = UIImage(cgImage: cgImage, scale: baseImage.scale, orientation: baseImage.imageOrientation)
         photoImageView.image = filtered
+        currentEditingImage = filtered
     }
 
     private func generateFinalImage() -> UIImage {
@@ -466,6 +551,98 @@ final class PhotoEditorViewController: UIViewController {
         present(picker, animated: true)
     }
 
+    private func setupCropOverlay() {
+        guard let currentImage = photoImageView.image else { return }
+
+        // photoImageView에서 실제 이미지가 표시되는 영역 계산 (scaleAspectFit 고려)
+        let imageSize = currentImage.size
+        let imageViewSize = photoImageView.bounds.size
+
+        let imageAspect = imageSize.width / imageSize.height
+        let viewAspect = imageViewSize.width / imageViewSize.height
+
+        var imageRect = CGRect.zero
+
+        if imageAspect > viewAspect {
+            // 이미지가 더 넓음 - 좌우에 꽉 차고 상하에 여백
+            let displayHeight = imageViewSize.width / imageAspect
+            imageRect = CGRect(
+                x: 0,
+                y: (imageViewSize.height - displayHeight) / 2,
+                width: imageViewSize.width,
+                height: displayHeight
+            )
+        } else {
+            let displayWidth = imageViewSize.height * imageAspect
+            imageRect = CGRect(
+                x: (imageViewSize.width - displayWidth) / 2,
+                y: 0,
+                width: displayWidth,
+                height: imageViewSize.height
+            )
+        }
+
+        cropOverlayView.frame = photoImageView.bounds
+
+        cropOverlayView.setCropRect(imageRect)
+    }
+
+    private func applyCrop() {
+        guard let currentImage = photoImageView.image else { return }
+
+        let cropRect = cropOverlayView.cropRect
+        let imageViewBounds = photoImageView.bounds
+
+        let imageSize = currentImage.size
+        let imageViewSize = imageViewBounds.size
+
+        let imageAspect = imageSize.width / imageSize.height
+        let viewAspect = imageViewSize.width / imageViewSize.height
+
+        var imageRect = CGRect.zero
+
+        if imageAspect > viewAspect {
+            let displayHeight = imageViewSize.width / imageAspect
+            imageRect = CGRect(
+                x: 0,
+                y: (imageViewSize.height - displayHeight) / 2,
+                width: imageViewSize.width,
+                height: displayHeight
+            )
+        } else {
+            let displayWidth = imageViewSize.height * imageAspect
+            imageRect = CGRect(
+                x: (imageViewSize.width - displayWidth) / 2,
+                y: 0,
+                width: displayWidth,
+                height: imageViewSize.height
+            )
+        }
+
+        let scaleX = imageSize.width / imageRect.width
+        let scaleY = imageSize.height / imageRect.height
+
+        let scaledCropRect = CGRect(
+            x: (cropRect.origin.x - imageRect.origin.x) * scaleX,
+            y: (cropRect.origin.y - imageRect.origin.y) * scaleY,
+            width: cropRect.size.width * scaleX,
+            height: cropRect.size.height * scaleY
+        )
+
+        guard let cgImage = currentImage.cgImage?.cropping(to: scaledCropRect) else { return }
+
+        let cropped = UIImage(
+            cgImage: cgImage,
+            scale: currentImage.scale,
+            orientation: currentImage.imageOrientation
+        )
+
+        croppedImage = cropped
+        photoImageView.image = cropped
+        currentEditingImage = cropped
+        currentMode.accept(.sticker)
+    }
+
     private func configureUI() {
         view.backgroundColor = .white
 
@@ -478,8 +655,12 @@ final class PhotoEditorViewController: UIViewController {
         modeButtonStackView.addArrangedSubview(stickerModeButton)
         modeButtonStackView.addArrangedSubview(drawingModeButton)
         modeButtonStackView.addArrangedSubview(filterModeButton)
+        modeButtonStackView.addArrangedSubview(cropModeButton)
         modeButtonStackView.addArrangedSubview(photoModeButton)
         view.addSubview(trashIconView)
+        view.addSubview(cropOverlayView)
+        view.addSubview(cropApplyButton)
+        view.addSubview(cropCancelButton)
         view.addSubview(doneButton)
 
         photoImageView.snp.makeConstraints { make in
@@ -520,6 +701,24 @@ final class PhotoEditorViewController: UIViewController {
             make.centerX.equalToSuperview()
             make.bottom.equalTo(modeButtonStackView.snp.top).offset(-20)
             make.width.height.equalTo(60)
+        }
+
+        cropOverlayView.snp.makeConstraints { make in
+            make.edges.equalTo(photoImageView)
+        }
+
+        cropApplyButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
+            make.width.equalTo(100)
+            make.height.equalTo(50)
+        }
+
+        cropCancelButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
+            make.width.equalTo(100)
+            make.height.equalTo(50)
         }
 
         doneButton.snp.makeConstraints { make in
