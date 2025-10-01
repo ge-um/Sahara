@@ -40,7 +40,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var stickerModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "스티커"
+        config.title = NSLocalizedString("photo_editor.sticker", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.cornerStyle = .medium
@@ -50,7 +50,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var drawingModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "그리기"
+        config.title = NSLocalizedString("photo_editor.drawing", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -60,7 +60,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var filterModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "필터"
+        config.title = NSLocalizedString("photo_editor.filter", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -70,7 +70,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var photoModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "사진"
+        config.title = NSLocalizedString("photo_editor.photo", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -80,7 +80,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var cropModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "자르기"
+        config.title = NSLocalizedString("photo_editor.crop", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -96,7 +96,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private let cropApplyButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = "적용"
+        config.title = NSLocalizedString("photo_editor.apply", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.cornerStyle = .medium
@@ -107,7 +107,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private let cropCancelButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.title = "취소"
+        config.title = NSLocalizedString("photo_editor.cancel", comment: "")
         let button = UIButton(configuration: config)
         button.isHidden = true
         return button
@@ -127,17 +127,17 @@ final class PhotoEditorViewController: UIViewController {
         return collectionView
     }()
 
-    private let filters: [(name: String, filter: CIFilter?)] = [
-        ("원본", nil),
-        ("흑백", CIFilter(name: "CIPhotoEffectNoir")),
-        ("세피아", CIFilter(name: "CISepiaTone")),
-        ("빈티지", CIFilter(name: "CIPhotoEffectInstant")),
-        ("크롬", CIFilter(name: "CIPhotoEffectChrome")),
-        ("페이드", CIFilter(name: "CIPhotoEffectFade")),
-        ("모노", CIFilter(name: "CIPhotoEffectMono")),
-        ("프로세스", CIFilter(name: "CIPhotoEffectProcess")),
-        ("전송", CIFilter(name: "CIPhotoEffectTransfer")),
-        ("토널", CIFilter(name: "CIPhotoEffectTonal"))
+    private lazy var filters: [(name: String, filter: CIFilter?)] = [
+        (NSLocalizedString("filter.original", comment: ""), nil),
+        (NSLocalizedString("filter.noir", comment: ""), CIFilter(name: "CIPhotoEffectNoir")),
+        (NSLocalizedString("filter.sepia", comment: ""), CIFilter(name: "CISepiaTone")),
+        (NSLocalizedString("filter.instant", comment: ""), CIFilter(name: "CIPhotoEffectInstant")),
+        (NSLocalizedString("filter.chrome", comment: ""), CIFilter(name: "CIPhotoEffectChrome")),
+        (NSLocalizedString("filter.fade", comment: ""), CIFilter(name: "CIPhotoEffectFade")),
+        (NSLocalizedString("filter.mono", comment: ""), CIFilter(name: "CIPhotoEffectMono")),
+        (NSLocalizedString("filter.process", comment: ""), CIFilter(name: "CIPhotoEffectProcess")),
+        (NSLocalizedString("filter.transfer", comment: ""), CIFilter(name: "CIPhotoEffectTransfer")),
+        (NSLocalizedString("filter.tonal", comment: ""), CIFilter(name: "CIPhotoEffectTonal"))
     ]
 
     private let trashIconView: UIImageView = {
@@ -149,8 +149,8 @@ final class PhotoEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let doneButton = UIBarButtonItem(title: "완료", style: .done, target: nil, action: nil)
-    private let cancelButton = UIBarButtonItem(title: "취소", style: .plain, target: nil, action: nil)
+    private lazy var doneButton = UIBarButtonItem(title: NSLocalizedString("photo_editor.done", comment: ""), style: .done, target: nil, action: nil)
+    private lazy var cancelButton = UIBarButtonItem(title: NSLocalizedString("photo_editor.cancel", comment: ""), style: .plain, target: nil, action: nil)
 
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
@@ -551,7 +551,7 @@ final class PhotoEditorViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = "사진 편집"
+        navigationItem.title = NSLocalizedString("photo_editor.title", comment: "")
         navigationItem.leftBarButtonItem = cancelButton
         navigationItem.rightBarButtonItem = doneButton
     }

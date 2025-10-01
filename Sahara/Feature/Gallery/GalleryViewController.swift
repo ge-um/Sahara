@@ -25,7 +25,7 @@ final class GalleryViewController: UIViewController {
 
     private lazy var dateButton: UIButton = {
         let button = UIButton()
-        button.setTitle("날짜별", for: .normal)
+        button.setTitle(NSLocalizedString("gallery.date_view", comment: ""), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = .systemBlue
         button.layer.cornerRadius = 8
@@ -35,7 +35,7 @@ final class GalleryViewController: UIViewController {
 
     private lazy var locationButton: UIButton = {
         let button = UIButton()
-        button.setTitle("장소별", for: .normal)
+        button.setTitle(NSLocalizedString("gallery.location_view", comment: ""), for: .normal)
         button.setTitleColor(.label, for: .normal)
         button.backgroundColor = .systemGray5
         button.layer.cornerRadius = 8
@@ -45,7 +45,7 @@ final class GalleryViewController: UIViewController {
 
     private lazy var themeButton: UIButton = {
         let button = UIButton()
-        button.setTitle("주제별", for: .normal)
+        button.setTitle(NSLocalizedString("gallery.theme_view", comment: ""), for: .normal)
         button.setTitleColor(.label, for: .normal)
         button.backgroundColor = .systemGray5
         button.layer.cornerRadius = 8

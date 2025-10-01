@@ -13,7 +13,7 @@ import UIKit
 final class StickerModalViewController: UIViewController {
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
-        searchBar.placeholder = "스티커 검색"
+        searchBar.placeholder = NSLocalizedString("photo_editor.sticker_search_placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         return searchBar
     }()
@@ -114,7 +114,7 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = "스티커"
+        navigationItem.title = NSLocalizedString("photo_editor.sticker_modal_title", comment: "")
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,
             target: self,

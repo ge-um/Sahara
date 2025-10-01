@@ -69,7 +69,7 @@ final class ThemeGalleryViewController: UIViewController {
         }
         
         let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
-            .sorted { $0.category.rawValue < $1.category.rawValue }
+            .sorted { $0.category.localizedName < $1.category.localizedName }
         
         themeGroups = groups
         tableView.reloadData()
@@ -184,8 +184,8 @@ final class ThemeCell: UITableViewCell {
     }
 
     func configure(with group: ThemeGroup) {
-        titleLabel.text = group.category.rawValue
-        countLabel.text = "\(group.photoMemos.count)개의 사진"
+        titleLabel.text = group.category.localizedName
+        countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.photoMemos.count)
 
         if let firstPhoto = group.photoMemos.first,
            let image = UIImage(data: firstPhoto.imageData) {

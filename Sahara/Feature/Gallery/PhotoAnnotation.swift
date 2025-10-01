@@ -13,7 +13,7 @@ final class PhotoAnnotation: NSObject, MKAnnotation {
     let photoMemos: [PhotoMemo]
 
     var title: String? {
-        return "\(photoMemos.count)개의 사진"
+        return String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
     }
 
     init(coordinate: CLLocationCoordinate2D, photoMemos: [PhotoMemo]) {

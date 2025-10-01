@@ -1,0 +1,79 @@
+/* Common */
+"common.save" = "保存";
+"common.cancel" = "キャンセル";
+"common.done" = "完了";
+"common.share" = "共有";
+"common.ok" = "確認";
+"common.photo_count" = "%d枚の写真";
+
+/* Gallery */
+"gallery.date_view" = "日付順";
+"gallery.location_view" = "場所順";
+"gallery.theme_view" = "テーマ順";
+"gallery.month_format" = "yyyy年MM月";
+
+/* Theme Categories */
+"theme.people" = "人物";
+"theme.food" = "食べ物";
+"theme.animals" = "動物";
+"theme.nature" = "自然";
+"theme.buildings" = "建物";
+"theme.others" = "その他";
+
+/* Weekdays */
+"weekday.sunday" = "日";
+"weekday.monday" = "月";
+"weekday.tuesday" = "火";
+"weekday.wednesday" = "水";
+"weekday.thursday" = "木";
+"weekday.friday" = "金";
+"weekday.saturday" = "土";
+
+/* Photo Info */
+"photo_info.title" = "写真情報";
+"photo_info.date" = "日付";
+"photo_info.memo" = "メモ";
+"photo_info.memo_placeholder" = "メモを入力してください（300文字制限）";
+"photo_info.location" = "位置";
+"photo_info.location_placeholder" = "位置を選択してください";
+"photo_info.search_location" = "位置検索";
+
+/* Photo Detail */
+"photo_detail.no_memo" = "メモがありません。";
+"photo_detail.save_success" = "保存完了";
+"photo_detail.save_success_message" = "写真がアルバムに保存されました。";
+"photo_detail.save_failed" = "保存失敗";
+"photo_detail.image_load_error" = "画像を読み込めません。";
+"photo_detail.swipe_left_hint" = "← スワイプしてメモを表示";
+"photo_detail.swipe_right_hint" = "→ スワイプして写真を表示";
+"photo_detail.date_format" = "yyyy年MM月dd日 EEEE";
+
+/* Location Search */
+"location_search.title" = "位置検索";
+"location_search.placeholder" = "位置検索";
+"location_search.use_current_location" = "現在地を使用";
+
+/* Photo Editor */
+"photo_editor.title" = "写真編集";
+"photo_editor.done" = "完了";
+"photo_editor.cancel" = "キャンセル";
+"photo_editor.sticker" = "ステッカー";
+"photo_editor.drawing" = "描画";
+"photo_editor.filter" = "フィルター";
+"photo_editor.photo" = "写真";
+"photo_editor.crop" = "切り抜き";
+"photo_editor.apply" = "適用";
+"photo_editor.sticker_search_placeholder" = "ステッカーを検索";
+"photo_editor.sticker_modal_title" = "ステッカー";
+
+/* Filters */
+"filter.original" = "オリジナル";
+"filter.noir" = "ノワール";
+"filter.sepia" = "セピア";
+"filter.instant" = "インスタント";
+"filter.chrome" = "クローム";
+"filter.fade" = "フェード";
+"filter.mono" = "モノ";
+"filter.process" = "プロセス";
+"filter.transfer" = "トランスファー";
+"filter.tonal" = "トーナル";

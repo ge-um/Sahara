@@ -1,0 +1,79 @@
+/* Common */
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"common.done" = "Done";
+"common.share" = "Share";
+"common.ok" = "OK";
+"common.photo_count" = "%d photos";
+
+/* Gallery */
+"gallery.date_view" = "By Date";
+"gallery.location_view" = "By Location";
+"gallery.theme_view" = "By Theme";
+"gallery.month_format" = "MMMM yyyy";
+
+/* Theme Categories */
+"theme.people" = "People";
+"theme.food" = "Food";
+"theme.animals" = "Animals";
+"theme.nature" = "Nature";
+"theme.buildings" = "Buildings";
+"theme.others" = "Others";
+
+/* Weekdays */
+"weekday.sunday" = "Sun";
+"weekday.monday" = "Mon";
+"weekday.tuesday" = "Tue";
+"weekday.wednesday" = "Wed";
+"weekday.thursday" = "Thu";
+"weekday.friday" = "Fri";
+"weekday.saturday" = "Sat";
+
+/* Photo Info */
+"photo_info.title" = "Photo Info";
+"photo_info.date" = "Date";
+"photo_info.memo" = "Memo";
+"photo_info.memo_placeholder" = "Enter memo (300 character limit)";
+"photo_info.location" = "Location";
+"photo_info.location_placeholder" = "Select location";
+"photo_info.search_location" = "Search Location";
+
+/* Photo Detail */
+"photo_detail.no_memo" = "No memo available.";
+"photo_detail.save_success" = "Saved";
+"photo_detail.save_success_message" = "Photo saved to album.";
+"photo_detail.save_failed" = "Save Failed";
+"photo_detail.image_load_error" = "Unable to load image.";
+"photo_detail.swipe_left_hint" = "← Swipe to view memo";
+"photo_detail.swipe_right_hint" = "→ Swipe to view photo";
+"photo_detail.date_format" = "EEEE, MMMM d, yyyy";
+
+/* Location Search */
+"location_search.title" = "Search Location";
+"location_search.placeholder" = "Search location";
+"location_search.use_current_location" = "Use Current Location";
+
+/* Photo Editor */
+"photo_editor.title" = "Photo Editor";
+"photo_editor.done" = "Done";
+"photo_editor.cancel" = "Cancel";
+"photo_editor.sticker" = "Sticker";
+"photo_editor.drawing" = "Drawing";
+"photo_editor.filter" = "Filter";
+"photo_editor.photo" = "Photo";
+"photo_editor.crop" = "Crop";
+"photo_editor.apply" = "Apply";
+"photo_editor.sticker_search_placeholder" = "Search stickers";
+"photo_editor.sticker_modal_title" = "Stickers";
+
+/* Filters */
+"filter.original" = "Original";
+"filter.noir" = "Noir";
+"filter.sepia" = "Sepia";
+"filter.instant" = "Instant";
+"filter.chrome" = "Chrome";
+"filter.fade" = "Fade";
+"filter.mono" = "Mono";
+"filter.process" = "Process";
+"filter.transfer" = "Transfer";
+"filter.tonal" = "Tonal";

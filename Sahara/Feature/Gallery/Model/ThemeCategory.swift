@@ -8,12 +8,29 @@
 import Foundation
 
 enum ThemeCategory: String, CaseIterable {
-    case people = "사람"
-    case food = "음식"
-    case animals = "동물"
-    case nature = "자연"
-    case buildings = "건물"
-    case others = "기타"
+    case people
+    case food
+    case animals
+    case nature
+    case buildings
+    case others
+
+    var localizedName: String {
+        switch self {
+        case .people:
+            return NSLocalizedString("theme.people", comment: "")
+        case .food:
+            return NSLocalizedString("theme.food", comment: "")
+        case .animals:
+            return NSLocalizedString("theme.animals", comment: "")
+        case .nature:
+            return NSLocalizedString("theme.nature", comment: "")
+        case .buildings:
+            return NSLocalizedString("theme.buildings", comment: "")
+        case .others:
+            return NSLocalizedString("theme.others", comment: "")
+        }
+    }
 
     static func category(for labels: [String]) -> ThemeCategory {
         let lowercasedLabels = labels.map { $0.lowercased() }
