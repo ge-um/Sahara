@@ -15,10 +15,13 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
     private let originalImage: UIImage
 
     struct Input {
-        let viewDidLoad: Observable<Void>
+        let viewWillAppear: Observable<Void>
         let searchQuery: Observable<String>
         let stickerSelected: Observable<Sticker>
-        let doneButtonTapped: Observable<UIView>
+        let filterSelected: Observable<Int>
+        let drawingChanged: Observable<Void>
+        let photoSelected: Observable<UIImage>
+        let doneButtonTapped: Observable<UIImage>
         let cancelButtonTapped: Observable<Void>
     }
 
@@ -26,6 +29,8 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
         let originalImage: Driver<UIImage>
         let stickers: Driver<[Sticker]>
         let selectedSticker: Driver<Sticker>
+        let selectedFilter: Driver<Int>
+        let selectedPhoto: Driver<UIImage>
         let navigateToMetadata: Driver<UIImage>
         let dismiss: Driver<Void>
     }
@@ -37,8 +42,7 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let stickersRelay = BehaviorRelay<[Sticker]>(value: [])
 
-        // 초기 트렌딩 스티커 로드
-        input.viewDidLoad
+        input.viewWillAppear
             .flatMapLatest { _ in
                 NetworkManager.shared.callRequest(
                     api: .trendingStickers(
@@ -54,7 +58,6 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
             .bind(to: stickersRelay)
             .disposed(by: disposeBag)
 
-        // 검색어 변경 시 스티커 검색
         input.searchQuery
             .filter { !$0.isEmpty }
             .flatMapLatest { query in
@@ -73,7 +76,6 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
             .bind(to: stickersRelay)
             .disposed(by: disposeBag)
 
-        // 검색어가 비어있으면 트렌딩 스티커로 복귀
         input.searchQuery
             .filter { $0.isEmpty }
             .flatMapLatest { _ in
@@ -94,13 +96,13 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
         let selectedSticker = input.stickerSelected
             .asDriver(onErrorDriveWith: .empty())
 
-        // 완료 버튼 탭 시 최종 이미지 생성하고 메타데이터 화면으로 이동
+        let selectedFilter = input.filterSelected
+            .asDriver(onErrorJustReturn: 0)
+
+        let selectedPhoto = input.photoSelected
+            .asDriver(onErrorDriveWith: .empty())
+
         let navigateToMetadata = input.doneButtonTapped
-            .map { photoImageView -> UIImage? in
-                // photoImageView를 UIImage로 렌더링
-                return photoImageView.asImage()
-            }
-            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         let dismiss = input.cancelButtonTapped
@@ -110,6 +112,8 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
             originalImage: Driver.just(originalImage),
             stickers: stickersRelay.asDriver(),
             selectedSticker: selectedSticker,
+            selectedFilter: selectedFilter,
+            selectedPhoto: selectedPhoto,
             navigateToMetadata: navigateToMetadata,
             dismiss: dismiss
         )
