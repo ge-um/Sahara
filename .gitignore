@@ -4,9 +4,11 @@
 
 ### AI ###
 claude.md
+.claude/
+settings.local.json
+*.local
 
 ### API ###
-Secret/
 Sahara/API/
 API/
 
