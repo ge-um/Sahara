@@ -10,4 +10,8 @@ import Foundation
 struct DayItem {
     let date: Date?
     let photoMemos: [PhotoMemo]
+
+    var hasPhotos: Bool {
+        return !photoMemos.isEmpty
+    }
 }
