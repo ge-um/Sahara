@@ -16,14 +16,10 @@ enum EditMode {
     case sticker
     case drawing
     case filter
-    case text
     case photo
 }
 
 final class PhotoEditorViewController: UIViewController {
-    private let scrollView = UIScrollView()
-    private let contentView = UIView()
-
     private let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -81,16 +77,6 @@ final class PhotoEditorViewController: UIViewController {
         return button
     }()
 
-    private lazy var textModeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = "텍스트"
-        config.baseBackgroundColor = .systemGray4
-        config.baseForegroundColor = .label
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
-        button.tag = 3
-        return button
-    }()
 
     private lazy var photoModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
@@ -153,36 +139,6 @@ final class PhotoEditorViewController: UIViewController {
         return collectionView
     }()
 
-    private lazy var textColorCollectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 50, height: 50)
-        layout.minimumLineSpacing = 10
-
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .clear
-        collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(TextColorCell.self, forCellWithReuseIdentifier: TextColorCell.identifier)
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        return collectionView
-    }()
-
-    private let textToolbar: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray6
-        view.layer.cornerRadius = 12
-        view.isHidden = true
-        return view
-    }()
-
-    private let textColorLabel: UILabel = {
-        let label = UILabel()
-        label.text = "색상"
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .secondaryLabel
-        return label
-    }()
 
 
     private let trashIconView: UIImageView = {
@@ -214,21 +170,11 @@ final class PhotoEditorViewController: UIViewController {
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
     private var stickerViews: [DraggableStickerView] = []
-    private var textViews: [DraggableTextView] = []
     private var photoViews: [DraggableImageView] = []
     private var currentMode: EditMode = .sticker
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
     private let context = CIContext()
-    private var currentTextColor: UIColor = .black
-    private var currentTextFont: UIFont = .systemFont(ofSize: 24, weight: .bold)
-    private let textColors: [UIColor] = [.black, .white, .red, .blue, .green, .yellow, .purple, .orange]
-    private let textFonts: [UIFont] = [
-        .systemFont(ofSize: 24, weight: .bold),
-        .systemFont(ofSize: 24, weight: .regular),
-        .italicSystemFont(ofSize: 24),
-        .monospacedSystemFont(ofSize: 24, weight: .bold)
-    ]
 
     // MARK: - Init
     init(viewModel: PhotoEditorViewModel) {
@@ -245,21 +191,11 @@ final class PhotoEditorViewController: UIViewController {
         configureUI()
         configureNavigation()
         setupPencilKit()
-        setupGestures()
         bind()
         updateEditMode()
         updateModeButtons()
     }
 
-    private func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleBackgroundTap))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-    }
-
-    @objc private func handleBackgroundTap() {
-        view.endEditing(true)
-    }
 
     private func setupPencilKit() {
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
@@ -293,28 +229,9 @@ final class PhotoEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        textModeButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.currentMode = .text
-                owner.updateEditMode()
-                owner.updateModeButtons()
-            }
-            .disposed(by: disposeBag)
-
         photoModeButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.presentPhotoPicker()
-            }
-            .disposed(by: disposeBag)
-
-        let textTapGesture = UITapGestureRecognizer()
-        photoImageView.addGestureRecognizer(textTapGesture)
-
-        textTapGesture.rx.event
-            .filter { [weak self] _ in self?.currentMode == .text }
-            .bind(with: self) { owner, gesture in
-                let location = gesture.location(in: owner.photoImageView)
-                owner.addTextToPhoto(at: location)
             }
             .disposed(by: disposeBag)
 
@@ -449,7 +366,6 @@ final class PhotoEditorViewController: UIViewController {
         searchBar.isHidden = true
         stickerCollectionView.isHidden = true
         filterCollectionView.isHidden = true
-        textToolbar.isHidden = true
         canvasView.isUserInteractionEnabled = false
         toolPicker.setVisible(false, forFirstResponder: canvasView)
 
@@ -464,16 +380,14 @@ final class PhotoEditorViewController: UIViewController {
             toolPicker.setVisible(true, forFirstResponder: canvasView)
         case .filter:
             filterCollectionView.isHidden = false
-        case .text:
-            textToolbar.isHidden = false
         case .photo:
             break
         }
     }
 
     private func updateModeButtons() {
-        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, textModeButton, photoModeButton]
-        let modes: [EditMode] = [.sticker, .drawing, .filter, .text, .photo]
+        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, photoModeButton]
+        let modes: [EditMode] = [.sticker, .drawing, .filter, .photo]
 
         for (button, mode) in zip(buttons, modes) {
             var config = button.configuration
@@ -508,51 +422,6 @@ final class PhotoEditorViewController: UIViewController {
         let filtered = UIImage(cgImage: cgImage, scale: originalImage.scale, orientation: originalImage.imageOrientation)
         photoImageView.image = filtered
         filteredImage = filtered
-    }
-
-    private func addTextToPhoto(at location: CGPoint) {
-        let textView = DraggableTextView(frame: .zero)
-        textView.configure(text: "텍스트", color: currentTextColor, font: currentTextFont)
-        textView.frame = CGRect(x: location.x - 75,
-                               y: location.y - 25,
-                               width: 150,
-                               height: 50)
-
-        textView.onDragChanged = { [weak self] view in
-            self?.handleDragChanged(view: view)
-        }
-
-        textView.onDragEnded = { [weak self] view in
-            self?.handleDragEnded(view: view, in: &self!.textViews)
-        }
-
-        textView.onDoubleTap = { [weak self] view in
-            self?.editTextView(view)
-        }
-
-        photoImageView.addSubview(textView)
-        textViews.append(textView)
-    }
-
-    private func editTextView(_ textView: DraggableTextView) {
-        let alert = UIAlertController(title: "텍스트 편집", message: nil, preferredStyle: .alert)
-        alert.addTextField { textField in
-            textField.text = textView.text
-            textField.placeholder = "텍스트를 입력하세요"
-        }
-
-        let saveAction = UIAlertAction(title: "확인", style: .default) { _ in
-            if let text = alert.textFields?.first?.text, !text.isEmpty {
-                textView.updateText(text)
-            }
-        }
-
-        let cancelAction = UIAlertAction(title: "취소", style: .cancel)
-
-        alert.addAction(saveAction)
-        alert.addAction(cancelAction)
-
-        present(alert, animated: true)
     }
 
     private func addPhotoToCanvas(_ image: UIImage) {
@@ -632,41 +501,23 @@ final class PhotoEditorViewController: UIViewController {
     private func configureUI() {
         view.backgroundColor = .white
 
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        contentView.addSubview(photoImageView)
-        contentView.addSubview(canvasView)
-        contentView.addSubview(searchBar)
-        contentView.addSubview(stickerCollectionView)
-        contentView.addSubview(filterCollectionView)
-        contentView.addSubview(textToolbar)
-        textToolbar.addSubview(textColorLabel)
-        textToolbar.addSubview(textColorCollectionView)
+        view.addSubview(photoImageView)
+        view.addSubview(canvasView)
+        view.addSubview(searchBar)
+        view.addSubview(stickerCollectionView)
+        view.addSubview(filterCollectionView)
         view.addSubview(modeButtonStackView)
         modeButtonStackView.addArrangedSubview(stickerModeButton)
         modeButtonStackView.addArrangedSubview(drawingModeButton)
         modeButtonStackView.addArrangedSubview(filterModeButton)
-        modeButtonStackView.addArrangedSubview(textModeButton)
         modeButtonStackView.addArrangedSubview(photoModeButton)
         view.addSubview(trashIconView)
         view.addSubview(doneButton)
 
-        scrollView.snp.makeConstraints { make in
+        photoImageView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
             make.bottom.equalTo(modeButtonStackView.snp.top).offset(-10)
-        }
-
-        contentView.snp.makeConstraints { make in
-            make.edges.equalTo(scrollView)
-            make.width.equalTo(scrollView)
-        }
-
-        photoImageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            let availableHeight = UIScreen.main.bounds.height - 400
-            make.height.equalTo(min(max(availableHeight * 0.5, 200), 350))
         }
 
         canvasView.snp.makeConstraints { make in
@@ -674,40 +525,21 @@ final class PhotoEditorViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(16)
+            make.bottom.equalTo(stickerCollectionView.snp.top).offset(-8)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
 
         stickerCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(12)
+            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-16)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(100)
-            make.bottom.equalToSuperview().offset(-20)
         }
 
         filterCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(20)
+            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-16)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(120)
-            make.bottom.equalToSuperview().offset(-20)
-        }
-
-        textToolbar.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(100)
-            make.bottom.equalToSuperview().offset(-20)
-        }
-
-        textColorLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(12)
-        }
-
-        textColorCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(textColorLabel.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(12)
-            make.bottom.equalToSuperview().inset(12)
         }
 
         modeButtonStackView.snp.makeConstraints { make in
@@ -739,8 +571,6 @@ extension PhotoEditorViewController: UICollectionViewDataSource, UICollectionVie
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == filterCollectionView {
             return filters.count
-        } else if collectionView == textColorCollectionView {
-            return textColors.count
         }
         return 0
     }
@@ -757,15 +587,6 @@ extension PhotoEditorViewController: UICollectionViewDataSource, UICollectionVie
             let filterItem = filters[indexPath.item]
             cell.configure(with: filterItem.name, image: originalImage, filter: filterItem.filter, context: context)
             return cell
-        } else if collectionView == textColorCollectionView {
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: TextColorCell.identifier,
-                for: indexPath
-            ) as? TextColorCell else {
-                return UICollectionViewCell()
-            }
-            cell.configure(with: textColors[indexPath.item])
-            return cell
         }
         return UICollectionViewCell()
     }
@@ -773,8 +594,6 @@ extension PhotoEditorViewController: UICollectionViewDataSource, UICollectionVie
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == filterCollectionView {
             applyFilter(at: indexPath.item)
-        } else if collectionView == textColorCollectionView {
-            currentTextColor = textColors[indexPath.item]
         }
     }
 
@@ -879,128 +698,6 @@ extension PhotoEditorViewController: PHPickerViewControllerDelegate {
                 }
             }
         }
-    }
-}
-
-final class TextColorCell: UICollectionViewCell {
-    static let identifier = "TextColorCell"
-
-    private let colorView: UIView = {
-        let view = UIView()
-        view.layer.cornerRadius = 20
-        view.layer.borderWidth = 2
-        view.layer.borderColor = UIColor.systemGray4.cgColor
-        return view
-    }()
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        contentView.addSubview(colorView)
-        colorView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(40)
-        }
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func configure(with color: UIColor) {
-        colorView.backgroundColor = color
-        if color == .white {
-            colorView.layer.borderColor = UIColor.systemGray3.cgColor
-        } else {
-            colorView.layer.borderColor = UIColor.clear.cgColor
-        }
-    }
-}
-
-final class DraggableTextView: UIView {
-    private let label = UILabel()
-    var onDragChanged: ((UIView) -> Void)?
-    var onDragEnded: ((UIView) -> Void)?
-    var onDoubleTap: ((DraggableTextView) -> Void)?
-
-    var text: String? {
-        return label.text
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        addSubview(label)
-        label.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(4)
-        }
-        label.textAlignment = .center
-        label.numberOfLines = 0
-
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        addGestureRecognizer(panGesture)
-
-        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
-        addGestureRecognizer(pinchGesture)
-
-        let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
-        addGestureRecognizer(rotationGesture)
-
-        let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap))
-        doubleTapGesture.numberOfTapsRequired = 2
-        addGestureRecognizer(doubleTapGesture)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func configure(text: String, color: UIColor, font: UIFont) {
-        label.text = text
-        label.textColor = color
-        label.font = font
-        sizeToFit()
-    }
-
-    func updateText(_ text: String) {
-        label.text = text
-        sizeToFit()
-    }
-
-    override func sizeToFit() {
-        label.sizeToFit()
-        frame.size = CGSize(width: label.frame.width + 8, height: label.frame.height + 8)
-    }
-
-    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: superview)
-
-        switch gesture.state {
-        case .changed:
-            center = CGPoint(x: center.x + translation.x, y: center.y + translation.y)
-            gesture.setTranslation(.zero, in: superview)
-            onDragChanged?(self)
-        case .ended:
-            onDragEnded?(self)
-        default:
-            break
-        }
-    }
-
-    @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
-        if gesture.state == .began || gesture.state == .changed {
-            transform = transform.scaledBy(x: gesture.scale, y: gesture.scale)
-            gesture.scale = 1.0
-        }
-    }
-
-    @objc private func handleRotation(_ gesture: UIRotationGestureRecognizer) {
-        if gesture.state == .began || gesture.state == .changed {
-            transform = transform.rotated(by: gesture.rotation)
-            gesture.rotation = 0
-        }
-    }
-
-    @objc private func handleDoubleTap() {
-        onDoubleTap?(self)
     }
 }
 
