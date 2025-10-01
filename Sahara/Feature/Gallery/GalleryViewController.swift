@@ -166,12 +166,10 @@ final class GalleryViewController: UIViewController {
     private func loadMapAnnotations() {
         mapView.removeAnnotations(mapView.annotations)
 
-        // 위치가 있는 사진만 필터링
         let photoMemos = realm.objects(PhotoMemo.self)
             .filter("latitude != nil AND longitude != nil")
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
-        // 좌표별로 그룹화
         var coordinateGroups: [String: [PhotoMemo]] = [:]
         for memo in photoMemos {
             guard let lat = memo.latitude, let lon = memo.longitude,
@@ -180,7 +178,6 @@ final class GalleryViewController: UIViewController {
             coordinateGroups[key, default: []].append(memo)
         }
 
-        // Annotation 생성
         let annotations = coordinateGroups.compactMap { key, memos -> PhotoAnnotation? in
             guard let firstMemo = memos.first,
                   let lat = firstMemo.latitude,
@@ -192,7 +189,6 @@ final class GalleryViewController: UIViewController {
 
         mapView.addAnnotations(annotations)
 
-        // 모든 annotation을 보여주는 영역으로 설정
         if !annotations.isEmpty {
             mapView.showAnnotations(annotations, animated: true)
         }
@@ -332,7 +328,6 @@ final class GalleryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        // 뷰가 나타날 때마다 location 뷰도 갱신
         rx.methodInvoked(#selector(viewWillAppear))
             .withLatestFrom(output.selectedViewType.asObservable())
             .filter { $0 == .location }
@@ -411,7 +406,6 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     guard let image = image as? UIImage else { return }
 
-                    // 사진 선택 후 바로 스티커 편집 화면으로 이동
                     let stickerViewModel = PhotoEditorViewModel(originalImage: image)
                     let stickerVC = PhotoEditorViewController(viewModel: stickerViewModel)
                     let nav = UINavigationController(rootViewController: stickerVC)
@@ -428,51 +422,36 @@ extension GalleryViewController: MKMapViewDelegate {
         guard let photoAnnotation = annotation as? PhotoAnnotation else { return nil }
 
         let identifier = "PhotoAnnotation"
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? PhotoAnnotationView
 
         if annotationView == nil {
-            annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-            annotationView?.canShowCallout = true
-            annotationView?.rightCalloutAccessoryView = UIButton(type: .detailDisclosure)
+            annotationView = PhotoAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             annotationView?.clusteringIdentifier = "PhotoCluster"
         } else {
             annotationView?.annotation = annotation
         }
 
-        // 첫 번째 사진을 핀에 표시
         if let firstPhoto = photoAnnotation.photoMemos.first,
            let image = UIImage(data: firstPhoto.imageData) {
-            let size = CGSize(width: 40, height: 40)
-            UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-            image.draw(in: CGRect(origin: .zero, size: size))
-            let thumbnailImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-
-            annotationView?.image = thumbnailImage
-            annotationView?.layer.cornerRadius = 20
-        } else {
-            annotationView?.markerTintColor = .systemBlue
-            annotationView?.glyphText = "\(photoAnnotation.photoMemos.count)"
+            annotationView?.configure(with: image)
         }
 
         return annotationView
     }
 
-    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-        guard let photoAnnotation = view.annotation as? PhotoAnnotation else { return }
-        showGallery(for: photoAnnotation.photoMemos)
-    }
-
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        // 클러스터를 탭하면 자동으로 확대되지만, 추가로 갤러리를 보여줄 수도 있습니다
+        mapView.deselectAnnotation(view.annotation, animated: false)
+
         if let cluster = view.annotation as? MKClusterAnnotation {
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? PhotoAnnotation }
             let allPhotos = photoAnnotations.flatMap { $0.photoMemos }
 
             if !allPhotos.isEmpty {
-                // 클러스터 내 모든 사진 보여주기
                 showGallery(for: allPhotos)
             }
+        }
+        else if let photoAnnotation = view.annotation as? PhotoAnnotation {
+            showGallery(for: photoAnnotation.photoMemos)
         }
     }
 
