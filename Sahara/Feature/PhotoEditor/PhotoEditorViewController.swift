@@ -460,13 +460,13 @@ final class PhotoEditorViewController: UIViewController {
         textToolbar.isHidden = true
         canvasView.isUserInteractionEnabled = false
         toolPicker.setVisible(false, forFirstResponder: canvasView)
-        photoImageView.isUserInteractionEnabled = false
+
+        photoImageView.isUserInteractionEnabled = true
 
         switch currentMode {
         case .sticker:
             searchBar.isHidden = false
             stickerCollectionView.isHidden = false
-            photoImageView.isUserInteractionEnabled = true
         case .drawing:
             canvasView.isUserInteractionEnabled = true
             toolPicker.setVisible(true, forFirstResponder: canvasView)
@@ -474,7 +474,6 @@ final class PhotoEditorViewController: UIViewController {
             filterCollectionView.isHidden = false
         case .text:
             textToolbar.isHidden = false
-            photoImageView.isUserInteractionEnabled = true
         case .photo:
             break
         }
