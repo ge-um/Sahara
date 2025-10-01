@@ -13,7 +13,7 @@ import UIKit
 
 final class PhotoInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let editedImage: UIImage
+    private let editedImage: UIImage?
 
     struct Input {
         let date: Observable<Date>
@@ -24,13 +24,14 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let editedImage: Driver<UIImage>
+        let editedImage: Driver<UIImage?>
+        let hasImage: Driver<Bool>
         let location: Driver<CLLocation>
         let saved: Driver<Void>
         let dismiss: Driver<Void>
     }
 
-    init(editedImage: UIImage) {
+    init(editedImage: UIImage?) {
         self.editedImage = editedImage
     }
 
@@ -60,8 +61,11 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
         let dismiss = input.cancelButtonTapped
             .asDriver(onErrorJustReturn: ())
 
+        let hasImage = Driver.just(editedImage != nil)
+
         return Output(
             editedImage: Driver.just(editedImage),
+            hasImage: hasImage,
             location: locationRelay.compactMap { $0 }.asDriver(onErrorDriveWith: .empty()),
             saved: saved,
             dismiss: dismiss
@@ -69,7 +73,8 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
     }
 
     private func saveToRealm(date: Date, memo: String?, location: CLLocation?) {
-        guard let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
+        guard let editedImage = editedImage,
+              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
         let memoText = (memo?.isEmpty == false && memo != "메모를 남기면 사진 뒤쪽에서 메모를 볼 수 있어요! (300자 제한)") ? memo : nil
 

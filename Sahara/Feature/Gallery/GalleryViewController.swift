@@ -142,13 +142,11 @@ final class GalleryViewController: UIViewController {
     }
 
     @objc private func addButtonTapped() {
-        var configuration = PHPickerConfiguration()
-        configuration.selectionLimit = 1
-        configuration.filter = .any(of: [.images])
-        configuration.selection = .ordered
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
-        present(picker, animated: true)
+        let viewModel = PhotoInfoViewModel(editedImage: nil)
+        let photoInfoVC = PhotoInfoViewController(viewModel: viewModel)
+        let navController = UINavigationController(rootViewController: photoInfoVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
 
     private func setupThemeView() {
@@ -329,7 +327,7 @@ final class GalleryViewController: UIViewController {
                 if viewType == .location {
                     owner.loadMapAnnotations()
                 } else if viewType == .theme {
-                    owner.themeGalleryVC.viewWillAppear(false)
+                    owner.themeGalleryVC.refreshData()
                 }
             }
             .disposed(by: disposeBag)
