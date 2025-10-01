@@ -26,6 +26,7 @@ final class PhotoEditorViewController: UIViewController {
         canvas.backgroundColor = .clear
         canvas.isOpaque = false
         canvas.drawingPolicy = .anyInput
+        canvas.isUserInteractionEnabled = false
         return canvas
     }()
 
@@ -139,27 +140,6 @@ final class PhotoEditorViewController: UIViewController {
         ("토널", CIFilter(name: "CIPhotoEffectTonal"))
     ]
 
-    private let searchBar: UISearchBar = {
-        let searchBar = UISearchBar()
-        searchBar.placeholder = "스티커 검색"
-        searchBar.searchBarStyle = .minimal
-        return searchBar
-    }()
-
-    private lazy var stickerCollectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 80, height: 80)
-        layout.minimumLineSpacing = 10
-        layout.minimumInteritemSpacing = 10
-
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemGray6
-        collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(PhotoStickerCell.self, forCellWithReuseIdentifier: PhotoStickerCell.identifier)
-        return collectionView
-    }()
-
     private let trashIconView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "trash.fill")
@@ -169,29 +149,15 @@ final class PhotoEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let doneButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.title = "완료"
-        config.baseBackgroundColor = .systemBlue
-        button.configuration = config
-        return button
-    }()
-
-    private let cancelButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.plain()
-        config.title = "취소"
-        button.configuration = config
-        return button
-    }()
+    private let doneButton = UIBarButtonItem(title: "완료", style: .done, target: nil, action: nil)
+    private let cancelButton = UIBarButtonItem(title: "취소", style: .plain, target: nil, action: nil)
 
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
-    private var currentMode = BehaviorRelay<EditMode>(value: .sticker)
+    private var currentMode = BehaviorRelay<EditMode?>(value: nil)
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
     private var croppedImage: UIImage?
@@ -236,20 +202,28 @@ final class PhotoEditorViewController: UIViewController {
     }
 
     private func bind() {
-        let stickerModeTapped = stickerModeButton.rx.tap
-            .map { EditMode.sticker }
+        stickerModeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.presentStickerModal()
+            }
+            .disposed(by: disposeBag)
 
-        let drawingModeTapped = drawingModeButton.rx.tap
-            .map { EditMode.drawing }
+        drawingModeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.currentMode.accept(.drawing)
+            }
+            .disposed(by: disposeBag)
 
-        let filterModeTapped = filterModeButton.rx.tap
-            .map { EditMode.filter }
+        filterModeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.currentMode.accept(.filter)
+            }
+            .disposed(by: disposeBag)
 
-        let cropModeTapped = cropModeButton.rx.tap
-            .map { EditMode.crop }
-
-        Observable.merge(stickerModeTapped, drawingModeTapped, filterModeTapped, cropModeTapped)
-            .bind(to: currentMode)
+        cropModeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.currentMode.accept(.crop)
+            }
             .disposed(by: disposeBag)
 
         currentMode
@@ -273,19 +247,14 @@ final class PhotoEditorViewController: UIViewController {
 
         cropCancelButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.currentMode.accept(.sticker)
+                owner.currentMode.accept(nil)
             }
             .disposed(by: disposeBag)
 
-        let searchQuery = searchBar.rx.text
-            .orEmpty
-            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
-            .distinctUntilChanged()
-
         let input = PhotoEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
-            searchQuery: searchQuery,
-            stickerSelected: stickerCollectionView.rx.modelSelected(Sticker.self).asObservable(),
+            searchQuery: .empty(),
+            stickerSelected: .empty(),
             filterSelected: filterSelectedRelay.asObservable(),
             cropApplied: cropAppliedRelay.asObservable(),
             drawingChanged: Observable.just(()),
@@ -315,22 +284,6 @@ final class PhotoEditorViewController: UIViewController {
         output.croppedImage
             .drive(with: self) { owner, image in
                 owner.croppedImage = image
-            }
-            .disposed(by: disposeBag)
-
-        output.stickers
-            .asObservable()
-            .bind(to: stickerCollectionView.rx.items(
-                cellIdentifier: PhotoStickerCell.identifier,
-                cellType: PhotoStickerCell.self
-            )) { _, sticker, cell in
-                cell.configure(with: sticker)
-            }
-            .disposed(by: disposeBag)
-
-        output.selectedSticker
-            .drive(with: self) { owner, sticker in
-                owner.addStickerToPhoto(sticker)
             }
             .disposed(by: disposeBag)
 
@@ -411,9 +364,7 @@ final class PhotoEditorViewController: UIViewController {
     }
 
 
-    private func updateEditMode(mode: EditMode) {
-        searchBar.isHidden = true
-        stickerCollectionView.isHidden = true
+    private func updateEditMode(mode: EditMode?) {
         filterCollectionView.isHidden = true
         canvasView.isUserInteractionEnabled = false
         toolPicker.setVisible(false, forFirstResponder: canvasView)
@@ -424,10 +375,14 @@ final class PhotoEditorViewController: UIViewController {
         modeButtonStackView.isHidden = false
         doneButton.isHidden = false
 
+        guard let mode = mode else {
+            doneButton.isHidden = false
+            return
+        }
+
         switch mode {
         case .sticker:
-            searchBar.isHidden = false
-            stickerCollectionView.isHidden = false
+            break
         case .drawing:
             canvasView.isUserInteractionEnabled = true
             toolPicker.setVisible(true, forFirstResponder: canvasView)
@@ -447,9 +402,9 @@ final class PhotoEditorViewController: UIViewController {
         }
     }
 
-    private func updateModeButtons(currentMode: EditMode) {
+    private func updateModeButtons(currentMode: EditMode?) {
         let buttons = [stickerModeButton, drawingModeButton, filterModeButton, cropModeButton, photoModeButton]
-        let modes: [EditMode] = [.sticker, .drawing, .filter, .crop, .photo]
+        let modes: [EditMode?] = [.sticker, .drawing, .filter, .crop, .photo]
 
         for (button, mode) in zip(buttons, modes) {
             var config = button.configuration
@@ -464,13 +419,36 @@ final class PhotoEditorViewController: UIViewController {
         }
     }
 
+    private func presentStickerModal() {
+        let stickerModalVC = StickerModalViewController(viewModel: viewModel)
+        stickerModalVC.onStickerSelected = { [weak self] sticker in
+            self?.addStickerToPhoto(sticker)
+        }
+
+        let navController = UINavigationController(rootViewController: stickerModalVC)
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(navController, animated: true)
+    }
+
 
     private func generateFinalImage() -> UIImage {
+        modeButtonStackView.isHidden = true
+
         let renderer = UIGraphicsImageRenderer(bounds: photoImageView.bounds)
-        return renderer.image { context in
+        let image = renderer.image { context in
             photoImageView.layer.render(in: context.cgContext)
-            canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale).draw(in: canvasView.bounds)
+
+            let canvasFrame = canvasView.frame
+            let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
+            drawingImage.draw(in: canvasFrame)
         }
+
+        modeButtonStackView.isHidden = false
+
+        return image
     }
 
     private func presentPhotoPicker() {
@@ -504,7 +482,7 @@ final class PhotoEditorViewController: UIViewController {
         )
 
         cropAppliedRelay.accept((currentImage, cropRect, displayedImageRect))
-        currentMode.accept(.sticker)
+        currentMode.accept(nil)
     }
 
     private func configureUI() {
@@ -512,53 +490,39 @@ final class PhotoEditorViewController: UIViewController {
 
         view.addSubview(photoImageView)
         view.addSubview(canvasView)
-        view.addSubview(searchBar)
-        view.addSubview(stickerCollectionView)
-        view.addSubview(filterCollectionView)
         view.addSubview(modeButtonStackView)
+        view.addSubview(filterCollectionView)
+        view.addSubview(trashIconView)
+        view.addSubview(cropOverlayView)
+        view.addSubview(cropApplyButton)
+        view.addSubview(cropCancelButton)
+
         modeButtonStackView.addArrangedSubview(stickerModeButton)
         modeButtonStackView.addArrangedSubview(drawingModeButton)
         modeButtonStackView.addArrangedSubview(filterModeButton)
         modeButtonStackView.addArrangedSubview(cropModeButton)
         modeButtonStackView.addArrangedSubview(photoModeButton)
-        view.addSubview(trashIconView)
-        view.addSubview(cropOverlayView)
-        view.addSubview(cropApplyButton)
-        view.addSubview(cropCancelButton)
-        view.addSubview(doneButton)
+
+        modeButtonStackView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(100)
+            make.height.equalTo(40)
+        }
 
         photoImageView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-10)
+            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-20)
         }
 
         canvasView.snp.makeConstraints { make in
             make.edges.equalTo(photoImageView)
         }
 
-        searchBar.snp.makeConstraints { make in
-            make.bottom.equalTo(stickerCollectionView.snp.top).offset(-8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(44)
-        }
-
-        stickerCollectionView.snp.makeConstraints { make in
-            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(100)
-        }
-
         filterCollectionView.snp.makeConstraints { make in
             make.bottom.equalTo(modeButtonStackView.snp.top).offset(-16)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(120)
-        }
-
-        modeButtonStackView.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(doneButton.snp.top).offset(-10)
-            make.height.equalTo(40)
         }
 
         trashIconView.snp.makeConstraints { make in
@@ -584,18 +548,12 @@ final class PhotoEditorViewController: UIViewController {
             make.width.equalTo(100)
             make.height.equalTo(50)
         }
-
-        doneButton.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
-            make.height.equalTo(50)
-        }
-
     }
 
     private func configureNavigation() {
         navigationItem.title = "사진 편집"
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
+        navigationItem.leftBarButtonItem = cancelButton
+        navigationItem.rightBarButtonItem = doneButton
     }
 }
 

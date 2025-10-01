@@ -1,0 +1,128 @@
+//
+//  StickerModalViewController.swift
+//  Sahara
+//
+//  Created by 금가경 on 10/1/25.
+//
+
+import RxCocoa
+import RxSwift
+import SnapKit
+import UIKit
+
+final class StickerModalViewController: UIViewController {
+    private let searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "스티커 검색"
+        searchBar.searchBarStyle = .minimal
+        return searchBar
+    }()
+
+    private lazy var stickerCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 80, height: 80)
+        layout.minimumLineSpacing = 10
+        layout.minimumInteritemSpacing = 10
+        layout.sectionInset = UIEdgeInsets(top: 10, left: 20, bottom: 10, right: 20)
+
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .systemBackground
+        collectionView.register(PhotoStickerCell.self, forCellWithReuseIdentifier: PhotoStickerCell.identifier)
+        return collectionView
+    }()
+
+    private let viewModel: PhotoEditorViewModel
+    private let disposeBag = DisposeBag()
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    var onStickerSelected: ((Sticker) -> Void)?
+
+    init(viewModel: PhotoEditorViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureUI()
+        configureNavigation()
+        bind()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewWillAppearRelay.accept(())
+    }
+
+    private func bind() {
+        let searchQuery = searchBar.rx.text
+            .orEmpty
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+            .distinctUntilChanged()
+
+        let input = PhotoEditorViewModel.Input(
+            viewWillAppear: viewWillAppearRelay.asObservable(),
+            searchQuery: searchQuery,
+            stickerSelected: stickerCollectionView.rx.modelSelected(Sticker.self).asObservable(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = viewModel.transform(input: input)
+
+        output.stickers
+            .asObservable()
+            .bind(to: stickerCollectionView.rx.items(
+                cellIdentifier: PhotoStickerCell.identifier,
+                cellType: PhotoStickerCell.self
+            )) { _, sticker, cell in
+                cell.configure(with: sticker)
+            }
+            .disposed(by: disposeBag)
+
+        output.selectedSticker
+            .drive(with: self) { owner, sticker in
+                owner.onStickerSelected?(sticker)
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func configureUI() {
+        view.backgroundColor = .systemBackground
+
+        view.addSubview(searchBar)
+        view.addSubview(stickerCollectionView)
+
+        searchBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(50)
+        }
+
+        stickerCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(searchBar.snp.bottom).offset(10)
+            make.horizontalEdges.bottom.equalToSuperview()
+        }
+    }
+
+    private func configureNavigation() {
+        navigationItem.title = "스티커"
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close,
+            target: self,
+            action: #selector(closeButtonTapped)
+        )
+    }
+
+    @objc private func closeButtonTapped() {
+        dismiss(animated: true)
+    }
+}
