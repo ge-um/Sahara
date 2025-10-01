@@ -6,95 +6,103 @@
 //
 
 import MapKit
+import RealmSwift
 import SnapKit
 import UIKit
 
 final class PhotoDetailViewController: UIViewController {
-    // MARK: - UI Components
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.showsVerticalScrollIndicator = false
-        return scrollView
-    }()
+    private let photoMemoId: ObjectId
+    private var photoMemo: PhotoMemo?
+    private let realm = try! Realm()
 
-    private let contentView = UIView()
-
-    private let photoImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 16
-        imageView.clipsToBounds = true
-        imageView.layer.shadowColor = UIColor.black.cgColor
-        imageView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        imageView.layer.shadowRadius = 8
-        imageView.layer.shadowOpacity = 0.1
-        imageView.layer.masksToBounds = false
-        return imageView
-    }()
+    private var isFrontCardVisible = true
 
     private let cardContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private let frontCardView: UIView = {
         let view = UIView()
         view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 20
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 10
-        view.layer.shadowOpacity = 0.08
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.1
+        view.clipsToBounds = false
+        return view
+    }()
+
+    private let backCardView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemBackground
+        view.layer.cornerRadius = 20
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.1
+        view.clipsToBounds = false
+        view.isHidden = true
+        return view
+    }()
+
+    private let photoImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 20
+        return imageView
+    }()
+
+    private let overlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.layer.cornerRadius = 20
+        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         return view
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = .label
+        label.textColor = .white
         return label
     }()
 
-    private let dateIconView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "calendar")
-        imageView.tintColor = .systemBlue
-        imageView.contentMode = .scaleAspectFit
-        return imageView
+    private let locationLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.textColor = .white
+        label.numberOfLines = 2
+        return label
     }()
 
-    private let memoTitleLabel: UILabel = {
+    private let swipeHintLabel: UILabel = {
         let label = UILabel()
-        label.text = "메모"
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.text = "← 스와이프하여 메모 보기"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .white.withAlphaComponent(0.7)
+        label.textAlignment = .center
         return label
     }()
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 18)
         label.textColor = .label
         label.numberOfLines = 0
+        label.textAlignment = .left
         return label
     }()
 
-    private let locationTitleLabel: UILabel = {
+    private let backSwipeHintLabel: UILabel = {
         let label = UILabel()
-        label.text = "위치"
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
+        label.text = "→ 스와이프하여 사진 보기"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .secondaryLabel
-        return label
-    }()
-
-    private let mapView: MKMapView = {
-        let mapView = MKMapView()
-        mapView.layer.cornerRadius = 12
-        mapView.clipsToBounds = true
-        mapView.isUserInteractionEnabled = true
-        return mapView
-    }()
-
-    private let locationLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryLabel
-        label.numberOfLines = 2
+        label.textAlignment = .center
         return label
     }()
 
@@ -108,7 +116,7 @@ final class PhotoDetailViewController: UIViewController {
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOffset = CGSize(width: 0, height: 2)
         button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.1
+        button.layer.shadowOpacity = 0.2
         return button
     }()
 
@@ -146,12 +154,8 @@ final class PhotoDetailViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Properties
-    private let photoMemo: PhotoMemo
-
-    // MARK: - Init
-    init(photoMemo: PhotoMemo) {
-        self.photoMemo = photoMemo
+    init(photoMemoId: ObjectId) {
+        self.photoMemoId = photoMemoId
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -159,19 +163,178 @@ final class PhotoDetailViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        photoMemo = realm.object(ofType: PhotoMemo.self, forPrimaryKey: photoMemoId)
         configureUI()
         configureData()
         setupActions()
+        setupGestures()
     }
 
-    // MARK: - Setup
+    private func configureUI() {
+        view.backgroundColor = .systemGroupedBackground
+
+        view.addSubview(cardContainerView)
+        view.addSubview(buttonStackView)
+        view.addSubview(closeButton)
+
+        cardContainerView.addSubview(frontCardView)
+        cardContainerView.addSubview(backCardView)
+
+        frontCardView.addSubview(photoImageView)
+        frontCardView.addSubview(overlayView)
+        overlayView.addSubview(dateLabel)
+        overlayView.addSubview(locationLabel)
+        overlayView.addSubview(swipeHintLabel)
+
+        backCardView.addSubview(memoLabel)
+        backCardView.addSubview(backSwipeHintLabel)
+
+        buttonStackView.addArrangedSubview(saveButton)
+        buttonStackView.addArrangedSubview(shareButton)
+
+        cardContainerView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(500)
+        }
+
+        frontCardView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        backCardView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        photoImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        overlayView.snp.makeConstraints { make in
+            make.horizontalEdges.bottom.equalToSuperview()
+            make.height.equalTo(120)
+        }
+
+        dateLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        locationLabel.snp.makeConstraints { make in
+            make.top.equalTo(dateLabel.snp.bottom).offset(8)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        swipeHintLabel.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-16)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        memoLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(40)
+            make.horizontalEdges.equalToSuperview().inset(30)
+            make.bottom.lessThanOrEqualTo(backSwipeHintLabel.snp.top).offset(-20)
+        }
+
+        backSwipeHintLabel.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        buttonStackView.snp.makeConstraints { make in
+            make.top.equalTo(cardContainerView.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(50)
+        }
+
+        closeButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalToSuperview().inset(20)
+            make.width.height.equalTo(36)
+        }
+    }
+
+    private func configureData() {
+        guard let photoMemo = photoMemo else { return }
+
+        if let image = UIImage(data: photoMemo.imageData) {
+            photoImageView.image = image
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy년 MM월 dd일 EEEE"
+        dateFormatter.locale = Locale(identifier: "ko_KR")
+        dateLabel.text = dateFormatter.string(from: photoMemo.date)
+
+        if let memo = photoMemo.memo, !memo.isEmpty {
+            memoLabel.text = memo
+        } else {
+            memoLabel.text = "메모가 없습니다."
+        }
+
+        if let latitude = photoMemo.latitude,
+           let longitude = photoMemo.longitude {
+            let location = CLLocation(latitude: latitude, longitude: longitude)
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+                if let placemark = placemarks?.first {
+                    let address = [
+                        placemark.locality,
+                        placemark.thoroughfare,
+                        placemark.subThoroughfare
+                    ].compactMap { $0 }.joined(separator: " ")
+                    DispatchQueue.main.async {
+                        self?.locationLabel.text = address
+                    }
+                }
+            }
+        } else {
+            locationLabel.text = ""
+        }
+    }
+
     private func setupActions() {
         closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
         shareButton.addTarget(self, action: #selector(shareButtonTapped), for: .touchUpInside)
+    }
+
+    private func setupGestures() {
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeLeft.direction = .left
+        cardContainerView.addGestureRecognizer(swipeLeft)
+
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeRight.direction = .right
+        cardContainerView.addGestureRecognizer(swipeRight)
+    }
+
+    @objc private func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        if gesture.direction == .left && isFrontCardVisible {
+            flipToBack()
+        } else if gesture.direction == .right && !isFrontCardVisible {
+            flipToFront()
+        }
+    }
+
+    private func flipToBack() {
+        UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromLeft]) {
+            self.frontCardView.isHidden = true
+            self.backCardView.isHidden = false
+        } completion: { _ in
+            self.isFrontCardVisible = false
+        }
+    }
+
+    private func flipToFront() {
+        UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromRight]) {
+            self.frontCardView.isHidden = false
+            self.backCardView.isHidden = true
+        } completion: { _ in
+            self.isFrontCardVisible = true
+        }
     }
 
     @objc private func closeButtonTapped() {
@@ -179,7 +342,8 @@ final class PhotoDetailViewController: UIViewController {
     }
 
     @objc private func saveButtonTapped() {
-        guard let image = UIImage(data: photoMemo.imageData) else { return }
+        guard let photoMemo = photoMemo,
+              let image = UIImage(data: photoMemo.imageData) else { return }
         UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
     }
 
@@ -195,166 +359,10 @@ final class PhotoDetailViewController: UIViewController {
     }
 
     @objc private func shareButtonTapped() {
-        guard let image = UIImage(data: photoMemo.imageData) else { return }
+        guard let photoMemo = photoMemo,
+              let image = UIImage(data: photoMemo.imageData) else { return }
         let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
         activityVC.popoverPresentationController?.sourceView = shareButton
         present(activityVC, animated: true)
-    }
-
-    private func configureData() {
-        // 이미지
-        if let image = UIImage(data: photoMemo.imageData) {
-            photoImageView.image = image
-        }
-
-        // 날짜
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy년 MM월 dd일 EEEE"
-        dateFormatter.locale = Locale(identifier: "ko_KR")
-        dateLabel.text = dateFormatter.string(from: photoMemo.date)
-
-        // 메모
-        if let memo = photoMemo.memo, !memo.isEmpty {
-            memoLabel.text = memo
-            memoTitleLabel.isHidden = false
-            memoLabel.isHidden = false
-        } else {
-            memoTitleLabel.isHidden = true
-            memoLabel.isHidden = true
-        }
-
-        // 위치
-        if let latitude = photoMemo.latitude,
-           let longitude = photoMemo.longitude {
-            let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-            let region = MKCoordinateRegion(
-                center: coordinate,
-                latitudinalMeters: 1000,
-                longitudinalMeters: 1000
-            )
-            mapView.setRegion(region, animated: false)
-
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = coordinate
-            mapView.addAnnotation(annotation)
-
-            // 역지오코딩으로 주소 가져오기
-            let location = CLLocation(latitude: latitude, longitude: longitude)
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                if let placemark = placemarks?.first {
-                    let address = [
-                        placemark.locality,
-                        placemark.thoroughfare,
-                        placemark.subThoroughfare
-                    ].compactMap { $0 }.joined(separator: " ")
-                    self?.locationLabel.text = address
-                }
-            }
-
-            locationTitleLabel.isHidden = false
-            mapView.isHidden = false
-            locationLabel.isHidden = false
-        } else {
-            locationTitleLabel.isHidden = true
-            mapView.isHidden = true
-            locationLabel.isHidden = true
-        }
-    }
-
-    // MARK: - Configure UI
-    private func configureUI() {
-        view.backgroundColor = .systemGroupedBackground
-
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
-        contentView.addSubview(photoImageView)
-        contentView.addSubview(buttonStackView)
-        contentView.addSubview(cardContainerView)
-        view.addSubview(closeButton)
-
-        // 버튼 스택뷰에 버튼 추가
-        buttonStackView.addArrangedSubview(saveButton)
-        buttonStackView.addArrangedSubview(shareButton)
-
-        // Card Container 내부
-        cardContainerView.addSubview(dateIconView)
-        cardContainerView.addSubview(dateLabel)
-        cardContainerView.addSubview(memoTitleLabel)
-        cardContainerView.addSubview(memoLabel)
-        cardContainerView.addSubview(locationTitleLabel)
-        cardContainerView.addSubview(mapView)
-        cardContainerView.addSubview(locationLabel)
-
-        scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
-        }
-
-        contentView.snp.makeConstraints { make in
-            make.edges.equalTo(scrollView)
-            make.width.equalTo(scrollView)
-        }
-
-        photoImageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(300)
-        }
-
-        buttonStackView.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(50)
-        }
-
-        cardContainerView.snp.makeConstraints { make in
-            make.top.equalTo(buttonStackView.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-20)
-        }
-
-        dateIconView.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(20)
-            make.width.height.equalTo(24)
-        }
-
-        dateLabel.snp.makeConstraints { make in
-            make.leading.equalTo(dateIconView.snp.trailing).offset(12)
-            make.trailing.equalToSuperview().inset(20)
-            make.centerY.equalTo(dateIconView)
-        }
-
-        memoTitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(dateIconView.snp.bottom).offset(24)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        memoLabel.snp.makeConstraints { make in
-            make.top.equalTo(memoTitleLabel.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        locationTitleLabel.snp.makeConstraints { make in
-            make.top.equalTo(memoLabel.snp.bottom).offset(24)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        mapView.snp.makeConstraints { make in
-            make.top.equalTo(locationTitleLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(200)
-        }
-
-        locationLabel.snp.makeConstraints { make in
-            make.top.equalTo(mapView.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(20)
-        }
-
-        closeButton.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
-            make.trailing.equalToSuperview().inset(20)
-            make.width.height.equalTo(36)
-        }
     }
 }

@@ -80,7 +80,7 @@ extension GalleryDetailViewController: UITableViewDelegate {
 
         guard let photoMemo = photoMemos?[indexPath.row] else { return }
 
-        let detailVC = PhotoDetailViewController(photoMemo: photoMemo)
+        let detailVC = PhotoDetailViewController(photoMemoId: photoMemo.id)
         detailVC.modalPresentationStyle = .fullScreen
         present(detailVC, animated: true)
     }

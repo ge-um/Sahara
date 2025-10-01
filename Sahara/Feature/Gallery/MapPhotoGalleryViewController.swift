@@ -88,7 +88,7 @@ extension MapPhotoGalleryViewController: UICollectionViewDataSource {
 extension MapPhotoGalleryViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let photoMemo = photoMemos[indexPath.item]
-        let detailVC = PhotoDetailViewController(photoMemo: photoMemo)
+        let detailVC = PhotoDetailViewController(photoMemoId: photoMemo.id)
         detailVC.modalPresentationStyle = .fullScreen
         present(detailVC, animated: true)
     }
