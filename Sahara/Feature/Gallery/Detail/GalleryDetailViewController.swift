@@ -65,6 +65,14 @@ final class GalleryDetailViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
+        output.shouldPopIfEmpty
+            .drive(with: self) { owner, shouldPop in
+                if shouldPop {
+                    owner.navigationController?.popViewController(animated: true)
+                }
+            }
+            .disposed(by: disposeBag)
+
         output.memos
             .drive(tableView.rx.items(cellIdentifier: "Cell")) { _, memo, cell in
                 cell.imageView?.image = UIImage(data: memo.editedImageData)

@@ -52,8 +52,8 @@ final class MainTabBarController: UITabBarController {
             selectedImage: UIImage(named: "gallery")
         )
 
-        tabBarItem.imageInsets = UIEdgeInsets(top: 6, left: 0, bottom: -6, right: 0)
-        tabBarItem.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
+        tabBarItem.imageInsets = UIEdgeInsets(top: 4, left: 0, bottom: -4, right: 0)
+        tabBarItem.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
 
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .font: FontSystem.TextStyle.tabBarLabel.font,
