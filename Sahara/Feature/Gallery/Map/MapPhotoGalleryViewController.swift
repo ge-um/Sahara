@@ -5,11 +5,17 @@
 //  Created by 금가경 on 10/1/25.
 //
 
+import RxCocoa
+import RxSwift
 import SnapKit
 import UIKit
 
 final class MapPhotoGalleryViewController: UIViewController {
-    private let photoMemos: [Memo]
+    private let viewModel: MapPhotoGalleryViewModel
+    private let disposeBag = DisposeBag()
+    private let viewDidLoadTrigger = PublishRelay<Void>()
+
+    private let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: nil, action: nil)
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -26,14 +32,13 @@ final class MapPhotoGalleryViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .systemBackground
         collectionView.register(MapPhotoCell.self, forCellWithReuseIdentifier: MapPhotoCell.identifier)
-        collectionView.dataSource = self
-        collectionView.delegate = self
         return collectionView
     }()
 
     init(photoMemos: [Memo]) {
-        self.photoMemos = photoMemos
+        self.viewModel = MapPhotoGalleryViewModel(photoMemos: photoMemos)
         super.init(nibName: nil, bundle: nil)
+        title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
     }
 
     required init?(coder: NSCoder) {
@@ -43,17 +48,13 @@ final class MapPhotoGalleryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        bind()
+        viewDidLoadTrigger.accept(())
     }
 
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
-
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
-            target: self,
-            action: #selector(closeButtonTapped)
-        )
+        navigationItem.leftBarButtonItem = closeButton
 
         view.addSubview(collectionView)
 
@@ -62,35 +63,34 @@ final class MapPhotoGalleryViewController: UIViewController {
         }
     }
 
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
-    }
-}
+    private func bind() {
+        let input = MapPhotoGalleryViewModel.Input(
+            viewDidLoad: viewDidLoadTrigger.asObservable(),
+            itemSelected: collectionView.rx.itemSelected.asObservable(),
+            closeButtonTapped: closeButton.rx.tap.asObservable()
+        )
 
-extension MapPhotoGalleryViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photoMemos.count
-    }
+        let output = viewModel.transform(input: input)
 
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: MapPhotoCell.identifier,
-            for: indexPath
-        ) as? MapPhotoCell else {
-            return UICollectionViewCell()
-        }
+        output.photoMemos
+            .drive(collectionView.rx.items(cellIdentifier: MapPhotoCell.identifier, cellType: MapPhotoCell.self)) { _, memo, cell in
+                cell.configure(with: memo)
+            }
+            .disposed(by: disposeBag)
 
-        cell.configure(with: photoMemos[indexPath.item])
-        return cell
-    }
-}
+        output.navigateToDetail
+            .drive(with: self) { owner, photoMemoId in
+                let detailVC = PhotoDetailViewController(photoMemoId: photoMemoId)
+                detailVC.modalPresentationStyle = .fullScreen
+                owner.present(detailVC, animated: true)
+            }
+            .disposed(by: disposeBag)
 
-extension MapPhotoGalleryViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let photoMemo = photoMemos[indexPath.item]
-        let detailVC = PhotoDetailViewController(photoMemoId: photoMemo.id)
-        detailVC.modalPresentationStyle = .fullScreen
-        present(detailVC, animated: true)
+        output.dismiss
+            .drive(with: self) { owner, _ in
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 }
 

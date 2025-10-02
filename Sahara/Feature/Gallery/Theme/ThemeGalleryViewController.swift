@@ -5,20 +5,19 @@
 //  Created by 금가경 on 10/1/25.
 //
 
-import RealmSwift
+import RxCocoa
+import RxSwift
 import SnapKit
 import UIKit
-import Vision
 
 final class ThemeGalleryViewController: UIViewController {
-    private let realm = try! Realm()
-    private var themeGroups: [ThemeGroup] = []
+    private let viewModel = ThemeGalleryViewModel()
+    private let disposeBag = DisposeBag()
+    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.register(ThemeCell.self, forCellReuseIdentifier: ThemeCell.identifier)
-        tableView.dataSource = self
-        tableView.delegate = self
         tableView.rowHeight = 100
         return tableView
     }()
@@ -32,15 +31,16 @@ final class ThemeGalleryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        bind()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        analyzePhotos()
+        viewWillAppearRelay.accept(())
     }
 
     func refreshData() {
-        analyzePhotos()
+        viewWillAppearRelay.accept(())
     }
 
     private func configureUI() {
@@ -58,74 +58,43 @@ final class ThemeGalleryViewController: UIViewController {
         }
     }
 
-    private func analyzePhotos() {
-        activityIndicator.startAnimating()
+    private func bind() {
+        let input = ThemeGalleryViewModel.Input(
+            viewWillAppear: viewWillAppearRelay.asObservable(),
+            itemSelected: tableView.rx.itemSelected.asObservable()
+        )
 
-        let memos = self.realm.objects(Memo.self)
-        var categoryDict: [ThemeCategory: [Memo]] = [:]
-        
-        for photoMemo in memos {
-            guard let image = UIImage(data: photoMemo.editedImageData),
-                  let cgImage = image.cgImage else { continue }
-            
-            let category = self.classifyImage(cgImage)
-            categoryDict[category, default: []].append(photoMemo)
-        }
-        
-        let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
-            .sorted { $0.category.localizedName < $1.category.localizedName }
-        
-        themeGroups = groups
-        tableView.reloadData()
-        activityIndicator.stopAnimating()
-    }
+        let output = viewModel.transform(input: input)
 
-    private func classifyImage(_ cgImage: CGImage) -> ThemeCategory {
-        let request = VNClassifyImageRequest()
-
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        do {
-            try handler.perform([request])
-
-            if let observations = request.results as? [VNClassificationObservation] {
-                let topLabels = observations.prefix(5).map { $0.identifier }
-                return ThemeCategory.category(for: topLabels)
+        output.themeGroups
+            .drive(tableView.rx.items(cellIdentifier: ThemeCell.identifier, cellType: ThemeCell.self)) { _, group, cell in
+                cell.configure(with: group)
             }
-        } catch {
-            print("Vision error: \(error)")
-        }
+            .disposed(by: disposeBag)
 
-        return .others
-    }
-}
+        output.isLoading
+            .drive(with: self) { owner, isLoading in
+                if isLoading {
+                    owner.activityIndicator.startAnimating()
+                } else {
+                    owner.activityIndicator.stopAnimating()
+                }
+            }
+            .disposed(by: disposeBag)
 
-extension ThemeGalleryViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return themeGroups.count
-    }
+        output.navigateToPhotos
+            .drive(with: self) { owner, photoMemos in
+                let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos)
+                let nav = UINavigationController(rootViewController: galleryVC)
+                owner.present(nav, animated: true)
+            }
+            .disposed(by: disposeBag)
 
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: ThemeCell.identifier,
-            for: indexPath
-        ) as? ThemeCell else {
-            return UITableViewCell()
-        }
-
-        let group = themeGroups[indexPath.row]
-        cell.configure(with: group)
-        return cell
-    }
-}
-
-extension ThemeGalleryViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        let group = themeGroups[indexPath.row]
-        let galleryVC = MapPhotoGalleryViewController(photoMemos: group.photoMemos)
-        let nav = UINavigationController(rootViewController: galleryVC)
-        present(nav, animated: true)
+        tableView.rx.itemSelected
+            .bind(with: self) { owner, indexPath in
+                owner.tableView.deselectRow(at: indexPath, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 }
 

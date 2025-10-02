@@ -1,0 +1,102 @@
+//
+//  ThemeGalleryViewModel.swift
+//  Sahara
+//
+//  Created by 금가경 on 10/2/25.
+//
+
+import Foundation
+import RealmSwift
+import RxCocoa
+import RxSwift
+import UIKit
+import Vision
+
+final class ThemeGalleryViewModel: BaseViewModelProtocol {
+    private let realm = try! Realm()
+    private let disposeBag = DisposeBag()
+
+    struct Input {
+        let viewWillAppear: Observable<Void>
+        let itemSelected: Observable<IndexPath>
+    }
+
+    struct Output {
+        let themeGroups: Driver<[ThemeGroup]>
+        let isLoading: Driver<Bool>
+        let navigateToPhotos: Driver<[Memo]>
+    }
+
+    func transform(input: Input) -> Output {
+        let themeGroupsRelay = BehaviorRelay<[ThemeGroup]>(value: [])
+        let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+
+        input.viewWillAppear
+            .withUnretained(self)
+            .do(onNext: { _, _ in
+                isLoadingRelay.accept(true)
+            })
+            .flatMap { owner, _ -> Observable<[ThemeGroup]> in
+                return owner.analyzePhotos()
+            }
+            .do(onNext: { _ in
+                isLoadingRelay.accept(false)
+            })
+            .bind(to: themeGroupsRelay)
+            .disposed(by: disposeBag)
+
+        let navigateToPhotos = input.itemSelected
+            .withLatestFrom(themeGroupsRelay) { indexPath, groups in
+                groups[indexPath.row].photoMemos
+            }
+            .asDriver(onErrorDriveWith: .empty())
+
+        return Output(
+            themeGroups: themeGroupsRelay.asDriver(),
+            isLoading: isLoadingRelay.asDriver(),
+            navigateToPhotos: navigateToPhotos
+        )
+    }
+
+    private func analyzePhotos() -> Observable<[ThemeGroup]> {
+        return Observable.create { observer in
+            let memos = Array(self.realm.objects(Memo.self))
+
+            var categoryDict: [ThemeCategory: [Memo]] = [:]
+
+            for photoMemo in memos {
+                guard let image = UIImage(data: photoMemo.editedImageData),
+                      let cgImage = image.cgImage else { continue }
+
+                let category = self.classifyImage(cgImage)
+                categoryDict[category, default: []].append(photoMemo)
+            }
+
+            let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
+                .sorted { $0.category.localizedName < $1.category.localizedName }
+
+            observer.onNext(groups)
+            observer.onCompleted()
+
+            return Disposables.create()
+        }
+    }
+
+    private func classifyImage(_ cgImage: CGImage) -> ThemeCategory {
+        let request = VNClassifyImageRequest()
+
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+
+            if let observations = request.results as? [VNClassificationObservation] {
+                let topLabels = observations.prefix(5).map { $0.identifier }
+                return ThemeCategory.category(for: topLabels)
+            }
+        } catch {
+            print("Vision error: \(error)")
+        }
+
+        return .others
+    }
+}
