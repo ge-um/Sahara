@@ -34,7 +34,7 @@ final class GalleryViewModel {
     func transform(input: Input) -> Output {
         let showPhotoPicker = PublishRelay<Void>()
         let currentMonth = BehaviorRelay(value: Date())
-        let photos = BehaviorRelay<[Memo]>(value: [])
+        let photos = BehaviorRelay<[Card]>(value: [])
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
         
         let calendarItems = Observable
@@ -58,7 +58,7 @@ final class GalleryViewModel {
 
         let checkEmpty: () -> Void = { [weak self] in
             guard let self = self else { return }
-            let isEmpty = self.realmManager.isEmpty(Memo.self)
+            let isEmpty = self.realmManager.isEmpty(Card.self)
             isEmptyRelay.accept(isEmpty)
         }
 
@@ -111,34 +111,34 @@ final class GalleryViewModel {
         )
     }
     
-    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Memo]>) {
+    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Card]>) {
         let memos = realmManager.fetchMemos(in: date)
         photos.accept(memos)
     }
     
-    private func generateCalendar(for month: Date, photoMemos: [Memo]) -> [DayItem] {
+    private func generateCalendar(for month: Date, photoMemos: [Card]) -> [DayItem] {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
-        
+
         guard let range = calendar.range(of: .day, in: .month, for: month),
               let firstDay = calendar.date(from: calendar.dateComponents([.year, .month], from: month)) else {
             return []
         }
-        
+
         let firstWeekday = calendar.component(.weekday, from: firstDay)
-        
+
         var items: [DayItem] = []
-        
+
         for _ in 1..<firstWeekday {
-            items.append(DayItem(date: nil, photoMemos: []))
+            items.append(DayItem(date: nil, cards: []))
         }
-        
+
         for day in range {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
                 let memosForDay = photoMemos.filter {
                     calendar.isDate($0.createdDate, inSameDayAs: date)
                 }
-                items.append(DayItem(date: date, photoMemos: memosForDay))
+                items.append(DayItem(date: date, cards: memosForDay))
             }
         }
         return items

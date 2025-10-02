@@ -11,7 +11,7 @@ import RxCocoa
 import RxSwift
 
 final class MapPhotoGalleryViewModel: BaseViewModelProtocol {
-    private let photoMemos: [Memo]
+    private let photoMemos: [Card]
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -21,12 +21,12 @@ final class MapPhotoGalleryViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let photoMemos: Driver<[Memo]>
+        let photoMemos: Driver<[Card]>
         let navigateToDetail: Driver<ObjectId>
         let dismiss: Driver<Void>
     }
 
-    init(photoMemos: [Memo]) {
+    init(photoMemos: [Card]) {
         self.photoMemos = photoMemos
     }
 

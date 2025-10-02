@@ -24,7 +24,7 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
     struct Output {
         let themeGroups: Driver<[ThemeGroup]>
         let isLoading: Driver<Bool>
-        let navigateToPhotos: Driver<[Memo]>
+        let navigateToPhotos: Driver<[Card]>
     }
 
     func transform(input: Input) -> Output {
@@ -60,9 +60,9 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
 
     private func analyzePhotos() -> Observable<[ThemeGroup]> {
         return Observable.create { observer in
-            let memos = self.realmManager.fetch(Memo.self).map { Array($0) } ?? []
+            let memos = self.realmManager.fetch(Card.self).map { Array($0) } ?? []
 
-            var categoryDict: [ThemeCategory: [Memo]] = [:]
+            var categoryDict: [ThemeCategory: [Card]] = [:]
 
             for photoMemo in memos {
                 guard let image = UIImage(data: photoMemo.editedImageData),
@@ -89,7 +89,7 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
         do {
             try handler.perform([request])
 
-            if let observations = request.results as? [VNClassificationObservation] {
+            if let observations = request.results {
                 let topLabels = observations.prefix(5).map { $0.identifier }
                 return ThemeCategory.category(for: topLabels)
             }

@@ -35,7 +35,7 @@ final class MapPhotoGalleryViewController: UIViewController {
         return collectionView
     }()
 
-    init(photoMemos: [Memo]) {
+    init(photoMemos: [Card]) {
         self.viewModel = MapPhotoGalleryViewModel(photoMemos: photoMemos)
         super.init(nibName: nil, bundle: nil)
         title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
@@ -124,7 +124,7 @@ final class MapPhotoCell: UICollectionViewCell {
         }
     }
 
-    func configure(with photoMemo: Memo) {
+    func configure(with photoMemo: Card) {
         if let image = UIImage(data: photoMemo.editedImageData) {
             imageView.image = image
         }

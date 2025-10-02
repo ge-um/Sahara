@@ -9,9 +9,9 @@ import Foundation
 
 struct DayItem {
     let date: Date?
-    let photoMemos: [Memo]
+    let cards: [Card]
 
-    var hasPhotos: Bool {
-        return !photoMemos.isEmpty
+    var hasCards: Bool {
+        return !cards.isEmpty
     }
 }

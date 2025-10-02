@@ -12,6 +12,10 @@ enum FontSystem {
         return UIFont(name: "GalmuriMono11", size: size) ?? .systemFont(ofSize: size)
     }
 
+    static func galmuri14(size: CGFloat) -> UIFont {
+        return UIFont(name: "Galmuri14", size: size) ?? .systemFont(ofSize: size)
+    }
+
     enum TextStyle {
         case emptyStateMessage
         case tabBarLabel
