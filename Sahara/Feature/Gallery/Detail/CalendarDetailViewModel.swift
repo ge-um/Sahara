@@ -1,5 +1,5 @@
 //
-//  GalleryDetailViewModel.swift
+//  CalendarDetailViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/2/25.
@@ -10,7 +10,7 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 
-final class GalleryDetailViewModel: BaseViewModelProtocol {
+final class CalendarDetailViewModel: BaseViewModelProtocol {
     private let date: Date
     private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
@@ -41,7 +41,6 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
             memosRelay.accept(memos)
         }
 
-        // viewDidLoad와 viewWillAppear를 merge하되, distinctUntilChanged로 중복 호출 방지
         Observable.merge(
             input.viewDidLoad,
             input.viewWillAppear
