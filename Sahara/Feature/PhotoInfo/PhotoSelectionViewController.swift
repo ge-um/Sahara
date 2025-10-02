@@ -2,7 +2,7 @@
 //  PhotoSelectionViewController.swift
 //  Sahara
 //
-//  Created by Claude on 10/2/25.
+//  Created by 금가경 on 10/2/25.
 //
 
 import AVFoundation

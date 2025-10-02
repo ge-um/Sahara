@@ -2,7 +2,7 @@
 //  CameraViewController.swift
 //  Sahara
 //
-//  Created by Claude on 10/1/25.
+//  Created by 금가경 on 10/1/25.
 //
 
 import AVFoundation

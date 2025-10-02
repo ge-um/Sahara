@@ -6,6 +6,9 @@
 "common.ok" = "확인";
 "common.photo_count" = "%d개의 사진";
 
+/* Tab */
+"tab.gallery" = "갤러리";
+
 /* Gallery */
 "gallery.date_view" = "날짜별";
 "gallery.location_view" = "장소별";
