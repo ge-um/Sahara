@@ -1,17 +1,10 @@
-//
-//  PhotoSelectionViewController.swift
-//  Sahara
-//
-//  Created by 금가경 on 10/2/25.
-//
-
 import AVFoundation
 import Photos
 import PhotosUI
 import SnapKit
 import UIKit
 
-final class PhotoSelectionViewController: UIViewController {
+final class MediaSelectionViewController: UIViewController {
     private enum Section: Int, CaseIterable {
         case actions = 0
         case photos = 1
@@ -40,7 +33,7 @@ final class PhotoSelectionViewController: UIViewController {
         return cv
     }()
 
-    var onPhotoSelected: ((UIImage, CLLocation?) -> Void)?
+    var onMediaSelected: ((UIImage, CLLocation?) -> Void)?
     private var photos: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
 
@@ -200,8 +193,7 @@ final class PhotoSelectionViewController: UIViewController {
     }
 }
 
-// MARK: - UICollectionViewDataSource
-extension PhotoSelectionViewController: UICollectionViewDataSource {
+extension MediaSelectionViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 2
     }
@@ -232,8 +224,7 @@ extension PhotoSelectionViewController: UICollectionViewDataSource {
     }
 }
 
-// MARK: - UICollectionViewDelegate
-extension PhotoSelectionViewController: UICollectionViewDelegate {
+extension MediaSelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
             if indexPath.item == 0 {
@@ -255,7 +246,7 @@ extension PhotoSelectionViewController: UICollectionViewDelegate {
             ) { [weak self] image, _ in
                 if let image = image {
                     let location = asset.location
-                    self?.onPhotoSelected?(image, location)
+                    self?.onMediaSelected?(image, location)
                     self?.dismiss(animated: true)
                 }
             }
@@ -263,14 +254,13 @@ extension PhotoSelectionViewController: UICollectionViewDelegate {
     }
 }
 
-// MARK: - UIImagePickerControllerDelegate
-extension PhotoSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
             // 카메라로 찍은 사진은 위치 정보 없음
-            onPhotoSelected?(image, nil)
+            onMediaSelected?(image, nil)
             dismiss(animated: true)
         }
     }
@@ -280,8 +270,7 @@ extension PhotoSelectionViewController: UIImagePickerControllerDelegate, UINavig
     }
 }
 
-// MARK: - PHPickerViewControllerDelegate
-extension PhotoSelectionViewController: PHPickerViewControllerDelegate {
+extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
@@ -292,7 +281,7 @@ extension PhotoSelectionViewController: PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
                         // PHPicker는 위치 정보를 제공하지 않음
-                        self?.onPhotoSelected?(image, nil)
+                        self?.onMediaSelected?(image, nil)
                         self?.dismiss(animated: true)
                     }
                 }
@@ -301,7 +290,6 @@ extension PhotoSelectionViewController: PHPickerViewControllerDelegate {
     }
 }
 
-// MARK: - Cells
 final class ActionCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()

@@ -303,8 +303,8 @@ final class PhotoEditorViewController: UIViewController {
                     callback(editedImage)
                     owner.dismiss(animated: true)
                 } else {
-                    let metadataViewModel = PhotoInfoViewModel(editedImage: editedImage)
-                    let metadataVC = PhotoInfoViewController(viewModel: metadataViewModel)
+                    let metadataViewModel = CardInfoViewModel(editedImage: editedImage)
+                    let metadataVC = CardInfoViewController(viewModel: metadataViewModel)
                     owner.navigationController?.pushViewController(metadataVC, animated: true)
                 }
             }

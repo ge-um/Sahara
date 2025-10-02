@@ -1,17 +1,10 @@
-//
-//  PhotoInfoViewModel.swift
-//  Sahara
-//
-//  Created by 금가경 on 9/26/25.
-//
-
 import CoreLocation
 import Foundation
 import RxCocoa
 import RxSwift
 import UIKit
 
-final class PhotoInfoViewModel: BaseViewModelProtocol {
+final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private var editedImage: UIImage?
 

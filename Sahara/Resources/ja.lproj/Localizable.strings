@@ -32,14 +32,14 @@
 "weekday.friday" = "金";
 "weekday.saturday" = "土";
 
-/* Photo Info */
-"photo_info.title" = "写真情報";
-"photo_info.date" = "日付";
-"photo_info.memo" = "メモ";
-"photo_info.memo_placeholder" = "メモを入力してください（300文字制限）";
-"photo_info.location" = "位置";
-"photo_info.location_placeholder" = "位置を選択してください";
-"photo_info.search_location" = "位置検索";
+/* Card Info */
+"card_info.title" = "カード情報";
+"card_info.date" = "日付";
+"card_info.memo" = "メモ";
+"card_info.memo_placeholder" = "メモを入力してください（300文字制限）";
+"card_info.location" = "位置";
+"card_info.location_placeholder" = "位置を選択してください";
+"card_info.search_location" = "位置検索";
 
 /* Photo Detail */
 "photo_detail.no_memo" = "メモがありません。";
