@@ -66,6 +66,12 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
             .map { [weak self] date, memo, location -> Bool in
                 guard let self = self else { return false }
 
+                // 이미지 필수 검증
+                if self.editedImage == nil {
+                    saveErrorRelay.accept("이미지는 필수값입니다.")
+                    return false
+                }
+
                 // 메모가 300자 초과 시 에러
                 if let memo = memo, !memo.isEmpty, memo != "메모를 남기고 카드 뒷면에서 확인해보세요!", memo.count > 300 {
                     saveErrorRelay.accept("메모는 300자를 초과할 수 없습니다.")
