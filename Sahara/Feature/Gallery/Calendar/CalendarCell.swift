@@ -13,7 +13,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var dayLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20, weight: .bold)
+        label.font = FontSystem.galmuriMono(size: 20)
         return label
     }()
 
@@ -27,9 +27,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     required init?(coder: NSCoder) { fatalError() }
 
     private func configureUI() {
-        contentView.layer.borderWidth = 1.0
-        contentView.layer.borderColor = UIColor.black.cgColor
-        contentView.layer.masksToBounds = true
         contentView.backgroundColor = .white
 
         addSubview(containerView)
