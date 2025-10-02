@@ -46,9 +46,16 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     }
 
     func configure(with item: DayItem) {
+        // 기존 이미지뷰들 제거
+        imageViews.forEach { $0.removeFromSuperview() }
+        imageViews.removeAll()
+
         if let date = item.date {
             let day = Calendar.current.component(.day, from: date)
             dayLabel.text = "\(day)"
+
+            // 현재 달이 아니면 회색으로 표시
+            dayLabel.textColor = item.isCurrentMonth ? .label : .systemGray3
 
             let photoCount = item.cards.count
 
@@ -63,6 +70,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             }
         } else {
             dayLabel.text = ""
+            dayLabel.textColor = .label
             containerView.backgroundColor = .white
         }
     }

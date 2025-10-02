@@ -211,7 +211,7 @@ final class GalleryViewController: UIViewController {
 
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(calendarHeaderView.snp.bottom)
-            make.horizontalEdges.equalToSuperview().inset(24)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().inset(70)
         }
 
