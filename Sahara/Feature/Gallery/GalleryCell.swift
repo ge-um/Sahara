@@ -74,18 +74,18 @@ final class GalleryCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutSingleImage(_ photoMemo: PhotoMemo) {
+    private func layoutSingleImage(_ photoMemo: Memo) {
         let imageView = createImageView()
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        imageView.image = UIImage(data: photoMemo.imageData)
+        imageView.image = UIImage(data: photoMemo.editedImageData)
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
 
-    private func layoutTwoImages(_ photo1: PhotoMemo, _ photo2: PhotoMemo) {
+    private func layoutTwoImages(_ photo1: Memo, _ photo2: Memo) {
         let imageView1 = createImageView()
         let imageView2 = createImageView()
 
@@ -93,8 +93,8 @@ final class GalleryCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        imageView1.image = UIImage(data: photo1.imageData)
-        imageView2.image = UIImage(data: photo2.imageData)
+        imageView1.image = UIImage(data: photo1.editedImageData)
+        imageView2.image = UIImage(data: photo2.editedImageData)
 
         imageView1.snp.makeConstraints { make in
             make.top.leading.bottom.equalToSuperview()
@@ -107,7 +107,7 @@ final class GalleryCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutMultipleImages(photoMemos: [PhotoMemo]) {
+    private func layoutMultipleImages(photoMemos: [Memo]) {
         guard photoMemos.count >= 3 else { return }
 
         let topImageView = createImageView()
@@ -119,9 +119,9 @@ final class GalleryCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(bottomLeftImageView)
         containerView.addSubview(bottomRightImageView)
 
-        topImageView.image = UIImage(data: photoMemos[0].imageData)
-        bottomLeftImageView.image = UIImage(data: photoMemos[1].imageData)
-        bottomRightImageView.image = UIImage(data: photoMemos[2].imageData)
+        topImageView.image = UIImage(data: photoMemos[0].editedImageData)
+        bottomLeftImageView.image = UIImage(data: photoMemos[1].editedImageData)
+        bottomRightImageView.image = UIImage(data: photoMemos[2].editedImageData)
 
         topImageView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()

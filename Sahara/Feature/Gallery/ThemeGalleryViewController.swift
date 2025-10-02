@@ -61,11 +61,11 @@ final class ThemeGalleryViewController: UIViewController {
     private func analyzePhotos() {
         activityIndicator.startAnimating()
 
-        let photoMemos = self.realm.objects(PhotoMemo.self)
-        var categoryDict: [ThemeCategory: [PhotoMemo]] = [:]
+        let memos = self.realm.objects(Memo.self)
+        var categoryDict: [ThemeCategory: [Memo]] = [:]
         
-        for photoMemo in photoMemos {
-            guard let image = UIImage(data: photoMemo.imageData),
+        for photoMemo in memos {
+            guard let image = UIImage(data: photoMemo.editedImageData),
                   let cgImage = image.cgImage else { continue }
             
             let category = self.classifyImage(cgImage)
@@ -192,7 +192,7 @@ final class ThemeCell: UITableViewCell {
         countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.photoMemos.count)
 
         if let firstPhoto = group.photoMemos.first,
-           let image = UIImage(data: firstPhoto.imageData) {
+           let image = UIImage(data: firstPhoto.editedImageData) {
             thumbnailImageView.image = image
         }
     }

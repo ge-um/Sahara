@@ -18,7 +18,7 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
     struct Input {
         let viewWillAppear: Observable<Void>
         let searchQuery: Observable<String>
-        let stickerSelected: Observable<Sticker>
+        let stickerSelected: Observable<KlipySticker>
         let filterSelected: Observable<(Int, UIImage?)>
         let cropApplied: Observable<(UIImage, CGRect, CGRect)>
         let drawingChanged: Observable<Void>
@@ -32,8 +32,8 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
         let currentEditingImage: Driver<UIImage>
         let croppedImage: Driver<UIImage?>
         let filteredImage: Driver<UIImage?>
-        let stickers: Driver<[Sticker]>
-        let selectedSticker: Driver<Sticker>
+        let stickers: Driver<[KlipySticker]>
+        let selectedSticker: Driver<KlipySticker>
         let selectedPhoto: Driver<UIImage>
         let navigateToMetadata: Driver<UIImage>
         let dismiss: Driver<Void>
@@ -44,7 +44,7 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let stickersRelay = BehaviorRelay<[Sticker]>(value: [])
+        let stickersRelay = BehaviorRelay<[KlipySticker]>(value: [])
         let currentEditingImageRelay = BehaviorRelay<UIImage>(value: originalImage)
         let croppedImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)

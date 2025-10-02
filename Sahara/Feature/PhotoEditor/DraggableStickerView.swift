@@ -61,7 +61,7 @@ final class DraggableStickerView: UIView, UIGestureRecognizerDelegate {
         return true
     }
 
-    func configure(with sticker: Sticker) {
+    func configure(with sticker: KlipySticker) {
         // 고화질(hd 또는 md) 이미지를 사용
         var urlString: String?
 

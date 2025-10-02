@@ -87,9 +87,9 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
 
         let memoText = (memo?.isEmpty == false && memo != "메모를 남기면 사진 뒤쪽에서 메모를 볼 수 있어요! (300자 제한)") ? memo : nil
 
-        let photoMemo = PhotoMemo(
-            date: date,
-            imageData: imageData,
+        let photoMemo = Memo(
+            createdDate: date,
+            editedImageData: imageData,
             memo: memoText,
             latitude: location?.coordinate.latitude,
             longitude: location?.coordinate.longitude
