@@ -68,7 +68,7 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
                 updatedMemos.remove(at: index)
                 memosRelay.accept(updatedMemos)
 
-                NotificationCenter.default.post(name: NSNotification.Name("PhotoDeleted"), object: nil)
+                NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
             })
             .map { _ in () }
 

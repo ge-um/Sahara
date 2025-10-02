@@ -400,7 +400,7 @@ final class PhotoDetailViewController: UIViewController {
         output.deleteCompleted
             .drive(with: self) { owner, _ in
                 owner.dismiss(animated: true) {
-                    NotificationCenter.default.post(name: NSNotification.Name("PhotoDeleted"), object: nil)
+                    NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
                 }
             }
             .disposed(by: disposeBag)
