@@ -5,6 +5,7 @@
 "common.share" = "Share";
 "common.ok" = "OK";
 "common.photo_count" = "%d photos";
+"common.app_name" = "Sahara";
 
 /* Tab */
 "tab.gallery" = "Gallery";

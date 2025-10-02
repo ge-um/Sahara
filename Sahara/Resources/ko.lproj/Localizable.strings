@@ -5,6 +5,7 @@
 "common.share" = "공유";
 "common.ok" = "확인";
 "common.photo_count" = "%d개의 사진";
+"common.app_name" = "사하라";
 
 /* Tab */
 "tab.gallery" = "갤러리";

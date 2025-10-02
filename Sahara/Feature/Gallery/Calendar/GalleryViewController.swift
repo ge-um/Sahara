@@ -15,6 +15,8 @@ import UIKit
 import MapKit
 
 final class GalleryViewController: UIViewController {
+    private let customNavigationBar = CustomNavigationBar()
+
     private let viewTypeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -124,21 +126,21 @@ final class GalleryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
         setupMapView()
         setupThemeView()
-        setupNavigationBar()
+        setupCustomNavigationBar()
         bind()
     }
 
-    private func setupNavigationBar() {
-        let addButton = UIBarButtonItem(
-            image: UIImage(systemName: "plus"),
-            style: .plain,
-            target: self,
-            action: #selector(addButtonTapped)
-        )
-        navigationItem.rightBarButtonItem = addButton
+    private func setupCustomNavigationBar() {
+        customNavigationBar.configure(title: NSLocalizedString("common.app_name", comment: ""))
+        customNavigationBar.hideLeftButton()
+
+        customNavigationBar.addRightButton(title: "+") { [weak self] in
+            self?.addButtonTapped()
+        }
     }
 
     @objc private func addButtonTapped() {
@@ -197,6 +199,7 @@ final class GalleryViewController: UIViewController {
     private func configureUI() {
         view.backgroundColor = .white
 
+        view.addSubview(customNavigationBar)
         view.addSubview(viewTypeButtonStackView)
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
@@ -210,8 +213,14 @@ final class GalleryViewController: UIViewController {
         view.addSubview(mapView)
         view.addSubview(themeContainerView)
 
+        customNavigationBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
+
         viewTypeButtonStackView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(10)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(10)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(44)
         }
