@@ -45,6 +45,7 @@ final class LocationSearchViewController: UIViewController {
     private let searchCompleter = MKLocalSearchCompleter()
     private var searchResults: [MKLocalSearchCompletion] = []
     var onLocationSelected: ((CLLocationCoordinate2D, String) -> Void)?
+    private let locationManager = CLLocationManager()
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -59,6 +60,9 @@ final class LocationSearchViewController: UIViewController {
         searchCompleter.delegate = self
         searchCompleter.resultTypes = [.address, .pointOfInterest]
         searchBar.delegate = self
+
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
     }
 
     private func setupActions() {
@@ -66,23 +70,33 @@ final class LocationSearchViewController: UIViewController {
     }
 
     @objc private func currentLocationTapped() {
-        let locationManager = CLLocationManager()
-        locationManager.requestWhenInUseAuthorization()
+        let authStatus = locationManager.authorizationStatus
 
-        if let location = locationManager.location {
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                if let placemark = placemarks?.first {
-                    let address = [
-                        placemark.locality,
-                        placemark.thoroughfare,
-                        placemark.subThoroughfare
-                    ].compactMap { $0 }.joined(separator: " ")
-                    self?.onLocationSelected?(location.coordinate, address)
-                    self?.dismiss(animated: true)
-                }
-            }
+        switch authStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.requestLocation()
+        case .denied, .restricted:
+            showLocationPermissionAlert()
+        @unknown default:
+            break
         }
+    }
+
+    private func showLocationPermissionAlert() {
+        let alert = UIAlertController(
+            title: "위치 권한 필요",
+            message: "현재 위치를 사용하려면 설정에서 위치 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsUrl)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        present(alert, animated: true)
     }
 
     // MARK: - Configure UI
@@ -184,6 +198,52 @@ extension LocationSearchViewController: UITableViewDataSource, UITableViewDelega
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 60
+    }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension LocationSearchViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            guard let self = self,
+                  let placemark = placemarks?.first else { return }
+
+            var addressString = ""
+            if let locality = placemark.locality {
+                addressString += locality
+            }
+            if let subLocality = placemark.subLocality {
+                addressString += " " + subLocality
+            }
+            if let thoroughfare = placemark.thoroughfare {
+                addressString += " " + thoroughfare
+            }
+
+            let finalAddress = addressString.isEmpty ? "현재 위치" : addressString
+            self.onLocationSelected?(location.coordinate, finalAddress)
+            self.dismiss(animated: true)
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        let alert = UIAlertController(
+            title: "위치 가져오기 실패",
+            message: "현재 위치를 가져올 수 없습니다.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            manager.requestLocation()
+        }
     }
 }
 
