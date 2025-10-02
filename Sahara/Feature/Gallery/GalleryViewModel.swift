@@ -234,11 +234,11 @@ final class GalleryViewModel {
         let calendar = Calendar.current
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
               let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else { return }
-        
+
         let results = realm.objects(PhotoMemo.self)
             .filter("date >= %@ AND date <= %@", startOfMonth, endOfMonth)
             .sorted(byKeyPath: "date", ascending: true)
-        
+
         photos.accept(Array(results))
     }
     
