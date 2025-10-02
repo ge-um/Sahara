@@ -275,13 +275,13 @@ final class GalleryViewController: UIViewController {
             .notification(NSNotification.Name("PhotoSaved"))
             .map { _ in () }
 
-        let viewWillAppear = Observable.merge(
-            rx.methodInvoked(#selector(viewWillAppear)).map { _ in () },
+        let viewWillAppearObservable = Observable.merge(
+            rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in () },
             photoSavedNotification
         )
 
         let input = GalleryViewModel.Input(
-            viewWillAppear: viewWillAppear,
+            viewWillAppear: viewWillAppearObservable,
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
             nextMonthTapped: nextMonthButton.rx.tap.asObservable(),
@@ -352,7 +352,7 @@ final class GalleryViewController: UIViewController {
         .disposed(by: disposeBag)
         
         collectionView.rx.modelSelected(DayItem.self)
-            .filter { $0.hasPhotos } // 사진이 있는 날짜만 필터링
+            .filter { $0.hasPhotos }
             .compactMap { $0.date }
             .bind(with: self) { owner, date in
                 let detailVC = GalleryDetailViewController(date: date)

@@ -47,7 +47,7 @@ final class PhotoSelectionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        requestPhotoLibraryAccess()
+        checkPhotoLibraryAccess()
     }
 
     private func configureUI() {
@@ -69,20 +69,47 @@ final class PhotoSelectionViewController: UIViewController {
         dismiss(animated: true)
     }
 
-    private func requestPhotoLibraryAccess() {
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
-            DispatchQueue.main.async {
-                switch status {
-                case .authorized, .limited:
-                    self?.fetchPhotos()
-                case .denied, .restricted:
-                    self?.showPermissionAlert()
-                case .notDetermined:
-                    break
-                @unknown default:
-                    break
+    private func checkPhotoLibraryAccess() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+        switch status {
+        case .authorized, .limited:
+            fetchPhotos()
+        case .denied, .restricted, .notDetermined:
+            break
+        @unknown default:
+            break
+        }
+    }
+
+    private func requestPhotoLibraryAccessIfNeeded(completion: @escaping (Bool) -> Void) {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+        switch status {
+        case .authorized, .limited:
+            completion(true)
+        case .denied, .restricted:
+            showPermissionAlert()
+            completion(false)
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] newStatus in
+                DispatchQueue.main.async {
+                    switch newStatus {
+                    case .authorized, .limited:
+                        self?.fetchPhotos()
+                        completion(true)
+                    case .denied, .restricted:
+                        self?.showPermissionAlert()
+                        completion(false)
+                    case .notDetermined:
+                        completion(false)
+                    @unknown default:
+                        completion(false)
+                    }
                 }
             }
+        @unknown default:
+            completion(false)
         }
     }
 
@@ -115,14 +142,25 @@ final class PhotoSelectionViewController: UIViewController {
     }
 
     private func openCamera() {
-        AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-            DispatchQueue.main.async {
-                if granted {
-                    self?.presentCamera()
-                } else {
-                    self?.showCameraPermissionAlert()
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+
+        switch status {
+        case .authorized:
+            presentCamera()
+        case .denied, .restricted:
+            showCameraPermissionAlert()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.presentCamera()
+                    } else {
+                        self?.showCameraPermissionAlert()
+                    }
                 }
             }
+        @unknown default:
+            break
         }
     }
 
