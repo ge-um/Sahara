@@ -15,6 +15,8 @@
 "gallery.location_view" = "By Location";
 "gallery.theme_view" = "By Theme";
 "gallery.month_format" = "MMMM yyyy";
+"gallery.empty_message" = "No saved cards.";
+"gallery.empty_button" = "Create Card";
 
 /* Theme Categories */
 "theme.people" = "People";

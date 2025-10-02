@@ -158,6 +158,7 @@ final class GalleryViewModel {
         let currentMonthTitle: Driver<String>
         let selectedViewType: Driver<GalleryViewType>
         let showCalendar: Driver<Bool>
+        let isEmpty: Driver<Bool>
     }
     
     func transform(input: Input) -> Output {
@@ -182,15 +183,23 @@ final class GalleryViewModel {
         
         let showCalendar = selectedViewType
             .map { $0 == .date }
-        
+
+        let isEmptyRelay = BehaviorRelay<Bool>(value: true)
+
+        let checkEmpty: () -> Void = { [weak self] in
+            guard let self = self else { return }
+            isEmptyRelay.accept(self.realm.objects(Memo.self).isEmpty)
+        }
+
         input.addButtonTapped
             .bind(to: showPhotoPicker)
             .disposed(by: disposeBag)
-        
+
         input.viewWillAppear
             .withLatestFrom(currentMonth)
             .bind(with: self) { owner, month in
                 owner.reloadCurrentMonthPhotos(month, photos: photos)
+                checkEmpty()
             }
             .disposed(by: disposeBag)
         
@@ -227,6 +236,7 @@ final class GalleryViewModel {
             currentMonthTitle: currentMonthTitle.asDriver(onErrorJustReturn: ""),
             selectedViewType: selectedViewType.asDriver(),
             showCalendar: showCalendar.asDriver(onErrorJustReturn: true),
+            isEmpty: isEmptyRelay.asDriver()
         )
     }
     
@@ -235,11 +245,12 @@ final class GalleryViewModel {
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
               let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else { return }
 
-        let results = realm.objects(Memo.self)
+        let allResults = realm.objects(Memo.self)
+        let monthResults = allResults
             .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
             .sorted(byKeyPath: "createdDate", ascending: true)
 
-        photos.accept(Array(results))
+        photos.accept(Array(monthResults))
     }
     
     private func generateCalendar(for month: Date, photoMemos: [Memo]) -> [DayItem] {

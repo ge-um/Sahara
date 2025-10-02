@@ -15,6 +15,8 @@
 "gallery.location_view" = "장소별";
 "gallery.theme_view" = "주제별";
 "gallery.month_format" = "yyyy년 MM월";
+"gallery.empty_message" = "저장된 카드가 없습니다.";
+"gallery.empty_button" = "카드 작성하기";
 
 /* Theme Categories */
 "theme.people" = "사람";
