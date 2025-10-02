@@ -17,11 +17,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
 
-        let galleryVM = GalleryViewModel()
-        let galleryVC = GalleryViewController(viewModel: galleryVM)
-        let navigationController = UINavigationController(rootViewController: galleryVC)
+        let mainTabBarController = MainTabBarController()
 
-        window?.rootViewController = navigationController
+        window?.rootViewController = mainTabBarController
         window?.makeKeyAndVisible()
     }
 

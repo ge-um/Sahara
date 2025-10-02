@@ -6,6 +6,9 @@
 "common.ok" = "OK";
 "common.photo_count" = "%d photos";
 
+/* Tab */
+"tab.gallery" = "Gallery";
+
 /* Gallery */
 "gallery.date_view" = "By Date";
 "gallery.location_view" = "By Location";
