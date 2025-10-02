@@ -22,6 +22,7 @@ final class PhotoDetailViewModel {
         let closeButtonTapped: Observable<Void>
         let saveButtonTapped: Observable<Void>
         let shareButtonTapped: Observable<Void>
+        let deleteConfirmed: Observable<Void>
         let swipeLeft: Observable<Void>
         let swipeRight: Observable<Void>
     }
@@ -36,6 +37,7 @@ final class PhotoDetailViewModel {
         let shouldDismiss: Driver<Void>
         let saveResult: Driver<Result<Void, Error>>
         let shareImage: Driver<UIImage>
+        let deleteCompleted: Driver<Void>
     }
 
     init(photoMemoId: ObjectId) {
@@ -131,6 +133,17 @@ final class PhotoDetailViewModel {
             }
             .asDriver(onErrorDriveWith: .empty())
 
+        let deleteCompleted = input.deleteConfirmed
+            .withLatestFrom(photoMemo)
+            .withUnretained(self)
+            .map { owner, memo -> Void in
+                try? owner.realm.write {
+                    owner.realm.delete(memo)
+                }
+                return ()
+            }
+            .asDriver(onErrorJustReturn: ())
+
         return Output(
             photoImage: photoImage,
             dateText: dateText,
@@ -140,7 +153,8 @@ final class PhotoDetailViewModel {
             shouldFlipToFront: shouldFlipToFront,
             shouldDismiss: shouldDismiss,
             saveResult: saveResult,
-            shareImage: shareImage
+            shareImage: shareImage,
+            deleteCompleted: deleteCompleted
         )
     }
 }

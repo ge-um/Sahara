@@ -13,7 +13,7 @@ import UIKit
 final class MapPhotoGalleryViewController: UIViewController {
     private let viewModel: MapPhotoGalleryViewModel
     private let disposeBag = DisposeBag()
-    private let viewDidLoadTrigger = PublishRelay<Void>()
+    private let viewDidLoadRelay = PublishRelay<Void>()
 
     private let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: nil, action: nil)
 
@@ -49,7 +49,7 @@ final class MapPhotoGalleryViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         bind()
-        viewDidLoadTrigger.accept(())
+        viewDidLoadRelay.accept(())
     }
 
     private func configureUI() {
@@ -65,7 +65,7 @@ final class MapPhotoGalleryViewController: UIViewController {
 
     private func bind() {
         let input = MapPhotoGalleryViewModel.Input(
-            viewDidLoad: viewDidLoadTrigger.asObservable(),
+            viewDidLoad: viewDidLoadRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable()
         )

@@ -16,9 +16,10 @@ final class PhotoDetailViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private var isFrontCardVisible = true
 
-    private let viewDidLoadTrigger = PublishRelay<Void>()
-    private let swipeLeftTrigger = PublishRelay<Void>()
-    private let swipeRightTrigger = PublishRelay<Void>()
+    private let viewDidLoadRelay = PublishRelay<Void>()
+    private let swipeLeftRelay = PublishRelay<Void>()
+    private let swipeRightRelay = PublishRelay<Void>()
+    private let deleteConfirmedRelay = PublishRelay<Void>()
 
     private let cardContainerView: UIView = {
         let view = UIView()
@@ -169,6 +170,20 @@ final class PhotoDetailViewController: UIViewController {
         return button
     }()
 
+    private lazy var deleteButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = .systemRed
+        config.baseForegroundColor = .white
+        config.image = UIImage(systemName: "trash")
+        config.cornerStyle = .capsule
+        let button = UIButton(configuration: config)
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.2
+        return button
+    }()
+
     init(photoMemoId: ObjectId) {
         self.viewModel = PhotoDetailViewModel(photoMemoId: photoMemoId)
         super.init(nibName: nil, bundle: nil)
@@ -183,7 +198,7 @@ final class PhotoDetailViewController: UIViewController {
         configureUI()
         setupGestures()
         bind()
-        viewDidLoadTrigger.accept(())
+        viewDidLoadRelay.accept(())
     }
 
     private func configureUI() {
@@ -191,6 +206,7 @@ final class PhotoDetailViewController: UIViewController {
 
         view.addSubview(cardContainerView)
         view.addSubview(buttonStackView)
+        view.addSubview(deleteButton)
         view.addSubview(closeButton)
 
         cardContainerView.addSubview(frontCardView)
@@ -263,6 +279,13 @@ final class PhotoDetailViewController: UIViewController {
             make.height.equalTo(50)
         }
 
+        deleteButton.snp.makeConstraints { make in
+            make.top.equalTo(buttonStackView.snp.bottom).offset(12)
+            make.centerX.equalToSuperview()
+            make.width.equalTo(50)
+            make.height.equalTo(50)
+        }
+
         closeButton.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
             make.trailing.equalToSuperview().inset(20)
@@ -282,22 +305,38 @@ final class PhotoDetailViewController: UIViewController {
 
     @objc private func handleSwipeLeft() {
         guard isFrontCardVisible else { return }
-        swipeLeftTrigger.accept(())
+        swipeLeftRelay.accept(())
     }
 
     @objc private func handleSwipeRight() {
         guard !isFrontCardVisible else { return }
-        swipeRightTrigger.accept(())
+        swipeRightRelay.accept(())
     }
 
     private func bind() {
+        deleteButton.rx.tap
+            .bind(with: self) { owner, _ in
+                let alert = UIAlertController(
+                    title: "사진 삭제",
+                    message: "이 사진을 삭제하시겠습니까?",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+                alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { _ in
+                    owner.deleteConfirmedRelay.accept(())
+                })
+                owner.present(alert, animated: true)
+            }
+            .disposed(by: disposeBag)
+
         let input = PhotoDetailViewModel.Input(
-            viewDidLoad: viewDidLoadTrigger.asObservable(),
+            viewDidLoad: viewDidLoadRelay.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             shareButtonTapped: shareButton.rx.tap.asObservable(),
-            swipeLeft: swipeLeftTrigger.asObservable(),
-            swipeRight: swipeRightTrigger.asObservable()
+            deleteConfirmed: deleteConfirmedRelay.asObservable(),
+            swipeLeft: swipeLeftRelay.asObservable(),
+            swipeRight: swipeRightRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -355,6 +394,12 @@ final class PhotoDetailViewController: UIViewController {
                 let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
                 owner.present(activityVC, animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        output.deleteCompleted
+            .drive(with: self) { owner, _ in
+                owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
     }
