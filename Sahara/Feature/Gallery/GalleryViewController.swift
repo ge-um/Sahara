@@ -205,14 +205,14 @@ final class GalleryViewController: UIViewController {
 
         calendarHeaderView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(68)
         }
 
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(calendarHeaderView.snp.bottom)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(70)
+            make.bottom.equalToSuperview().inset(90) // 70(tabBar) + 20(spacing)
         }
 
         mapView.snp.makeConstraints { make in
@@ -380,25 +380,25 @@ final class GalleryViewController: UIViewController {
     }
 
     private func layout() -> UICollectionViewLayout {
-        let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1/7),
-            heightDimension: .fractionalHeight(1)
-        )
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        layout.sectionInset = .zero
 
-        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        // 화면 너비에서 좌우 inset 제외
+        let collectionViewWidth = UIScreen.main.bounds.width - 40
+        let itemWidth = floor(collectionViewWidth / 7)
 
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1),
-            heightDimension: /*.absolute(80)*/.fractionalWidth(1/6)
-        )
+        // collectionView 높이: tabBar 위 20까지
+        // tabBar는 90(70 + 20), 그 위에 헤더들...
+        // 전체 높이에서 상단 요소들을 빼고 6으로 나눔
+        let topHeight: CGFloat = 54 + 20 + 36 + 10 + 68 // nav + margin + buttons + margin + header
+        let availableHeight = UIScreen.main.bounds.height - topHeight - 90
+        let itemHeight = floor(availableHeight / 6)
 
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
-        group.interItemSpacing = .fixed(1)
+        layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
 
-        let section = NSCollectionLayoutSection(group: group)
-        section.interGroupSpacing = 1
-
-        return UICollectionViewCompositionalLayout(section: section)
+        return layout
     }
 }
 

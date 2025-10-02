@@ -6,67 +6,77 @@
 //
 
 import UIKit
+import SnapKit
 
 final class MainTabBarController: UITabBarController {
-    private let tabBarGradientLayer = CAGradientLayer()
+    private let customTabBar: UIView = {
+        let view = UIView()
+        return view
+    }()
+
+    private let galleryStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 4
+        return stack
+    }()
+
+    private let galleryIconView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "gallery")
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    private let galleryLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("tab.gallery", comment: "")
+        label.font = FontSystem.TextStyle.tabBarLabel.font
+        label.textColor = .black
+        return label
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureTabBar()
+        tabBar.isHidden = true
+        setupCustomTabBar()
         setupViewControllers()
+    }
+
+    private func setupCustomTabBar() {
+        view.addSubview(customTabBar)
+        customTabBar.addSubview(galleryStackView)
+
+        galleryStackView.addArrangedSubview(galleryIconView)
+        galleryStackView.addArrangedSubview(galleryLabel)
+
+        customTabBar.applyGradient(.barBack)
+
+        customTabBar.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.height.equalTo(70)
+        }
+
+        galleryStackView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+
+        galleryIconView.snp.makeConstraints { make in
+            make.width.height.equalTo(24)
+        }
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        tabBarGradientLayer.frame = tabBar.bounds
-
-        var tabBarFrame = tabBar.frame
-        tabBarFrame.size.height = 70
-        tabBarFrame.origin.y = view.frame.size.height - 70
-        tabBar.frame = tabBarFrame
-    }
-
-    private func configureTabBar() {
-        tabBarGradientLayer.colors = ColorSystem.Gradient.barBack.colors
-        tabBarGradientLayer.locations = ColorSystem.Gradient.barBack.locations
-        tabBarGradientLayer.startPoint = ColorSystem.Gradient.barBack.startPoint
-        tabBarGradientLayer.endPoint = ColorSystem.Gradient.barBack.endPoint
-        tabBar.layer.insertSublayer(tabBarGradientLayer, at: 0)
-
-        tabBar.tintColor = .black
-        tabBar.unselectedItemTintColor = .gray
-        tabBar.isTranslucent = false
-
-        tabBar.shadowImage = UIImage()
-        tabBar.backgroundImage = UIImage()
+        customTabBar.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = customTabBar.bounds
     }
 
     private func setupViewControllers() {
         let galleryVM = GalleryViewModel()
         let galleryVC = GalleryViewController(viewModel: galleryVM)
         let galleryNav = UINavigationController(rootViewController: galleryVC)
-
-        let tabBarItem = UITabBarItem(
-            title: NSLocalizedString("tab.gallery", comment: ""),
-            image: UIImage(named: "gallery"),
-            selectedImage: UIImage(named: "gallery")
-        )
-
-        tabBarItem.imageInsets = UIEdgeInsets(top: 4, left: 0, bottom: -4, right: 0)
-        tabBarItem.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
-
-        let normalAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.TextStyle.tabBarLabel.font,
-            .kern: FontSystem.TextStyle.tabBarLabel.letterSpacing
-        ]
-        let selectedAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.TextStyle.tabBarLabel.font,
-            .kern: FontSystem.TextStyle.tabBarLabel.letterSpacing
-        ]
-        tabBarItem.setTitleTextAttributes(normalAttributes, for: .normal)
-        tabBarItem.setTitleTextAttributes(selectedAttributes, for: .selected)
-
-        galleryNav.tabBarItem = tabBarItem
 
         viewControllers = [galleryNav]
     }
