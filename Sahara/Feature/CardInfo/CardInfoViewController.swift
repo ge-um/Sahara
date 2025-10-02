@@ -1,10 +1,3 @@
-//
-//  PhotoInfoViewController.swift
-//  Sahara
-//
-//  Created by 금가경 on 9/26/25.
-//
-
 import CoreLocation
 import MapKit
 import RxCocoa
@@ -12,8 +5,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class PhotoInfoViewController: UIViewController {
-    // MARK: - UI Components
+final class CardInfoViewController: UIViewController {
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = false
@@ -65,7 +57,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("photo_info.date", comment: "")
+        label.text = NSLocalizedString("card_info.date", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -80,7 +72,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("photo_info.memo", comment: "")
+        label.text = NSLocalizedString("card_info.memo", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -112,7 +104,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("photo_info.location", comment: "")
+        label.text = NSLocalizedString("card_info.location", comment: "")
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         label.textColor = .secondaryLabel
         return label
@@ -120,7 +112,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let selectedLocationLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("photo_info.location_placeholder", comment: "")
+        label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
         label.font = .systemFont(ofSize: 14)
         label.textColor = .tertiaryLabel
         label.numberOfLines = 2
@@ -129,7 +121,7 @@ final class PhotoInfoViewController: UIViewController {
 
     private let searchLocationButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_info.search_location", comment: "")
+        config.title = NSLocalizedString("card_info.search_location", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.image = UIImage(systemName: "magnifyingglass")
@@ -164,16 +156,14 @@ final class PhotoInfoViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Properties
-    private let viewModel: PhotoInfoViewModel
+    private let viewModel: CardInfoViewModel
     private let disposeBag = DisposeBag()
     private var selectedLocation: CLLocation?
     private var selectedImage: UIImage?
     private let initialLocationSubject = PublishSubject<CLLocation>()
     private var mapViewHeightConstraint: Constraint?
 
-    // MARK: - Init
-    init(viewModel: PhotoInfoViewModel) {
+    init(viewModel: CardInfoViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -182,7 +172,6 @@ final class PhotoInfoViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
@@ -196,7 +185,6 @@ final class PhotoInfoViewController: UIViewController {
         memoTextView.attributedText = createPlaceholderText()
     }
 
-    // MARK: - Setup
     private func setupKeyboardDismiss() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
@@ -209,7 +197,6 @@ final class PhotoInfoViewController: UIViewController {
         view.endEditing(true)
     }
 
-    // MARK: - Bind
     private func bind() {
         let locationSubject = PublishSubject<CLLocation>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
@@ -220,7 +207,7 @@ final class PhotoInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let input = PhotoInfoViewModel.Input(
+        let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             date: datePicker.rx.date.asObservable(),
             memo: memoTextView.rx.text.asObservable(),
@@ -247,7 +234,7 @@ final class PhotoInfoViewController: UIViewController {
 
         photoSelectButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.presentPhotoSelectionModal(selectedImageSubject: selectedImageSubject)
+                owner.presentMediaSelectionModal(selectedImageSubject: selectedImageSubject)
             }
             .disposed(by: disposeBag)
 
@@ -278,12 +265,12 @@ final class PhotoInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func presentPhotoSelectionModal(selectedImageSubject: BehaviorSubject<UIImage?>) {
-        let photoSelectionVC = PhotoSelectionViewController()
-        photoSelectionVC.onPhotoSelected = { [weak self] image, location in
+    private func presentMediaSelectionModal(selectedImageSubject: BehaviorSubject<UIImage?>) {
+        let mediaSelectionVC = MediaSelectionViewController()
+        mediaSelectionVC.onMediaSelected = { [weak self] image, location in
             self?.openPhotoEditor(with: image, location: location, selectedImageSubject: selectedImageSubject)
         }
-        let navController = UINavigationController(rootViewController: photoSelectionVC)
+        let navController = UINavigationController(rootViewController: mediaSelectionVC)
         if let sheet = navController.sheetPresentationController {
             sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
@@ -373,7 +360,6 @@ final class PhotoInfoViewController: UIViewController {
         mapView.addAnnotation(annotation)
     }
 
-    // MARK: - Configure UI
     private func configureUI() {
         view.backgroundColor = .systemGroupedBackground
 
@@ -484,14 +470,13 @@ final class PhotoInfoViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = NSLocalizedString("photo_info.title", comment: "")
+        navigationItem.title = NSLocalizedString("card_info.title", comment: "")
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: saveButton)
     }
 }
 
-// MARK: - UITextViewDelegate
-extension PhotoInfoViewController: UITextViewDelegate {
+extension CardInfoViewController: UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         if textView.textColor == .placeholderText {
             textView.text = ""
