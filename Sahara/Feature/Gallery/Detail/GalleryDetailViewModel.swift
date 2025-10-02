@@ -12,7 +12,7 @@ import RxSwift
 
 final class GalleryDetailViewModel: BaseViewModelProtocol {
     private let date: Date
-    private let realm = try! Realm()
+    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -37,16 +37,8 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
 
         let loadMemos: () -> Void = { [weak self] in
             guard let self = self else { return }
-            let startOfDay = Calendar.current.startOfDay(for: self.date)
-            guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else {
-                return
-            }
-
-            let results = self.realm.objects(Memo.self)
-                .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
-                .sorted(byKeyPath: "createdDate", ascending: true)
-
-            memosRelay.accept(Array(results))
+            let memos = self.realmManager.fetchMemos(on: self.date)
+            memosRelay.accept(memos)
         }
 
         // viewDidLoad와 viewWillAppear를 merge하되, distinctUntilChanged로 중복 호출 방지
@@ -70,11 +62,8 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
                 guard index < memos.count else { return }
                 let memo = memos[index]
 
-                try? owner.realm.write {
-                    owner.realm.delete(memo)
-                }
+                owner.realmManager.delete(memo)
 
-                // 배열에서 해당 항목 제거하여 즉시 UI 업데이트
                 var updatedMemos = memos
                 updatedMemos.remove(at: index)
                 memosRelay.accept(updatedMemos)

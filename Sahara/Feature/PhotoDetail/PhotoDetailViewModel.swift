@@ -14,7 +14,7 @@ import UIKit
 
 final class PhotoDetailViewModel {
     private let photoMemoId: ObjectId
-    private let realm = try! Realm()
+    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -48,7 +48,7 @@ final class PhotoDetailViewModel {
         let photoMemo = input.viewDidLoad
             .compactMap { [weak self] _ -> Memo? in
                 guard let self = self else { return nil }
-                return self.realm.object(ofType: Memo.self, forPrimaryKey: self.photoMemoId)
+                return self.realmManager.realm?.object(ofType: Memo.self, forPrimaryKey: self.photoMemoId)
             }
             .share(replay: 1)
 
@@ -137,9 +137,7 @@ final class PhotoDetailViewModel {
             .withLatestFrom(photoMemo)
             .withUnretained(self)
             .map { owner, memo -> Void in
-                try? owner.realm.write {
-                    owner.realm.delete(memo)
-                }
+                owner.realmManager.delete(memo)
                 return ()
             }
             .asDriver(onErrorJustReturn: ())

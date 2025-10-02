@@ -13,7 +13,7 @@ import UIKit
 import Vision
 
 final class ThemeGalleryViewModel: BaseViewModelProtocol {
-    private let realm = try! Realm()
+    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -60,7 +60,7 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
 
     private func analyzePhotos() -> Observable<[ThemeGroup]> {
         return Observable.create { observer in
-            let memos = Array(self.realm.objects(Memo.self))
+            let memos = self.realmManager.fetch(Memo.self).map { Array($0) } ?? []
 
             var categoryDict: [ThemeCategory: [Memo]] = [:]
 

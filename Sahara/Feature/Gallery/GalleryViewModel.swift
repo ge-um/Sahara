@@ -142,7 +142,7 @@ import RxSwift
 
 final class GalleryViewModel {
     private let disposeBag = DisposeBag()
-    private let realm = try! Realm()
+    private let realmManager = RealmManager.shared
     
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -188,7 +188,7 @@ final class GalleryViewModel {
 
         let checkEmpty: () -> Void = { [weak self] in
             guard let self = self else { return }
-            let isEmpty = self.realm.objects(Memo.self).isEmpty
+            let isEmpty = self.realmManager.isEmpty(Memo.self)
             print("🔍 checkEmpty: isEmpty = \(isEmpty)")
             isEmptyRelay.accept(isEmpty)
         }
@@ -243,16 +243,8 @@ final class GalleryViewModel {
     }
     
     private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Memo]>) {
-        let calendar = Calendar.current
-        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
-              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else { return }
-
-        let allResults = realm.objects(Memo.self)
-        let monthResults = allResults
-            .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
-            .sorted(byKeyPath: "createdDate", ascending: true)
-
-        photos.accept(Array(monthResults))
+        let memos = realmManager.fetchMemos(in: date)
+        photos.accept(memos)
     }
     
     private func generateCalendar(for month: Date, photoMemos: [Memo]) -> [DayItem] {
