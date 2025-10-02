@@ -13,7 +13,8 @@ import UIKit
 final class GalleryDetailViewController: UIViewController {
     private let viewModel: GalleryDetailViewModel
     private let disposeBag = DisposeBag()
-    private let viewDidLoadTrigger = PublishRelay<Void>()
+    private let viewDidLoadRelay = PublishRelay<Void>()
+    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
@@ -34,7 +35,12 @@ final class GalleryDetailViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         bind()
-        viewDidLoadTrigger.accept(())
+        viewDidLoadRelay.accept(())
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewWillAppearRelay.accept(())
     }
 
     private func configureUI() {
@@ -48,9 +54,13 @@ final class GalleryDetailViewController: UIViewController {
     }
 
     private func bind() {
+        let itemDeleted = tableView.rx.itemDeleted.asObservable()
+
         let input = GalleryDetailViewModel.Input(
-            viewDidLoad: viewDidLoadTrigger.asObservable(),
-            itemSelected: tableView.rx.itemSelected.asObservable()
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            viewWillAppear: viewWillAppearRelay.asObservable(),
+            itemSelected: tableView.rx.itemSelected.asObservable(),
+            itemDeleted: itemDeleted
         )
 
         let output = viewModel.transform(input: input)

@@ -17,7 +17,9 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
 
     struct Input {
         let viewDidLoad: Observable<Void>
+        let viewWillAppear: Observable<Void>
         let itemSelected: Observable<IndexPath>
+        let itemDeleted: Observable<IndexPath>
     }
 
     struct Output {
@@ -32,21 +34,43 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let memosRelay = BehaviorRelay<[Memo]>(value: [])
 
-        input.viewDidLoad
-            .withUnretained(self)
-            .map { owner, _ -> [Memo] in
-                let startOfDay = Calendar.current.startOfDay(for: owner.date)
-                guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else {
-                    return []
-                }
-
-                let results = owner.realm.objects(Memo.self)
-                    .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
-                    .sorted(byKeyPath: "createdDate", ascending: true)
-
-                return Array(results)
+        let loadMemos: () -> Void = { [weak self] in
+            guard let self = self else { return }
+            let startOfDay = Calendar.current.startOfDay(for: self.date)
+            guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else {
+                return
             }
-            .bind(to: memosRelay)
+
+            let results = self.realm.objects(Memo.self)
+                .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
+                .sorted(byKeyPath: "createdDate", ascending: true)
+
+            memosRelay.accept(Array(results))
+        }
+
+        input.viewDidLoad
+            .bind(with: self) { _, _ in
+                loadMemos()
+            }
+            .disposed(by: disposeBag)
+
+        input.viewWillAppear
+            .bind(with: self) { _, _ in
+                loadMemos()
+            }
+            .disposed(by: disposeBag)
+
+        input.itemDeleted
+            .withLatestFrom(memosRelay) { indexPath, memos in
+                memos[indexPath.row]
+            }
+            .withUnretained(self)
+            .bind { owner, memo in
+                try? owner.realm.write {
+                    owner.realm.delete(memo)
+                }
+                loadMemos()
+            }
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected

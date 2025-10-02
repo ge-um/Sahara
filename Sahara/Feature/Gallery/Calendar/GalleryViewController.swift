@@ -275,13 +275,13 @@ final class GalleryViewController: UIViewController {
             .notification(NSNotification.Name("PhotoSaved"))
             .map { _ in () }
 
-        let viewWillAppearTrigger = Observable.merge(
+        let viewWillAppear = Observable.merge(
             rx.methodInvoked(#selector(viewWillAppear)).map { _ in () },
             photoSavedNotification
         )
 
         let input = GalleryViewModel.Input(
-            viewWillAppear: viewWillAppearTrigger,
+            viewWillAppear: viewWillAppear,
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
             nextMonthTapped: nextMonthButton.rx.tap.asObservable(),
