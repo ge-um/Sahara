@@ -40,7 +40,7 @@ final class PhotoSelectionViewController: UIViewController {
         return cv
     }()
 
-    var onPhotoSelected: ((UIImage) -> Void)?
+    var onPhotoSelected: ((UIImage, CLLocation?) -> Void)?
     private var photos: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
 
@@ -254,7 +254,8 @@ extension PhotoSelectionViewController: UICollectionViewDelegate {
                 options: options
             ) { [weak self] image, _ in
                 if let image = image {
-                    self?.onPhotoSelected?(image)
+                    let location = asset.location
+                    self?.onPhotoSelected?(image, location)
                     self?.dismiss(animated: true)
                 }
             }
@@ -268,7 +269,8 @@ extension PhotoSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            onPhotoSelected?(image)
+            // 카메라로 찍은 사진은 위치 정보 없음
+            onPhotoSelected?(image, nil)
             dismiss(animated: true)
         }
     }
@@ -289,7 +291,8 @@ extension PhotoSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        self?.onPhotoSelected?(image)
+                        // PHPicker는 위치 정보를 제공하지 않음
+                        self?.onPhotoSelected?(image, nil)
                         self?.dismiss(animated: true)
                     }
                 }

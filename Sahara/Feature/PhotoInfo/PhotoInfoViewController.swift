@@ -169,6 +169,7 @@ final class PhotoInfoViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private var selectedLocation: CLLocation?
     private var selectedImage: UIImage?
+    private let initialLocationSubject = PublishSubject<CLLocation>()
 
     // MARK: - Init
     init(viewModel: PhotoInfoViewModel) {
@@ -222,7 +223,7 @@ final class PhotoInfoViewController: UIViewController {
             selectedImage: selectedImageSubject.asObservable(),
             date: datePicker.rx.date.asObservable(),
             memo: memoTextView.rx.text.asObservable(),
-            location: locationSubject.asObservable(),
+            location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             cancelButtonTapped: cancelButton.rx.tap.asObservable()
         )
@@ -278,8 +279,8 @@ final class PhotoInfoViewController: UIViewController {
 
     private func presentPhotoSelectionModal(selectedImageSubject: BehaviorSubject<UIImage?>) {
         let photoSelectionVC = PhotoSelectionViewController()
-        photoSelectionVC.onPhotoSelected = { [weak self] image in
-            self?.openPhotoEditor(with: image, selectedImageSubject: selectedImageSubject)
+        photoSelectionVC.onPhotoSelected = { [weak self] image, location in
+            self?.openPhotoEditor(with: image, location: location, selectedImageSubject: selectedImageSubject)
         }
         let navController = UINavigationController(rootViewController: photoSelectionVC)
         if let sheet = navController.sheetPresentationController {
@@ -289,9 +290,37 @@ final class PhotoInfoViewController: UIViewController {
         present(navController, animated: true)
     }
 
-    private func openPhotoEditor(with image: UIImage, selectedImageSubject: BehaviorSubject<UIImage?>) {
+    private func openPhotoEditor(with image: UIImage, location: CLLocation?, selectedImageSubject: BehaviorSubject<UIImage?>) {
         dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
+
+            // 위치 정보가 있으면 먼저 처리
+            if let location = location {
+                self.selectedLocation = location
+                self.initialLocationSubject.onNext(location)
+
+                let geocoder = CLGeocoder()
+                geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+                    guard let self = self,
+                          let placemark = placemarks?.first else { return }
+
+                    var addressString = ""
+                    if let locality = placemark.locality {
+                        addressString += locality
+                    }
+                    if let subLocality = placemark.subLocality {
+                        addressString += " " + subLocality
+                    }
+                    if let thoroughfare = placemark.thoroughfare {
+                        addressString += " " + thoroughfare
+                    }
+
+                    self.selectedLocationLabel.text = addressString.isEmpty ? "사진 위치" : addressString
+                    self.selectedLocationLabel.textColor = .label
+                    self.updateMapView(with: location.coordinate)
+                }
+            }
+
             let viewModel = PhotoEditorViewModel(originalImage: image)
             let editorVC = PhotoEditorViewController(viewModel: viewModel)
             editorVC.onEditingComplete = { [weak self] editedImage in
