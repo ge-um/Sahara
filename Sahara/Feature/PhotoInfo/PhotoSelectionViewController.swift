@@ -81,7 +81,8 @@ final class PhotoSelectionViewController: UIViewController {
             break
         }
     }
-
+    
+    // TODO: - 권한 요청 플로우 수정하기
     private func requestPhotoLibraryAccessIfNeeded(completion: @escaping (Bool) -> Void) {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
 
