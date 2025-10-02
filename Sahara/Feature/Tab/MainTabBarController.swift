@@ -19,10 +19,14 @@ final class MainTabBarController: UITabBarController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         tabBarGradientLayer.frame = tabBar.bounds
+
+        var tabBarFrame = tabBar.frame
+        tabBarFrame.size.height = 70
+        tabBarFrame.origin.y = view.frame.size.height - 70
+        tabBar.frame = tabBarFrame
     }
 
     private func configureTabBar() {
-        // 탭바 그라디언트 배경
         tabBarGradientLayer.colors = ColorSystem.Gradient.barBack.colors
         tabBarGradientLayer.locations = ColorSystem.Gradient.barBack.locations
         tabBarGradientLayer.startPoint = ColorSystem.Gradient.barBack.startPoint
@@ -33,7 +37,6 @@ final class MainTabBarController: UITabBarController {
         tabBar.unselectedItemTintColor = .gray
         tabBar.isTranslucent = false
 
-        // 탭바 상단 구분선 제거
         tabBar.shadowImage = UIImage()
         tabBar.backgroundImage = UIImage()
     }
@@ -43,14 +46,15 @@ final class MainTabBarController: UITabBarController {
         let galleryVC = GalleryViewController(viewModel: galleryVM)
         let galleryNav = UINavigationController(rootViewController: galleryVC)
 
-        // Asset의 gallery 아이콘 사용
         let tabBarItem = UITabBarItem(
             title: NSLocalizedString("tab.gallery", comment: ""),
             image: UIImage(named: "gallery"),
             selectedImage: UIImage(named: "gallery")
         )
 
-        // 탭바 텍스트 스타일 적용
+        tabBarItem.imageInsets = UIEdgeInsets(top: 6, left: 0, bottom: -6, right: 0)
+        tabBarItem.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 3)
+
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .font: FontSystem.TextStyle.tabBarLabel.font,
             .kern: FontSystem.TextStyle.tabBarLabel.letterSpacing
