@@ -198,6 +198,7 @@ final class PhotoInfoViewController: UIViewController {
     // MARK: - Bind
     private func bind() {
         let locationSubject = PublishSubject<CLLocation>()
+        let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
         searchLocationButton.rx.tap
             .subscribe(with: self) { owner, _ in
@@ -206,6 +207,7 @@ final class PhotoInfoViewController: UIViewController {
             .disposed(by: disposeBag)
 
         let input = PhotoInfoViewModel.Input(
+            selectedImage: selectedImageSubject.asObservable(),
             date: datePicker.rx.date.asObservable(),
             memo: memoTextView.rx.text.asObservable(),
             location: locationSubject.asObservable(),
@@ -231,7 +233,7 @@ final class PhotoInfoViewController: UIViewController {
 
         photoSelectButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.presentPhotoSelectionModal()
+                owner.presentPhotoSelectionModal(selectedImageSubject: selectedImageSubject)
             }
             .disposed(by: disposeBag)
 
@@ -248,10 +250,10 @@ final class PhotoInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func presentPhotoSelectionModal() {
+    private func presentPhotoSelectionModal(selectedImageSubject: BehaviorSubject<UIImage?>) {
         let photoSelectionVC = PhotoSelectionViewController()
         photoSelectionVC.onPhotoSelected = { [weak self] image in
-            self?.openPhotoEditor(with: image)
+            self?.openPhotoEditor(with: image, selectedImageSubject: selectedImageSubject)
         }
         let navController = UINavigationController(rootViewController: photoSelectionVC)
         if let sheet = navController.sheetPresentationController {
@@ -261,7 +263,7 @@ final class PhotoInfoViewController: UIViewController {
         present(navController, animated: true)
     }
 
-    private func openPhotoEditor(with image: UIImage) {
+    private func openPhotoEditor(with image: UIImage, selectedImageSubject: BehaviorSubject<UIImage?>) {
         dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
             let viewModel = PhotoEditorViewModel(originalImage: image)
@@ -271,6 +273,7 @@ final class PhotoInfoViewController: UIViewController {
                 self?.photoImageView.image = editedImage
                 self?.photoImageView.isHidden = false
                 self?.photoSelectButton.isHidden = true
+                selectedImageSubject.onNext(editedImage)
             }
             let navController = UINavigationController(rootViewController: editorVC)
             navController.modalPresentationStyle = .fullScreen

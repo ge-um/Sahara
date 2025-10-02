@@ -271,8 +271,17 @@ final class GalleryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        let photoSavedNotification = NotificationCenter.default.rx
+            .notification(NSNotification.Name("PhotoSaved"))
+            .map { _ in () }
+
+        let viewWillAppearTrigger = Observable.merge(
+            rx.methodInvoked(#selector(viewWillAppear)).map { _ in () },
+            photoSavedNotification
+        )
+
         let input = GalleryViewModel.Input(
-            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear)).map { _ in },
+            viewWillAppear: viewWillAppearTrigger,
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
             nextMonthTapped: nextMonthButton.rx.tap.asObservable(),
@@ -328,13 +337,19 @@ final class GalleryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        rx.methodInvoked(#selector(viewWillAppear))
-            .withLatestFrom(output.selectedViewType.asObservable())
-            .filter { $0 == .location }
-            .bind(with: self) { owner, _ in
+        Observable.merge(
+            rx.methodInvoked(#selector(viewWillAppear)).map { _ in () },
+            photoSavedNotification
+        )
+        .withLatestFrom(output.selectedViewType.asObservable())
+        .bind(with: self) { owner, viewType in
+            if viewType == .location {
                 owner.loadMapAnnotations()
+            } else if viewType == .theme {
+                owner.themeGalleryVC.refreshData()
             }
-            .disposed(by: disposeBag)
+        }
+        .disposed(by: disposeBag)
         
         collectionView.rx.modelSelected(DayItem.self)
             .filter { $0.hasPhotos } // 사진이 있는 날짜만 필터링

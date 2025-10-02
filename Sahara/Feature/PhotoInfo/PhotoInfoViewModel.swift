@@ -13,9 +13,10 @@ import UIKit
 
 final class PhotoInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let editedImage: UIImage?
+    private var editedImage: UIImage?
 
     struct Input {
+        let selectedImage: Observable<UIImage?>
         let date: Observable<Date>
         let memo: Observable<String?>
         let location: Observable<CLLocation>
@@ -37,6 +38,14 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let locationRelay = BehaviorRelay<CLLocation?>(value: nil)
+        let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
+
+        input.selectedImage
+            .bind(with: self) { owner, image in
+                owner.editedImage = image
+                imageRelay.accept(image)
+            }
+            .disposed(by: disposeBag)
 
         input.location
             .map { $0 as CLLocation? }
@@ -61,10 +70,10 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
         let dismiss = input.cancelButtonTapped
             .asDriver(onErrorJustReturn: ())
 
-        let hasImage = Driver.just(editedImage != nil)
+        let hasImage = imageRelay.map { $0 != nil }.asDriver(onErrorJustReturn: false)
 
         return Output(
-            editedImage: Driver.just(editedImage),
+            editedImage: imageRelay.asDriver(),
             hasImage: hasImage,
             location: locationRelay.compactMap { $0 }.asDriver(onErrorDriveWith: .empty()),
             saved: saved,
@@ -87,5 +96,6 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
         )
 
         RealmManager.shared.save(photoMemo)
+        NotificationCenter.default.post(name: NSNotification.Name("PhotoSaved"), object: nil)
     }
 }
