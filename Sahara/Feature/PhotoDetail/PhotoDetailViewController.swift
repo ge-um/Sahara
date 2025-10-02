@@ -131,29 +131,41 @@ final class PhotoDetailViewController: UIViewController {
         return stackView
     }()
 
-    private let saveButton: UIButton = {
+    private lazy var saveButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .systemBlue
-        config.baseForegroundColor = .white
-        config.title = NSLocalizedString("common.save", comment: "")
-        config.image = UIImage(systemName: "square.and.arrow.down")
-        config.imagePlacement = .leading
-        config.imagePadding = 8
-        config.cornerStyle = .medium
+        config.baseBackgroundColor = ColorSystem.buttonYellow
+        config.baseForegroundColor = .black
+        config.cornerStyle = .capsule
+
+        let font = FontSystem.galmuriMono(size: 12)
+        let title = NSLocalizedString("common.save", comment: "")
+        config.attributedTitle = AttributedString(title.attributedString(font: font, letterSpacing: -6, color: .black))
+
         let button = UIButton(configuration: config)
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.2
+
         return button
     }()
 
-    private let shareButton: UIButton = {
+    private lazy var shareButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .systemGreen
-        config.baseForegroundColor = .white
-        config.title = NSLocalizedString("common.share", comment: "")
-        config.image = UIImage(systemName: "square.and.arrow.up")
-        config.imagePlacement = .leading
-        config.imagePadding = 8
-        config.cornerStyle = .medium
+        config.baseBackgroundColor = ColorSystem.buttonYellow
+        config.baseForegroundColor = .black
+        config.cornerStyle = .capsule
+
+        let font = FontSystem.galmuriMono(size: 12)
+        let title = NSLocalizedString("common.share", comment: "")
+        config.attributedTitle = AttributedString(title.attributedString(font: font, letterSpacing: -6, color: .black))
+
         let button = UIButton(configuration: config)
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.2
+
         return button
     }()
 
@@ -175,7 +187,7 @@ final class PhotoDetailViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(cardContainerView)
         view.addSubview(buttonStackView)
