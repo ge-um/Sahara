@@ -170,6 +170,7 @@ final class PhotoInfoViewController: UIViewController {
     private var selectedLocation: CLLocation?
     private var selectedImage: UIImage?
     private let initialLocationSubject = PublishSubject<CLLocation>()
+    private var mapViewHeightConstraint: Constraint?
 
     // MARK: - Init
     init(viewModel: PhotoInfoViewModel) {
@@ -353,6 +354,12 @@ final class PhotoInfoViewController: UIViewController {
 
     private func updateMapView(with coordinate: CLLocationCoordinate2D) {
         mapView.isHidden = false
+        mapViewHeightConstraint?.update(offset: 200)
+
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+
         let region = MKCoordinateRegion(
             center: coordinate,
             latitudinalMeters: 1000,
@@ -471,7 +478,7 @@ final class PhotoInfoViewController: UIViewController {
         mapView.snp.makeConstraints { make in
             make.top.equalTo(searchLocationButton.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(16)
-            make.height.equalTo(200)
+            mapViewHeightConstraint = make.height.equalTo(0).constraint
             make.bottom.equalToSuperview().inset(16)
         }
     }
