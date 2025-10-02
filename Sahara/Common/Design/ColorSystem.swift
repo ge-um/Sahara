@@ -47,8 +47,8 @@ enum ColorSystem {
                 ]
             case .grayGradient:
                 return [
-                    UIColor(hex: "A6A3B4").cgColor,
-                    UIColor.white.cgColor
+                    UIColor.white.cgColor,
+                    UIColor(hex: "A6A3B4").cgColor
                 ]
             case .whiteGray:
                 return [
