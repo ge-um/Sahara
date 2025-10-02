@@ -6,6 +6,8 @@
 	<string>Light</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>사진 접근 권한이 필요합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>현재 위치를 기록하기 위해 위치 접근 권한이 필요합니다.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>GalmuriMono11.ttf</string>
