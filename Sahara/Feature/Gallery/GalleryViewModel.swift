@@ -188,7 +188,9 @@ final class GalleryViewModel {
 
         let checkEmpty: () -> Void = { [weak self] in
             guard let self = self else { return }
-            isEmptyRelay.accept(self.realm.objects(Memo.self).isEmpty)
+            let isEmpty = self.realm.objects(Memo.self).isEmpty
+            print("🔍 checkEmpty: isEmpty = \(isEmpty)")
+            isEmptyRelay.accept(isEmpty)
         }
 
         input.addButtonTapped

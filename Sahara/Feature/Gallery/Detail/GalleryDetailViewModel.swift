@@ -25,6 +25,7 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
     struct Output {
         let memos: Driver<[Memo]>
         let navigateToDetail: Driver<ObjectId>
+        let shouldPopIfEmpty: Driver<Bool>
     }
 
     init(date: Date) {
@@ -48,29 +49,42 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
             memosRelay.accept(Array(results))
         }
 
-        input.viewDidLoad
-            .bind(with: self) { _, _ in
-                loadMemos()
-            }
-            .disposed(by: disposeBag)
+        // viewDidLoad와 viewWillAppear를 merge하되, distinctUntilChanged로 중복 호출 방지
+        Observable.merge(
+            input.viewDidLoad,
+            input.viewWillAppear
+        )
+        .throttle(.milliseconds(100), scheduler: MainScheduler.instance)
+        .bind(with: self) { _, _ in
+            loadMemos()
+        }
+        .disposed(by: disposeBag)
 
-        input.viewWillAppear
-            .bind(with: self) { _, _ in
-                loadMemos()
-            }
-            .disposed(by: disposeBag)
-
-        input.itemDeleted
-            .withLatestFrom(memosRelay) { indexPath, memos in
-                memos[indexPath.row]
+        let deleteCompleted = input.itemDeleted
+            .withLatestFrom(memosRelay) { indexPath, memos -> (Int, [Memo]) in
+                (indexPath.row, memos)
             }
             .withUnretained(self)
-            .bind { owner, memo in
+            .do(onNext: { owner, data in
+                let (index, memos) = data
+                guard index < memos.count else { return }
+                let memo = memos[index]
+
                 try? owner.realm.write {
                     owner.realm.delete(memo)
                 }
-                loadMemos()
-            }
+
+                // 배열에서 해당 항목 제거하여 즉시 UI 업데이트
+                var updatedMemos = memos
+                updatedMemos.remove(at: index)
+                memosRelay.accept(updatedMemos)
+
+                NotificationCenter.default.post(name: NSNotification.Name("PhotoDeleted"), object: nil)
+            })
+            .map { _ in () }
+
+        deleteCompleted
+            .subscribe()
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected
@@ -79,9 +93,17 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorDriveWith: .empty())
 
+        let shouldPopIfEmpty = deleteCompleted
+            .withLatestFrom(memosRelay)
+            .map { $0.isEmpty }
+            .filter { $0 }
+            .map { _ in true }
+            .asDriver(onErrorJustReturn: false)
+
         return Output(
             memos: memosRelay.asDriver(),
-            navigateToDetail: navigateToDetail
+            navigateToDetail: navigateToDetail,
+            shouldPopIfEmpty: shouldPopIfEmpty
         )
     }
 }

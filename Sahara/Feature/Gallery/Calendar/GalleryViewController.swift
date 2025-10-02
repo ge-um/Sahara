@@ -116,6 +116,7 @@ final class GalleryViewController: UIViewController {
     private let realm = try! Realm()
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
+    private let viewTypeRelay = BehaviorRelay<GalleryViewType>(value: .date)
     
     init(viewModel: GalleryViewModel) {
         self.viewModel = viewModel
@@ -266,32 +267,42 @@ final class GalleryViewController: UIViewController {
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(monthNavigationView.snp.bottom)
             make.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview().inset(70)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(monthNavigationView.snp.bottom)
             make.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview().inset(70)
         }
 
         themeContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
             make.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview().inset(70)
         }
     }
     
     private func bind() {
-        let dateButtonTap = dateButton.rx.tap.map { GalleryViewType.date }
-        let locationButtonTap = locationButton.rx.tap.map { GalleryViewType.location }
-        let themeButtonTap = themeButton.rx.tap.map { GalleryViewType.theme }
+        dateButton.rx.tap
+            .map { GalleryViewType.date }
+            .bind(to: viewTypeRelay)
+            .disposed(by: disposeBag)
 
-        let viewTypeSelected = Observable.merge(dateButtonTap, locationButtonTap, themeButtonTap)
-            .startWith(.date)
+        locationButton.rx.tap
+            .map { GalleryViewType.location }
+            .bind(to: viewTypeRelay)
+            .disposed(by: disposeBag)
 
-        viewTypeSelected
+        themeButton.rx.tap
+            .map { GalleryViewType.theme }
+            .bind(to: viewTypeRelay)
+            .disposed(by: disposeBag)
+
+        viewTypeRelay
+            .asObservable()
             .bind(with: self) { owner, viewType in
+                print("🔍 viewTypeSelected emitted: \(viewType)")
                 owner.updateButtonStyles(selectedType: viewType)
             }
             .disposed(by: disposeBag)
@@ -300,9 +311,17 @@ final class GalleryViewController: UIViewController {
             .notification(NSNotification.Name("PhotoSaved"))
             .map { _ in () }
 
+        let photoDeletedNotification = NotificationCenter.default.rx
+            .notification(NSNotification.Name("PhotoDeleted"))
+            .do(onNext: { _ in
+                print("🔍 PhotoDeleted notification received")
+            })
+            .map { _ in () }
+
         let viewWillAppearObservable = Observable.merge(
             rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in () },
-            photoSavedNotification
+            photoSavedNotification,
+            photoDeletedNotification
         )
 
         let input = GalleryViewModel.Input(
@@ -310,7 +329,7 @@ final class GalleryViewController: UIViewController {
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthButton.rx.tap.asObservable(),
             nextMonthTapped: nextMonthButton.rx.tap.asObservable(),
-            viewTypeSelected: viewTypeSelected
+            viewTypeSelected: viewTypeRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -347,38 +366,40 @@ final class GalleryViewController: UIViewController {
             .drive(currentMonthLabel.rx.text)
             .disposed(by: disposeBag)
 
-        output.isEmpty
-            .drive(with: self) { owner, isEmpty in
+        Driver.combineLatest(output.isEmpty, output.selectedViewType)
+            .drive(with: self) { owner, data in
+                let (isEmpty, viewType) = data
+                print("🔍 isEmpty: \(isEmpty), viewType: \(viewType)")
+
                 owner.emptyStateView.isHidden = !isEmpty
                 owner.viewTypeButtonStackView.isHidden = isEmpty
-                owner.monthNavigationView.isHidden = isEmpty
-                owner.collectionView.isHidden = isEmpty
-                owner.mapView.isHidden = isEmpty
-                owner.themeContainerView.isHidden = isEmpty
-
-                // + 버튼 숨기기/보이기
                 owner.customNavigationBar.setRightButtonHidden(isEmpty)
-            }
-            .disposed(by: disposeBag)
 
-        output.selectedViewType
-            .drive(with: self) { owner, viewType in
-                owner.monthNavigationView.isHidden = viewType != .date
-                owner.collectionView.isHidden = viewType != .date
-                owner.mapView.isHidden = viewType != .location
-                owner.themeContainerView.isHidden = viewType != .theme
+                if isEmpty {
+                    // isEmpty일 때 모든 콘텐츠 뷰 숨기기
+                    owner.monthNavigationView.isHidden = true
+                    owner.collectionView.isHidden = true
+                    owner.mapView.isHidden = true
+                    owner.themeContainerView.isHidden = true
+                } else {
+                    // 데이터가 있을 때 뷰 타입별로 show/hide
+                    owner.monthNavigationView.isHidden = viewType != .date
+                    owner.collectionView.isHidden = viewType != .date
+                    owner.mapView.isHidden = viewType != .location
+                    owner.themeContainerView.isHidden = viewType != .theme
 
-                if viewType == .location {
-                    owner.loadMapAnnotations()
-                } else if viewType == .theme {
-                    owner.themeGalleryVC.refreshData()
+                    if viewType == .location {
+                        owner.loadMapAnnotations()
+                    } else if viewType == .theme {
+                        owner.themeGalleryVC.refreshData()
+                    }
                 }
             }
             .disposed(by: disposeBag)
 
         Observable.merge(
-            rx.methodInvoked(#selector(viewWillAppear)).map { _ in () },
-            photoSavedNotification
+            photoSavedNotification,
+            photoDeletedNotification
         )
         .withLatestFrom(output.selectedViewType.asObservable())
         .bind(with: self) { owner, viewType in
