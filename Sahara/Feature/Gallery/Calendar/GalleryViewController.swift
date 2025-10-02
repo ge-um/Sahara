@@ -17,6 +17,8 @@ import MapKit
 final class GalleryViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
+    private let emptyStateView = EmptyStateView()
+
     private let viewTypeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -141,6 +143,14 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.addRightButton(title: "+") { [weak self] in
             self?.addButtonTapped()
         }
+
+        emptyStateView.configure(
+            message: NSLocalizedString("gallery.empty_message", comment: ""),
+            buttonTitle: NSLocalizedString("gallery.empty_button", comment: "")
+        )
+        emptyStateView.onActionButtonTapped = { [weak self] in
+            self?.addButtonTapped()
+        }
     }
 
     @objc private func addButtonTapped() {
@@ -197,9 +207,10 @@ final class GalleryViewController: UIViewController {
     }
     
     private func configureUI() {
-        view.backgroundColor = .white
+        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
+        view.addSubview(emptyStateView)
         view.addSubview(viewTypeButtonStackView)
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
@@ -217,6 +228,11 @@ final class GalleryViewController: UIViewController {
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(54)
+        }
+
+        emptyStateView.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom)
+            make.horizontalEdges.bottom.equalToSuperview()
         }
 
         viewTypeButtonStackView.snp.makeConstraints { make in
@@ -330,7 +346,21 @@ final class GalleryViewController: UIViewController {
         output.currentMonthTitle
             .drive(currentMonthLabel.rx.text)
             .disposed(by: disposeBag)
-        
+
+        output.isEmpty
+            .drive(with: self) { owner, isEmpty in
+                owner.emptyStateView.isHidden = !isEmpty
+                owner.viewTypeButtonStackView.isHidden = isEmpty
+                owner.monthNavigationView.isHidden = isEmpty
+                owner.collectionView.isHidden = isEmpty
+                owner.mapView.isHidden = isEmpty
+                owner.themeContainerView.isHidden = isEmpty
+
+                // + 버튼 숨기기/보이기
+                owner.customNavigationBar.setRightButtonHidden(isEmpty)
+            }
+            .disposed(by: disposeBag)
+
         output.selectedViewType
             .drive(with: self) { owner, viewType in
                 owner.monthNavigationView.isHidden = viewType != .date

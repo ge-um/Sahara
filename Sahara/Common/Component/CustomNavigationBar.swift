@@ -130,4 +130,8 @@ final class CustomNavigationBar: UIView {
         config?.image = image
         leftButton.configuration = config
     }
+
+    func setRightButtonHidden(_ hidden: Bool) {
+        rightStackView.isHidden = hidden
+    }
 }

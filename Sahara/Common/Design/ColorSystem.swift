@@ -17,6 +17,7 @@ enum ColorSystem {
     enum Gradient {
         case pinkBlue
         case barBack
+        case buttonPink
 
         var colors: [CGColor] {
             switch self {
@@ -31,6 +32,11 @@ enum ColorSystem {
                     UIColor(hex: "E8EAFF").cgColor,
                     UIColor(hex: "BDBCBD").cgColor
                 ]
+            case .buttonPink:
+                return [
+                    UIColor(hex: "FF009F").cgColor,
+                    UIColor(hex: "DB0E8C").cgColor
+                ]
             }
         }
 
@@ -40,6 +46,8 @@ enum ColorSystem {
                 return [0.0, 0.5, 1.0]
             case .barBack:
                 return [0.22, 1.0]
+            case .buttonPink:
+                return [0.0, 1.0]
             }
         }
 
@@ -47,7 +55,7 @@ enum ColorSystem {
             switch self {
             case .pinkBlue:
                 return CGPoint(x: 0.5, y: 0.0)
-            case .barBack:
+            case .barBack, .buttonPink:
                 return CGPoint(x: 0, y: 0)
             }
         }
@@ -56,7 +64,7 @@ enum ColorSystem {
             switch self {
             case .pinkBlue:
                 return CGPoint(x: 0.5, y: 1.0)
-            case .barBack:
+            case .barBack, .buttonPink:
                 return CGPoint(x: 0, y: 1)
             }
         }
