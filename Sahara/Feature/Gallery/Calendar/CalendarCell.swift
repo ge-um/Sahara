@@ -37,8 +37,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
 
         dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(4)
-            make.leading.equalToSuperview().offset(4)
+            make.top.equalToSuperview().offset(8)
+            make.leading.equalToSuperview().offset(8)
         }
     }
 

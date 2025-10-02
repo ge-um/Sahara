@@ -45,14 +45,15 @@ final class GalleryViewController: UIViewController {
         return button
     }()
     
-    private let calendarHeaderView = CalendarHeaderView()
-    
-    private lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
-        collectionView.register(CalendarCell.self, forCellWithReuseIdentifier: CalendarCell.identifier)
-        collectionView.backgroundColor = .clear
-        collectionView.isScrollEnabled = false
-        return collectionView
+    private lazy var calendarContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private lazy var calendarVC: CalendarViewController = {
+        let vc = CalendarViewController(viewModel: viewModel)
+        return vc
     }()
     
     private lazy var mapView: MKMapView = {
@@ -90,10 +91,20 @@ final class GalleryViewController: UIViewController {
         super.viewDidLoad()
         navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
+        setupCalendarView()
         setupMapView()
         setupThemeView()
         setupCustomNavigationBar()
         bind()
+    }
+
+    private func setupCalendarView() {
+        addChild(calendarVC)
+        calendarContainerView.addSubview(calendarVC.view)
+        calendarVC.view.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        calendarVC.didMove(toParent: self)
     }
 
     override func viewDidLayoutSubviews() {
@@ -181,8 +192,7 @@ final class GalleryViewController: UIViewController {
         viewTypeButtonStackView.addArrangedSubview(locationButton)
         viewTypeButtonStackView.addArrangedSubview(themeButton)
 
-        view.addSubview(calendarHeaderView)
-        view.addSubview(collectionView)
+        view.addSubview(calendarContainerView)
         view.addSubview(mapView)
         view.addSubview(themeContainerView)
 
@@ -203,20 +213,14 @@ final class GalleryViewController: UIViewController {
             make.height.equalTo(36)
         }
 
-        calendarHeaderView.snp.makeConstraints { make in
+        calendarContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(68)
-        }
-
-        collectionView.snp.makeConstraints { make in
-            make.top.equalTo(calendarHeaderView.snp.bottom)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().inset(90) // 70(tabBar) + 20(spacing)
         }
 
         mapView.snp.makeConstraints { make in
-            make.top.equalTo(calendarHeaderView.snp.bottom)
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
             make.horizontalEdges.equalToSuperview()
             make.bottom.equalToSuperview().inset(70)
         }
@@ -265,55 +269,15 @@ final class GalleryViewController: UIViewController {
             photoDeletedNotification
         )
 
-        calendarHeaderView.onPreviousMonthTapped = {
-            NotificationCenter.default.post(name: NSNotification.Name("PreviousMonthTapped"), object: nil)
-        }
-
-        calendarHeaderView.onNextMonthTapped = {
-            NotificationCenter.default.post(name: NSNotification.Name("NextMonthTapped"), object: nil)
-        }
-
-        let previousMonthObservable = NotificationCenter.default.rx
-            .notification(NSNotification.Name("PreviousMonthTapped"))
-            .map { _ in () }
-
-        let nextMonthObservable = NotificationCenter.default.rx
-            .notification(NSNotification.Name("NextMonthTapped"))
-            .map { _ in () }
-
         let input = GalleryViewModel.Input(
             viewWillAppear: viewWillAppearObservable,
             addButtonTapped: Observable.never(),
-            previousMonthTapped: previousMonthObservable,
-            nextMonthTapped: nextMonthObservable,
+            previousMonthTapped: Observable.never(),
+            nextMonthTapped: Observable.never(),
             viewTypeSelected: viewTypeRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
-        
-        let dataSource = RxCollectionViewSectionedReloadDataSource<CalendarSection>(
-            configureCell: { _, collectionView, indexPath, item in
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: CalendarCell.identifier,
-                    for: indexPath
-                ) as? CalendarCell else {
-                    return UICollectionViewCell()
-                }
-                cell.configure(with: item)
-                return cell
-            }
-        )
-        
-        output.calendarItems
-            .map { [CalendarSection(items: $0)] }
-            .drive(collectionView.rx.items(dataSource: dataSource))
-            .disposed(by: disposeBag)
-        
-        output.currentMonthTitle
-            .drive(with: self) { owner, monthTitle in
-                owner.calendarHeaderView.configure(monthTitle: monthTitle)
-            }
-            .disposed(by: disposeBag)
 
         Driver.combineLatest(output.isEmpty, output.selectedViewType)
             .drive(with: self) { owner, data in
@@ -323,13 +287,11 @@ final class GalleryViewController: UIViewController {
                 owner.customNavigationBar.setRightButtonHidden(isEmpty)
 
                 if isEmpty {
-                    owner.calendarHeaderView.isHidden = true
-                    owner.collectionView.isHidden = true
+                    owner.calendarContainerView.isHidden = true
                     owner.mapView.isHidden = true
                     owner.themeContainerView.isHidden = true
                 } else {
-                    owner.calendarHeaderView.isHidden = viewType != .date
-                    owner.collectionView.isHidden = viewType != .date
+                    owner.calendarContainerView.isHidden = viewType != .date
                     owner.mapView.isHidden = viewType != .location
                     owner.themeContainerView.isHidden = viewType != .theme
 
@@ -355,15 +317,6 @@ final class GalleryViewController: UIViewController {
             }
         }
         .disposed(by: disposeBag)
-        
-        collectionView.rx.modelSelected(DayItem.self)
-            .filter { $0.hasCards }
-            .compactMap { $0.date }
-            .bind(with: self) { owner, date in
-                let detailVC = GalleryDetailViewController(date: date)
-                owner.navigationController?.pushViewController(detailVC, animated: true)
-            }
-            .disposed(by: disposeBag)
     }
 
     private func updateButtonStyles(selectedType: GalleryViewType) {
@@ -379,27 +332,6 @@ final class GalleryViewController: UIViewController {
         }
     }
 
-    private func layout() -> UICollectionViewLayout {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 0
-        layout.minimumLineSpacing = 0
-        layout.sectionInset = .zero
-
-        // 화면 너비에서 좌우 inset 제외
-        let collectionViewWidth = UIScreen.main.bounds.width - 40
-        let itemWidth = floor(collectionViewWidth / 7)
-
-        // collectionView 높이: tabBar 위 20까지
-        // tabBar는 90(70 + 20), 그 위에 헤더들...
-        // 전체 높이에서 상단 요소들을 빼고 6으로 나눔
-        let topHeight: CGFloat = 54 + 20 + 36 + 10 + 68 // nav + margin + buttons + margin + header
-        let availableHeight = UIScreen.main.bounds.height - topHeight - 90
-        let itemHeight = floor(availableHeight / 6)
-
-        layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
-
-        return layout
-    }
 }
 
 extension GalleryViewController: PHPickerViewControllerDelegate {
