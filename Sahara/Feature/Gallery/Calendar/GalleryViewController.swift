@@ -308,11 +308,11 @@ final class GalleryViewController: UIViewController {
             .disposed(by: disposeBag)
 
         let photoSavedNotification = NotificationCenter.default.rx
-            .notification(NSNotification.Name("PhotoSaved"))
+            .notification(AppNotification.photoSaved.name)
             .map { _ in () }
 
         let photoDeletedNotification = NotificationCenter.default.rx
-            .notification(NSNotification.Name("PhotoDeleted"))
+            .notification(AppNotification.photoDeleted.name)
             .do(onNext: { _ in
                 print("🔍 PhotoDeleted notification received")
             })

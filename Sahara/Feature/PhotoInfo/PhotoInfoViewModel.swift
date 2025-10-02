@@ -96,6 +96,6 @@ final class PhotoInfoViewModel: BaseViewModelProtocol {
         )
 
         RealmManager.shared.save(photoMemo)
-        NotificationCenter.default.post(name: NSNotification.Name("PhotoSaved"), object: nil)
+        NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 }
