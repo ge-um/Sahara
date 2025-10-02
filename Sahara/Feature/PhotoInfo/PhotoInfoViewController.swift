@@ -88,12 +88,19 @@ final class PhotoInfoViewController: UIViewController {
 
     private let memoTextView: UITextView = {
         let textView = UITextView()
-        textView.text = NSLocalizedString("photo_info.memo_placeholder", comment: "")
-        textView.textColor = .placeholderText
         textView.font = .systemFont(ofSize: 16)
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         return textView
+    }()
+
+    private let characterCountLabel: UILabel = {
+        let label = UILabel()
+        label.text = "0/300"
+        label.font = .systemFont(ofSize: 12)
+        label.textColor = .label
+        label.textAlignment = .right
+        return label
     }()
 
     private let locationCard: UIView = {
@@ -180,6 +187,11 @@ final class PhotoInfoViewController: UIViewController {
         configureNavigation()
         bind()
         setupKeyboardDismiss()
+        setupPlaceholder()
+    }
+
+    private func setupPlaceholder() {
+        memoTextView.attributedText = createPlaceholderText()
     }
 
     // MARK: - Setup
@@ -238,8 +250,22 @@ final class PhotoInfoViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.saved
-            .drive(with: self) { owner, _ in
-                owner.navigationController?.dismiss(animated: true)
+            .drive(with: self) { owner, success in
+                if success {
+                    owner.navigationController?.dismiss(animated: true)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.saveError
+            .drive(with: self) { owner, errorMessage in
+                let alert = UIAlertController(
+                    title: "저장 실패",
+                    message: errorMessage,
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                owner.present(alert, animated: true)
             }
             .disposed(by: disposeBag)
 
@@ -327,6 +353,7 @@ final class PhotoInfoViewController: UIViewController {
         contentView.addSubview(memoCard)
         memoCard.addSubview(memoLabel)
         memoCard.addSubview(memoTextView)
+        memoCard.addSubview(characterCountLabel)
 
         contentView.addSubview(locationCard)
         locationCard.addSubview(locationLabel)
@@ -383,6 +410,11 @@ final class PhotoInfoViewController: UIViewController {
             make.top.equalTo(memoLabel.snp.bottom).offset(4)
             make.horizontalEdges.equalToSuperview().inset(8)
             make.height.equalTo(100)
+        }
+
+        characterCountLabel.snp.makeConstraints { make in
+            make.top.equalTo(memoTextView.snp.bottom).offset(4)
+            make.trailing.equalToSuperview().inset(16)
             make.bottom.equalToSuperview().inset(12)
         }
 
@@ -433,15 +465,35 @@ extension PhotoInfoViewController: UITextViewDelegate {
 
     func textViewDidEndEditing(_ textView: UITextView) {
         if textView.text.isEmpty {
-            textView.text = NSLocalizedString("photo_info.memo_placeholder", comment: "")
-            textView.textColor = .placeholderText
+            textView.attributedText = createPlaceholderText()
+            characterCountLabel.text = "0/300"
+            characterCountLabel.textColor = .label
         }
     }
 
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        let currentText = textView.text ?? ""
-        guard let stringRange = Range(range, in: currentText) else { return false }
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
-        return updatedText.count <= 300
+        return true
+    }
+
+    func textViewDidChange(_ textView: UITextView) {
+        let count = textView.text.count
+        characterCountLabel.text = "\(count)/300"
+
+        // 250자 이상일 때 빨간색
+        if count >= 250 {
+            characterCountLabel.textColor = .systemRed
+        } else {
+            characterCountLabel.textColor = .label
+        }
+    }
+
+    private func createPlaceholderText() -> NSAttributedString {
+        return NSAttributedString(
+            string: "메모를 남기고 카드 뒷면에서 확인해보세요!",
+            attributes: [
+                .foregroundColor: UIColor.placeholderText,
+                .font: UIFont.systemFont(ofSize: 16)
+            ]
+        )
     }
 }
