@@ -8,7 +8,11 @@
 import UIKit
 
 extension UIView {
-    func applyGradient(_ gradient: ColorSystem.Gradient) {
+    func applyGradient(_ gradient: ColorSystem.Gradient, removeExisting: Bool = false) {
+        if removeExisting {
+            layer.sublayers?.filter { $0 is CAGradientLayer }.forEach { $0.removeFromSuperlayer() }
+        }
+
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = bounds
         gradientLayer.colors = gradient.colors

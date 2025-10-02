@@ -18,6 +18,9 @@ enum ColorSystem {
         case pinkBlue
         case barBack
         case buttonPink
+        case blueGradient
+        case grayGradient
+        case whiteGray
 
         var colors: [CGColor] {
             switch self {
@@ -37,6 +40,21 @@ enum ColorSystem {
                     UIColor(hex: "FF009F").cgColor,
                     UIColor(hex: "DB0E8C").cgColor
                 ]
+            case .blueGradient:
+                return [
+                    UIColor(hex: "4F7BFE").cgColor,
+                    UIColor(hex: "0213CC").cgColor
+                ]
+            case .grayGradient:
+                return [
+                    UIColor(hex: "A6A3B4").cgColor,
+                    UIColor.white.cgColor
+                ]
+            case .whiteGray:
+                return [
+                    UIColor.white.cgColor,
+                    UIColor(white: 0.9, alpha: 1.0).cgColor
+                ]
             }
         }
 
@@ -46,7 +64,7 @@ enum ColorSystem {
                 return [0.0, 0.5, 1.0]
             case .barBack:
                 return [0.22, 1.0]
-            case .buttonPink:
+            case .buttonPink, .blueGradient, .grayGradient, .whiteGray:
                 return [0.0, 1.0]
             }
         }
@@ -55,8 +73,8 @@ enum ColorSystem {
             switch self {
             case .pinkBlue:
                 return CGPoint(x: 0.5, y: 0.0)
-            case .barBack, .buttonPink:
-                return CGPoint(x: 0, y: 0)
+            case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
+                return CGPoint(x: 0.5, y: 0)
             }
         }
 
@@ -64,8 +82,8 @@ enum ColorSystem {
             switch self {
             case .pinkBlue:
                 return CGPoint(x: 0.5, y: 1.0)
-            case .barBack, .buttonPink:
-                return CGPoint(x: 0, y: 1)
+            case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
+                return CGPoint(x: 0.5, y: 1)
             }
         }
     }

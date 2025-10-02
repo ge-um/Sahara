@@ -91,5 +91,5 @@ enum ThemeCategory: String, CaseIterable {
 
 struct ThemeGroup {
     let category: ThemeCategory
-    let photoMemos: [Memo]
+    let photoMemos: [Card]
 }

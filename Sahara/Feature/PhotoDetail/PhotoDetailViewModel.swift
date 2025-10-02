@@ -46,9 +46,9 @@ final class PhotoDetailViewModel {
 
     func transform(input: Input) -> Output {
         let photoMemo = input.viewDidLoad
-            .compactMap { [weak self] _ -> Memo? in
+            .compactMap { [weak self] _ -> Card? in
                 guard let self = self else { return nil }
-                return self.realmManager.realm?.object(ofType: Memo.self, forPrimaryKey: self.photoMemoId)
+                return self.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: self.photoMemoId)
             }
             .share(replay: 1)
 

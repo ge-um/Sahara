@@ -97,7 +97,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let memoText = (memo?.isEmpty == false && memo != "메모를 남기고 카드 뒷면에서 확인해보세요!") ? memo : nil
 
-        let photoMemo = Memo(
+        let photoMemo = Card(
             createdDate: date,
             editedImageData: imageData,
             memo: memoText,

@@ -23,7 +23,7 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let memos: Driver<[Memo]>
+        let memos: Driver<[Card]>
         let navigateToDetail: Driver<ObjectId>
         let shouldPopIfEmpty: Driver<Bool>
     }
@@ -33,7 +33,7 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let memosRelay = BehaviorRelay<[Memo]>(value: [])
+        let memosRelay = BehaviorRelay<[Card]>(value: [])
 
         let loadMemos: () -> Void = { [weak self] in
             guard let self = self else { return }
@@ -53,7 +53,7 @@ final class GalleryDetailViewModel: BaseViewModelProtocol {
         .disposed(by: disposeBag)
 
         let deleteCompleted = input.itemDeleted
-            .withLatestFrom(memosRelay) { indexPath, memos -> (Int, [Memo]) in
+            .withLatestFrom(memosRelay) { indexPath, memos -> (Int, [Card]) in
                 (indexPath.row, memos)
             }
             .withUnretained(self)

@@ -49,7 +49,7 @@ final class RealmManager {
         }
     }
 
-    func fetchMemos(on date: Date) -> [Memo] {
+    func fetchMemos(on date: Date) -> [Card] {
         guard let realm = realm else { return [] }
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
@@ -57,14 +57,14 @@ final class RealmManager {
             return []
         }
 
-        let results = realm.objects(Memo.self)
+        let results = realm.objects(Card.self)
             .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
             .sorted(byKeyPath: "createdDate", ascending: true)
 
         return Array(results)
     }
 
-    func fetchMemos(in month: Date) -> [Memo] {
+    func fetchMemos(in month: Date) -> [Card] {
         guard let realm = realm else { return [] }
         let calendar = Calendar.current
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month)),
@@ -72,7 +72,7 @@ final class RealmManager {
             return []
         }
 
-        let results = realm.objects(Memo.self)
+        let results = realm.objects(Card.self)
             .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
             .sorted(byKeyPath: "createdDate", ascending: true)
 
