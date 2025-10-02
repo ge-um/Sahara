@@ -302,7 +302,6 @@ final class GalleryViewController: UIViewController {
         viewTypeRelay
             .asObservable()
             .bind(with: self) { owner, viewType in
-                print("🔍 viewTypeSelected emitted: \(viewType)")
                 owner.updateButtonStyles(selectedType: viewType)
             }
             .disposed(by: disposeBag)
@@ -313,9 +312,6 @@ final class GalleryViewController: UIViewController {
 
         let photoDeletedNotification = NotificationCenter.default.rx
             .notification(AppNotification.photoDeleted.name)
-            .do(onNext: { _ in
-                print("🔍 PhotoDeleted notification received")
-            })
             .map { _ in () }
 
         let viewWillAppearObservable = Observable.merge(
@@ -369,8 +365,6 @@ final class GalleryViewController: UIViewController {
         Driver.combineLatest(output.isEmpty, output.selectedViewType)
             .drive(with: self) { owner, data in
                 let (isEmpty, viewType) = data
-                print("🔍 isEmpty: \(isEmpty), viewType: \(viewType)")
-
                 owner.emptyStateView.isHidden = !isEmpty
                 owner.viewTypeButtonStackView.isHidden = isEmpty
                 owner.customNavigationBar.setRightButtonHidden(isEmpty)
