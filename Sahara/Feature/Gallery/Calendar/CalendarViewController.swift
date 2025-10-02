@@ -106,8 +106,10 @@ final class CalendarViewController: UIViewController {
             .filter { $0.hasCards }
             .compactMap { $0.date }
             .bind(with: self) { owner, date in
-                let detailVC = GalleryDetailViewController(date: date)
-                owner.navigationController?.pushViewController(detailVC, animated: true)
+                let detailVC = CalendarDetailViewController(date: date)
+                if let galleryVC = owner.parent as? GalleryViewController {
+                    galleryVC.navigationController?.pushViewController(detailVC, animated: true)
+                }
             }
             .disposed(by: disposeBag)
     }
