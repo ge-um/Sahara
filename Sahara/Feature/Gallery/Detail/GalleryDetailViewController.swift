@@ -11,7 +11,7 @@ import RealmSwift
 
 final class GalleryDetailViewController: UIViewController {
     private let date: Date
-    private var photoMemos: Results<PhotoMemo>?
+    private var photoMemos: Results<Memo>?
     private let realm = try! Realm()
 
     private lazy var tableView: UITableView = {
@@ -51,9 +51,9 @@ final class GalleryDetailViewController: UIViewController {
         let startOfDay = Calendar.current.startOfDay(for: date)
         guard let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) else { return }
 
-        photoMemos = realm.objects(PhotoMemo.self)
-            .filter("date >= %@ AND date < %@", startOfDay, endOfDay)
-            .sorted(byKeyPath: "date", ascending: true)
+        photoMemos = realm.objects(Memo.self)
+            .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
+            .sorted(byKeyPath: "createdDate", ascending: true)
 
         tableView.reloadData()
     }
@@ -67,7 +67,7 @@ extension GalleryDetailViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         if let memo = photoMemos?[indexPath.row] {
-            cell.imageView?.image = UIImage(data: memo.imageData)
+            cell.imageView?.image = UIImage(data: memo.editedImageData)
             cell.textLabel?.text = memo.memo ?? "(메모 없음)"
         }
         return cell

@@ -41,7 +41,7 @@ final class PhotoStickerCell: UICollectionViewCell {
         }
     }
 
-    func configure(with sticker: Sticker) {
+    func configure(with sticker: KlipySticker) {
         // 작은 사이즈(sm)의 이미지를 우선적으로 사용 (썸네일용)
         var urlString: String?
 

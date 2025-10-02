@@ -166,12 +166,12 @@ final class GalleryViewController: UIViewController {
     private func loadMapAnnotations() {
         mapView.removeAnnotations(mapView.annotations)
 
-        let photoMemos = realm.objects(PhotoMemo.self)
+        let memos = realm.objects(Memo.self)
             .filter("latitude != nil AND longitude != nil")
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
-        var coordinateGroups: [String: [PhotoMemo]] = [:]
-        for memo in photoMemos {
+        var coordinateGroups: [String: [Memo]] = [:]
+        for memo in memos {
             guard let lat = memo.latitude, let lon = memo.longitude,
                   lat != 0, lon != 0 else { continue }
             let key = "\(lat),\(lon)"
@@ -447,7 +447,7 @@ extension GalleryViewController: MKMapViewDelegate {
         }
 
         if let firstPhoto = photoAnnotation.photoMemos.first,
-           let image = UIImage(data: firstPhoto.imageData) {
+           let image = UIImage(data: firstPhoto.editedImageData) {
             annotationView?.configure(with: image)
         }
 
@@ -470,7 +470,7 @@ extension GalleryViewController: MKMapViewDelegate {
         }
     }
 
-    private func showGallery(for photoMemos: [PhotoMemo]) {
+    private func showGallery(for photoMemos: [Memo]) {
         let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos)
         let nav = UINavigationController(rootViewController: galleryVC)
         present(nav, animated: true)

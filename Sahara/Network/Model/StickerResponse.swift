@@ -13,7 +13,7 @@ struct StickerResponse: Decodable {
 }
 
 struct StickerData: Decodable {
-    let data: [Sticker]
+    let data: [KlipySticker]
     let currentPage: Int?
     let perPage: Int?
     let hasNext: Bool?
@@ -26,7 +26,7 @@ struct StickerData: Decodable {
     }
 }
 
-struct Sticker: Decodable {
+struct KlipySticker: Decodable {
     let id: Int
     let slug: String
     let title: String

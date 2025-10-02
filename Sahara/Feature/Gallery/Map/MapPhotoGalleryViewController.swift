@@ -9,7 +9,7 @@ import SnapKit
 import UIKit
 
 final class MapPhotoGalleryViewController: UIViewController {
-    private let photoMemos: [PhotoMemo]
+    private let photoMemos: [Memo]
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -31,7 +31,7 @@ final class MapPhotoGalleryViewController: UIViewController {
         return collectionView
     }()
 
-    init(photoMemos: [PhotoMemo]) {
+    init(photoMemos: [Memo]) {
         self.photoMemos = photoMemos
         super.init(nibName: nil, bundle: nil)
     }
@@ -124,8 +124,8 @@ final class MapPhotoCell: UICollectionViewCell {
         }
     }
 
-    func configure(with photoMemo: PhotoMemo) {
-        if let image = UIImage(data: photoMemo.imageData) {
+    func configure(with photoMemo: Memo) {
+        if let image = UIImage(data: photoMemo.editedImageData) {
             imageView.image = image
         }
     }

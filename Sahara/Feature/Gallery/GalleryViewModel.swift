@@ -30,7 +30,7 @@
 //    func transform(input: Input) -> Output {
 //        let showPhotoPicker = PublishRelay<Void>()
 //        let currentMonth = BehaviorRelay(value: Date())
-//        let photos = BehaviorRelay<[PhotoMemo]>(value: [])
+//        let photos = BehaviorRelay<[Memo]>(value: [])
 //        
 //        let calendarItems = Observable
 //            .combineLatest(currentMonth, photos)
@@ -87,19 +87,19 @@
 //        )
 //    }
 //    
-//    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[PhotoMemo]>) {
+//    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Memo]>) {
 //        let calendar = Calendar.current
 //        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
 //              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else { return }
 //        
-//        let results = realm.objects(PhotoMemo.self)
-//            .filter("date >= %@ AND date <= %@", startOfMonth, endOfMonth)
-//            .sorted(byKeyPath: "date", ascending: true)
+//        let results = realm.objects(Memo.self)
+//            .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
+//            .sorted(byKeyPath: "createdDate", ascending: true)
 //        
 //        photos.accept(Array(results))
 //    }
 //    
-//    private func generateCalendar(for month: Date, photoMemos: [PhotoMemo]) -> [DayItem] {
+//    private func generateCalendar(for month: Date, photoMemos: [Memo]) -> [DayItem] {
 //        var calendar = Calendar.current
 //        calendar.locale = Locale(identifier: "ko_KR")
 //        
@@ -119,7 +119,7 @@
 //        for day in range {
 //            if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
 //                let memosForDay = photoMemos.filter {
-//                    calendar.isDate($0.date, inSameDayAs: date)
+//                    calendar.isDate($0.createdDate, inSameDayAs: date)
 //                }
 //                items.append(DayItem(date: date, photoMemos: memosForDay))
 //            }
@@ -163,7 +163,7 @@ final class GalleryViewModel {
     func transform(input: Input) -> Output {
         let showPhotoPicker = PublishRelay<Void>()
         let currentMonth = BehaviorRelay(value: Date())
-        let photos = BehaviorRelay<[PhotoMemo]>(value: [])
+        let photos = BehaviorRelay<[Memo]>(value: [])
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
         
         let calendarItems = Observable
@@ -230,19 +230,19 @@ final class GalleryViewModel {
         )
     }
     
-    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[PhotoMemo]>) {
+    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Memo]>) {
         let calendar = Calendar.current
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
               let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else { return }
 
-        let results = realm.objects(PhotoMemo.self)
-            .filter("date >= %@ AND date <= %@", startOfMonth, endOfMonth)
-            .sorted(byKeyPath: "date", ascending: true)
+        let results = realm.objects(Memo.self)
+            .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
+            .sorted(byKeyPath: "createdDate", ascending: true)
 
         photos.accept(Array(results))
     }
     
-    private func generateCalendar(for month: Date, photoMemos: [PhotoMemo]) -> [DayItem] {
+    private func generateCalendar(for month: Date, photoMemos: [Memo]) -> [DayItem] {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
         
@@ -262,7 +262,7 @@ final class GalleryViewModel {
         for day in range {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
                 let memosForDay = photoMemos.filter {
-                    calendar.isDate($0.date, inSameDayAs: date)
+                    calendar.isDate($0.createdDate, inSameDayAs: date)
                 }
                 items.append(DayItem(date: date, photoMemos: memosForDay))
             }

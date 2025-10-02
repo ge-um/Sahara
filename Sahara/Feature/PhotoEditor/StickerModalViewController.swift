@@ -34,7 +34,7 @@ final class StickerModalViewController: UIViewController {
     private let viewModel: PhotoEditorViewModel
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
-    var onStickerSelected: ((Sticker) -> Void)?
+    var onStickerSelected: ((KlipySticker) -> Void)?
 
     init(viewModel: PhotoEditorViewModel) {
         self.viewModel = viewModel
@@ -66,7 +66,7 @@ final class StickerModalViewController: UIViewController {
         let input = PhotoEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             searchQuery: searchQuery,
-            stickerSelected: stickerCollectionView.rx.modelSelected(Sticker.self).asObservable(),
+            stickerSelected: stickerCollectionView.rx.modelSelected(KlipySticker.self).asObservable(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),

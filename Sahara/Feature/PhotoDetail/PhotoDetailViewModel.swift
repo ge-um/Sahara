@@ -44,15 +44,15 @@ final class PhotoDetailViewModel {
 
     func transform(input: Input) -> Output {
         let photoMemo = input.viewDidLoad
-            .compactMap { [weak self] _ -> PhotoMemo? in
+            .compactMap { [weak self] _ -> Memo? in
                 guard let self = self else { return nil }
-                return self.realm.object(ofType: PhotoMemo.self, forPrimaryKey: self.photoMemoId)
+                return self.realm.object(ofType: Memo.self, forPrimaryKey: self.photoMemoId)
             }
             .share(replay: 1)
 
         let photoImage = photoMemo
             .map { photoMemo -> UIImage? in
-                UIImage(data: photoMemo.imageData)
+                UIImage(data: photoMemo.editedImageData)
             }
             .asDriver(onErrorJustReturn: nil)
 
@@ -61,7 +61,7 @@ final class PhotoDetailViewModel {
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = NSLocalizedString("photo_detail.date_format", comment: "")
                 dateFormatter.locale = Locale.current
-                return dateFormatter.string(from: photoMemo.date)
+                return dateFormatter.string(from: photoMemo.createdDate)
             }
             .asDriver(onErrorJustReturn: "")
 
@@ -116,7 +116,7 @@ final class PhotoDetailViewModel {
         let saveResult = input.saveButtonTapped
             .withLatestFrom(photoMemo)
             .map { photoMemo -> Result<Void, Error> in
-                guard let image = UIImage(data: photoMemo.imageData) else {
+                guard let image = UIImage(data: photoMemo.editedImageData) else {
                     return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")]))
                 }
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
@@ -127,7 +127,7 @@ final class PhotoDetailViewModel {
         let shareImage = input.shareButtonTapped
             .withLatestFrom(photoMemo)
             .compactMap { photoMemo -> UIImage? in
-                UIImage(data: photoMemo.imageData)
+                UIImage(data: photoMemo.editedImageData)
             }
             .asDriver(onErrorDriveWith: .empty())
 

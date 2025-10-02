@@ -330,7 +330,7 @@ final class PhotoEditorViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func addStickerToPhoto(_ sticker: Sticker) {
+    private func addStickerToPhoto(_ sticker: KlipySticker) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: sticker)
         stickerView.frame = CGRect(x: photoImageView.bounds.midX - 50,
