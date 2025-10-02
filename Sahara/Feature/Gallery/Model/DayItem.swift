@@ -10,6 +10,7 @@ import Foundation
 struct DayItem {
     let date: Date?
     let cards: [Card]
+    let isCurrentMonth: Bool
 
     var hasCards: Bool {
         return !cards.isEmpty

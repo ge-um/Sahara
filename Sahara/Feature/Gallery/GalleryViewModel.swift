@@ -126,21 +126,37 @@ final class GalleryViewModel {
         }
 
         let firstWeekday = calendar.component(.weekday, from: firstDay)
+        let daysInMonth = range.count
 
         var items: [DayItem] = []
 
-        for _ in 1..<firstWeekday {
-            items.append(DayItem(date: nil, cards: []))
+        // 이전 달의 날짜들
+        for i in (1..<firstWeekday).reversed() {
+            if let date = calendar.date(byAdding: .day, value: -i, to: firstDay) {
+                items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+            }
         }
 
+        // 현재 달의 날짜들
         for day in range {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
                 let memosForDay = photoMemos.filter {
                     calendar.isDate($0.createdDate, inSameDayAs: date)
                 }
-                items.append(DayItem(date: date, cards: memosForDay))
+                items.append(DayItem(date: date, cards: memosForDay, isCurrentMonth: true))
             }
         }
+
+        // 다음 달의 날짜들 (항상 42칸이 되도록)
+        let remainingCells = 42 - items.count
+        if let lastDay = calendar.date(byAdding: .day, value: daysInMonth - 1, to: firstDay) {
+            for i in 1...remainingCells {
+                if let date = calendar.date(byAdding: .day, value: i, to: lastDay) {
+                    items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+                }
+            }
+        }
+
         return items
     }
 }
