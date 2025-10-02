@@ -4,6 +4,10 @@
 <dict>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>사진 접근 권한이 필요합니다.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>GalmuriMono11.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
