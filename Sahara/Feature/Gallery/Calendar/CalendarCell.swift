@@ -13,7 +13,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var dayLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 20)
+        label.font = FontSystem.galmuriMono(size: 16)
         return label
     }()
 

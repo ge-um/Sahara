@@ -20,7 +20,8 @@ final class CalendarHeaderView: UIView {
     private let previousMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
         button.setTitle("<", for: .normal)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
@@ -30,7 +31,8 @@ final class CalendarHeaderView: UIView {
     private let nextMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 8
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
         button.setTitle(">", for: .normal)
         button.setTitleColor(.black, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
