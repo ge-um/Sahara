@@ -43,6 +43,7 @@
 "card_info.location" = "위치";
 "card_info.location_placeholder" = "위치를 선택해주세요";
 "card_info.search_location" = "위치 검색";
+"card_info.image_required" = "이미지는 필수값입니다.";
 
 /* Card Detail */
 "card_detail.title" = "카드 보기";
@@ -61,6 +62,7 @@
 "location_search.title" = "위치 검색";
 "location_search.placeholder" = "위치 검색";
 "location_search.use_current_location" = "현재 위치 사용";
+"location_search.location_error" = "현재 위치를 가져올 수 없습니다.";
 
 /* Media Selection */
 "media_selection.title" = "사진 선택";

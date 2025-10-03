@@ -43,6 +43,7 @@
 "card_info.location" = "Location";
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
+"card_info.image_required" = "Image is required.";
 
 /* Card Detail */
 "card_detail.title" = "View Card";
@@ -61,6 +62,7 @@
 "location_search.title" = "Search Location";
 "location_search.placeholder" = "Search location";
 "location_search.use_current_location" = "Use Current Location";
+"location_search.location_error" = "Unable to get current location.";
 
 /* Media Selection */
 "media_selection.title" = "Select Photo";

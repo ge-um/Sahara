@@ -61,7 +61,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 // 이미지 필수 검증
                 if self.editedImage == nil {
-                    saveErrorRelay.accept("이미지는 필수값입니다.")
+                    saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
                     return false
                 }
 
