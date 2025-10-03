@@ -18,6 +18,7 @@ final class MediaEditorViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = true
         imageView.backgroundColor = .white
+        imageView.layer.cornerRadius = 10
         return imageView
     }()
 
@@ -444,15 +445,24 @@ final class MediaEditorViewController: UIViewController {
 
 
     private func generateFinalImage() -> UIImage {
+        guard let baseImage = photoImageView.image else {
+            return UIImage()
+        }
+
         modeButtonStackView.isHidden = true
 
-        let renderer = UIGraphicsImageRenderer(bounds: photoImageView.bounds)
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: baseImage.size,
+            in: photoImageView.bounds.size
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: imageRect.size)
         let image = renderer.image { context in
+            context.cgContext.translateBy(x: -imageRect.origin.x, y: -imageRect.origin.y)
             photoImageView.layer.render(in: context.cgContext)
 
-            let canvasFrame = canvasView.frame
             let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
-            drawingImage.draw(in: canvasFrame)
+            drawingImage.draw(at: .zero)
         }
 
         modeButtonStackView.isHidden = false
@@ -496,7 +506,7 @@ final class MediaEditorViewController: UIViewController {
 
     private func configureUI() {
         view.backgroundColor = .white
-
+        
         view.addSubview(photoImageView)
         view.addSubview(canvasView)
         view.addSubview(modeButtonStackView)

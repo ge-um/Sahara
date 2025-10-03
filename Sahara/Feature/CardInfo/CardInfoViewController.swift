@@ -21,10 +21,6 @@ final class CardInfoViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = 16
         imageView.clipsToBounds = true
-        imageView.layer.shadowColor = UIColor.black.cgColor
-        imageView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        imageView.layer.shadowRadius = 8
-        imageView.layer.shadowOpacity = 0.1
         imageView.isUserInteractionEnabled = true
         return imageView
     }()
@@ -185,6 +181,7 @@ final class CardInfoViewController: UIViewController {
     private var selectedImage: UIImage?
     private let initialLocationSubject = PublishSubject<CLLocation>()
     private var mapViewHeightConstraint: Constraint?
+    private var photoImageHeightConstraint: Constraint?
     private let selectedDateRelay = BehaviorRelay<Date>(value: Date())
 
     init(viewModel: CardInfoViewModel) {
@@ -306,7 +303,12 @@ final class CardInfoViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.editedImage
-            .drive(photoImageView.rx.image)
+            .drive(with: self) { owner, image in
+                owner.photoImageView.image = image
+                if let image = image {
+                    owner.updatePhotoImageHeight(for: image)
+                }
+            }
             .disposed(by: disposeBag)
 
         output.hasImage
@@ -315,6 +317,11 @@ final class CardInfoViewController: UIViewController {
                 owner.photoSelectButton.isHidden = hasImage
                 if hasImage {
                     owner.selectedImage = owner.photoImageView.image
+                    if let image = owner.photoImageView.image {
+                        owner.updatePhotoImageHeight(for: image)
+                    }
+                } else {
+                    owner.resetPhotoImageHeight()
                 }
             }
             .disposed(by: disposeBag)
@@ -505,7 +512,7 @@ final class CardInfoViewController: UIViewController {
         photoImageView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(300)
+            photoImageHeightConstraint = make.height.equalTo(300).constraint
         }
 
         photoSelectButton.snp.makeConstraints { make in
@@ -587,6 +594,32 @@ final class CardInfoViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(16)
             mapViewHeightConstraint = make.height.equalTo(0).constraint
             make.bottom.equalToSuperview().inset(16)
+        }
+    }
+
+    private func updatePhotoImageHeight(for image: UIImage) {
+        let aspectRatio = image.size.height / image.size.width
+
+        photoImageView.snp.remakeConstraints { make in
+            make.top.equalToSuperview().offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(photoImageView.snp.width).multipliedBy(aspectRatio)
+        }
+
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+    }
+
+    private func resetPhotoImageHeight() {
+        photoImageView.snp.remakeConstraints { make in
+            make.top.equalToSuperview().offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(300)
+        }
+
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
         }
     }
 
