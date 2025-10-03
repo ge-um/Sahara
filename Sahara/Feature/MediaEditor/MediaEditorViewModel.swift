@@ -14,10 +14,14 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let originalImage: UIImage
     private let context = CIContext()
+    private let currentPageRelay = BehaviorRelay<Int>(value: 1)
+    private let hasNextRelay = BehaviorRelay<Bool>(value: true)
+    private let currentQueryRelay = BehaviorRelay<String>(value: "")
 
     struct Input {
         let viewWillAppear: Observable<Void>
         let searchQuery: Observable<String>
+        let loadMoreTrigger: Observable<Void>
         let stickerSelected: Observable<KlipySticker>
         let filterSelected: Observable<(Int, UIImage?)>
         let cropApplied: Observable<(UIImage, CGRect, CGRect)>
@@ -33,6 +37,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let croppedImage: Driver<UIImage?>
         let filteredImage: Driver<UIImage?>
         let stickers: Driver<[KlipySticker]>
+        let isLoadingMore: Driver<Bool>
         let selectedSticker: Driver<KlipySticker>
         let selectedPhoto: Driver<UIImage>
         let navigateToMetadata: Driver<UIImage>
@@ -48,9 +53,24 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let currentEditingImageRelay = BehaviorRelay<UIImage>(value: originalImage)
         let croppedImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)
+        let isLoadingMoreRelay = BehaviorRelay<Bool>(value: false)
+
+        input.searchQuery
+            .withUnretained(self)
+            .bind { owner, query in
+                owner.currentQueryRelay.accept(query)
+                owner.currentPageRelay.accept(1)
+                owner.hasNextRelay.accept(true)
+            }
+            .disposed(by: disposeBag)
 
         input.viewWillAppear
-            .flatMapLatest { _ in
+            .withUnretained(self)
+            .do(onNext: { owner, _ in
+                owner.currentPageRelay.accept(1)
+                owner.hasNextRelay.accept(true)
+            })
+            .flatMapLatest { owner, _ in
                 NetworkManager.shared.callRequest(
                     api: .trendingStickers(
                         page: 1,
@@ -61,43 +81,95 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                     type: StickerResponse.self
                 )
             }
-            .map { $0.data.data }
+            .withUnretained(self)
+            .do(onNext: { owner, response in
+                owner.hasNextRelay.accept(response.data.hasNext ?? false)
+            })
+            .map { $0.1.data.data }
             .bind(to: stickersRelay)
             .disposed(by: disposeBag)
 
         input.searchQuery
-            .filter { !$0.isEmpty }
-            .flatMapLatest { query in
-                NetworkManager.shared.callRequest(
-                    api: .searchStickers(
-                        query: query,
-                        page: 1,
-                        perPage: 20,
-                        customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
-                        locale: Locale.current.language.languageCode?.identifier ?? "US"
-                    ),
-                    type: StickerResponse.self
-                )
+            .skip(1)
+            .distinctUntilChanged()
+            .withUnretained(self)
+            .flatMapLatest { owner, query -> Observable<StickerResponse> in
+                if query.isEmpty {
+                    return NetworkManager.shared.callRequest(
+                        api: .trendingStickers(
+                            page: 1,
+                            perPage: 20,
+                            customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
+                            locale: Locale.current.language.languageCode?.identifier ?? "US"
+                        ),
+                        type: StickerResponse.self
+                    )
+                } else {
+                    return NetworkManager.shared.callRequest(
+                        api: .searchStickers(
+                            query: query,
+                            page: 1,
+                            perPage: 20,
+                            customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
+                            locale: Locale.current.language.languageCode?.identifier ?? "US"
+                        ),
+                        type: StickerResponse.self
+                    )
+                }
             }
-            .map { $0.data.data }
+            .withUnretained(self)
+            .do(onNext: { owner, response in
+                owner.hasNextRelay.accept(response.data.hasNext ?? false)
+            })
+            .map { $0.1.data.data }
             .bind(to: stickersRelay)
             .disposed(by: disposeBag)
 
-        input.searchQuery
-            .filter { $0.isEmpty }
-            .flatMapLatest { _ in
-                NetworkManager.shared.callRequest(
-                    api: .trendingStickers(
-                        page: 1,
-                        perPage: 20,
-                        customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
-                        locale: Locale.current.language.languageCode?.identifier ?? "US"
-                    ),
-                    type: StickerResponse.self
-                )
+        input.loadMoreTrigger
+            .withUnretained(self)
+            .filter { owner, _ in owner.hasNextRelay.value && !isLoadingMoreRelay.value }
+            .do(onNext: { owner, _ in
+                isLoadingMoreRelay.accept(true)
+                owner.currentPageRelay.accept(owner.currentPageRelay.value + 1)
+            })
+            .flatMapLatest { owner, _ -> Observable<StickerResponse> in
+                let query = owner.currentQueryRelay.value
+                let page = owner.currentPageRelay.value
+
+                if query.isEmpty {
+                    return NetworkManager.shared.callRequest(
+                        api: .trendingStickers(
+                            page: page,
+                            perPage: 20,
+                            customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
+                            locale: Locale.current.language.languageCode?.identifier ?? "US"
+                        ),
+                        type: StickerResponse.self
+                    )
+                } else {
+                    return NetworkManager.shared.callRequest(
+                        api: .searchStickers(
+                            query: query,
+                            page: page,
+                            perPage: 20,
+                            customerId: UIDevice.current.identifierForVendor?.uuidString ?? "unknown",
+                            locale: Locale.current.language.languageCode?.identifier ?? "US"
+                        ),
+                        type: StickerResponse.self
+                    )
+                }
             }
-            .map { $0.data.data }
-            .bind(to: stickersRelay)
+            .withUnretained(self)
+            .do(onNext: { owner, response in
+                owner.hasNextRelay.accept(response.data.hasNext ?? false)
+                isLoadingMoreRelay.accept(false)
+            })
+            .map { $0.1.data.data }
+            .withUnretained(self)
+            .bind { owner, newStickers in
+                let currentStickers = stickersRelay.value
+                stickersRelay.accept(currentStickers + newStickers)
+            }
             .disposed(by: disposeBag)
 
         // 필터 적용 로직
@@ -154,6 +226,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             croppedImage: croppedImageRelay.asDriver(),
             filteredImage: filteredImageRelay.asDriver(),
             stickers: stickersRelay.asDriver(),
+            isLoadingMore: isLoadingMoreRelay.asDriver(),
             selectedSticker: selectedSticker,
             selectedPhoto: selectedPhoto,
             navigateToMetadata: navigateToMetadata,
