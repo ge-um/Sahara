@@ -27,10 +27,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     required init?(coder: NSCoder) { fatalError() }
 
     private func configureUI() {
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = .clear
 
         addSubview(containerView)
         addSubview(dayLabel)
+
+        containerView.backgroundColor = .clear
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -43,7 +45,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     }
 
     func configure(with item: DayItem) {
-        // 기존 이미지뷰들 제거
         imageViews.forEach { $0.removeFromSuperview() }
         imageViews.removeAll()
 
@@ -51,13 +52,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let day = Calendar.current.component(.day, from: date)
             dayLabel.text = "\(day)"
 
-            // 현재 달이 아니면 회색으로 표시
-            dayLabel.textColor = item.isCurrentMonth ? .label : .systemGray3
+            dayLabel.textColor = item.isCurrentMonth ? .label : ColorSystem.labelNotCurrentMonth
 
             let photoCount = item.cards.count
 
             if photoCount == 0 {
-                containerView.backgroundColor = .white
+                containerView.backgroundColor = .clear
             } else if photoCount == 1 {
                 layoutSingleImage(item.cards[0])
             } else if photoCount == 2 {
@@ -68,7 +68,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         } else {
             dayLabel.text = ""
             dayLabel.textColor = .label
-            containerView.backgroundColor = .white
+            containerView.backgroundColor = .clear
         }
     }
 
