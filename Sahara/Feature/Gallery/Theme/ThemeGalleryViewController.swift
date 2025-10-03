@@ -85,9 +85,10 @@ final class ThemeGalleryViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.navigateToPhotos
-            .drive(with: self) { owner, photoMemos in
-                let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos)
+            .drive(with: self) { owner, themeGroup in
+                let galleryVC = MapPhotoGalleryViewController(photoMemos: themeGroup.photoMemos, themeCategory: themeGroup.category)
                 let nav = UINavigationController(rootViewController: galleryVC)
+                nav.modalPresentationStyle = .fullScreen
                 owner.present(nav, animated: true)
             }
             .disposed(by: disposeBag)

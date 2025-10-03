@@ -51,4 +51,9 @@ final class MapPhotoGalleryViewModel: BaseViewModelProtocol {
             dismiss: dismiss
         )
     }
+
+    func getCard(at index: Int) -> Card? {
+        guard index < photoMemos.count else { return nil }
+        return photoMemos[index]
+    }
 }
