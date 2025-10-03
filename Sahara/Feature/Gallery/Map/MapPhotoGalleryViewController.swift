@@ -76,7 +76,7 @@ final class MapPhotoGalleryViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.grayGradient)
+        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(collectionView)
