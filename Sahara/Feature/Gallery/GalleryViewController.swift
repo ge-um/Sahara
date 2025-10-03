@@ -398,9 +398,9 @@ extension GalleryViewController: MKMapViewDelegate {
     }
 
     private func showGallery(for photoMemos: [Card]) {
-        let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos, themeCategory: .others)
-        let nav = UINavigationController(rootViewController: galleryVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        let photoCount = photoMemos.count
+        let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
+        let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos, themeCategory: .others, customTitle: title)
+        navigationController?.pushViewController(galleryVC, animated: true)
     }
 }
