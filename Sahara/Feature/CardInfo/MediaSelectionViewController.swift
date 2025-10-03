@@ -38,11 +38,25 @@ final class MediaSelectionViewController: UIViewController {
     var onMediaSelected: ((UIImage, CLLocation?) -> Void)?
     private var photos: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
+    private var isObserverRegistered = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        checkPhotoLibraryAccess()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status == .authorized || status == .limited {
+            registerPhotoLibraryChangeObserverIfNeeded()
+            fetchPhotos()
+        }
+    }
+
+    deinit {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
 
     private func configureUI() {
@@ -74,50 +88,6 @@ final class MediaSelectionViewController: UIViewController {
         dismiss(animated: true)
     }
 
-    private func checkPhotoLibraryAccess() {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-
-        switch status {
-        case .authorized, .limited:
-            fetchPhotos()
-        case .denied, .restricted, .notDetermined:
-            break
-        @unknown default:
-            break
-        }
-    }
-    
-    // TODO: - 권한 요청 플로우 수정하기
-    private func requestPhotoLibraryAccessIfNeeded(completion: @escaping (Bool) -> Void) {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-
-        switch status {
-        case .authorized, .limited:
-            completion(true)
-        case .denied, .restricted:
-            showPermissionAlert()
-            completion(false)
-        case .notDetermined:
-            PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] newStatus in
-                DispatchQueue.main.async {
-                    switch newStatus {
-                    case .authorized, .limited:
-                        self?.fetchPhotos()
-                        completion(true)
-                    case .denied, .restricted:
-                        self?.showPermissionAlert()
-                        completion(false)
-                    case .notDetermined:
-                        completion(false)
-                    @unknown default:
-                        completion(false)
-                    }
-                }
-            }
-        @unknown default:
-            completion(false)
-        }
-    }
 
     private func fetchPhotos() {
         let fetchOptions = PHFetchOptions()
@@ -195,6 +165,56 @@ final class MediaSelectionViewController: UIViewController {
     }
 
     private func openPHPicker() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+        switch status {
+        case .authorized:
+            registerPhotoLibraryChangeObserverIfNeeded()
+            fetchPhotos()
+            presentPHPicker()
+        case .limited:
+            registerPhotoLibraryChangeObserverIfNeeded()
+            fetchPhotos()
+            PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+        case .denied, .restricted:
+            showPermissionAlert()
+        case .notDetermined:
+            requestPhotoLibraryAccessAndOpenPicker()
+        @unknown default:
+            break
+        }
+    }
+
+    private func requestPhotoLibraryAccessAndOpenPicker() {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.registerPhotoLibraryChangeObserverIfNeeded()
+                switch status {
+                case .authorized:
+                    self.fetchPhotos()
+                    self.presentPHPicker()
+                case .limited:
+                    self.fetchPhotos()
+                    PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+                case .denied, .restricted:
+                    self.showPermissionAlert()
+                case .notDetermined:
+                    break
+                @unknown default:
+                    break
+                }
+            }
+        }
+    }
+
+    private func registerPhotoLibraryChangeObserverIfNeeded() {
+        guard !isObserverRegistered else { return }
+        PHPhotoLibrary.shared().register(self)
+        isObserverRegistered = true
+    }
+
+    private func presentPHPicker() {
         var configuration = PHPickerConfiguration()
         configuration.selectionLimit = 1
         configuration.filter = .images
@@ -292,12 +312,19 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        // PHPicker는 위치 정보를 제공하지 않음
                         self?.onMediaSelected?(image, nil)
                         self?.dismiss(animated: true)
                     }
                 }
             }
+        }
+    }
+}
+
+extension MediaSelectionViewController: PHPhotoLibraryChangeObserver {
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        DispatchQueue.main.async { [weak self] in
+            self?.fetchPhotos()
         }
     }
 }
