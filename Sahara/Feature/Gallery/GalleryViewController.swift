@@ -158,21 +158,19 @@ final class GalleryViewController: UIViewController {
             .filter("latitude != nil AND longitude != nil")
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
-        var coordinateGroups: [String: [Card]] = [:]
+        var coordinateGroups: [String: [(id: ObjectId, lat: Double, lon: Double)]] = [:]
         for memo in memos {
             guard let lat = memo.latitude, let lon = memo.longitude,
                   lat != 0, lon != 0 else { continue }
             let key = "\(lat),\(lon)"
-            coordinateGroups[key, default: []].append(memo)
+            coordinateGroups[key, default: []].append((id: memo.id, lat: lat, lon: lon))
         }
 
         let annotations = coordinateGroups.compactMap { key, memos -> PhotoAnnotation? in
-            guard let firstMemo = memos.first,
-                  let lat = firstMemo.latitude,
-                  let lon = firstMemo.longitude,
-                  lat != 0, lon != 0 else { return nil }
-            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            return PhotoAnnotation(coordinate: coordinate, photoMemos: memos)
+            guard let first = memos.first else { return nil }
+            let coordinate = CLLocationCoordinate2D(latitude: first.lat, longitude: first.lon)
+            let ids = memos.map { $0.id }
+            return PhotoAnnotation(coordinate: coordinate, photoMemoIds: ids)
         }
 
         mapView.addAnnotations(annotations)
@@ -370,7 +368,8 @@ extension GalleryViewController: MKMapViewDelegate {
             annotationView?.annotation = annotation
         }
 
-        if let firstPhoto = photoAnnotation.photoMemos.first,
+        if let firstPhotoId = photoAnnotation.photoMemoIds.first,
+           let firstPhoto = realm.object(ofType: Card.self, forPrimaryKey: firstPhotoId),
            let image = UIImage(data: firstPhoto.editedImageData) {
             annotationView?.configure(with: image)
         }
@@ -383,14 +382,16 @@ extension GalleryViewController: MKMapViewDelegate {
 
         if let cluster = view.annotation as? MKClusterAnnotation {
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? PhotoAnnotation }
-            let allPhotos = photoAnnotations.flatMap { $0.photoMemos }
+            let allPhotoIds = photoAnnotations.flatMap { $0.photoMemoIds }
+            let allPhotos = allPhotoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
 
             if !allPhotos.isEmpty {
                 showGallery(for: allPhotos)
             }
         }
         else if let photoAnnotation = view.annotation as? PhotoAnnotation {
-            showGallery(for: photoAnnotation.photoMemos)
+            let photoMemos = photoAnnotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+            showGallery(for: photoMemos)
         }
     }
 
