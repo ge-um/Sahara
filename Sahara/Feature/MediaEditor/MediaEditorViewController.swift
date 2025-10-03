@@ -521,7 +521,7 @@ final class MediaEditorViewController: UIViewController {
         photoImageView.snp.remakeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
             make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-40)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
         }
 
         canvasView.snp.remakeConstraints { make in
@@ -531,7 +531,7 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.snp.remakeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(70)
+            make.height.equalTo(88)
         }
 
         UIView.animate(withDuration: 0.3, animations: {
@@ -553,7 +553,7 @@ final class MediaEditorViewController: UIViewController {
 
             toolBarContainer.snp.remakeConstraints { make in
                 make.leading.trailing.equalToSuperview()
-                make.height.equalTo(70)
+                make.height.equalTo(88)
                 make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-75)
             }
 
@@ -589,14 +589,14 @@ final class MediaEditorViewController: UIViewController {
 
             cropApplyButton.snp.remakeConstraints { make in
                 make.trailing.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
                 make.width.greaterThanOrEqualTo(80)
                 make.height.equalTo(44)
             }
 
             cropCancelButton.snp.remakeConstraints { make in
                 make.leading.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
                 make.width.greaterThanOrEqualTo(80)
                 make.height.equalTo(44)
             }
@@ -897,7 +897,7 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(70)
+            make.height.equalTo(88)
         }
 
         toolBarScrollView.snp.makeConstraints { make in
@@ -912,7 +912,7 @@ final class MediaEditorViewController: UIViewController {
         photoImageView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
             make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-40)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
         }
 
 
@@ -921,14 +921,14 @@ final class MediaEditorViewController: UIViewController {
         }
 
         filterCollectionView.snp.makeConstraints { make in
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
             make.horizontalEdges.equalToSuperview().inset(40)
             make.height.equalTo(144)
         }
 
         trashIconView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
             make.width.height.equalTo(60)
         }
 
