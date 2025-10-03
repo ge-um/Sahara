@@ -395,13 +395,7 @@ final class CardInfoViewController: UIViewController {
 
         output.saveError
             .drive(with: self) { owner, errorMessage in
-                let alert = UIAlertController(
-                    title: "저장 실패",
-                    message: errorMessage,
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "확인", style: .default))
-                owner.present(alert, animated: true)
+                owner.showToast(message: errorMessage)
             }
             .disposed(by: disposeBag)
 

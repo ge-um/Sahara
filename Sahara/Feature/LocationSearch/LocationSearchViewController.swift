@@ -254,13 +254,7 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        let alert = UIAlertController(
-            title: "위치 가져오기 실패",
-            message: "현재 위치를 가져올 수 없습니다.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
+        showToast(message: "현재 위치를 가져올 수 없습니다.")
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

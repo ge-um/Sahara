@@ -383,15 +383,13 @@ final class CardDetailViewController: UIViewController {
 
         output.saveResult
             .drive(with: self) { owner, result in
-                let alert: UIAlertController
                 switch result {
                 case .success:
-                    alert = UIAlertController(title: NSLocalizedString("photo_detail.save_success", comment: ""), message: NSLocalizedString("photo_detail.save_success_message", comment: ""), preferredStyle: .alert)
+                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
+                    owner.showToast(message: message)
                 case .failure(let error):
-                    alert = UIAlertController(title: NSLocalizedString("photo_detail.save_failed", comment: ""), message: error.localizedDescription, preferredStyle: .alert)
+                    owner.showToast(message: error.localizedDescription)
                 }
-                alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
-                owner.present(alert, animated: true)
             }
             .disposed(by: disposeBag)
 
