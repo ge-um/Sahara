@@ -15,6 +15,9 @@ final class StickerModalViewController: UIViewController {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("media_editor.sticker_search_placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
+        if let textField = searchBar.value(forKey: "searchField") as? UITextField {
+            textField.font = FontSystem.galmuriMono(size: 14)
+        }
         return searchBar
     }()
 
@@ -26,7 +29,7 @@ final class StickerModalViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 10, left: 20, bottom: 10, right: 20)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemBackground
+        collectionView.backgroundColor = .clear
         collectionView.register(StickerCell.self, forCellWithReuseIdentifier: StickerCell.identifier)
         return collectionView
     }()
@@ -96,15 +99,24 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.backgroundColor = .systemBackground
+        view.applyGradient(.grayGradient)
+
+        navigationController?.view.applyGradient(.grayGradient)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: FontSystem.galmuriMono(size: 16)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
 
         view.addSubview(searchBar)
         view.addSubview(stickerCollectionView)
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(50)
+            make.horizontalEdges.equalToSuperview()
         }
 
         stickerCollectionView.snp.makeConstraints { make in
@@ -115,11 +127,15 @@ final class StickerModalViewController: UIViewController {
 
     private func configureNavigation() {
         navigationItem.title = NSLocalizedString("media_editor.sticker_modal_title", comment: "")
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
+
+        let closeButton = UIBarButtonItem(
+            image: UIImage(systemName: "xmark"),
+            style: .plain,
             target: self,
             action: #selector(closeButtonTapped)
         )
+        closeButton.tintColor = .label
+        navigationItem.leftBarButtonItem = closeButton
     }
 
     @objc private func closeButtonTapped() {
