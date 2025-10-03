@@ -6,6 +6,8 @@ import SnapKit
 import UIKit
 
 final class CardInfoViewController: UIViewController {
+    private let customNavigationBar = CustomNavigationBar()
+
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsVerticalScrollIndicator = false
@@ -27,21 +29,17 @@ final class CardInfoViewController: UIViewController {
     }()
 
     private lazy var photoSelectButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "photo")
-        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 100, weight: .thin)
-        config.baseForegroundColor = .systemGray3
-        let button = UIButton(configuration: config)
+        let button = UIButton()
+        button.setImage(UIImage(named: "editBox"), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
         button.layer.cornerRadius = 16
-        button.layer.borderWidth = 2
-        button.layer.borderColor = UIColor.systemGray4.cgColor
-        button.backgroundColor = .secondarySystemBackground
+        button.clipsToBounds = true
         return button
     }()
 
     private let dateCard: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ColorSystem.cardBackground
         view.layer.cornerRadius = 12
         return view
     }()
@@ -58,14 +56,14 @@ final class CardInfoViewController: UIViewController {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.date", comment: "")
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelPrimary
         return label
     }()
 
     private let memoCard: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ColorSystem.cardBackground
         view.layer.cornerRadius = 12
         return view
     }()
@@ -73,14 +71,15 @@ final class CardInfoViewController: UIViewController {
     private let memoLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.memo", comment: "")
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelPrimary
         return label
     }()
 
     private let memoTextView: UITextView = {
         let textView = UITextView()
-        textView.font = .systemFont(ofSize: 16)
+        textView.font = FontSystem.galmuriMono(size: 16)
+        textView.textColor = ColorSystem.labelSecondary
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         return textView
@@ -89,15 +88,15 @@ final class CardInfoViewController: UIViewController {
     private let characterCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0/300"
-        label.font = .systemFont(ofSize: 12)
-        label.textColor = .label
+        label.font = FontSystem.galmuriMono(size: 12)
+        label.textColor = ColorSystem.labelPrimary
         label.textAlignment = .right
         return label
     }()
 
     private let locationCard: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemGroupedBackground
+        view.backgroundColor = ColorSystem.cardBackground
         view.layer.cornerRadius = 12
         return view
     }()
@@ -105,30 +104,31 @@ final class CardInfoViewController: UIViewController {
     private let locationLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location", comment: "")
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        label.textColor = .secondaryLabel
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelPrimary
         return label
     }()
 
     private let selectedLocationLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .tertiaryLabel
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelPrimary
         label.numberOfLines = 2
         return label
     }()
 
     private let searchLocationButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("card_info.search_location", comment: "")
-        config.baseBackgroundColor = .systemBlue
-        config.baseForegroundColor = .white
-        config.image = UIImage(systemName: "magnifyingglass")
-        config.imagePlacement = .leading
-        config.imagePadding = 8
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
+        button.setTitle(NSLocalizedString("card_info.search_location", comment: ""), for: .normal)
+        button.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.black, for: .normal)
+        button.tintColor = .black
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
         return button
     }()
 
@@ -142,16 +142,22 @@ final class CardInfoViewController: UIViewController {
 
     private let saveButton: UIButton = {
         let button = UIButton()
-        var config = UIButton.Configuration.plain()
-        config.title = NSLocalizedString("common.save", comment: "")
-        button.configuration = config
+        button.setTitle(NSLocalizedString("common.save", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         return button
     }()
 
     private let cancelButton: UIButton = {
         let button = UIButton()
-        var config = UIButton.Configuration.plain()
-        config.title = NSLocalizedString("common.cancel", comment: "")
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(named: "xmark")
+        config.baseBackgroundColor = .white
+        config.baseForegroundColor = .black
+        config.cornerStyle = .medium
         button.configuration = config
         return button
     }()
@@ -174,11 +180,50 @@ final class CardInfoViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
-        configureNavigation()
+        setupCustomNavigationBar()
         bind()
         setupKeyboardDismiss()
         setupPlaceholder()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        saveButton.applyGradient(.buttonPink)
+        searchLocationButton.applyGradient(.searchLocationButton)
+        photoSelectButton.applyGradient(.barBack)
+    }
+
+    private func setupCustomNavigationBar() {
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: FontSystem.galmuriMono(size: 14),
+            .kern: -0.84
+        ]
+        let attributedTitle = NSAttributedString(
+            string: NSLocalizedString("card_info.title", comment: ""),
+            attributes: titleAttributes
+        )
+        customNavigationBar.configure(title: attributedTitle.string)
+
+        view.addSubview(cancelButton)
+        view.addSubview(saveButton)
+
+        cancelButton.snp.makeConstraints { make in
+            make.leading.equalTo(customNavigationBar).offset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.equalTo(48)
+            make.height.equalTo(44)
+        }
+
+        saveButton.snp.makeConstraints { make in
+            make.trailing.equalTo(customNavigationBar).inset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.greaterThanOrEqualTo(48)
+            make.height.equalTo(44)
+        }
+
+        customNavigationBar.hideLeftButton()
     }
 
     private func setupPlaceholder() {
@@ -304,7 +349,7 @@ final class CardInfoViewController: UIViewController {
                     }
 
                     self.selectedLocationLabel.text = addressString.isEmpty ? "사진 위치" : addressString
-                    self.selectedLocationLabel.textColor = .label
+                    self.selectedLocationLabel.textColor = ColorSystem.labelSecondary
                     self.updateMapView(with: location.coordinate)
                 }
             }
@@ -330,7 +375,7 @@ final class CardInfoViewController: UIViewController {
             let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
             self?.selectedLocation = location
             self?.selectedLocationLabel.text = address
-            self?.selectedLocationLabel.textColor = .label
+            self?.selectedLocationLabel.textColor = ColorSystem.labelSecondary
             self?.updateMapView(with: coordinate)
             locationSubject.onNext(location)
         }
@@ -361,10 +406,17 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.backgroundColor = .systemGroupedBackground
+        view.applyGradient(.cardInfoBackground)
 
+        view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
+
+        customNavigationBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
 
         contentView.addSubview(photoImageView)
         contentView.addSubview(photoSelectButton)
@@ -384,7 +436,8 @@ final class CardInfoViewController: UIViewController {
         locationCard.addSubview(mapView)
 
         scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(customNavigationBar.snp.bottom)
+            make.horizontalEdges.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         contentView.snp.makeConstraints { make in
@@ -469,18 +522,13 @@ final class CardInfoViewController: UIViewController {
         }
     }
 
-    private func configureNavigation() {
-        navigationItem.title = NSLocalizedString("card_info.title", comment: "")
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: cancelButton)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: saveButton)
-    }
 }
 
 extension CardInfoViewController: UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
-        if textView.textColor == .placeholderText {
+        if textView.textColor == ColorSystem.labelPrimary {
             textView.text = ""
-            textView.textColor = .label
+            textView.textColor = ColorSystem.labelSecondary
         }
     }
 
@@ -488,7 +536,7 @@ extension CardInfoViewController: UITextViewDelegate {
         if textView.text.isEmpty {
             textView.attributedText = createPlaceholderText()
             characterCountLabel.text = "0/300"
-            characterCountLabel.textColor = .label
+            characterCountLabel.textColor = ColorSystem.labelPrimary
         }
     }
 
@@ -504,16 +552,16 @@ extension CardInfoViewController: UITextViewDelegate {
         if count >= 250 {
             characterCountLabel.textColor = .systemRed
         } else {
-            characterCountLabel.textColor = .label
+            characterCountLabel.textColor = ColorSystem.labelPrimary
         }
     }
 
     private func createPlaceholderText() -> NSAttributedString {
         return NSAttributedString(
-            string: "메모를 남기고 카드 뒷면에서 확인해보세요!",
+            string: NSLocalizedString("card_info.memo_placeholder", comment: ""),
             attributes: [
-                .foregroundColor: UIColor.placeholderText,
-                .font: UIFont.systemFont(ofSize: 16)
+                .foregroundColor: ColorSystem.labelPrimary,
+                .font: FontSystem.galmuriMono(size: 16)
             ]
         )
     }

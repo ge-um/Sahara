@@ -13,6 +13,9 @@ enum ColorSystem {
     static let gradientPink = UIColor(hex: "#FFBDFF")
 
     static let buttonYellow = UIColor(hex: "#D9F266")
+    static let cardBackground = UIColor(hex: "#2C2A37").withAlphaComponent(0.2)
+    static let labelPrimary = UIColor(hex: "#4A4A4A")
+    static let labelSecondary = UIColor(hex: "#1A1A1A")
 
     enum Gradient {
         case pinkBlue
@@ -21,6 +24,8 @@ enum ColorSystem {
         case blueGradient
         case grayGradient
         case whiteGray
+        case cardInfoBackground
+        case searchLocationButton
 
         var colors: [CGColor] {
             switch self {
@@ -55,23 +60,34 @@ enum ColorSystem {
                     UIColor.white.cgColor,
                     UIColor(white: 0.9, alpha: 1.0).cgColor
                 ]
+            case .cardInfoBackground:
+                return [
+                    UIColor(hex: "A6FDAB").cgColor,
+                    UIColor(hex: "EFFFE4").cgColor,
+                    UIColor(hex: "963F28").cgColor
+                ]
+            case .searchLocationButton:
+                return [
+                    UIColor(hex: "FFFFC5").cgColor,
+                    UIColor(hex: "9BDA2A").cgColor
+                ]
             }
         }
 
         var locations: [NSNumber] {
             switch self {
-            case .pinkBlue:
+            case .pinkBlue, .cardInfoBackground:
                 return [0.0, 0.5, 1.0]
             case .barBack:
                 return [0.22, 1.0]
-            case .buttonPink, .blueGradient, .grayGradient, .whiteGray:
+            case .buttonPink, .blueGradient, .grayGradient, .whiteGray, .searchLocationButton:
                 return [0.0, 1.0]
             }
         }
 
         var startPoint: CGPoint {
             switch self {
-            case .pinkBlue:
+            case .pinkBlue, .cardInfoBackground, .searchLocationButton:
                 return CGPoint(x: 0.5, y: 0.0)
             case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
                 return CGPoint(x: 0.5, y: 0)
@@ -80,7 +96,7 @@ enum ColorSystem {
 
         var endPoint: CGPoint {
             switch self {
-            case .pinkBlue:
+            case .pinkBlue, .cardInfoBackground, .searchLocationButton:
                 return CGPoint(x: 0.5, y: 1.0)
             case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
                 return CGPoint(x: 0.5, y: 1)
