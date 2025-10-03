@@ -1,5 +1,5 @@
 //
-//  PhotoDetailViewController.swift
+//  CardDetailViewController.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -11,8 +11,8 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class PhotoDetailViewController: UIViewController {
-    private let viewModel: PhotoDetailViewModel
+final class CardDetailViewController: UIViewController {
+    private let viewModel: CardDetailViewModel
     private let disposeBag = DisposeBag()
     private var isFrontCardVisible = true
 
@@ -185,7 +185,7 @@ final class PhotoDetailViewController: UIViewController {
     }()
 
     init(photoMemoId: ObjectId) {
-        self.viewModel = PhotoDetailViewModel(photoMemoId: photoMemoId)
+        self.viewModel = CardDetailViewModel(photoMemoId: photoMemoId)
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -329,7 +329,7 @@ final class PhotoDetailViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let input = PhotoDetailViewModel.Input(
+        let input = CardDetailViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),

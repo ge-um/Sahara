@@ -80,7 +80,7 @@ final class MapPhotoGalleryViewController: UIViewController {
 
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
-                let detailVC = PhotoDetailViewController(photoMemoId: photoMemoId)
+                let detailVC = CardDetailViewController(photoMemoId: photoMemoId)
                 detailVC.modalPresentationStyle = .fullScreen
                 owner.present(detailVC, animated: true)
             }
