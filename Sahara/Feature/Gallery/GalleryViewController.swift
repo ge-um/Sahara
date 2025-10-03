@@ -64,7 +64,7 @@ final class GalleryViewController: UIViewController {
 
     private lazy var themeContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
         return view
     }()
 
@@ -221,14 +221,14 @@ final class GalleryViewController: UIViewController {
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
-            make.horizontalEdges.equalToSuperview()
-            make.bottom.equalToSuperview().inset(70)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(90)
         }
 
         themeContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
-            make.horizontalEdges.equalToSuperview()
-            make.bottom.equalToSuperview().inset(70)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(90)
         }
     }
     
