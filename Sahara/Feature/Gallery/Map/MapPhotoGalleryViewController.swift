@@ -37,6 +37,8 @@ final class MapPhotoGalleryViewController: UIViewController {
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: pinterestLayout)
         collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(MapPhotoCell.self, forCellWithReuseIdentifier: MapPhotoCell.identifier)
         return collectionView
     }()

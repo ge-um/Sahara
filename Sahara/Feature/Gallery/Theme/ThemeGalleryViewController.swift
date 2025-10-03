@@ -21,6 +21,8 @@ final class ThemeGalleryViewController: UIViewController {
         tableView.rowHeight = 100
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
+        tableView.showsVerticalScrollIndicator = false
+        tableView.showsHorizontalScrollIndicator = false
         return tableView
     }()
 

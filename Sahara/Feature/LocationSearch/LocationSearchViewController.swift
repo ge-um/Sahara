@@ -28,6 +28,8 @@ final class LocationSearchViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         tableView.backgroundColor = .clear
+        tableView.showsVerticalScrollIndicator = false
+        tableView.showsHorizontalScrollIndicator = false
         return tableView
     }()
 

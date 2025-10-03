@@ -28,6 +28,8 @@ final class CalendarDetailViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: pinterestLayout)
         collectionView.register(CalendarDetailCell.self, forCellWithReuseIdentifier: CalendarDetailCell.identifier)
         collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
         return collectionView
     }()
 

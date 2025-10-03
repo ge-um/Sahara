@@ -39,7 +39,7 @@ final class PhotoAnnotationView: MKAnnotationView {
 
     private func setupUI() {
         backgroundColor = .clear
-        frame = CGSize(width: 60, height: 75).asRect()
+        frame = CGSize(width: 60, height: 60).asRect()
         centerOffset = CGPoint(x: 0, y: -frame.height / 2)
 
         addSubview(bubbleView)
@@ -57,9 +57,9 @@ final class PhotoAnnotationView: MKAnnotationView {
         let bubbleBottom = bubbleView.frame.maxY
         let bubbleCenter = bubbleView.frame.midX
 
-        tailPath.move(to: CGPoint(x: bubbleCenter - 8, y: bubbleBottom - 5))
-        tailPath.addLine(to: CGPoint(x: bubbleCenter, y: rect.maxY - 5))
-        tailPath.addLine(to: CGPoint(x: bubbleCenter + 8, y: bubbleBottom - 5))
+        tailPath.move(to: CGPoint(x: bubbleCenter - 8, y: bubbleBottom - 3))
+        tailPath.addLine(to: CGPoint(x: bubbleCenter, y: rect.maxY - 3))
+        tailPath.addLine(to: CGPoint(x: bubbleCenter + 8, y: bubbleBottom - 3))
         tailPath.close()
 
         UIColor.white.setFill()

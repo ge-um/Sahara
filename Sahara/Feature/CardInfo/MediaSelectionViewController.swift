@@ -26,6 +26,8 @@ final class MediaSelectionViewController: UIViewController {
 
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .systemBackground
+        cv.showsVerticalScrollIndicator = false
+        cv.showsHorizontalScrollIndicator = false
         cv.register(PhotoSelectionCell.self, forCellWithReuseIdentifier: "PhotoSelectionCell")
         cv.register(ActionCell.self, forCellWithReuseIdentifier: "ActionCell")
         cv.delegate = self
