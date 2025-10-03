@@ -648,13 +648,13 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func setupCropOverlay() {
-        guard let currentImage = photoImageView.image else { return }
+        guard let uncropped = uncropedOriginalImage else { return }
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
             let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-                imageSize: currentImage.size,
+                imageSize: uncropped.size,
                 in: self.photoImageView.bounds.size
             )
 
@@ -668,8 +668,9 @@ final class MediaEditorViewController: UIViewController {
                 height: imageRect.height
             )
 
-            if let lastCrop = self.lastCropRect,
-               let uncropped = self.uncropedOriginalImage {
+            self.cropOverlayView.imageRect = imageRectInOverlay
+
+            if let lastCrop = self.lastCropRect {
                 let scale = imageRect.width / uncropped.size.width
 
                 let scaledCropRect = CGRect(
@@ -679,7 +680,6 @@ final class MediaEditorViewController: UIViewController {
                     height: lastCrop.height * scale
                 )
 
-                self.cropOverlayView.setCropRect(imageRectInOverlay)
                 self.cropOverlayView.setCropRect(scaledCropRect)
             } else {
                 self.cropOverlayView.setCropRect(imageRectInOverlay)
@@ -688,31 +688,66 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func applyCrop() {
-        guard let currentImage = photoImageView.image else { return }
+        guard let uncropped = uncropedOriginalImage else { return }
 
         let cropRectInOverlay = cropOverlayView.cropRect
+        let imageRectInOverlay = cropOverlayView.imageRect
 
-        let displayedImageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: currentImage.size,
-            in: photoImageView.bounds.size
+        print("🔵 cropRectInOverlay: \(cropRectInOverlay)")
+        print("🔵 imageRectInOverlay: \(imageRectInOverlay)")
+        print("🔵 uncropped.size: \(uncropped.size)")
+        print("🔵 uncropped.imageOrientation: \(uncropped.imageOrientation.rawValue)")
+
+        // cropRect를 imageRect 기준 상대 좌표로 변환
+        let relativeX = cropRectInOverlay.origin.x - imageRectInOverlay.origin.x
+        let relativeY = cropRectInOverlay.origin.y - imageRectInOverlay.origin.y
+        let relativeWidth = cropRectInOverlay.width
+        let relativeHeight = cropRectInOverlay.height
+
+        print("🔵 relative: (\(relativeX), \(relativeY), \(relativeWidth), \(relativeHeight))")
+
+        // scaleAspectFit이므로 동일한 scale 사용
+        let scale = uncropped.size.width / imageRectInOverlay.width
+
+        let cropRectInImage = CGRect(
+            x: relativeX * scale,
+            y: relativeY * scale,
+            width: relativeWidth * scale,
+            height: relativeHeight * scale
         )
 
-        let cropRectInImage = MediaEditorCropHandler.convertCropRectToImageCoordinates(
-            cropRect: cropRectInOverlay,
-            imageSize: currentImage.size,
-            displayedImageRect: displayedImageRect
-        )
+        print("🔵 scale: \(scale)")
+        print("🔵 cropRectInImage: \(cropRectInImage)")
+        print("🔵 cropRectInImage width/height ratio: \(cropRectInImage.width / cropRectInImage.height)")
+        print("🔵 cropRectInOverlay width/height ratio: \(cropRectInOverlay.width / cropRectInOverlay.height)")
 
-        guard let uncropped = uncropedOriginalImage,
-              let croppedCGImage = uncropped.cgImage?.cropping(to: cropRectInImage) else {
+        // orientation을 고려하여 이미지를 정규화
+        guard let cgImage = uncropped.cgImage else {
+            currentMode.accept(nil)
+            return
+        }
+
+        // orientation이 있으면 이미지를 다시 그려서 정규화
+        let normalizedImage: UIImage
+        if uncropped.imageOrientation != .up {
+            UIGraphicsBeginImageContextWithOptions(uncropped.size, false, uncropped.scale)
+            uncropped.draw(in: CGRect(origin: .zero, size: uncropped.size))
+            normalizedImage = UIGraphicsGetImageFromCurrentImageContext() ?? uncropped
+            UIGraphicsEndImageContext()
+        } else {
+            normalizedImage = uncropped
+        }
+
+        guard let normalizedCGImage = normalizedImage.cgImage,
+              let croppedCGImage = normalizedCGImage.cropping(to: cropRectInImage) else {
             currentMode.accept(nil)
             return
         }
 
         let croppedImage = UIImage(
             cgImage: croppedCGImage,
-            scale: uncropped.scale,
-            orientation: uncropped.imageOrientation
+            scale: normalizedImage.scale,
+            orientation: .up
         )
 
         lastCropRect = cropRectInImage
@@ -858,9 +893,6 @@ final class MediaEditorViewController: UIViewController {
             make.width.height.equalTo(60)
         }
 
-        cropOverlayView.snp.makeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
 
         cropApplyButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().inset(20)
