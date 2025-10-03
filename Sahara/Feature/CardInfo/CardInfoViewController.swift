@@ -60,8 +60,8 @@ final class CardInfoViewController: UIViewController {
     private let dateValueLabel: UILabel = {
         let label = UILabel()
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy년 MM월 dd일"
-        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.locale = Locale.current
+        formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
         label.font = FontSystem.galmuriMono(size: 16)
         label.textColor = ColorSystem.labelPrimary
@@ -279,8 +279,8 @@ final class CardInfoViewController: UIViewController {
         selectedDateRelay
             .bind(with: self) { owner, date in
                 let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy년 MM월 dd일"
-                formatter.locale = Locale(identifier: "ko_KR")
+                formatter.locale = Locale.current
+                formatter.dateStyle = .long
                 owner.dateValueLabel.text = formatter.string(from: date)
             }
             .disposed(by: disposeBag)

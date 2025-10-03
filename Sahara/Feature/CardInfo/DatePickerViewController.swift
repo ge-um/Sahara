@@ -24,7 +24,7 @@ final class DatePickerViewController: UIViewController {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .inline
-        picker.locale = Locale(identifier: "ko_KR")
+        picker.locale = Locale.current
         return picker
     }()
 

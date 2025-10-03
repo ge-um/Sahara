@@ -181,7 +181,7 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func setupCustomNavigationBar() {
-        customNavigationBar.configure(title: "카드 보기")
+        customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
         customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
 
         customNavigationBar.onLeftButtonTapped = { [weak self] in

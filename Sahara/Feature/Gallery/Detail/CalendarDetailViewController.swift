@@ -67,8 +67,8 @@ final class CalendarDetailViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월 d일"
+        formatter.locale = Locale.current
+        formatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "yyyyMMMMd", options: 0, locale: Locale.current)
         customNavigationBar.configure(title: formatter.string(from: date))
 
         customNavigationBar.onLeftButtonTapped = { [weak self] in

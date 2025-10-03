@@ -44,6 +44,9 @@
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
 
+/* Card Detail */
+"card_detail.title" = "View Card";
+
 /* Photo Detail */
 "photo_detail.no_memo" = "No memo available.";
 "photo_detail.save_success" = "Saved";
