@@ -652,7 +652,7 @@ final class MediaEditorViewController: UIViewController {
 
     private func presentPhotoSelectionModal() {
         let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { [weak self] image, _ in
+        mediaSelectionVC.onMediaSelected = { [weak self] image, _, _ in
             self?.addPhotoToCanvas(image)
             self?.currentMode.accept(nil)
         }

@@ -408,8 +408,8 @@ final class CardInfoViewController: UIViewController {
 
     private func presentMediaSelectionModal(selectedImageSubject: BehaviorSubject<UIImage?>) {
         let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { [weak self] image, location in
-            self?.openPhotoEditor(with: image, location: location, selectedImageSubject: selectedImageSubject)
+        mediaSelectionVC.onMediaSelected = { [weak self] image, location, date in
+            self?.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject)
         }
         let navController = UINavigationController(rootViewController: mediaSelectionVC)
         if let sheet = navController.sheetPresentationController {
@@ -419,9 +419,14 @@ final class CardInfoViewController: UIViewController {
         present(navController, animated: true)
     }
 
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, selectedImageSubject: BehaviorSubject<UIImage?>) {
+    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>) {
         dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
+
+            // 날짜 정보가 있으면 설정
+            if let date = date {
+                self.selectedDateRelay.accept(date)
+            }
 
             // 위치 정보가 있으면 먼저 처리
             if let location = location {
