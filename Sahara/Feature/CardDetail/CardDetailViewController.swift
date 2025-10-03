@@ -20,6 +20,7 @@ final class CardDetailViewController: UIViewController {
     private let swipeLeftRelay = PublishRelay<Void>()
     private let swipeRightRelay = PublishRelay<Void>()
     private let deleteConfirmedRelay = PublishRelay<Void>()
+    private var photoImageHeightConstraint: Constraint?
 
     private let cardContainerView: UIView = {
         let view = UIView()
@@ -226,8 +227,8 @@ final class CardDetailViewController: UIViewController {
 
         cardContainerView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(500)
+            make.horizontalEdges.equalToSuperview().inset(60)
+            photoImageHeightConstraint = make.height.equalTo(300).constraint
         }
 
         frontCardView.snp.makeConstraints { make in
@@ -274,7 +275,7 @@ final class CardDetailViewController: UIViewController {
         }
 
         buttonStackView.snp.makeConstraints { make in
-            make.top.equalTo(cardContainerView.snp.bottom).offset(20)
+            make.top.equalTo(cardContainerView.snp.bottom).offset(24)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(50)
         }
@@ -342,7 +343,12 @@ final class CardDetailViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.photoImage
-            .drive(photoImageView.rx.image)
+            .drive(with: self) { owner, image in
+                owner.photoImageView.image = image
+                if let image = image {
+                    owner.updatePhotoImageHeight(for: image)
+                }
+            }
             .disposed(by: disposeBag)
 
         output.dateText
@@ -421,6 +427,17 @@ final class CardDetailViewController: UIViewController {
             self.backCardView.isHidden = true
         } completion: { _ in
             self.isFrontCardVisible = true
+        }
+    }
+
+    private func updatePhotoImageHeight(for image: UIImage) {
+        let imageWidth = view.frame.width - 120
+        let imageHeight = image.heightForWidth(imageWidth)
+
+        photoImageHeightConstraint?.update(offset: imageHeight)
+
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
         }
     }
 }
