@@ -905,7 +905,7 @@ final class MediaEditorViewController: UIViewController {
         }
 
         modeButtonStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 8, right: 20))
             make.height.equalTo(54)
         }
 
