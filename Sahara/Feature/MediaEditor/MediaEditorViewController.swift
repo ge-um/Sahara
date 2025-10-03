@@ -13,12 +13,13 @@ import SnapKit
 import UIKit
 
 final class MediaEditorViewController: UIViewController {
+    private let customNavigationBar = CustomNavigationBar()
+
     private let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = true
-        imageView.backgroundColor = .white
-        imageView.layer.cornerRadius = 10
+        imageView.backgroundColor = .clear
         return imageView
     }()
 
@@ -31,61 +32,64 @@ final class MediaEditorViewController: UIViewController {
         return canvas
     }()
 
+    private let toolBarContainer: UIView = {
+        let view = UIView()
+        return view
+    }()
+
+    private let toolBarScrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsHorizontalScrollIndicator = false
+        return scrollView
+    }()
+
     private let modeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
-        stackView.distribution = .fillEqually
-        stackView.spacing = 8
+        stackView.distribution = .equalSpacing
+        stackView.spacing = 72
         return stackView
     }()
 
     private lazy var stickerModeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.sticker", comment: "")
-        config.baseBackgroundColor = .systemBlue
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
         return button
     }()
 
     private lazy var drawingModeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.drawing", comment: "")
-        config.baseBackgroundColor = .systemGray4
-        config.baseForegroundColor = .label
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
         return button
     }()
 
     private lazy var filterModeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.filter", comment: "")
-        config.baseBackgroundColor = .systemGray4
-        config.baseForegroundColor = .label
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
-        return button
-    }()
-
-    private lazy var photoModeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.photo", comment: "")
-        config.baseBackgroundColor = .systemGray4
-        config.baseForegroundColor = .label
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
         return button
     }()
 
     private lazy var cropModeButton: UIButton = {
+        let button = UIButton()
+        return button
+    }()
+
+    private let cancelButton: UIButton = {
+        let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.crop", comment: "")
-        config.baseBackgroundColor = .systemGray4
-        config.baseForegroundColor = .label
+        config.image = UIImage(named: "xmark")
+        config.baseBackgroundColor = .white
+        config.baseForegroundColor = .black
         config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        button.configuration = config
+        return button
+    }()
+
+    private let doneButton: UIButton = {
+        let button = UIButton()
+        button.setTitle(NSLocalizedString("media_editor.done", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         return button
     }()
 
@@ -150,8 +154,21 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
-    private lazy var doneButton = UIBarButtonItem(title: NSLocalizedString("media_editor.done", comment: ""), style: .done, target: nil, action: nil)
-    private lazy var cancelButton = UIBarButtonItem(title: NSLocalizedString("media_editor.cancel", comment: ""), style: .plain, target: nil, action: nil)
+    private let leftStarImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "star")?.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = UIColor(hex: "FFFFBD")
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    private let rightStarImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "star")?.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = UIColor(hex: "A0BAFF")
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
 
     private let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
@@ -185,10 +202,47 @@ final class MediaEditorViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
-        configureNavigation()
+        setupCustomNavigationBar()
+        setupModeButtons()
         setupPencilKit()
         bind()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        toolBarContainer.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = toolBarContainer.bounds
+        doneButton.applyGradient(.buttonPink)
+        updateStarPositions()
+    }
+
+    private func updateStarPositions() {
+        guard let image = photoImageView.image else { return }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: photoImageView.bounds.size
+        )
+
+        let imageFrameInView = CGRect(
+            x: photoImageView.frame.origin.x + imageRect.origin.x,
+            y: photoImageView.frame.origin.y + imageRect.origin.y,
+            width: imageRect.width,
+            height: imageRect.height
+        )
+
+        leftStarImageView.snp.remakeConstraints { make in
+            make.centerX.equalTo(view).offset(imageFrameInView.minX - view.bounds.width / 2)
+            make.centerY.equalTo(view).offset(imageFrameInView.minY - view.bounds.height / 2)
+            make.width.height.equalTo(32)
+        }
+
+        rightStarImageView.snp.remakeConstraints { make in
+            make.centerX.equalTo(view).offset(imageFrameInView.maxX - view.bounds.width / 2)
+            make.centerY.equalTo(view).offset(imageFrameInView.minY - view.bounds.height / 2)
+            make.width.height.equalTo(32)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -238,11 +292,6 @@ final class MediaEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        photoModeButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.presentPhotoPicker()
-            }
-            .disposed(by: disposeBag)
 
         cropApplyButton.rx.tap
             .bind(with: self) { owner, _ in
@@ -264,7 +313,7 @@ final class MediaEditorViewController: UIViewController {
             cropApplied: cropAppliedRelay.asObservable(),
             drawingChanged: Observable.just(()),
             photoSelected: photoSelectedRelay.asObservable(),
-            doneButtonTapped: doneButton.rx.tap.map { [weak self] in
+            doneButtonTapped: doneButton.rx.tap.asObservable().map { [weak self] in
                 guard let self = self else { return UIImage() }
                 return self.generateFinalImage()
             },
@@ -382,7 +431,7 @@ final class MediaEditorViewController: UIViewController {
         cropOverlayView.isHidden = true
         cropApplyButton.isHidden = true
         cropCancelButton.isHidden = true
-        modeButtonStackView.isHidden = false
+        toolBarContainer.isHidden = false
         doneButton.isHidden = false
 
         guard let mode = mode else {
@@ -404,7 +453,7 @@ final class MediaEditorViewController: UIViewController {
             cropOverlayView.isHidden = false
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
-            modeButtonStackView.isHidden = true
+            toolBarContainer.isHidden = true
             doneButton.isHidden = true
             guard let original = originalImage else { return }
             photoImageView.image = original
@@ -413,19 +462,15 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func updateModeButtons(currentMode: EditMode?) {
-        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, cropModeButton, photoModeButton]
-        let modes: [EditMode?] = [.sticker, .drawing, .filter, .crop, .photo]
+        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, cropModeButton]
+        let modes: [EditMode?] = [.sticker, .drawing, .filter, .crop]
 
         for (button, mode) in zip(buttons, modes) {
-            var config = button.configuration
             if mode == currentMode {
-                config?.baseBackgroundColor = .systemBlue
-                config?.baseForegroundColor = .white
+                button.alpha = 1.0
             } else {
-                config?.baseBackgroundColor = .systemGray4
-                config?.baseForegroundColor = .label
+                button.alpha = 0.5
             }
-            button.configuration = config
         }
     }
 
@@ -449,7 +494,7 @@ final class MediaEditorViewController: UIViewController {
             return UIImage()
         }
 
-        modeButtonStackView.isHidden = true
+        toolBarContainer.isHidden = true
 
         let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
             imageSize: baseImage.size,
@@ -465,7 +510,7 @@ final class MediaEditorViewController: UIViewController {
             drawingImage.draw(at: .zero)
         }
 
-        modeButtonStackView.isHidden = false
+        toolBarContainer.isHidden = false
 
         return image
     }
@@ -504,49 +549,137 @@ final class MediaEditorViewController: UIViewController {
         currentMode.accept(nil)
     }
 
+    private func setupCustomNavigationBar() {
+        customNavigationBar.configure(title: NSLocalizedString("media_editor.title", comment: ""))
+        customNavigationBar.hideLeftButton()
+
+        view.addSubview(cancelButton)
+        view.addSubview(doneButton)
+
+        cancelButton.snp.makeConstraints { make in
+            make.leading.equalTo(customNavigationBar).offset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.equalTo(48)
+            make.height.equalTo(44)
+        }
+
+        doneButton.snp.makeConstraints { make in
+            make.trailing.equalTo(customNavigationBar).inset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.greaterThanOrEqualTo(48)
+            make.height.equalTo(44)
+        }
+    }
+
+    private func setupModeButtons() {
+        let buttonConfigs: [(button: UIButton, imageName: String, titleKey: String)] = [
+            (stickerModeButton, "sticker", "media_editor.sticker"),
+            (drawingModeButton, "edit", "media_editor.drawing"),
+            (filterModeButton, "sliders", "media_editor.filter"),
+            (cropModeButton, "crop", "media_editor.crop")
+        ]
+
+        for config in buttonConfigs {
+            let stack = UIStackView()
+            stack.axis = .vertical
+            stack.alignment = .center
+            stack.spacing = 4
+            stack.isUserInteractionEnabled = false
+
+            let imageView = UIImageView()
+            if let originalImage = UIImage(named: config.imageName) {
+                imageView.image = originalImage.withRenderingMode(.alwaysTemplate)
+            }
+            imageView.contentMode = .scaleAspectFit
+            imageView.tintColor = .black
+
+            let label = UILabel()
+            let text = NSLocalizedString(config.titleKey, comment: "")
+            let attributedString = text.attributedString(
+                font: FontSystem.galmuriMono(size: 12),
+                letterSpacing: -6,
+                color: .black
+            )
+            label.attributedText = attributedString
+            label.textAlignment = .center
+
+            stack.addArrangedSubview(imageView)
+            stack.addArrangedSubview(label)
+
+            imageView.snp.makeConstraints { make in
+                make.width.height.equalTo(24)
+            }
+
+            config.button.addSubview(stack)
+            stack.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+
+            modeButtonStackView.addArrangedSubview(config.button)
+        }
+    }
+
     private func configureUI() {
-        view.backgroundColor = .white
-        
+        view.applyGradient(.cardInfoBackground)
+
+        view.addSubview(customNavigationBar)
         view.addSubview(photoImageView)
         view.addSubview(canvasView)
-        view.addSubview(modeButtonStackView)
+        view.addSubview(toolBarContainer)
         view.addSubview(filterCollectionView)
         view.addSubview(trashIconView)
         view.addSubview(cropOverlayView)
         view.addSubview(cropApplyButton)
         view.addSubview(cropCancelButton)
+        view.addSubview(leftStarImageView)
+        view.addSubview(rightStarImageView)
 
-        modeButtonStackView.addArrangedSubview(stickerModeButton)
-        modeButtonStackView.addArrangedSubview(drawingModeButton)
-        modeButtonStackView.addArrangedSubview(filterModeButton)
-        modeButtonStackView.addArrangedSubview(cropModeButton)
-        modeButtonStackView.addArrangedSubview(photoModeButton)
+        toolBarContainer.addSubview(toolBarScrollView)
+        toolBarScrollView.addSubview(modeButtonStackView)
+
+        toolBarContainer.applyGradient(.barBack)
+
+        customNavigationBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
+
+        toolBarContainer.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.height.equalTo(70)
+        }
+
+        toolBarScrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
 
         modeButtonStackView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(100)
-            make.height.equalTo(40)
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20))
+            make.height.equalTo(54)
         }
 
         photoImageView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview()
-            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-20)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
+            make.horizontalEdges.equalToSuperview().inset(40)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-40)
         }
+
 
         canvasView.snp.makeConstraints { make in
             make.edges.equalTo(photoImageView)
         }
 
         filterCollectionView.snp.makeConstraints { make in
-            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-16)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-16)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(120)
         }
 
         trashIconView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalTo(modeButtonStackView.snp.top).offset(-20)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
             make.width.height.equalTo(60)
         }
 
@@ -567,12 +700,6 @@ final class MediaEditorViewController: UIViewController {
             make.width.equalTo(100)
             make.height.equalTo(50)
         }
-    }
-
-    private func configureNavigation() {
-        navigationItem.title = NSLocalizedString("media_editor.title", comment: "")
-        navigationItem.leftBarButtonItem = cancelButton
-        navigationItem.rightBarButtonItem = doneButton
     }
 }
 
