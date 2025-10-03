@@ -27,7 +27,7 @@ final class StickerModalViewController: UIViewController {
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .systemBackground
-        collectionView.register(PhotoStickerCell.self, forCellWithReuseIdentifier: PhotoStickerCell.identifier)
+        collectionView.register(StickerCell.self, forCellWithReuseIdentifier: StickerCell.identifier)
         return collectionView
     }()
 
@@ -80,8 +80,8 @@ final class StickerModalViewController: UIViewController {
         output.stickers
             .asObservable()
             .bind(to: stickerCollectionView.rx.items(
-                cellIdentifier: PhotoStickerCell.identifier,
-                cellType: PhotoStickerCell.self
+                cellIdentifier: StickerCell.identifier,
+                cellType: StickerCell.self
             )) { _, sticker, cell in
                 cell.configure(with: sticker)
             }
