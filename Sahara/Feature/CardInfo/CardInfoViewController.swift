@@ -44,21 +44,37 @@ final class CardInfoViewController: UIViewController {
         return view
     }()
 
-    private let datePicker: UIDatePicker = {
-        let picker = UIDatePicker()
-        picker.date = Date()
-        picker.datePickerMode = .date
-        picker.calendar = .autoupdatingCurrent
-        picker.preferredDatePickerStyle = .compact
-        return picker
-    }()
-
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.date", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelTitle
+        return label
+    }()
+
+    private let dateIconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "calendar")
+        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    private let dateValueLabel: UILabel = {
+        let label = UILabel()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy년 MM월 dd일"
+        formatter.locale = Locale(identifier: "ko_KR")
+        label.text = formatter.string(from: Date())
+        label.font = FontSystem.galmuriMono(size: 16)
         label.textColor = ColorSystem.labelPrimary
         return label
+    }()
+
+    private let dateSelectButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .clear
+        return button
     }()
 
     private let memoCard: UIView = {
@@ -72,7 +88,7 @@ final class CardInfoViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.memo", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.labelTitle
         return label
     }()
 
@@ -105,7 +121,7 @@ final class CardInfoViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.labelTitle
         return label
     }()
 
@@ -168,6 +184,7 @@ final class CardInfoViewController: UIViewController {
     private var selectedImage: UIImage?
     private let initialLocationSubject = PublishSubject<CLLocation>()
     private var mapViewHeightConstraint: Constraint?
+    private let selectedDateRelay = BehaviorRelay<Date>(value: Date())
 
     init(viewModel: CardInfoViewModel) {
         self.viewModel = viewModel
@@ -246,6 +263,21 @@ final class CardInfoViewController: UIViewController {
         let locationSubject = PublishSubject<CLLocation>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
+        dateSelectButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.presentDatePicker()
+            }
+            .disposed(by: disposeBag)
+
+        selectedDateRelay
+            .bind(with: self) { owner, date in
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy년 MM월 dd일"
+                formatter.locale = Locale(identifier: "ko_KR")
+                owner.dateValueLabel.text = formatter.string(from: date)
+            }
+            .disposed(by: disposeBag)
+
         searchLocationButton.rx.tap
             .subscribe(with: self) { owner, _ in
                 owner.presentLocationSearch(locationSubject: locationSubject)
@@ -254,7 +286,7 @@ final class CardInfoViewController: UIViewController {
 
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
-            date: datePicker.rx.date.asObservable(),
+            date: selectedDateRelay.asObservable(),
             memo: memoTextView.rx.text.asObservable(),
             location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
@@ -369,6 +401,19 @@ final class CardInfoViewController: UIViewController {
         }
     }
 
+    private func presentDatePicker() {
+        let datePickerVC = DatePickerViewController(initialDate: selectedDateRelay.value)
+        datePickerVC.onDateSelected = { [weak self] date in
+            self?.selectedDateRelay.accept(date)
+        }
+
+        if let sheet = datePickerVC.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(datePickerVC, animated: true)
+    }
+
     private func presentLocationSearch(locationSubject: PublishSubject<CLLocation>) {
         let locationSearchVC = LocationSearchViewController()
         locationSearchVC.onLocationSelected = { [weak self] coordinate, address in
@@ -422,7 +467,9 @@ final class CardInfoViewController: UIViewController {
         contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         dateCard.addSubview(dateLabel)
-        dateCard.addSubview(datePicker)
+        dateCard.addSubview(dateValueLabel)
+        dateCard.addSubview(dateIconImageView)
+        dateCard.addSubview(dateSelectButton)
 
         contentView.addSubview(memoCard)
         memoCard.addSubview(memoLabel)
@@ -467,9 +514,20 @@ final class CardInfoViewController: UIViewController {
             make.top.leading.equalToSuperview().inset(16)
         }
 
-        datePicker.snp.makeConstraints { make in
+        dateIconImageView.snp.makeConstraints { make in
             make.top.equalTo(dateLabel.snp.bottom).offset(8)
             make.leading.equalToSuperview().inset(16)
+            make.width.height.equalTo(20)
+            make.bottom.equalToSuperview().inset(16)
+        }
+
+        dateValueLabel.snp.makeConstraints { make in
+            make.leading.equalTo(dateIconImageView.snp.trailing).offset(8)
+            make.centerY.equalTo(dateIconImageView)
+        }
+
+        dateSelectButton.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         memoCard.snp.makeConstraints { make in
