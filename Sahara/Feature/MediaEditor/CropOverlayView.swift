@@ -18,7 +18,7 @@ final class CropOverlayView: UIView {
 
     private let dimView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        view.backgroundColor = .clear
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -30,6 +30,7 @@ final class CropOverlayView: UIView {
 
     private var initialCropRect: CGRect = .zero
     private var currentHandle: CropHandleView?
+    private var imageRect: CGRect = .zero
 
     var cropRect: CGRect {
         return cropBoxView.frame
@@ -67,13 +68,14 @@ final class CropOverlayView: UIView {
     }
 
     func setCropRect(_ rect: CGRect) {
+        imageRect = rect
         cropBoxView.frame = rect
         layoutHandles()
         updateDimMask()
     }
 
     private func layoutHandles() {
-        let handleSize: CGFloat = 30
+        let handleSize: CGFloat = 20
 
         topLeftHandle.frame = CGRect(x: -handleSize/2, y: -handleSize/2, width: handleSize, height: handleSize)
         topRightHandle.frame = CGRect(x: cropBoxView.bounds.width - handleSize/2, y: -handleSize/2, width: handleSize, height: handleSize)
@@ -82,12 +84,6 @@ final class CropOverlayView: UIView {
     }
 
     private func updateDimMask() {
-        let maskLayer = CAShapeLayer()
-        let path = UIBezierPath(rect: bounds)
-        path.append(UIBezierPath(rect: cropBoxView.frame).reversing())
-        maskLayer.path = path.cgPath
-        maskLayer.fillRule = .evenOdd
-        dimView.layer.mask = maskLayer
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
@@ -101,11 +97,10 @@ final class CropOverlayView: UIView {
             newFrame.origin.x += translation.x
             newFrame.origin.y += translation.y
 
-            newFrame.origin.x = max(0, min(bounds.width - newFrame.width, newFrame.origin.x))
-            newFrame.origin.y = max(0, min(bounds.height - newFrame.height, newFrame.origin.y))
+            newFrame.origin.x = max(imageRect.origin.x, min(imageRect.maxX - newFrame.width, newFrame.origin.x))
+            newFrame.origin.y = max(imageRect.origin.y, min(imageRect.maxY - newFrame.height, newFrame.origin.y))
 
             cropBoxView.frame = newFrame
-            updateDimMask()
         default:
             break
         }
@@ -121,7 +116,7 @@ final class CropOverlayView: UIView {
             currentHandle = handle
         case .changed:
             var newFrame = initialCropRect
-            let minSize: CGFloat = 100
+            let minSize: CGFloat = 50
 
             if handle == topLeftHandle {
                 newFrame.origin.x += translation.x
@@ -142,13 +137,19 @@ final class CropOverlayView: UIView {
             }
 
             if newFrame.width >= minSize && newFrame.height >= minSize {
-                newFrame.origin.x = max(0, min(bounds.width - newFrame.width, newFrame.origin.x))
-                newFrame.origin.y = max(0, min(bounds.height - newFrame.height, newFrame.origin.y))
+                newFrame.origin.x = max(imageRect.origin.x, newFrame.origin.x)
+                newFrame.origin.y = max(imageRect.origin.y, newFrame.origin.y)
 
-                if newFrame.maxX <= bounds.width && newFrame.maxY <= bounds.height {
+                if newFrame.maxX > imageRect.maxX {
+                    newFrame.size.width = imageRect.maxX - newFrame.origin.x
+                }
+                if newFrame.maxY > imageRect.maxY {
+                    newFrame.size.height = imageRect.maxY - newFrame.origin.y
+                }
+
+                if newFrame.width >= minSize && newFrame.height >= minSize {
                     cropBoxView.frame = newFrame
                     layoutHandles()
-                    updateDimMask()
                 }
             }
         default:
@@ -159,7 +160,6 @@ final class CropOverlayView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         dimView.frame = bounds
-        updateDimMask()
     }
 }
 
@@ -167,13 +167,18 @@ final class CropHandleView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .white
-        layer.cornerRadius = 15
-        layer.borderWidth = 2
-        layer.borderColor = UIColor.systemBlue.cgColor
+        layer.cornerRadius = 10
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.white.cgColor
         isUserInteractionEnabled = true
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let expandedBounds = bounds.insetBy(dx: -15, dy: -15)
+        return expandedBounds.contains(point)
     }
 }
