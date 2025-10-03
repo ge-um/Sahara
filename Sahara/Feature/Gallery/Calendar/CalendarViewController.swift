@@ -12,21 +12,18 @@ import RxDataSources
 import SnapKit
 
 final class CalendarViewController: UIViewController {
-    private let calendarContainerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear
-        view.layer.cornerRadius = 12
-        view.clipsToBounds = true
-        return view
-    }()
-
-    private let calendarHeaderView = CalendarHeaderView()
-
     private lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout())
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         collectionView.register(CalendarCell.self, forCellWithReuseIdentifier: CalendarCell.identifier)
-        collectionView.backgroundColor = .clear
+        collectionView.register(
+            CalendarHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: CalendarHeaderView.identifier
+        )
+        collectionView.backgroundColor = ColorSystem.calendarBackground
         collectionView.isScrollEnabled = false
+        collectionView.layer.cornerRadius = 12
+        collectionView.clipsToBounds = true
         return collectionView
     }()
 
@@ -34,6 +31,8 @@ final class CalendarViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let previousMonthRelay = PublishRelay<Void>()
     private let nextMonthRelay = PublishRelay<Void>()
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    private var currentHeaderView: CalendarHeaderView?
 
     init(viewModel: GalleryViewModel) {
         self.viewModel = viewModel
@@ -50,39 +49,29 @@ final class CalendarViewController: UIViewController {
         bind()
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if collectionView.collectionViewLayout is UICollectionViewFlowLayout {
+            collectionView.collectionViewLayout = createLayout()
+        }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewWillAppearRelay.accept(())
+    }
+
     private func configureUI() {
-        view.addSubview(calendarContainerView)
-        calendarContainerView.addSubview(calendarHeaderView)
-        calendarContainerView.addSubview(collectionView)
-
-        calendarContainerView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        calendarHeaderView.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(72)
-        }
+        view.addSubview(collectionView)
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(calendarHeaderView.snp.bottom)
-            make.horizontalEdges.equalToSuperview()
-            make.bottom.equalToSuperview()
+            make.edges.equalToSuperview()
         }
     }
 
     private func bind() {
-        calendarHeaderView.onPreviousMonthTapped = { [weak self] in
-            self?.previousMonthRelay.accept(())
-        }
-
-        calendarHeaderView.onNextMonthTapped = { [weak self] in
-            self?.nextMonthRelay.accept(())
-        }
-
         let input = GalleryViewModel.Input(
-            viewWillAppear: rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in () },
+            viewWillAppear: viewWillAppearRelay.asObservable(),
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthRelay.asObservable(),
             nextMonthTapped: nextMonthRelay.asObservable(),
@@ -101,6 +90,27 @@ final class CalendarViewController: UIViewController {
                 }
                 cell.configure(with: item)
                 return cell
+            },
+            configureSupplementaryView: { [weak self] _, collectionView, kind, indexPath in
+                guard let self = self,
+                      kind == UICollectionView.elementKindSectionHeader,
+                      let header = collectionView.dequeueReusableSupplementaryView(
+                        ofKind: kind,
+                        withReuseIdentifier: CalendarHeaderView.identifier,
+                        for: indexPath
+                      ) as? CalendarHeaderView else {
+                    return UICollectionReusableView()
+                }
+
+                self.currentHeaderView = header
+                header.onPreviousMonthTapped = { [weak self] in
+                    self?.previousMonthRelay.accept(())
+                }
+                header.onNextMonthTapped = { [weak self] in
+                    self?.nextMonthRelay.accept(())
+                }
+
+                return header
             }
         )
 
@@ -111,7 +121,7 @@ final class CalendarViewController: UIViewController {
 
         output.currentMonthTitle
             .drive(with: self) { owner, monthTitle in
-                owner.calendarHeaderView.configure(monthTitle: monthTitle)
+                owner.currentHeaderView?.configure(monthTitle: monthTitle)
             }
             .disposed(by: disposeBag)
 
@@ -127,18 +137,20 @@ final class CalendarViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func layout() -> UICollectionViewLayout {
+    private func createLayout() -> UICollectionViewLayout {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         layout.sectionInset = .zero
 
-        let collectionViewWidth = UIScreen.main.bounds.width - 40
-        let itemWidth = floor(collectionViewWidth / 7)
+        let headerHeight: CGFloat = 72
+        layout.headerReferenceSize = CGSize(width: collectionView.bounds.width, height: headerHeight)
 
-        let topHeight: CGFloat = 54 + 20 + 36 + 10 + 68
-        let availableHeight = UIScreen.main.bounds.height - topHeight - 90
-        let itemHeight = floor(availableHeight / 6)
+        let collectionViewWidth = collectionView.bounds.width
+        let itemWidth = (collectionViewWidth / 7).rounded(.down)
+
+        let collectionViewHeight = collectionView.bounds.height - headerHeight
+        let itemHeight = (collectionViewHeight / 6).rounded(.down)
 
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
 

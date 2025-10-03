@@ -8,7 +8,9 @@
 import UIKit
 import SnapKit
 
-final class CalendarHeaderView: UIView {
+final class CalendarHeaderView: UICollectionReusableView {
+    static let identifier = "CalendarHeaderView"
+
     private let monthLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuri14(size: 14)
@@ -23,7 +25,7 @@ final class CalendarHeaderView: UIView {
         button.layer.cornerRadius = 10
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
-        button.setTitleColor(.black, for: .normal)
+        button.setTitleColor(ColorSystem.labelInactive, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
         return button
     }()
@@ -34,7 +36,7 @@ final class CalendarHeaderView: UIView {
         button.layer.cornerRadius = 10
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
-        button.setTitleColor(.black, for: .normal)
+        button.setTitleColor(ColorSystem.labelInactive, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
         return button
     }()
@@ -60,7 +62,7 @@ final class CalendarHeaderView: UIView {
     }
 
     private func setupView() {
-        backgroundColor = .white
+        backgroundColor = .clear
 
         addSubview(monthLabel)
         addSubview(previousMonthButton)
