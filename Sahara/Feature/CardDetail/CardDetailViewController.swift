@@ -95,6 +95,14 @@ final class CardDetailViewController: UIViewController {
         return label
     }()
 
+    private let memoScrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.backgroundColor = .clear
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        return scrollView
+    }()
+
     private let memoLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 18)
@@ -201,8 +209,9 @@ final class CardDetailViewController: UIViewController {
         overlayView.addSubview(locationLabel)
         overlayView.addSubview(swipeHintLabel)
 
-        backCardView.addSubview(memoLabel)
+        backCardView.addSubview(memoScrollView)
         backCardView.addSubview(backSwipeHintLabel)
+        memoScrollView.addSubview(memoLabel)
 
         buttonContainerView.addSubview(saveButton)
         buttonContainerView.addSubview(shareButton)
@@ -251,10 +260,15 @@ final class CardDetailViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
-        memoLabel.snp.makeConstraints { make in
+        memoScrollView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(40)
             make.horizontalEdges.equalToSuperview().inset(30)
-            make.bottom.lessThanOrEqualTo(backSwipeHintLabel.snp.top).offset(-20)
+            make.bottom.equalTo(backSwipeHintLabel.snp.top).offset(-20)
+        }
+
+        memoLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalTo(memoScrollView.snp.width)
         }
 
         backSwipeHintLabel.snp.makeConstraints { make in

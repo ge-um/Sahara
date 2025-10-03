@@ -39,7 +39,7 @@
 "card_info.title" = "Card Info";
 "card_info.date" = "Date";
 "card_info.memo" = "Memo";
-"card_info.memo_placeholder" = "Enter memo (300 character limit)";
+"card_info.memo_placeholder" = "Enter memo";
 "card_info.location" = "Location";
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
