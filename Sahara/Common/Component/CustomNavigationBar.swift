@@ -95,19 +95,19 @@ final class CustomNavigationBar: UIView {
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .black, action: @escaping () -> Void) {
         let button = UIButton()
 
         if let title = title {
             button.setTitle(title, for: .normal)
             button.titleLabel?.font = FontSystem.galmuriMono(size: 16)
-            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(tintColor, for: .normal)
         }
 
         if let image = image {
             var config = UIButton.Configuration.plain()
             config.image = image
-            config.baseForegroundColor = .black
+            config.baseForegroundColor = tintColor
             button.configuration = config
         }
 

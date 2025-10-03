@@ -19,7 +19,6 @@ final class CardDetailViewModel {
 
     struct Input {
         let viewDidLoad: Observable<Void>
-        let closeButtonTapped: Observable<Void>
         let saveButtonTapped: Observable<Void>
         let shareButtonTapped: Observable<Void>
         let deleteConfirmed: Observable<Void>
@@ -34,7 +33,6 @@ final class CardDetailViewModel {
         let memoText: Driver<String>
         let shouldFlipToBack: Driver<Void>
         let shouldFlipToFront: Driver<Void>
-        let shouldDismiss: Driver<Void>
         let saveResult: Driver<Result<Void, Error>>
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
@@ -121,9 +119,6 @@ final class CardDetailViewModel {
         let shouldFlipToFront = input.swipeRight
             .asDriver(onErrorJustReturn: ())
 
-        let shouldDismiss = input.closeButtonTapped
-            .asDriver(onErrorJustReturn: ())
-
         let saveResult = input.saveButtonTapped
             .withLatestFrom(photoMemoData)
             .map { data -> Result<Void, Error> in
@@ -160,7 +155,6 @@ final class CardDetailViewModel {
             memoText: memoText,
             shouldFlipToBack: shouldFlipToBack,
             shouldFlipToFront: shouldFlipToFront,
-            shouldDismiss: shouldDismiss,
             saveResult: saveResult,
             shareImage: shareImage,
             deleteCompleted: deleteCompleted

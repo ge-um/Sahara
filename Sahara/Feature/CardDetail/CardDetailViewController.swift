@@ -22,6 +22,8 @@ final class CardDetailViewController: UIViewController {
     private let deleteConfirmedRelay = PublishRelay<Void>()
     private var photoImageHeightConstraint: Constraint?
 
+    private let customNavigationBar = CustomNavigationBar()
+
     private let cardContainerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
@@ -71,14 +73,14 @@ final class CardDetailViewController: UIViewController {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.font = FontSystem.galmuriMono(size: 18)
         label.textColor = .white
         return label
     }()
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.font = FontSystem.galmuriMono(size: 14)
         label.textColor = .white
         label.numberOfLines = 2
         return label
@@ -87,7 +89,7 @@ final class CardDetailViewController: UIViewController {
     private lazy var swipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
-        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .white.withAlphaComponent(0.7)
         label.textAlignment = .center
         return label
@@ -95,7 +97,7 @@ final class CardDetailViewController: UIViewController {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18)
+        label.font = FontSystem.galmuriMono(size: 18)
         label.textColor = .label
         label.numberOfLines = 0
         label.textAlignment = .left
@@ -105,85 +107,45 @@ final class CardDetailViewController: UIViewController {
     private lazy var backSwipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
-        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         return label
     }()
 
-    private let closeButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .systemGray5
-        config.baseForegroundColor = .label
-        config.image = UIImage(systemName: "xmark")
-        config.cornerStyle = .capsule
-        let button = UIButton(configuration: config)
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.2
-        return button
-    }()
 
-    private let buttonStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 12
-        stackView.distribution = .fillEqually
-        return stackView
+    private let buttonContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
     }()
 
     private lazy var saveButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = ColorSystem.buttonYellow
-        config.baseForegroundColor = .black
-        config.cornerStyle = .capsule
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 35
+        button.clipsToBounds = true
 
         let font = FontSystem.galmuriMono(size: 12)
         let title = NSLocalizedString("common.save", comment: "")
-        config.attributedTitle = AttributedString(title.attributedString(font: font, letterSpacing: -6, color: .black))
-
-        let button = UIButton(configuration: config)
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.2
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
 
         return button
     }()
 
     private lazy var shareButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = ColorSystem.buttonYellow
-        config.baseForegroundColor = .black
-        config.cornerStyle = .capsule
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 35
+        button.clipsToBounds = true
 
         let font = FontSystem.galmuriMono(size: 12)
         let title = NSLocalizedString("common.share", comment: "")
-        config.attributedTitle = AttributedString(title.attributedString(font: font, letterSpacing: -6, color: .black))
-
-        let button = UIButton(configuration: config)
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.2
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
 
         return button
     }()
 
-    private lazy var deleteButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .systemRed
-        config.baseForegroundColor = .white
-        config.image = UIImage(systemName: "trash")
-        config.cornerStyle = .capsule
-        let button = UIButton(configuration: config)
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
-        button.layer.shadowOpacity = 0.2
-        return button
-    }()
 
     init(photoMemoId: ObjectId) {
         self.viewModel = CardDetailViewModel(photoMemoId: photoMemoId)
@@ -196,19 +158,39 @@ final class CardDetailViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        setupCustomNavigationBar()
         configureUI()
         setupGestures()
         bind()
         viewDidLoadRelay.accept(())
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        saveButton.applyGradient(.saveShareButton)
+        shareButton.applyGradient(.saveShareButton)
+    }
+
+    private func setupCustomNavigationBar() {
+        customNavigationBar.configure(title: "카드 보기")
+        customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
+
+        customNavigationBar.onLeftButtonTapped = { [weak self] in
+            self?.dismiss(animated: true)
+        }
+
+        customNavigationBar.addRightButton(image: UIImage(systemName: "trash"), tintColor: .systemRed) { [weak self] in
+            self?.showDeleteAlert()
+        }
+    }
+
     private func configureUI() {
         view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
+        view.addSubview(customNavigationBar)
         view.addSubview(cardContainerView)
-        view.addSubview(buttonStackView)
-        view.addSubview(deleteButton)
-        view.addSubview(closeButton)
+        view.addSubview(buttonContainerView)
 
         cardContainerView.addSubview(frontCardView)
         cardContainerView.addSubview(backCardView)
@@ -222,12 +204,18 @@ final class CardDetailViewController: UIViewController {
         backCardView.addSubview(memoLabel)
         backCardView.addSubview(backSwipeHintLabel)
 
-        buttonStackView.addArrangedSubview(saveButton)
-        buttonStackView.addArrangedSubview(shareButton)
+        buttonContainerView.addSubview(saveButton)
+        buttonContainerView.addSubview(shareButton)
+
+        customNavigationBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
 
         cardContainerView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
-            make.horizontalEdges.equalToSuperview().inset(60)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(32)
+            make.horizontalEdges.equalToSuperview().inset(32)
             photoImageHeightConstraint = make.height.equalTo(300).constraint
         }
 
@@ -274,23 +262,23 @@ final class CardDetailViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
-        buttonStackView.snp.makeConstraints { make in
-            make.top.equalTo(cardContainerView.snp.bottom).offset(24)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(50)
-        }
-
-        deleteButton.snp.makeConstraints { make in
-            make.top.equalTo(buttonStackView.snp.bottom).offset(12)
+        buttonContainerView.snp.makeConstraints { make in
+            make.top.equalTo(cardContainerView.snp.bottom).offset(32)
             make.centerX.equalToSuperview()
-            make.width.equalTo(50)
-            make.height.equalTo(50)
+            make.height.equalTo(70)
         }
 
-        closeButton.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
-            make.trailing.equalToSuperview().inset(20)
-            make.width.height.equalTo(36)
+        saveButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview()
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(70)
+        }
+
+        shareButton.snp.makeConstraints { make in
+            make.leading.equalTo(saveButton.snp.trailing).offset(12)
+            make.trailing.equalToSuperview()
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(70)
         }
     }
 
@@ -314,25 +302,22 @@ final class CardDetailViewController: UIViewController {
         swipeRightRelay.accept(())
     }
 
-    private func bind() {
-        deleteButton.rx.tap
-            .bind(with: self) { owner, _ in
-                let alert = UIAlertController(
-                    title: "사진 삭제",
-                    message: "이 사진을 삭제하시겠습니까?",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-                alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { _ in
-                    owner.deleteConfirmedRelay.accept(())
-                })
-                owner.present(alert, animated: true)
-            }
-            .disposed(by: disposeBag)
+    private func showDeleteAlert() {
+        let alert = UIAlertController(
+            title: "사진 삭제",
+            message: "이 사진을 삭제하시겠습니까?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
+            self?.deleteConfirmedRelay.accept(())
+        })
+        present(alert, animated: true)
+    }
 
+    private func bind() {
         let input = CardDetailViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
-            closeButtonTapped: closeButton.rx.tap.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             shareButtonTapped: shareButton.rx.tap.asObservable(),
             deleteConfirmed: deleteConfirmedRelay.asObservable(),
@@ -372,12 +357,6 @@ final class CardDetailViewController: UIViewController {
         output.shouldFlipToFront
             .drive(with: self) { owner, _ in
                 owner.flipToFront()
-            }
-            .disposed(by: disposeBag)
-
-        output.shouldDismiss
-            .drive(with: self) { owner, _ in
-                owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
 
@@ -431,7 +410,7 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func updatePhotoImageHeight(for image: UIImage) {
-        let imageWidth = view.frame.width - 120
+        let imageWidth = view.frame.width - 64
         let imageHeight = image.heightForWidth(imageWidth)
 
         photoImageHeightConstraint?.update(offset: imageHeight)
