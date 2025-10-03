@@ -96,24 +96,31 @@ final class MediaEditorViewController: UIViewController {
     private let cropOverlayView: CropOverlayView = {
         let view = CropOverlayView()
         view.isHidden = true
+        view.backgroundColor = .clear
         return view
     }()
 
     private let cropApplyButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("media_editor.apply", comment: "")
-        config.baseBackgroundColor = .systemBlue
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
+        button.setTitle(NSLocalizedString("media_editor.apply", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         button.isHidden = true
         return button
     }()
 
     private let cropCancelButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.title = NSLocalizedString("media_editor.cancel", comment: "")
-        let button = UIButton(configuration: config)
+        let button = UIButton()
+        button.setTitle(NSLocalizedString("media_editor.cancel", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.black, for: .normal)
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         button.isHidden = true
         return button
     }()
@@ -157,6 +164,14 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
+    private let cropDimOverlay: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.isHidden = true
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let leftStarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "star")?.withRenderingMode(.alwaysTemplate)
@@ -183,6 +198,8 @@ final class MediaEditorViewController: UIViewController {
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
     private var croppedImage: UIImage?
+    private var uncropedOriginalImage: UIImage?
+    private var lastCropRect: CGRect?
     private let context = CIContext()
     private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
     private let cropAppliedRelay = PublishRelay<(UIImage, CGRect, CGRect)>()
@@ -217,6 +234,7 @@ final class MediaEditorViewController: UIViewController {
         super.viewDidLayoutSubviews()
         toolBarContainer.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = toolBarContainer.bounds
         doneButton.applyGradient(.buttonPink)
+        cropApplyButton.applyGradient(.buttonPink)
         updateStarPositions()
     }
 
@@ -348,6 +366,7 @@ final class MediaEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.originalImage = image
+                owner.uncropedOriginalImage = image
             }
             .disposed(by: disposeBag)
 
@@ -453,8 +472,12 @@ final class MediaEditorViewController: UIViewController {
         cropOverlayView.isHidden = true
         cropApplyButton.isHidden = true
         cropCancelButton.isHidden = true
+        cropDimOverlay.isHidden = true
         toolBarContainer.isHidden = false
         doneButton.isHidden = false
+        leftStarImageView.isHidden = false
+        rightStarImageView.isHidden = false
+        cancelButton.isEnabled = true
 
         photoImageView.snp.remakeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
@@ -478,6 +501,8 @@ final class MediaEditorViewController: UIViewController {
 
         guard let mode = mode else {
             doneButton.isHidden = false
+            doneButton.isEnabled = true
+            doneButton.alpha = 1.0
             return
         }
 
@@ -516,14 +541,46 @@ final class MediaEditorViewController: UIViewController {
         case .photo:
             break
         case .crop:
+            leftStarImageView.isHidden = true
+            rightStarImageView.isHidden = true
+            cropDimOverlay.isHidden = false
+            cancelButton.isEnabled = false
+            doneButton.alpha = 0.5
+            doneButton.isEnabled = false
+
+            cropApplyButton.snp.remakeConstraints { make in
+                make.trailing.equalToSuperview().inset(20)
+                make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+                make.width.greaterThanOrEqualTo(80)
+                make.height.equalTo(44)
+            }
+
+            cropCancelButton.snp.remakeConstraints { make in
+                make.leading.equalToSuperview().inset(20)
+                make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+                make.width.greaterThanOrEqualTo(80)
+                make.height.equalTo(44)
+            }
+
+            photoImageView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+                make.horizontalEdges.equalToSuperview().inset(20)
+                make.bottom.equalTo(cropApplyButton.snp.top).offset(-20)
+            }
+
             cropOverlayView.isHidden = false
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
-            toolBarContainer.isHidden = true
-            doneButton.isHidden = true
-            guard let original = originalImage else { return }
-            photoImageView.image = original
-            setupCropOverlay()
+            doneButton.isHidden = false
+
+            guard let uncropped = uncropedOriginalImage else { return }
+            photoImageView.image = uncropped
+
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.layoutIfNeeded()
+            }, completion: { _ in
+                self.setupCropOverlay()
+            })
         }
     }
 
@@ -593,25 +650,76 @@ final class MediaEditorViewController: UIViewController {
     private func setupCropOverlay() {
         guard let currentImage = photoImageView.image else { return }
 
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: currentImage.size,
-            in: photoImageView.bounds.size
-        )
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
 
-        cropOverlayView.frame = photoImageView.bounds
-        cropOverlayView.setCropRect(imageRect)
+            let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+                imageSize: currentImage.size,
+                in: self.photoImageView.bounds.size
+            )
+
+            let overlayFrame = self.photoImageView.convert(self.photoImageView.bounds, to: self.view)
+            self.cropOverlayView.frame = overlayFrame
+
+            let imageRectInOverlay = CGRect(
+                x: imageRect.origin.x,
+                y: imageRect.origin.y,
+                width: imageRect.width,
+                height: imageRect.height
+            )
+
+            if let lastCrop = self.lastCropRect,
+               let uncropped = self.uncropedOriginalImage {
+                let scale = imageRect.width / uncropped.size.width
+
+                let scaledCropRect = CGRect(
+                    x: imageRect.origin.x + (lastCrop.origin.x * scale),
+                    y: imageRect.origin.y + (lastCrop.origin.y * scale),
+                    width: lastCrop.width * scale,
+                    height: lastCrop.height * scale
+                )
+
+                self.cropOverlayView.setCropRect(imageRectInOverlay)
+                self.cropOverlayView.setCropRect(scaledCropRect)
+            } else {
+                self.cropOverlayView.setCropRect(imageRectInOverlay)
+            }
+        }
     }
 
     private func applyCrop() {
         guard let currentImage = photoImageView.image else { return }
 
-        let cropRect = cropOverlayView.cropRect
+        let cropRectInOverlay = cropOverlayView.cropRect
+
         let displayedImageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
             imageSize: currentImage.size,
             in: photoImageView.bounds.size
         )
 
-        cropAppliedRelay.accept((currentImage, cropRect, displayedImageRect))
+        let cropRectInImage = MediaEditorCropHandler.convertCropRectToImageCoordinates(
+            cropRect: cropRectInOverlay,
+            imageSize: currentImage.size,
+            displayedImageRect: displayedImageRect
+        )
+
+        guard let uncropped = uncropedOriginalImage,
+              let croppedCGImage = uncropped.cgImage?.cropping(to: cropRectInImage) else {
+            currentMode.accept(nil)
+            return
+        }
+
+        let croppedImage = UIImage(
+            cgImage: croppedCGImage,
+            scale: uncropped.scale,
+            orientation: uncropped.imageOrientation
+        )
+
+        lastCropRect = cropRectInImage
+
+        photoImageView.image = croppedImage
+        originalImage = croppedImage
+
         currentMode.accept(nil)
     }
 
@@ -694,11 +802,12 @@ final class MediaEditorViewController: UIViewController {
         view.addSubview(toolBarContainer)
         view.addSubview(filterCollectionView)
         view.addSubview(trashIconView)
+        view.addSubview(leftStarImageView)
+        view.addSubview(rightStarImageView)
+        view.addSubview(cropDimOverlay)
         view.addSubview(cropOverlayView)
         view.addSubview(cropApplyButton)
         view.addSubview(cropCancelButton)
-        view.addSubview(leftStarImageView)
-        view.addSubview(rightStarImageView)
 
         toolBarContainer.addSubview(toolBarScrollView)
         toolBarScrollView.addSubview(modeButtonStackView)
@@ -765,6 +874,10 @@ final class MediaEditorViewController: UIViewController {
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
             make.width.equalTo(100)
             make.height.equalTo(50)
+        }
+
+        cropDimOverlay.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
     }
 }
