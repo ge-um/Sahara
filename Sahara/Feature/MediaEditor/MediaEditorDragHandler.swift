@@ -1,5 +1,5 @@
 //
-//  PhotoEditorDragHandler.swift
+//  MediaEditorDragHandler.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class PhotoEditorDragHandler {
+final class MediaEditorDragHandler {
     private let trashIconView: UIImageView
     private weak var parentView: UIView?
 

@@ -67,18 +67,18 @@
 "media_selection.camera_permission_message" = "Camera access is required to take photos.";
 "media_selection.go_to_settings" = "Go to Settings";
 
-/* Photo Editor */
-"photo_editor.title" = "Photo Editor";
-"photo_editor.done" = "Done";
-"photo_editor.cancel" = "Cancel";
-"photo_editor.sticker" = "Sticker";
-"photo_editor.drawing" = "Drawing";
-"photo_editor.filter" = "Filter";
-"photo_editor.photo" = "Photo";
-"photo_editor.crop" = "Crop";
-"photo_editor.apply" = "Apply";
-"photo_editor.sticker_search_placeholder" = "Search stickers";
-"photo_editor.sticker_modal_title" = "Stickers";
+/* Media Editor */
+"media_editor.title" = "Media Editor";
+"media_editor.done" = "Done";
+"media_editor.cancel" = "Cancel";
+"media_editor.sticker" = "Sticker";
+"media_editor.drawing" = "Drawing";
+"media_editor.filter" = "Filter";
+"media_editor.photo" = "Photo";
+"media_editor.crop" = "Crop";
+"media_editor.apply" = "Apply";
+"media_editor.sticker_search_placeholder" = "Search stickers";
+"media_editor.sticker_modal_title" = "Stickers";
 
 /* Filters */
 "filter.original" = "Original";

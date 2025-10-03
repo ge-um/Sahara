@@ -67,18 +67,18 @@
 "media_selection.camera_permission_message" = "사진을 촬영하려면 카메라 접근 권한이 필요합니다.";
 "media_selection.go_to_settings" = "설정으로 이동";
 
-/* Photo Editor */
-"photo_editor.title" = "사진 편집";
-"photo_editor.done" = "완료";
-"photo_editor.cancel" = "취소";
-"photo_editor.sticker" = "스티커";
-"photo_editor.drawing" = "그리기";
-"photo_editor.filter" = "필터";
-"photo_editor.photo" = "사진";
-"photo_editor.crop" = "자르기";
-"photo_editor.apply" = "적용";
-"photo_editor.sticker_search_placeholder" = "스티커 검색";
-"photo_editor.sticker_modal_title" = "스티커";
+/* Media Editor */
+"media_editor.title" = "사진 편집";
+"media_editor.done" = "완료";
+"media_editor.cancel" = "취소";
+"media_editor.sticker" = "스티커";
+"media_editor.drawing" = "그리기";
+"media_editor.filter" = "필터";
+"media_editor.photo" = "사진";
+"media_editor.crop" = "자르기";
+"media_editor.apply" = "적용";
+"media_editor.sticker_search_placeholder" = "스티커 검색";
+"media_editor.sticker_modal_title" = "스티커";
 
 /* Filters */
 "filter.original" = "원본";

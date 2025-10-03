@@ -1,5 +1,5 @@
 //
-//  PhotoEditorViewModel.swift
+//  MediaEditorViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -10,7 +10,7 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-final class PhotoEditorViewModel: BaseViewModelProtocol {
+final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let originalImage: UIImage
     private let context = CIContext()
@@ -123,12 +123,12 @@ final class PhotoEditorViewModel: BaseViewModelProtocol {
         // 자르기 적용 로직
         input.cropApplied
             .compactMap { image, cropRect, displayedRect -> UIImage? in
-                let scaledCropRect = PhotoEditorCropHandler.convertCropRectToImageCoordinates(
+                let scaledCropRect = MediaEditorCropHandler.convertCropRectToImageCoordinates(
                     cropRect: cropRect,
                     imageSize: image.size,
                     displayedImageRect: displayedRect
                 )
-                return PhotoEditorCropHandler.cropImage(image, to: scaledCropRect)
+                return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
             }
             .bind { croppedImage in
                 croppedImageRelay.accept(croppedImage)

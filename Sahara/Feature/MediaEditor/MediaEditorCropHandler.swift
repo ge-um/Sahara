@@ -1,5 +1,5 @@
 //
-//  PhotoEditorCropHandler.swift
+//  MediaEditorCropHandler.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class PhotoEditorCropHandler {
+final class MediaEditorCropHandler {
     static func calculateDisplayedImageRect(
         imageSize: CGSize,
         in viewSize: CGSize

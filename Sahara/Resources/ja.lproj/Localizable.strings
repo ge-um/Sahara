@@ -64,18 +64,18 @@
 "media_selection.camera_permission_message" = "写真を撮影するにはカメラアクセス権限が必要です。";
 "media_selection.go_to_settings" = "設定に移動";
 
-/* Photo Editor */
-"photo_editor.title" = "写真編集";
-"photo_editor.done" = "完了";
-"photo_editor.cancel" = "キャンセル";
-"photo_editor.sticker" = "ステッカー";
-"photo_editor.drawing" = "描画";
-"photo_editor.filter" = "フィルター";
-"photo_editor.photo" = "写真";
-"photo_editor.crop" = "切り抜き";
-"photo_editor.apply" = "適用";
-"photo_editor.sticker_search_placeholder" = "ステッカーを検索";
-"photo_editor.sticker_modal_title" = "ステッカー";
+/* Media Editor */
+"media_editor.title" = "メディア編集";
+"media_editor.done" = "完了";
+"media_editor.cancel" = "キャンセル";
+"media_editor.sticker" = "ステッカー";
+"media_editor.drawing" = "描画";
+"media_editor.filter" = "フィルター";
+"media_editor.photo" = "写真";
+"media_editor.crop" = "切り抜き";
+"media_editor.apply" = "適用";
+"media_editor.sticker_search_placeholder" = "ステッカーを検索";
+"media_editor.sticker_modal_title" = "ステッカー";
 
 /* Filters */
 "filter.original" = "オリジナル";
