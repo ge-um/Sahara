@@ -100,7 +100,7 @@ final class CardInfoViewController: UIViewController {
 
     private let characterCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "0/300"
+        label.text = "0"
         label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = ColorSystem.labelPrimary
         label.textAlignment = .right
@@ -636,7 +636,7 @@ extension CardInfoViewController: UITextViewDelegate {
     func textViewDidEndEditing(_ textView: UITextView) {
         if textView.text.isEmpty {
             textView.attributedText = createPlaceholderText()
-            characterCountLabel.text = "0/300"
+            characterCountLabel.text = "0"
             characterCountLabel.textColor = ColorSystem.labelPrimary
         }
     }
@@ -647,14 +647,8 @@ extension CardInfoViewController: UITextViewDelegate {
 
     func textViewDidChange(_ textView: UITextView) {
         let count = textView.text.count
-        characterCountLabel.text = "\(count)/300"
-
-        // 250자 이상일 때 빨간색
-        if count >= 250 {
-            characterCountLabel.textColor = .systemRed
-        } else {
-            characterCountLabel.textColor = ColorSystem.labelPrimary
-        }
+        characterCountLabel.text = "\(count)"
+        characterCountLabel.textColor = ColorSystem.labelPrimary
     }
 
     private func createPlaceholderText() -> NSAttributedString {

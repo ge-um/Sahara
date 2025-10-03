@@ -105,13 +105,9 @@ final class CardDetailViewModel {
 
         let memoText = photoMemoData
             .map { data -> String in
-                if let memo = data.memo, !memo.isEmpty {
-                    return memo
-                } else {
-                    return NSLocalizedString("photo_detail.no_memo", comment: "")
-                }
+                return data.memo ?? ""
             }
-            .asDriver(onErrorJustReturn: NSLocalizedString("photo_detail.no_memo", comment: ""))
+            .asDriver(onErrorJustReturn: "")
 
         let shouldFlipToBack = input.swipeLeft
             .asDriver(onErrorJustReturn: ())

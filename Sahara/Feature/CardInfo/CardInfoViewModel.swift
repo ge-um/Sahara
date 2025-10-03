@@ -65,12 +65,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     return false
                 }
 
-                // 메모가 300자 초과 시 에러
-                if let memo = memo, !memo.isEmpty, memo != "메모를 남기고 카드 뒷면에서 확인해보세요!", memo.count > 300 {
-                    saveErrorRelay.accept("메모는 300자를 초과할 수 없습니다.")
-                    return false
-                }
-
                 self.saveToRealm(date: date, memo: memo, location: location)
                 return true
             }
@@ -95,7 +89,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        let memoText = (memo?.isEmpty == false && memo != "메모를 남기고 카드 뒷면에서 확인해보세요!") ? memo : nil
+        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入力してください"]
+        let memoText: String? = {
+            guard let memo = memo, !memo.isEmpty else { return nil }
+            return placeholders.contains(memo) ? nil : memo
+        }()
 
         let photoMemo = Card(
             createdDate: date,
