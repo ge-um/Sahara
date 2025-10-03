@@ -490,11 +490,14 @@ final class MediaEditorViewController: UIViewController {
                 make.bottom.equalTo(filterCollectionView.snp.top).offset(-16)
             }
 
+            filterCollectionView.isHidden = false
+
             UIView.animate(withDuration: 0.3, animations: {
                 self.view.layoutIfNeeded()
+            }, completion: { _ in
+                self.filterCollectionView.reloadData()
+                self.filterCollectionView.layoutIfNeeded()
             })
-
-            filterCollectionView.isHidden = false
         case .photo:
             break
         case .crop:
