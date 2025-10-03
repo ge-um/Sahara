@@ -5,6 +5,7 @@
 //  Created by 금가경 on 10/1/25.
 //
 
+import RealmSwift
 import RxCocoa
 import RxSwift
 import SnapKit
@@ -15,30 +16,37 @@ final class MapPhotoGalleryViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewDidLoadRelay = PublishRelay<Void>()
 
-    private let closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: nil, action: nil)
+    private let customNavigationBar = CustomNavigationBar()
+
+    private let closeButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(named: "xmark")
+        config.baseBackgroundColor = .white
+        config.baseForegroundColor = .black
+        config.cornerStyle = .medium
+        button.configuration = config
+        return button
+    }()
+
+    private var pinterestLayout: PinterestLayout!
 
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        let spacing: CGFloat = 2
-        let itemsPerRow: CGFloat = 3
-        let totalSpacing = spacing * (itemsPerRow + 1)
-        let itemWidth = (UIScreen.main.bounds.width - totalSpacing) / itemsPerRow
+        pinterestLayout = PinterestLayout()
+        pinterestLayout.delegate = self
 
-        layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
-        layout.minimumLineSpacing = spacing
-        layout.minimumInteritemSpacing = spacing
-        layout.sectionInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
-
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemBackground
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: pinterestLayout)
+        collectionView.backgroundColor = .clear
         collectionView.register(MapPhotoCell.self, forCellWithReuseIdentifier: MapPhotoCell.identifier)
         return collectionView
     }()
 
-    init(photoMemos: [Card]) {
+    private let themeCategory: ThemeCategory
+
+    init(photoMemos: [Card], themeCategory: ThemeCategory) {
         self.viewModel = MapPhotoGalleryViewModel(photoMemos: photoMemos)
+        self.themeCategory = themeCategory
         super.init(nibName: nil, bundle: nil)
-        title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoMemos.count)
     }
 
     required init?(coder: NSCoder) {
@@ -47,19 +55,42 @@ final class MapPhotoGalleryViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
+        setupCustomNavigationBar()
         bind()
         viewDidLoadRelay.accept(())
     }
 
-    private func configureUI() {
-        view.backgroundColor = .systemBackground
-        navigationItem.leftBarButtonItem = closeButton
+    private func setupCustomNavigationBar() {
+        customNavigationBar.configure(title: themeCategory.localizedName)
 
+        view.addSubview(closeButton)
+
+        closeButton.snp.makeConstraints { make in
+            make.leading.equalTo(customNavigationBar).offset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.equalTo(48)
+            make.height.equalTo(44)
+        }
+    }
+
+    private func configureUI() {
+        view.applyGradient(.grayGradient)
+
+        view.addSubview(customNavigationBar)
         view.addSubview(collectionView)
 
+        customNavigationBar.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
+
         collectionView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
+            make.horizontalEdges.equalToSuperview().inset(24)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
 
@@ -91,6 +122,19 @@ final class MapPhotoGalleryViewController: UIViewController {
                 owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
+    }
+}
+
+extension MapPhotoGalleryViewController: PinterestLayoutDelegate {
+    func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
+        guard let cell = viewModel.getCard(at: indexPath.item),
+              let image = UIImage(data: cell.editedImageData) else {
+            return 180
+        }
+
+        let aspectRatio = image.size.height / image.size.width
+        let cellWidth = (collectionView.bounds.width - 8) / 2
+        return cellWidth * aspectRatio
     }
 }
 

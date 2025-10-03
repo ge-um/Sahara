@@ -398,8 +398,9 @@ extension GalleryViewController: MKMapViewDelegate {
     }
 
     private func showGallery(for photoMemos: [Card]) {
-        let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos)
+        let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos, themeCategory: .others)
         let nav = UINavigationController(rootViewController: galleryVC)
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 }

@@ -24,7 +24,7 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
     struct Output {
         let themeGroups: Driver<[ThemeGroup]>
         let isLoading: Driver<Bool>
-        let navigateToPhotos: Driver<[Card]>
+        let navigateToPhotos: Driver<ThemeGroup>
     }
 
     func transform(input: Input) -> Output {
@@ -47,7 +47,7 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
 
         let navigateToPhotos = input.itemSelected
             .withLatestFrom(themeGroupsRelay) { indexPath, groups in
-                groups[indexPath.row].photoMemos
+                groups[indexPath.row]
             }
             .asDriver(onErrorDriveWith: .empty())
 
