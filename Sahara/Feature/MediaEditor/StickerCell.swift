@@ -1,5 +1,5 @@
 //
-//  PhotoPhotoStickerCell.swift
+//  StickerCell.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -9,7 +9,7 @@ import Kingfisher
 import SnapKit
 import UIKit
 
-final class PhotoStickerCell: UICollectionViewCell, IsIdentifiable {
+final class StickerCell: UICollectionViewCell, IsIdentifiable {
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
