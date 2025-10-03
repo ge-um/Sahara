@@ -19,6 +19,8 @@ final class ThemeGalleryViewController: UIViewController {
         let tableView = UITableView()
         tableView.register(ThemeCell.self, forCellReuseIdentifier: ThemeCell.identifier)
         tableView.rowHeight = 100
+        tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
         return tableView
     }()
 
@@ -44,7 +46,7 @@ final class ThemeGalleryViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .clear
 
         view.addSubview(tableView)
         view.addSubview(activityIndicator)

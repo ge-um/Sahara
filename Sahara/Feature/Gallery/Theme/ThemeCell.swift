@@ -18,13 +18,13 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 18, weight: .semibold)
+        label.font = FontSystem.galmuriMono(size: 18)
         return label
     }()
 
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = FontSystem.galmuriMono(size: 14)
         label.textColor = .secondaryLabel
         return label
     }()
@@ -39,6 +39,10 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
     }
 
     private func configureUI() {
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+        selectionStyle = .none
+
         contentView.addSubview(thumbnailImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(countLabel)
