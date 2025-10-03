@@ -43,7 +43,7 @@ class PinterestLayout: UICollectionViewFlowLayout {
         guard contentWidth > 0 else { return }
 
         let numberOfColumns: Int = 2
-        let cellPadding: CGFloat = 2
+        let cellPadding: CGFloat = 4
         let cellWidth: CGFloat = contentWidth / CGFloat(numberOfColumns)
 
         let xOffSet: [CGFloat] = [0, cellWidth]
