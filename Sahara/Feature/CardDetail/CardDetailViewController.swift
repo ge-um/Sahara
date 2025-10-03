@@ -65,7 +65,7 @@ final class CardDetailViewController: UIViewController {
 
     private let overlayView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.backgroundColor = ColorSystem.cardBackground.withAlphaComponent(0.6)
         view.layer.cornerRadius = 20
         view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         return view
@@ -90,8 +90,8 @@ final class CardDetailViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = .white.withAlphaComponent(0.7)
-        label.textAlignment = .center
+        label.textColor = .white.withAlphaComponent(0.8)
+        label.textAlignment = .right
         return label
     }()
 
@@ -242,7 +242,6 @@ final class CardDetailViewController: UIViewController {
 
         overlayView.snp.makeConstraints { make in
             make.horizontalEdges.bottom.equalToSuperview()
-            make.height.equalTo(120)
         }
 
         dateLabel.snp.makeConstraints { make in
@@ -256,8 +255,9 @@ final class CardDetailViewController: UIViewController {
         }
 
         swipeHintLabel.snp.makeConstraints { make in
+            make.top.equalTo(locationLabel.snp.bottom).offset(4)
+            make.trailing.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().offset(-16)
-            make.horizontalEdges.equalToSuperview().inset(20)
         }
 
         memoScrollView.snp.makeConstraints { make in
