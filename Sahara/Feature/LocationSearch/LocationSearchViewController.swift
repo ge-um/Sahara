@@ -10,11 +10,13 @@ import SnapKit
 import UIKit
 
 final class LocationSearchViewController: UIViewController {
-    // MARK: - UI Components
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
+        if let textField = searchBar.value(forKey: "searchField") as? UITextField {
+            textField.font = FontSystem.galmuriMono(size: 14)
+        }
         return searchBar
     }()
 
@@ -25,37 +27,42 @@ final class LocationSearchViewController: UIViewController {
         tableView.dataSource = self
         tableView.keyboardDismissMode = .onDrag
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.backgroundColor = .clear
         return tableView
     }()
 
     private let currentLocationButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("location_search.use_current_location", comment: "")
-        config.baseBackgroundColor = .systemBlue
-        config.baseForegroundColor = .white
-        config.image = UIImage(systemName: "location.fill")
-        config.imagePlacement = .leading
-        config.imagePadding = 8
-        config.cornerStyle = .medium
-        let button = UIButton(configuration: config)
+        let button = UIButton()
+        button.setTitle(NSLocalizedString("location_search.use_current_location", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
+        button.setTitleColor(.white, for: .normal)
+        button.setImage(UIImage(systemName: "location.fill"), for: .normal)
+        button.tintColor = .white
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
         return button
     }()
 
-    // MARK: - Properties
     private let searchCompleter = MKLocalSearchCompleter()
     private var searchResults: [MKLocalSearchCompletion] = []
     var onLocationSelected: ((CLLocationCoordinate2D, String) -> Void)?
     private let locationManager = CLLocationManager()
 
-    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         setupSearchCompleter()
         setupActions()
+        currentLocationButton.applyGradient(.blueGradient)
     }
 
-    // MARK: - Setup
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        currentLocationButton.applyGradient(.blueGradient)
+    }
+
     private func setupSearchCompleter() {
         searchCompleter.delegate = self
         searchCompleter.resultTypes = [.address, .pointOfInterest]
@@ -99,15 +106,28 @@ final class LocationSearchViewController: UIViewController {
         present(alert, animated: true)
     }
 
-    // MARK: - Configure UI
     private func configureUI() {
-        view.backgroundColor = .systemBackground
+        view.applyGradient(.grayGradient)
+
+        navigationController?.view.applyGradient(.grayGradient)
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: FontSystem.galmuriMono(size: 16)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
         navigationItem.title = NSLocalizedString("location_search.title", comment: "")
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
+
+        let cancelButton = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
             action: #selector(cancelTapped)
         )
+        cancelButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .normal)
+        cancelButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .highlighted)
+        navigationItem.leftBarButtonItem = cancelButton
 
         view.addSubview(searchBar)
         view.addSubview(currentLocationButton)
@@ -135,7 +155,6 @@ final class LocationSearchViewController: UIViewController {
     }
 }
 
-// MARK: - UISearchBarDelegate
 extension LocationSearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchCompleter.queryFragment = searchText
@@ -146,7 +165,6 @@ extension LocationSearchViewController: UISearchBarDelegate {
     }
 }
 
-// MARK: - MKLocalSearchCompleterDelegate
 extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         searchResults = completer.results
@@ -158,7 +176,6 @@ extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
     }
 }
 
-// MARK: - UITableViewDataSource & UITableViewDelegate
 extension LocationSearchViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return searchResults.count
@@ -201,7 +218,6 @@ extension LocationSearchViewController: UITableViewDataSource, UITableViewDelega
     }
 }
 
-// MARK: - CLLocationManagerDelegate
 extension LocationSearchViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
@@ -247,20 +263,19 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     }
 }
 
-// MARK: - LocationSearchCell
 final class LocationSearchCell: UITableViewCell {
     static let identifier = "LocationSearchCell"
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.font = FontSystem.galmuriMono(size: 14)
         label.textColor = .label
         return label
     }()
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .secondaryLabel
         return label
     }()
@@ -275,6 +290,7 @@ final class LocationSearchCell: UITableViewCell {
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        backgroundColor = .clear
         setupUI()
     }
 
