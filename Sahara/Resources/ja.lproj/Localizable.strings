@@ -63,6 +63,7 @@
 "media_selection.title" = "写真選択";
 "media_selection.camera" = "カメラ";
 "media_selection.library" = "アルバム";
+"media_selection.sticker" = "写真";
 "media_selection.camera_permission_title" = "カメラアクセス権限が必要";
 "media_selection.camera_permission_message" = "写真を撮影するにはカメラアクセス権限が必要です。";
 "media_selection.go_to_settings" = "設定に移動";
