@@ -123,12 +123,15 @@ final class MediaEditorViewController: UIViewController {
         layout.scrollDirection = .horizontal
         layout.itemSize = CGSize(width: 100, height: 120)
         layout.minimumLineSpacing = 10
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemGray6
+        collectionView.backgroundColor = ColorSystem.cardBackground
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(FilterCell.self, forCellWithReuseIdentifier: FilterCell.identifier)
         collectionView.dataSource = self
+        collectionView.layer.cornerRadius = 12
+        collectionView.clipsToBounds = true
         return collectionView
     }()
 
@@ -438,6 +441,12 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.isHidden = false
         doneButton.isHidden = false
 
+        photoImageView.snp.remakeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
+            make.horizontalEdges.equalToSuperview().inset(40)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-40)
+        }
+
         canvasView.snp.remakeConstraints { make in
             make.edges.equalTo(photoImageView)
         }
@@ -475,6 +484,16 @@ final class MediaEditorViewController: UIViewController {
 
             toolPicker.setVisible(true, forFirstResponder: canvasView)
         case .filter:
+            photoImageView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
+                make.horizontalEdges.equalToSuperview().inset(40)
+                make.bottom.equalTo(filterCollectionView.snp.top).offset(-16)
+            }
+
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.layoutIfNeeded()
+            })
+
             filterCollectionView.isHidden = false
         case .photo:
             break
@@ -701,9 +720,9 @@ final class MediaEditorViewController: UIViewController {
         }
 
         filterCollectionView.snp.makeConstraints { make in
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(120)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-20)
+            make.horizontalEdges.equalToSuperview().inset(40)
+            make.height.equalTo(144)
         }
 
         trashIconView.snp.makeConstraints { make in
