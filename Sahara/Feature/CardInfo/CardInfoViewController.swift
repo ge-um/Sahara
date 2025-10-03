@@ -25,6 +25,7 @@ final class CardInfoViewController: UIViewController {
         imageView.layer.shadowOffset = CGSize(width: 0, height: 2)
         imageView.layer.shadowRadius = 8
         imageView.layer.shadowOpacity = 0.1
+        imageView.isUserInteractionEnabled = true
         return imageView
     }()
 
@@ -262,6 +263,15 @@ final class CardInfoViewController: UIViewController {
     private func bind() {
         let locationSubject = PublishSubject<CLLocation>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
+
+        let photoImageTapGesture = UITapGestureRecognizer()
+        photoImageView.addGestureRecognizer(photoImageTapGesture)
+
+        photoImageTapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                owner.presentMediaSelectionModal(selectedImageSubject: selectedImageSubject)
+            }
+            .disposed(by: disposeBag)
 
         dateSelectButton.rx.tap
             .subscribe(with: self) { owner, _ in
