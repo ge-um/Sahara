@@ -96,8 +96,8 @@ final class CalendarDetailViewController: UIViewController {
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
-            make.horizontalEdges.equalToSuperview()
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
+            make.horizontalEdges.equalToSuperview().inset(24)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
