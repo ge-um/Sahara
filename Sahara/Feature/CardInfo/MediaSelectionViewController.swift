@@ -35,7 +35,7 @@ final class MediaSelectionViewController: UIViewController {
         return cv
     }()
 
-    var onMediaSelected: ((UIImage, CLLocation?) -> Void)?
+    var onMediaSelected: ((UIImage, CLLocation?, Date?) -> Void)?
     private var photos: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
     private var isObserverRegistered = false
@@ -278,7 +278,8 @@ extension MediaSelectionViewController: UICollectionViewDelegate {
             ) { [weak self] image, _ in
                 if let image = image {
                     let location = asset.location
-                    self?.onMediaSelected?(image, location)
+                    let date = asset.creationDate
+                    self?.onMediaSelected?(image, location, date)
                     self?.dismiss(animated: true)
                 }
             }
@@ -291,8 +292,8 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            // 카메라로 찍은 사진은 위치 정보 없음
-            onMediaSelected?(image, nil)
+            // 카메라로 찍은 사진은 위치 정보와 날짜 정보 없음
+            onMediaSelected?(image, nil, nil)
             dismiss(animated: true)
         }
     }
@@ -312,7 +313,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        self?.onMediaSelected?(image, nil)
+                        self?.onMediaSelected?(image, nil, nil)
                         self?.dismiss(animated: true)
                     }
                 }
