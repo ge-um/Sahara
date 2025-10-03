@@ -13,7 +13,7 @@ import UIKit
 final class StickerModalViewController: UIViewController {
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
-        searchBar.placeholder = NSLocalizedString("photo_editor.sticker_search_placeholder", comment: "")
+        searchBar.placeholder = NSLocalizedString("media_editor.sticker_search_placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         return searchBar
     }()
@@ -31,12 +31,12 @@ final class StickerModalViewController: UIViewController {
         return collectionView
     }()
 
-    private let viewModel: PhotoEditorViewModel
+    private let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
     var onStickerSelected: ((KlipySticker) -> Void)?
 
-    init(viewModel: PhotoEditorViewModel) {
+    init(viewModel: MediaEditorViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -63,7 +63,7 @@ final class StickerModalViewController: UIViewController {
             .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .distinctUntilChanged()
 
-        let input = PhotoEditorViewModel.Input(
+        let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             searchQuery: searchQuery,
             stickerSelected: stickerCollectionView.rx.modelSelected(KlipySticker.self).asObservable(),
@@ -114,7 +114,7 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = NSLocalizedString("photo_editor.sticker_modal_title", comment: "")
+        navigationItem.title = NSLocalizedString("media_editor.sticker_modal_title", comment: "")
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,
             target: self,

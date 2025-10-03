@@ -1,5 +1,5 @@
 //
-//  PhotoEditorViewController.swift
+//  MediaEditorViewController.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -12,7 +12,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class PhotoEditorViewController: UIViewController {
+final class MediaEditorViewController: UIViewController {
     private let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -40,7 +40,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var stickerModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.sticker", comment: "")
+        config.title = NSLocalizedString("media_editor.sticker", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.cornerStyle = .medium
@@ -50,7 +50,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var drawingModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.drawing", comment: "")
+        config.title = NSLocalizedString("media_editor.drawing", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -60,7 +60,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var filterModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.filter", comment: "")
+        config.title = NSLocalizedString("media_editor.filter", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -70,7 +70,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var photoModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.photo", comment: "")
+        config.title = NSLocalizedString("media_editor.photo", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -80,7 +80,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private lazy var cropModeButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.crop", comment: "")
+        config.title = NSLocalizedString("media_editor.crop", comment: "")
         config.baseBackgroundColor = .systemGray4
         config.baseForegroundColor = .label
         config.cornerStyle = .medium
@@ -96,7 +96,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private let cropApplyButton: UIButton = {
         var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("photo_editor.apply", comment: "")
+        config.title = NSLocalizedString("media_editor.apply", comment: "")
         config.baseBackgroundColor = .systemBlue
         config.baseForegroundColor = .white
         config.cornerStyle = .medium
@@ -107,7 +107,7 @@ final class PhotoEditorViewController: UIViewController {
 
     private let cropCancelButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.title = NSLocalizedString("photo_editor.cancel", comment: "")
+        config.title = NSLocalizedString("media_editor.cancel", comment: "")
         let button = UIButton(configuration: config)
         button.isHidden = true
         return button
@@ -149,10 +149,10 @@ final class PhotoEditorViewController: UIViewController {
         return imageView
     }()
 
-    private lazy var doneButton = UIBarButtonItem(title: NSLocalizedString("photo_editor.done", comment: ""), style: .done, target: nil, action: nil)
-    private lazy var cancelButton = UIBarButtonItem(title: NSLocalizedString("photo_editor.cancel", comment: ""), style: .plain, target: nil, action: nil)
+    private lazy var doneButton = UIBarButtonItem(title: NSLocalizedString("media_editor.done", comment: ""), style: .done, target: nil, action: nil)
+    private lazy var cancelButton = UIBarButtonItem(title: NSLocalizedString("media_editor.cancel", comment: ""), style: .plain, target: nil, action: nil)
 
-    private let viewModel: PhotoEditorViewModel
+    private let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
     var onEditingComplete: ((UIImage) -> Void)?
 
@@ -168,12 +168,12 @@ final class PhotoEditorViewController: UIViewController {
     private let photoSelectedRelay = PublishRelay<UIImage>()
     private let viewWillAppearRelay = PublishRelay<Void>()
 
-    private lazy var dragHandler = PhotoEditorDragHandler(
+    private lazy var dragHandler = MediaEditorDragHandler(
         trashIconView: trashIconView,
         parentView: view
     )
 
-    init(viewModel: PhotoEditorViewModel) {
+    init(viewModel: MediaEditorViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -255,7 +255,7 @@ final class PhotoEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let input = PhotoEditorViewModel.Input(
+        let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             searchQuery: .empty(),
             stickerSelected: .empty(),
@@ -472,7 +472,7 @@ final class PhotoEditorViewController: UIViewController {
     private func setupCropOverlay() {
         guard let currentImage = photoImageView.image else { return }
 
-        let imageRect = PhotoEditorCropHandler.calculateDisplayedImageRect(
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
             imageSize: currentImage.size,
             in: photoImageView.bounds.size
         )
@@ -485,7 +485,7 @@ final class PhotoEditorViewController: UIViewController {
         guard let currentImage = photoImageView.image else { return }
 
         let cropRect = cropOverlayView.cropRect
-        let displayedImageRect = PhotoEditorCropHandler.calculateDisplayedImageRect(
+        let displayedImageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
             imageSize: currentImage.size,
             in: photoImageView.bounds.size
         )
@@ -560,13 +560,13 @@ final class PhotoEditorViewController: UIViewController {
     }
 
     private func configureNavigation() {
-        navigationItem.title = NSLocalizedString("photo_editor.title", comment: "")
+        navigationItem.title = NSLocalizedString("media_editor.title", comment: "")
         navigationItem.leftBarButtonItem = cancelButton
         navigationItem.rightBarButtonItem = doneButton
     }
 }
 
-extension PhotoEditorViewController: UICollectionViewDataSource {
+extension MediaEditorViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == filterCollectionView {
             return filters.count
@@ -591,7 +591,7 @@ extension PhotoEditorViewController: UICollectionViewDataSource {
     }
 }
 
-extension PhotoEditorViewController: PHPickerViewControllerDelegate {
+extension MediaEditorViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 

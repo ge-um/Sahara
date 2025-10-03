@@ -9,9 +9,7 @@ import Kingfisher
 import SnapKit
 import UIKit
 
-final class PhotoStickerCell: UICollectionViewCell {
-    static let identifier = "PhotoStickerCell"
-
+final class PhotoStickerCell: UICollectionViewCell, IsIdentifiable {
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit

@@ -386,8 +386,8 @@ final class CardInfoViewController: UIViewController {
                 }
             }
 
-            let viewModel = PhotoEditorViewModel(originalImage: image)
-            let editorVC = PhotoEditorViewController(viewModel: viewModel)
+            let viewModel = MediaEditorViewModel(originalImage: image)
+            let editorVC = MediaEditorViewController(viewModel: viewModel)
             editorVC.onEditingComplete = { [weak self] editedImage in
                 self?.selectedImage = editedImage
                 self?.photoImageView.image = editedImage
