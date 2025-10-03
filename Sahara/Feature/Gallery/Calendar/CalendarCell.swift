@@ -95,13 +95,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageView2.image = UIImage(data: photo2.editedImageData)
 
         imageView1.snp.makeConstraints { make in
-            make.top.leading.bottom.equalToSuperview()
-            make.trailing.equalTo(containerView.snp.centerX).offset(-0.5)
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(containerView.snp.centerY).offset(-0.5)
         }
 
         imageView2.snp.makeConstraints { make in
-            make.top.trailing.bottom.equalToSuperview()
-            make.leading.equalTo(containerView.snp.centerX).offset(0.5)
+            make.bottom.leading.trailing.equalToSuperview()
+            make.top.equalTo(containerView.snp.centerY).offset(0.5)
         }
     }
 
@@ -141,7 +141,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private func createImageView() -> UIImageView {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleToFill
+        imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.backgroundColor = .systemGray6
         return imageView
