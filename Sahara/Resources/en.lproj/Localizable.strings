@@ -66,6 +66,7 @@
 "media_selection.title" = "Select Photo";
 "media_selection.camera" = "Camera";
 "media_selection.library" = "Library";
+"media_selection.sticker" = "Photo";
 "media_selection.camera_permission_title" = "Camera Access Required";
 "media_selection.camera_permission_message" = "Camera access is required to take photos.";
 "media_selection.go_to_settings" = "Go to Settings";

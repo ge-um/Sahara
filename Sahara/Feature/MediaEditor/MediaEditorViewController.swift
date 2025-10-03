@@ -47,7 +47,7 @@ final class MediaEditorViewController: UIViewController {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .equalSpacing
-        stackView.spacing = 72
+        stackView.spacing = 52
         return stackView
     }()
 
@@ -62,6 +62,11 @@ final class MediaEditorViewController: UIViewController {
     }()
 
     private lazy var filterModeButton: UIButton = {
+        let button = UIButton()
+        return button
+    }()
+
+    private lazy var photoModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
@@ -338,6 +343,16 @@ final class MediaEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        photoModeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                if owner.currentMode.value == .photo {
+                    owner.currentMode.accept(nil)
+                } else {
+                    owner.currentMode.accept(.photo)
+                }
+            }
+            .disposed(by: disposeBag)
+
         cropModeButton.rx.tap
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .crop {
@@ -563,7 +578,7 @@ final class MediaEditorViewController: UIViewController {
                 self.filterCollectionView.layoutIfNeeded()
             })
         case .photo:
-            break
+            presentPhotoSelectionModal()
         case .crop:
             leftStarImageView.isHidden = true
             rightStarImageView.isHidden = true
@@ -609,8 +624,8 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func updateModeButtons(currentMode: EditMode?) {
-        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, cropModeButton]
-        let modes: [EditMode?] = [.sticker, .drawing, .filter, .crop]
+        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, photoModeButton, cropModeButton]
+        let modes: [EditMode?] = [.sticker, .drawing, .filter, .photo, .crop]
 
         for (button, mode) in zip(buttons, modes) {
             if mode == currentMode {
@@ -635,6 +650,19 @@ final class MediaEditorViewController: UIViewController {
         present(navController, animated: true)
     }
 
+    private func presentPhotoSelectionModal() {
+        let mediaSelectionVC = MediaSelectionViewController()
+        mediaSelectionVC.onMediaSelected = { [weak self] image, _ in
+            self?.addPhotoToCanvas(image)
+            self?.currentMode.accept(nil)
+        }
+        let navController = UINavigationController(rootViewController: mediaSelectionVC)
+        if let sheet = navController.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(navController, animated: true)
+    }
 
     private func generateFinalImage() -> UIImage {
         guard let baseImage = photoImageView.image else {
@@ -795,6 +823,7 @@ final class MediaEditorViewController: UIViewController {
             (stickerModeButton, "sticker", "media_editor.sticker"),
             (drawingModeButton, "edit", "media_editor.drawing"),
             (filterModeButton, "sliders", "media_editor.filter"),
+            (photoModeButton, "image", "media_editor.photo"),
             (cropModeButton, "crop", "media_editor.crop")
         ]
 
