@@ -8,7 +8,6 @@ final class RealmManager {
         do {
             return try Realm()
         } catch {
-            print("Realm 초기화 실패: \(error)")
             return nil
         }
     }
@@ -21,7 +20,6 @@ final class RealmManager {
                 realm?.add(object)
             }
         } catch {
-            print("Realm 저장 실패: \(error)")
         }
     }
 
@@ -35,7 +33,6 @@ final class RealmManager {
                 realm?.delete(object)
             }
         } catch {
-            print("Realm 삭제 실패: \(error)")
         }
     }
 
@@ -45,7 +42,6 @@ final class RealmManager {
                 block()
             }
         } catch {
-            print("Realm 업데이트 실패: \(error)")
         }
     }
 

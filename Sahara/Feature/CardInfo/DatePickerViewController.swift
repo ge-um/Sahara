@@ -30,12 +30,20 @@ final class DatePickerViewController: UIViewController {
 
     private let confirmButton: UIButton = {
         let button = UIButton()
-        button.setTitle("확인", for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.white, for: .normal)
+        var config = UIButton.Configuration.filled()
+        config.title = "확인"
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 24, bottom: 12, right: 24)
         return button
     }()
 

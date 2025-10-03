@@ -77,7 +77,6 @@ final class CameraViewController: UIViewController {
                 view.layer.insertSublayer(previewLayer, at: 0)
             }
         } catch {
-            print("Camera setup error: \(error)")
         }
     }
 
@@ -144,7 +143,6 @@ final class CameraViewController: UIViewController {
                 captureSession.addInput(newInput)
             }
         } catch {
-            print("Error switching camera: \(error)")
         }
 
         captureSession.commitConfiguration()
