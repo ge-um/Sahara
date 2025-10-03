@@ -1,5 +1,5 @@
 //
-//  PhotoDetailViewModel.swift
+//  CardDetailViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -12,7 +12,7 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-final class PhotoDetailViewModel {
+final class CardDetailViewModel {
     private let photoMemoId: ObjectId
     private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
