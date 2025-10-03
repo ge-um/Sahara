@@ -67,6 +67,11 @@ final class DatePickerViewController: UIViewController {
         bind()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        onDateSelected?(datePicker.date)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         confirmButton.applyGradient(.buttonPink)
