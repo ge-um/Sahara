@@ -217,6 +217,7 @@ final class CardInfoViewController: UIViewController {
         bind()
         setupKeyboardDismiss()
         setupPlaceholder()
+        setupKeyboardHandling()
     }
 
     override func viewDidLayoutSubviews() {
@@ -271,6 +272,42 @@ final class CardInfoViewController: UIViewController {
 
     @objc private func dismissKeyboard() {
         view.endEditing(true)
+    }
+
+    private func setupKeyboardHandling() {
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillShowNotification)
+            .withUnretained(self)
+            .bind { owner, notification in
+                guard let userInfo = notification.userInfo,
+                      let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+                      let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
+                    return
+                }
+
+                let keyboardHeight = keyboardFrame.height
+                let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+
+                UIView.animate(withDuration: duration) {
+                    owner.scrollView.contentInset = contentInsets
+                    owner.scrollView.scrollIndicatorInsets = contentInsets
+                }
+            }
+            .disposed(by: disposeBag)
+
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillHideNotification)
+            .withUnretained(self)
+            .bind { owner, notification in
+                guard let userInfo = notification.userInfo,
+                      let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else {
+                    return
+                }
+
+                UIView.animate(withDuration: duration) {
+                    owner.scrollView.contentInset = .zero
+                    owner.scrollView.scrollIndicatorInsets = .zero
+                }
+            }
+            .disposed(by: disposeBag)
     }
 
     private func bind() {
@@ -647,6 +684,20 @@ extension CardInfoViewController: UITextViewDelegate {
             textView.text = ""
             textView.textColor = ColorSystem.labelSecondary
         }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else { return }
+            let contentHeight = self.scrollView.contentSize.height
+            let scrollViewHeight = self.scrollView.frame.height
+            let bottomInset = self.scrollView.contentInset.bottom
+
+            if contentHeight > scrollViewHeight {
+                let bottomOffset = CGPoint(x: 0, y: contentHeight - scrollViewHeight + bottomInset)
+                UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut) {
+                    self.scrollView.setContentOffset(bottomOffset, animated: false)
+                }
+            }
+        }
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -665,6 +716,15 @@ extension CardInfoViewController: UITextViewDelegate {
         let count = textView.text.count
         characterCountLabel.text = "\(count)"
         characterCountLabel.textColor = ColorSystem.labelPrimary
+
+        let contentHeight = scrollView.contentSize.height
+        let scrollViewHeight = scrollView.frame.height
+        let bottomInset = scrollView.contentInset.bottom
+
+        if contentHeight > scrollViewHeight {
+            let bottomOffset = CGPoint(x: 0, y: contentHeight - scrollViewHeight + bottomInset)
+            scrollView.setContentOffset(bottomOffset, animated: true)
+        }
     }
 
     private func createPlaceholderText() -> NSAttributedString {
