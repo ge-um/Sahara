@@ -25,7 +25,7 @@ final class MediaSelectionViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
 
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        cv.backgroundColor = .systemBackground
+        cv.backgroundColor = .clear
         cv.showsVerticalScrollIndicator = false
         cv.showsHorizontalScrollIndicator = false
         cv.register(PhotoSelectionCell.self, forCellWithReuseIdentifier: "PhotoSelectionCell")
@@ -46,7 +46,7 @@ final class MediaSelectionViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.backgroundColor = .systemBackground
+        view.applyGradient(.grayGradient)
 
         // 커스텀 타이틀 뷰로 폰트 적용
         let titleLabel = UILabel()
