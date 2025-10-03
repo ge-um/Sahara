@@ -59,6 +59,8 @@ final class GalleryViewController: UIViewController {
     private lazy var mapView: MKMapView = {
         let mapView = MKMapView()
         mapView.delegate = self
+        mapView.layer.cornerRadius = 12
+        mapView.clipsToBounds = true
         return mapView
     }()
 

@@ -12,6 +12,14 @@ import RxDataSources
 import SnapKit
 
 final class CalendarViewController: UIViewController {
+    private let calendarContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.layer.cornerRadius = 12
+        view.clipsToBounds = true
+        return view
+    }()
+
     private let calendarHeaderView = CalendarHeaderView()
 
     private lazy var collectionView: UICollectionView = {
@@ -43,8 +51,13 @@ final class CalendarViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.addSubview(calendarHeaderView)
-        view.addSubview(collectionView)
+        view.addSubview(calendarContainerView)
+        calendarContainerView.addSubview(calendarHeaderView)
+        calendarContainerView.addSubview(collectionView)
+
+        calendarContainerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
 
         calendarHeaderView.snp.makeConstraints { make in
             make.top.equalToSuperview()
