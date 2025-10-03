@@ -30,6 +30,8 @@ final class StickerModalViewController: UIViewController {
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(StickerCell.self, forCellWithReuseIdentifier: StickerCell.identifier)
         return collectionView
     }()
@@ -37,6 +39,7 @@ final class StickerModalViewController: UIViewController {
     private let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
+    private let loadMoreRelay = PublishRelay<Void>()
     var onStickerSelected: ((KlipySticker) -> Void)?
 
     init(viewModel: MediaEditorViewModel) {
@@ -69,6 +72,7 @@ final class StickerModalViewController: UIViewController {
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             searchQuery: searchQuery,
+            loadMoreTrigger: loadMoreRelay.asObservable(),
             stickerSelected: stickerCollectionView.rx.modelSelected(KlipySticker.self).asObservable(),
             filterSelected: .empty(),
             cropApplied: .empty(),
@@ -88,6 +92,18 @@ final class StickerModalViewController: UIViewController {
             )) { _, sticker, cell in
                 cell.configure(with: sticker)
             }
+            .disposed(by: disposeBag)
+
+        stickerCollectionView.rx.willDisplayCell
+            .withLatestFrom(output.stickers.asObservable()) { cellInfo, stickers in
+                (cellInfo.at.item, stickers.count)
+            }
+            .filter { item, count in
+                item >= count - 5
+            }
+            .map { _ in () }
+            .throttle(.seconds(1), scheduler: MainScheduler.instance)
+            .bind(to: loadMoreRelay)
             .disposed(by: disposeBag)
 
         output.selectedSticker

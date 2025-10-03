@@ -371,6 +371,7 @@ final class MediaEditorViewController: UIViewController {
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             searchQuery: .empty(),
+            loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
             filterSelected: filterSelectedRelay.asObservable(),
             cropApplied: cropAppliedRelay.asObservable(),
