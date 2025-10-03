@@ -52,7 +52,17 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let day = Calendar.current.component(.day, from: date)
             dayLabel.text = "\(day)"
 
-            dayLabel.textColor = item.isCurrentMonth ? .label : ColorSystem.labelNotCurrentMonth
+            let weekday = Calendar.current.component(.weekday, from: date)
+
+            if !item.isCurrentMonth {
+                dayLabel.textColor = ColorSystem.labelNotCurrentMonth
+            } else if weekday == 1 {
+                dayLabel.textColor = .systemRed
+            } else if weekday == 7 {
+                dayLabel.textColor = .systemBlue
+            } else {
+                dayLabel.textColor = .label
+            }
 
             let photoCount = item.cards.count
 
