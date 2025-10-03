@@ -254,7 +254,7 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        showToast(message: "현재 위치를 가져올 수 없습니다.")
+        showToast(message: NSLocalizedString("location_search.location_error", comment: ""))
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
