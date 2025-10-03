@@ -256,13 +256,11 @@ final class MediaEditorViewController: UIViewController {
     private func setupPencilKit() {
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
 
-        // PKToolPicker 초기화 시 발생하는 내부 경고 무시
-        // "Missing defaults dictionary" 경고는 PencilKit 내부 동작으로 앱 기능에 영향 없음
         toolPicker.setVisible(false, forFirstResponder: canvasView)
         toolPicker.addObserver(canvasView)
         canvasView.becomeFirstResponder()
 
-        if let window = view.window, let toolPicker = toolPicker as? PKToolPicker {
+        if let window = view.window {
             toolPicker.frameObscured(in: window)
         }
     }
@@ -270,25 +268,42 @@ final class MediaEditorViewController: UIViewController {
     private func bind() {
         stickerModeButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.presentStickerModal()
+                if owner.currentMode.value == .sticker {
+                    owner.currentMode.accept(nil)
+                } else {
+                    owner.currentMode.accept(.sticker)
+                    owner.presentStickerModal()
+                }
             }
             .disposed(by: disposeBag)
 
         drawingModeButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.currentMode.accept(.drawing)
+                if owner.currentMode.value == .drawing {
+                    owner.currentMode.accept(nil)
+                } else {
+                    owner.currentMode.accept(.drawing)
+                }
             }
             .disposed(by: disposeBag)
 
         filterModeButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.currentMode.accept(.filter)
+                if owner.currentMode.value == .filter {
+                    owner.currentMode.accept(nil)
+                } else {
+                    owner.currentMode.accept(.filter)
+                }
             }
             .disposed(by: disposeBag)
 
         cropModeButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.currentMode.accept(.crop)
+                if owner.currentMode.value == .crop {
+                    owner.currentMode.accept(nil)
+                } else {
+                    owner.currentMode.accept(.crop)
+                }
             }
             .disposed(by: disposeBag)
 
