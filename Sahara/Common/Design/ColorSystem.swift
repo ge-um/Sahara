@@ -24,7 +24,6 @@ enum ColorSystem {
         case buttonPink
         case blueGradient
         case grayGradient
-        case whiteGray
         case cardInfoBackground
         case searchLocationButton
         case saveShareButton
@@ -57,11 +56,6 @@ enum ColorSystem {
                     UIColor.white.cgColor,
                     UIColor(hex: "A6A3B4").cgColor
                 ]
-            case .whiteGray:
-                return [
-                    UIColor.white.cgColor,
-                    UIColor(white: 0.9, alpha: 1.0).cgColor
-                ]
             case .cardInfoBackground:
                 return [
                     UIColor(hex: "A6FDAB").cgColor,
@@ -87,7 +81,7 @@ enum ColorSystem {
                 return [0.0, 0.5, 1.0]
             case .barBack:
                 return [0.22, 1.0]
-            case .buttonPink, .blueGradient, .grayGradient, .whiteGray, .searchLocationButton, .saveShareButton:
+            case .buttonPink, .blueGradient, .grayGradient, .searchLocationButton, .saveShareButton:
                 return [0.0, 1.0]
             }
         }
@@ -96,7 +90,7 @@ enum ColorSystem {
             switch self {
             case .pinkBlue, .cardInfoBackground, .searchLocationButton, .saveShareButton:
                 return CGPoint(x: 0.5, y: 0.0)
-            case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
+            case .barBack, .buttonPink, .blueGradient, .grayGradient:
                 return CGPoint(x: 0.5, y: 0)
             }
         }
@@ -105,7 +99,7 @@ enum ColorSystem {
             switch self {
             case .pinkBlue, .cardInfoBackground, .searchLocationButton, .saveShareButton:
                 return CGPoint(x: 0.5, y: 1.0)
-            case .barBack, .buttonPink, .blueGradient, .grayGradient, .whiteGray:
+            case .barBack, .buttonPink, .blueGradient, .grayGradient:
                 return CGPoint(x: 0.5, y: 1)
             }
         }

@@ -129,8 +129,8 @@ final class CalendarHeaderView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        previousMonthButton.applyGradient(.whiteGray, removeExisting: true)
-        nextMonthButton.applyGradient(.whiteGray, removeExisting: true)
+        previousMonthButton.applyGradient(.grayGradient, removeExisting: true)
+        nextMonthButton.applyGradient(.grayGradient, removeExisting: true)
     }
 
     func configure(monthTitle: String) {
