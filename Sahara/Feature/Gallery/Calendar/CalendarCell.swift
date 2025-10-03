@@ -88,6 +88,9 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView)
 
         imageView.image = UIImage(data: photoMemo.editedImageData)
+        imageView.layer.cornerRadius = 8
+        imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -103,6 +106,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
         imageView1.image = UIImage(data: photo1.editedImageData)
         imageView2.image = UIImage(data: photo2.editedImageData)
+
+        imageView1.layer.cornerRadius = 8
+        imageView1.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+
+        imageView2.layer.cornerRadius = 8
+        imageView2.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
         imageView1.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -130,6 +139,15 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         topImageView.image = UIImage(data: cards[0].editedImageData)
         bottomLeftImageView.image = UIImage(data: cards[1].editedImageData)
         bottomRightImageView.image = UIImage(data: cards[2].editedImageData)
+
+        topImageView.layer.cornerRadius = 8
+        topImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+
+        bottomLeftImageView.layer.cornerRadius = 8
+        bottomLeftImageView.layer.maskedCorners = [.layerMinXMaxYCorner]
+
+        bottomRightImageView.layer.cornerRadius = 8
+        bottomRightImageView.layer.maskedCorners = [.layerMaxXMaxYCorner]
 
         topImageView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
