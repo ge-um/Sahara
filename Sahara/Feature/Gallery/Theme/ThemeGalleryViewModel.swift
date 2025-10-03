@@ -94,7 +94,6 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
                 return ThemeCategory.category(for: topLabels)
             }
         } catch {
-            print("Vision error: \(error)")
         }
 
         return .others

@@ -84,12 +84,20 @@ final class MediaEditorViewController: UIViewController {
 
     private let doneButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("media_editor.done", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.white, for: .normal)
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("media_editor.done", comment: "")
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         return button
     }()
 
@@ -102,25 +110,40 @@ final class MediaEditorViewController: UIViewController {
 
     private let cropApplyButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("media_editor.apply", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.white, for: .normal)
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("media_editor.apply", comment: "")
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         button.isHidden = true
         return button
     }()
 
     private let cropCancelButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("media_editor.cancel", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.black, for: .normal)
-        button.backgroundColor = .white
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("media_editor.cancel", comment: "")
+        config.baseBackgroundColor = .white
+        config.baseForegroundColor = .black
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         button.isHidden = true
         return button
     }()
@@ -693,20 +716,11 @@ final class MediaEditorViewController: UIViewController {
         let cropRectInOverlay = cropOverlayView.cropRect
         let imageRectInOverlay = cropOverlayView.imageRect
 
-        print("🔵 cropRectInOverlay: \(cropRectInOverlay)")
-        print("🔵 imageRectInOverlay: \(imageRectInOverlay)")
-        print("🔵 uncropped.size: \(uncropped.size)")
-        print("🔵 uncropped.imageOrientation: \(uncropped.imageOrientation.rawValue)")
-
-        // cropRect를 imageRect 기준 상대 좌표로 변환
         let relativeX = cropRectInOverlay.origin.x - imageRectInOverlay.origin.x
         let relativeY = cropRectInOverlay.origin.y - imageRectInOverlay.origin.y
         let relativeWidth = cropRectInOverlay.width
         let relativeHeight = cropRectInOverlay.height
 
-        print("🔵 relative: (\(relativeX), \(relativeY), \(relativeWidth), \(relativeHeight))")
-
-        // scaleAspectFit이므로 동일한 scale 사용
         let scale = uncropped.size.width / imageRectInOverlay.width
 
         let cropRectInImage = CGRect(
@@ -716,13 +730,8 @@ final class MediaEditorViewController: UIViewController {
             height: relativeHeight * scale
         )
 
-        print("🔵 scale: \(scale)")
-        print("🔵 cropRectInImage: \(cropRectInImage)")
-        print("🔵 cropRectInImage width/height ratio: \(cropRectInImage.width / cropRectInImage.height)")
-        print("🔵 cropRectInOverlay width/height ratio: \(cropRectInOverlay.width / cropRectInOverlay.height)")
-
         // orientation을 고려하여 이미지를 정규화
-        guard let cgImage = uncropped.cgImage else {
+        guard let _ = uncropped.cgImage else {
             currentMode.accept(nil)
             return
         }

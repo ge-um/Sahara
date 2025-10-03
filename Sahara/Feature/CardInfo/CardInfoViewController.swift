@@ -133,15 +133,23 @@ final class CardInfoViewController: UIViewController {
 
     private let searchLocationButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("card_info.search_location", comment: ""), for: .normal)
-        button.setImage(UIImage(systemName: "magnifyingglass"), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.black, for: .normal)
-        button.tintColor = .black
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("card_info.search_location", comment: "")
+        config.image = UIImage(systemName: "magnifyingglass")
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .black
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
         return button
     }()
 
@@ -155,12 +163,20 @@ final class CardInfoViewController: UIViewController {
 
     private let saveButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("common.save", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.white, for: .normal)
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("common.save", comment: "")
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         return button
     }()
 

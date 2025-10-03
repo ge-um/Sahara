@@ -33,15 +33,23 @@ final class LocationSearchViewController: UIViewController {
 
     private let currentLocationButton: UIButton = {
         let button = UIButton()
-        button.setTitle(NSLocalizedString("location_search.use_current_location", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 14)
-        button.setTitleColor(.white, for: .normal)
-        button.setImage(UIImage(systemName: "location.fill"), for: .normal)
-        button.tintColor = .white
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("location_search.use_current_location", comment: "")
+        config.image = UIImage(systemName: "location.fill")
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.baseBackgroundColor = .clear
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
         return button
     }()
 
@@ -172,7 +180,6 @@ extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print("Location search error: \(error.localizedDescription)")
     }
 }
 
