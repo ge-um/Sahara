@@ -56,7 +56,7 @@ final class MainTabBarController: UITabBarController {
         customTabBar.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(70)
+            make.height.equalTo(72)
         }
 
         galleryStackView.snp.makeConstraints { make in
