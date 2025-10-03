@@ -182,10 +182,17 @@ final class CardDetailViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
-        customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
 
-        customNavigationBar.onLeftButtonTapped = { [weak self] in
-            self?.dismiss(animated: true)
+        if navigationController != nil && presentingViewController == nil {
+            customNavigationBar.setLeftButtonImage(UIImage(named: "chevronLeft"))
+            customNavigationBar.onLeftButtonTapped = { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            }
+        } else {
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
+            customNavigationBar.onLeftButtonTapped = { [weak self] in
+                self?.dismiss(animated: true)
+            }
         }
 
         customNavigationBar.addRightButton(image: UIImage(systemName: "trash"), tintColor: .systemRed) { [weak self] in
@@ -398,8 +405,11 @@ final class CardDetailViewController: UIViewController {
 
         output.deleteCompleted
             .drive(with: self) { owner, _ in
-                owner.dismiss(animated: true) {
-                    NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
+                NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
+                if owner.navigationController != nil && owner.presentingViewController == nil {
+                    owner.navigationController?.popViewController(animated: true)
+                } else {
+                    owner.dismiss(animated: true)
                 }
             }
             .disposed(by: disposeBag)

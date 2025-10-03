@@ -20,11 +20,9 @@ final class MapPhotoGalleryViewController: UIViewController {
 
     private let closeButton: UIButton = {
         let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")
-        config.baseBackgroundColor = .white
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(named: "chevronLeft")
         config.baseForegroundColor = .black
-        config.cornerStyle = .medium
         button.configuration = config
         return button
     }()
@@ -44,10 +42,12 @@ final class MapPhotoGalleryViewController: UIViewController {
     }()
 
     private let themeCategory: ThemeCategory
+    private let customTitle: String?
 
-    init(photoMemos: [Card], themeCategory: ThemeCategory) {
+    init(photoMemos: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
         self.viewModel = MapPhotoGalleryViewModel(photoMemos: photoMemos)
         self.themeCategory = themeCategory
+        self.customTitle = customTitle
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -65,14 +65,16 @@ final class MapPhotoGalleryViewController: UIViewController {
     }
 
     private func setupCustomNavigationBar() {
-        customNavigationBar.configure(title: themeCategory.localizedName)
+        let title = customTitle ?? themeCategory.localizedName
+        customNavigationBar.configure(title: title)
+        customNavigationBar.hideLeftButton()
 
         view.addSubview(closeButton)
 
         closeButton.snp.makeConstraints { make in
-            make.leading.equalTo(customNavigationBar).offset(16)
+            make.leading.equalTo(customNavigationBar).offset(8)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
+            make.width.equalTo(44)
             make.height.equalTo(44)
         }
     }
@@ -114,14 +116,13 @@ final class MapPhotoGalleryViewController: UIViewController {
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
                 let detailVC = CardDetailViewController(photoMemoId: photoMemoId)
-                detailVC.modalPresentationStyle = .fullScreen
-                owner.present(detailVC, animated: true)
+                owner.navigationController?.pushViewController(detailVC, animated: true)
             }
             .disposed(by: disposeBag)
 
         output.dismiss
             .drive(with: self) { owner, _ in
-                owner.dismiss(animated: true)
+                owner.navigationController?.popViewController(animated: true)
             }
             .disposed(by: disposeBag)
     }
