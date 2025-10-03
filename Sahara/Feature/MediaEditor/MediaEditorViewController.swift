@@ -258,6 +258,10 @@ final class MediaEditorViewController: UIViewController {
         toolPicker.setVisible(false, forFirstResponder: canvasView)
         toolPicker.addObserver(canvasView)
         canvasView.becomeFirstResponder()
+
+        if let window = view.window, let toolPicker = toolPicker as? PKToolPicker {
+            toolPicker.frameObscured(in: window)
+        }
     }
 
     private func bind() {
@@ -434,6 +438,20 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.isHidden = false
         doneButton.isHidden = false
 
+        canvasView.snp.remakeConstraints { make in
+            make.edges.equalTo(photoImageView)
+        }
+
+        toolBarContainer.snp.remakeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.height.equalTo(70)
+        }
+
+        UIView.animate(withDuration: 0.3, animations: {
+            self.view.layoutIfNeeded()
+        })
+
         guard let mode = mode else {
             doneButton.isHidden = false
             return
@@ -444,6 +462,17 @@ final class MediaEditorViewController: UIViewController {
             break
         case .drawing:
             canvasView.isUserInteractionEnabled = true
+
+            toolBarContainer.snp.remakeConstraints { make in
+                make.leading.trailing.equalToSuperview()
+                make.height.equalTo(70)
+                make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-75)
+            }
+
+            UIView.animate(withDuration: 0.3, animations: {
+                self.view.layoutIfNeeded()
+            })
+
             toolPicker.setVisible(true, forFirstResponder: canvasView)
         case .filter:
             filterCollectionView.isHidden = false
