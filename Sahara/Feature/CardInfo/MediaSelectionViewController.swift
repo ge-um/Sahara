@@ -45,12 +45,22 @@ final class MediaSelectionViewController: UIViewController {
 
     private func configureUI() {
         view.backgroundColor = .systemBackground
-        navigationItem.title = "사진 선택"
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
+
+        // 커스텀 타이틀 뷰로 폰트 적용
+        let titleLabel = UILabel()
+        titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
+        titleLabel.font = FontSystem.galmuriMono(size: 16)
+        titleLabel.textColor = .label
+        navigationItem.titleView = titleLabel
+
+        let closeButton = UIBarButtonItem(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .plain,
             target: self,
             action: #selector(closeTapped)
         )
+        closeButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .normal)
+        navigationItem.leftBarButtonItem = closeButton
 
         view.addSubview(collectionView)
         collectionView.snp.makeConstraints { make in
@@ -169,16 +179,16 @@ final class MediaSelectionViewController: UIViewController {
 
     private func showCameraPermissionAlert() {
         let alert = UIAlertController(
-            title: "카메라 접근 권한 필요",
-            message: "사진을 촬영하려면 카메라 접근 권한이 필요합니다.",
+            title: NSLocalizedString("media_selection.camera_permission_title", comment: ""),
+            message: NSLocalizedString("media_selection.camera_permission_message", comment: ""),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
             }
         })
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
         present(alert, animated: true)
     }
 
@@ -210,9 +220,9 @@ extension MediaSelectionViewController: UICollectionViewDataSource {
         if indexPath.section == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ActionCell", for: indexPath) as! ActionCell
             if indexPath.item == 0 {
-                cell.configure(icon: "camera.fill", title: "카메라")
+                cell.configure(icon: "camera.fill", title: NSLocalizedString("media_selection.camera", comment: ""))
             } else {
-                cell.configure(icon: "photo.on.rectangle", title: "앨범")
+                cell.configure(icon: "photo.on.rectangle", title: NSLocalizedString("media_selection.library", comment: ""))
             }
             return cell
         } else {
@@ -294,13 +304,13 @@ final class ActionCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = .systemBlue
+        iv.tintColor = ColorSystem.gradientBlue
         return iv
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textAlignment = .center
         label.textColor = .label
         return label
