@@ -89,7 +89,6 @@ final class CalendarHeaderView: UIView {
             make.top.equalTo(monthLabel.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(28)
         }
 
         setupWeekdayLabels()

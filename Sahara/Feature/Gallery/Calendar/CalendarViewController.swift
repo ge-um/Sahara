@@ -49,7 +49,7 @@ final class CalendarViewController: UIViewController {
         calendarHeaderView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(68)
+            make.height.equalTo(72)
         }
 
         collectionView.snp.makeConstraints { make in
