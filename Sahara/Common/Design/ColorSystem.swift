@@ -16,6 +16,7 @@ enum ColorSystem {
     static let cardBackground = UIColor(hex: "#2C2A37").withAlphaComponent(0.2)
     static let labelPrimary = UIColor(hex: "#4A4A4A")
     static let labelSecondary = UIColor(hex: "#1A1A1A")
+    static let labelTitle = UIColor.black
 
     enum Gradient {
         case pinkBlue
