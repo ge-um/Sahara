@@ -45,32 +45,41 @@ final class PhotoDetailViewModel {
     }
 
     func transform(input: Input) -> Output {
-        let photoMemo = input.viewDidLoad
-            .compactMap { [weak self] _ -> Card? in
-                guard let self = self else { return nil }
-                return self.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: self.photoMemoId)
+        let photoMemoData = input.viewDidLoad
+            .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in
+                guard let self = self,
+                      let photoMemo = self.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: self.photoMemoId) else {
+                    return nil
+                }
+                return (
+                    image: photoMemo.editedImageData,
+                    date: photoMemo.createdDate,
+                    latitude: photoMemo.latitude,
+                    longitude: photoMemo.longitude,
+                    memo: photoMemo.memo
+                )
             }
             .share(replay: 1)
 
-        let photoImage = photoMemo
-            .map { photoMemo -> UIImage? in
-                UIImage(data: photoMemo.editedImageData)
+        let photoImage = photoMemoData
+            .map { data -> UIImage? in
+                UIImage(data: data.image)
             }
             .asDriver(onErrorJustReturn: nil)
 
-        let dateText = photoMemo
-            .map { photoMemo -> String in
+        let dateText = photoMemoData
+            .map { data -> String in
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = NSLocalizedString("photo_detail.date_format", comment: "")
                 dateFormatter.locale = Locale.current
-                return dateFormatter.string(from: photoMemo.createdDate)
+                return dateFormatter.string(from: data.date)
             }
             .asDriver(onErrorJustReturn: "")
 
-        let locationText = photoMemo
-            .flatMap { photoMemo -> Observable<String> in
-                guard let latitude = photoMemo.latitude,
-                      let longitude = photoMemo.longitude else {
+        let locationText = photoMemoData
+            .flatMap { data -> Observable<String> in
+                guard let latitude = data.latitude,
+                      let longitude = data.longitude else {
                     return .just("")
                 }
 
@@ -96,9 +105,9 @@ final class PhotoDetailViewModel {
             }
             .asDriver(onErrorJustReturn: "")
 
-        let memoText = photoMemo
-            .map { photoMemo -> String in
-                if let memo = photoMemo.memo, !memo.isEmpty {
+        let memoText = photoMemoData
+            .map { data -> String in
+                if let memo = data.memo, !memo.isEmpty {
                     return memo
                 } else {
                     return NSLocalizedString("photo_detail.no_memo", comment: "")
@@ -116,9 +125,9 @@ final class PhotoDetailViewModel {
             .asDriver(onErrorJustReturn: ())
 
         let saveResult = input.saveButtonTapped
-            .withLatestFrom(photoMemo)
-            .map { photoMemo -> Result<Void, Error> in
-                guard let image = UIImage(data: photoMemo.editedImageData) else {
+            .withLatestFrom(photoMemoData)
+            .map { data -> Result<Void, Error> in
+                guard let image = UIImage(data: data.image) else {
                     return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")]))
                 }
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
@@ -127,17 +136,19 @@ final class PhotoDetailViewModel {
             .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
 
         let shareImage = input.shareButtonTapped
-            .withLatestFrom(photoMemo)
-            .compactMap { photoMemo -> UIImage? in
-                UIImage(data: photoMemo.editedImageData)
+            .withLatestFrom(photoMemoData)
+            .compactMap { data -> UIImage? in
+                UIImage(data: data.image)
             }
             .asDriver(onErrorDriveWith: .empty())
 
         let deleteCompleted = input.deleteConfirmed
-            .withLatestFrom(photoMemo)
             .withUnretained(self)
-            .map { owner, memo -> Void in
-                owner.realmManager.delete(memo)
+            .map { owner, _ -> Void in
+                guard let photoMemo = owner.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: owner.photoMemoId) else {
+                    return ()
+                }
+                owner.realmManager.delete(photoMemo)
                 return ()
             }
             .asDriver(onErrorJustReturn: ())

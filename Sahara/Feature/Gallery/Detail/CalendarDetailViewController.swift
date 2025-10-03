@@ -9,6 +9,7 @@ import RxCocoa
 import RxSwift
 import SnapKit
 import UIKit
+import RealmSwift
 
 final class CalendarDetailViewController: UIViewController {
     private let viewModel: CalendarDetailViewModel
@@ -30,12 +31,14 @@ final class CalendarDetailViewController: UIViewController {
         return collectionView
     }()
 
-    private lazy var dataSource: UICollectionViewDiffableDataSource<Int, Card> = {
-        UICollectionViewDiffableDataSource<Int, Card>(collectionView: collectionView) { collectionView, indexPath, card in
-            guard let cell = collectionView.dequeueReusableCell(
+    private lazy var dataSource: UICollectionViewDiffableDataSource<Int, ObjectId> = {
+        UICollectionViewDiffableDataSource<Int, ObjectId>(collectionView: collectionView) { [weak self] collectionView, indexPath, cardId in
+            guard let self = self,
+                  let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: CalendarDetailCell.identifier,
                 for: indexPath
-            ) as? CalendarDetailCell else {
+            ) as? CalendarDetailCell,
+                  let card = self.viewModel.getCard(by: cardId) else {
                 return UICollectionViewCell()
             }
             cell.configure(with: card)
@@ -117,11 +120,11 @@ final class CalendarDetailViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.memos
-            .drive(with: self) { owner, cards in
-                var snapshot = NSDiffableDataSourceSnapshot<Int, Card>()
+        output.cardIds
+            .drive(with: self) { owner, cardIds in
+                var snapshot = NSDiffableDataSourceSnapshot<Int, ObjectId>()
                 snapshot.appendSections([0])
-                snapshot.appendItems(cards)
+                snapshot.appendItems(cardIds)
                 owner.dataSource.apply(snapshot, animatingDifferences: false) {
                     owner.pinterestLayout.invalidateLayout()
                     owner.collectionView.reloadData()
@@ -141,7 +144,8 @@ final class CalendarDetailViewController: UIViewController {
 
 extension CalendarDetailViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
-        guard let card = dataSource.itemIdentifier(for: indexPath),
+        guard let cardId = dataSource.itemIdentifier(for: indexPath),
+              let card = viewModel.getCard(by: cardId),
               let image = UIImage(data: card.editedImageData) else {
             return 200
         }

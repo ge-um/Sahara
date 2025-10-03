@@ -23,13 +23,17 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let memos: Driver<[Card]>
+        let cardIds: Driver<[ObjectId]>
         let navigateToDetail: Driver<ObjectId>
         let shouldPopIfEmpty: Driver<Bool>
     }
 
     init(date: Date) {
         self.date = date
+    }
+
+    func getCard(by id: ObjectId) -> Card? {
+        return realmManager.realm?.object(ofType: Card.self, forPrimaryKey: id)
     }
 
     func transform(input: Input) -> Output {
@@ -88,8 +92,12 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
             .map { _ in true }
             .asDriver(onErrorJustReturn: false)
 
+        let cardIds = memosRelay
+            .map { memos in memos.map { $0.id } }
+            .asDriver(onErrorJustReturn: [])
+
         return Output(
-            memos: memosRelay.asDriver(),
+            cardIds: cardIds,
             navigateToDetail: navigateToDetail,
             shouldPopIfEmpty: shouldPopIfEmpty
         )
