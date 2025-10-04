@@ -15,7 +15,7 @@
 "gallery.location_view" = "By Location";
 "gallery.theme_view" = "By Theme";
 "gallery.month_format" = "MMMM yyyy";
-"gallery.empty_message" = "No saved cards.";
+"gallery.empty_message" = "Capture your memories as cards!";
 "gallery.empty_button" = "Create Card";
 
 /* Theme Categories */
@@ -47,11 +47,15 @@
 
 /* Card Detail */
 "card_detail.title" = "View Card";
+"card_detail.delete_title" = "Delete Card";
+"card_detail.delete_message" = "Are you sure you want to delete this card?";
+"card_detail.delete_confirm" = "Delete";
+"card_detail.delete_cancel" = "Cancel";
 
 /* Photo Detail */
 "photo_detail.no_memo" = "No memo available.";
 "photo_detail.save_success" = "Saved";
-"photo_detail.save_success_message" = "Photo saved to album.";
+"photo_detail.save_success_message" = "Card saved to album.";
 "photo_detail.save_failed" = "Save Failed";
 "photo_detail.image_load_error" = "Unable to load image.";
 "photo_detail.swipe_left_hint" = "Swipe to view memo";

@@ -14,6 +14,8 @@
 "gallery.location_view" = "場所順";
 "gallery.theme_view" = "テーマ順";
 "gallery.month_format" = "yyyy年MM月";
+"gallery.empty_message" = "思い出をカードに残しましょう！";
+"gallery.empty_button" = "カード作成";
 
 /* Theme Categories */
 "theme.people" = "人物";
@@ -44,11 +46,15 @@
 
 /* Card Detail */
 "card_detail.title" = "カード表示";
+"card_detail.delete_title" = "カードを削除";
+"card_detail.delete_message" = "このカードを削除しますか？";
+"card_detail.delete_confirm" = "削除";
+"card_detail.delete_cancel" = "キャンセル";
 
 /* Photo Detail */
 "photo_detail.no_memo" = "メモがありません。";
 "photo_detail.save_success" = "保存完了";
-"photo_detail.save_success_message" = "写真がアルバムに保存されました。";
+"photo_detail.save_success_message" = "カードがアルバムに保存されました。";
 "photo_detail.save_failed" = "保存失敗";
 "photo_detail.image_load_error" = "画像を読み込めません。";
 "photo_detail.swipe_left_hint" = "スワイプしてメモを表示";
