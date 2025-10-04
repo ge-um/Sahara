@@ -1,3 +1,12 @@
 /* App Name */
 "CFBundleDisplayName" = "Sahara";
 "CFBundleName" = "Sahara";
+
+/* Privacy - Photo Library */
+"NSPhotoLibraryUsageDescription" = "Please allow photo library access to create cards.";
+
+/* Privacy - Camera */
+"NSCameraUsageDescription" = "Please allow camera access to create cards.";
+
+/* Privacy - Location When In Use */
+"NSLocationWhenInUseUsageDescription" = "Please allow location access to record your current location.";
