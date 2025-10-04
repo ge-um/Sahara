@@ -2,7 +2,7 @@
 //  UIViewController+Toast.swift
 //  Sahara
 //
-//  Created by Claude on 10/4/25.
+//  Created by 금가경 on 10/4/25.
 //
 
 import UIKit
