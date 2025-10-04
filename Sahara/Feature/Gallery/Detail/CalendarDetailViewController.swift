@@ -137,8 +137,7 @@ final class CalendarDetailViewController: UIViewController {
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
                 let detailVC = CardDetailViewController(photoMemoId: photoMemoId)
-                detailVC.modalPresentationStyle = .fullScreen
-                owner.present(detailVC, animated: true)
+                owner.navigationController?.pushViewController(detailVC, animated: true)
             }
             .disposed(by: disposeBag)
     }
