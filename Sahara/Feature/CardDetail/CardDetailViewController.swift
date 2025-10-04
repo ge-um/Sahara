@@ -395,7 +395,8 @@ final class CardDetailViewController: UIViewController {
 
         output.shareImage
             .drive(with: self) { owner, image in
-                let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+                let itemSource = ShareActivityItemSource(image: image)
+                let activityVC = UIActivityViewController(activityItems: [itemSource], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
                 owner.present(activityVC, animated: true)
             }
