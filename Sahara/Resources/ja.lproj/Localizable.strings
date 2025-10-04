@@ -69,9 +69,9 @@
 "media_selection.library" = "アルバム";
 "media_selection.sticker" = "写真";
 "media_selection.camera_permission_title" = "カメラアクセス権限が必要";
-"media_selection.camera_permission_message" = "写真を撮影するにはカメラアクセス権限が必要です。";
+"media_selection.camera_permission_message" = "写真を撮影するには設定でカメラアクセス権限を許可してください。";
 "media_selection.photo_permission_title" = "写真アクセス権限が必要";
-"media_selection.photo_permission_message" = "写真を選択するにはフォトライブラリアクセス権限が必要です。";
+"media_selection.photo_permission_message" = "写真を選択するには設定でフォトライブラリアクセス権限を許可してください。";
 "media_selection.go_to_settings" = "設定に移動";
 
 /* Media Editor */

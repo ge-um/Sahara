@@ -72,9 +72,9 @@
 "media_selection.library" = "Library";
 "media_selection.sticker" = "Photo";
 "media_selection.camera_permission_title" = "Camera Access Required";
-"media_selection.camera_permission_message" = "Camera access is required to take photos.";
+"media_selection.camera_permission_message" = "Please allow camera access in Settings to take photos.";
 "media_selection.photo_permission_title" = "Photo Access Required";
-"media_selection.photo_permission_message" = "Photo library access is required to select photos.";
+"media_selection.photo_permission_message" = "Please allow photo library access in Settings to select photos.";
 "media_selection.go_to_settings" = "Go to Settings";
 
 /* Media Editor */

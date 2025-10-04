@@ -1,3 +1,12 @@
 /* App Name */
 "CFBundleDisplayName" = "サハラ";
 "CFBundleName" = "サハラ";
+
+/* Privacy - Photo Library */
+"NSPhotoLibraryUsageDescription" = "カードを作成するためにフォトライブラリアクセス権限を許可してください。";
+
+/* Privacy - Camera */
+"NSCameraUsageDescription" = "カードを作成するためにカメラアクセス権限を許可してください。";
+
+/* Privacy - Location When In Use */
+"NSLocationWhenInUseUsageDescription" = "現在地を記録するために位置情報アクセス権限を許可してください。";
