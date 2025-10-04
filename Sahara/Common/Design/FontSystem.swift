@@ -24,7 +24,9 @@ enum FontSystem {
 
         var font: UIFont {
             switch self {
-            case .emptyStateMessage, .tabBarLabel:
+            case .emptyStateMessage:
+                return galmuriMono(size: 14)
+            case .tabBarLabel:
                 return galmuriMono(size: 12)
             case .navigationTitle:
                 return galmuriMono(size: 14)

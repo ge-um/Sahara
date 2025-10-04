@@ -55,7 +55,7 @@ final class EmptyStateView: UIView {
 
         messageLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview().offset(-40)
+            make.centerY.equalToSuperview().offset(-64)
             make.horizontalEdges.equalToSuperview().inset(40)
         }
 
