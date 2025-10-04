@@ -117,7 +117,7 @@ final class CardDetailViewController: UIViewController {
         label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
         label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .secondaryLabel
-        label.textAlignment = .center
+        label.textAlignment = .right
         return label
     }()
 
@@ -280,7 +280,7 @@ final class CardDetailViewController: UIViewController {
 
         backSwipeHintLabel.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-20)
-            make.horizontalEdges.equalToSuperview().inset(20)
+            make.trailing.equalToSuperview().inset(20)
         }
 
         buttonContainerView.snp.makeConstraints { make in
