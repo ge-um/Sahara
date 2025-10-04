@@ -3,7 +3,6 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=swift
 
 ### AI ###
-claude.md
 .claude/
 settings.local.json
 *.local
