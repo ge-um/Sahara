@@ -61,6 +61,7 @@ final class GalleryViewController: UIViewController {
         mapView.delegate = self
         mapView.layer.cornerRadius = 12
         mapView.clipsToBounds = true
+        mapView.showsUserLocation = false
         return mapView
     }()
 
@@ -149,8 +150,8 @@ final class GalleryViewController: UIViewController {
     }
 
     private func setupMapView() {
-        mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultAnnotationViewReuseIdentifier)
-        mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
+        mapView.register(PhotoAnnotationView.self, forAnnotationViewWithReuseIdentifier: PhotoAnnotation.identifier)
+        mapView.register(PhotoClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
     }
 
     private func loadMapAnnotations() {
@@ -160,20 +161,12 @@ final class GalleryViewController: UIViewController {
             .filter("latitude != nil AND longitude != nil")
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
-        var coordinateGroups: [String: [(id: ObjectId, lat: Double, lon: Double)]] = [:]
-        for memo in memos {
+        let annotations = Array(memos.compactMap { memo -> PhotoAnnotation? in
             guard let lat = memo.latitude, let lon = memo.longitude,
-                  lat != 0, lon != 0 else { continue }
-            let key = "\(lat),\(lon)"
-            coordinateGroups[key, default: []].append((id: memo.id, lat: lat, lon: lon))
-        }
-
-        let annotations = coordinateGroups.compactMap { key, memos -> PhotoAnnotation? in
-            guard let first = memos.first else { return nil }
-            let coordinate = CLLocationCoordinate2D(latitude: first.lat, longitude: first.lon)
-            let ids = memos.map { $0.id }
-            return PhotoAnnotation(coordinate: coordinate, photoMemoIds: ids)
-        }
+                  lat != 0, lon != 0 else { return nil }
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            return PhotoAnnotation(coordinate: coordinate, photoMemoIds: [memo.id])
+        })
 
         mapView.addAnnotations(annotations)
 
@@ -359,16 +352,38 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
 
 extension GalleryViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        if let cluster = annotation as? MKClusterAnnotation {
+            var clusterView = mapView.dequeueReusableAnnotationView(withIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier) as? PhotoClusterAnnotationView
+
+            if clusterView == nil {
+                clusterView = PhotoClusterAnnotationView(annotation: annotation, reuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
+            } else {
+                clusterView?.annotation = annotation
+            }
+
+            let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? PhotoAnnotation }
+            var representativeImage: UIImage?
+            if let randomAnnotation = photoAnnotations.randomElement(),
+               let photoId = randomAnnotation.photoMemoIds.first,
+               let photo = realm.object(ofType: Card.self, forPrimaryKey: photoId) {
+                representativeImage = UIImage(data: photo.editedImageData)
+            }
+
+            clusterView?.configure(with: cluster.memberAnnotations.count, image: representativeImage)
+            return clusterView
+        }
+
         guard let photoAnnotation = annotation as? PhotoAnnotation else { return nil }
 
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: PhotoAnnotation.identifier) as? PhotoAnnotationView
 
         if annotationView == nil {
             annotationView = PhotoAnnotationView(annotation: annotation, reuseIdentifier: PhotoAnnotation.identifier)
-            annotationView?.clusteringIdentifier = "PhotoCluster"
         } else {
             annotationView?.annotation = annotation
         }
+
+        annotationView?.clusteringIdentifier = PhotoAnnotation.clusterID
 
         if let firstPhotoId = photoAnnotation.photoMemoIds.first,
            let firstPhoto = realm.object(ofType: Card.self, forPrimaryKey: firstPhotoId),

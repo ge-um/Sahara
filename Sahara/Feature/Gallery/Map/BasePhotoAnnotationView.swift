@@ -1,0 +1,84 @@
+//
+//  BasePhotoAnnotationView.swift
+//  Sahara
+//
+//  Created by 금가경 on 10/4/25.
+//
+
+import MapKit
+import UIKit
+
+class BasePhotoAnnotationView: MKAnnotationView {
+    private let imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 25
+        return imageView
+    }()
+
+    private let overlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        view.layer.cornerRadius = 25
+        return view
+    }()
+
+    private let countLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.textColor = .white
+        label.font = FontSystem.galmuriMono(size: 16)
+        return label
+    }()
+
+    private let borderView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.layer.borderColor = UIColor.white.cgColor
+        view.layer.borderWidth = 3
+        view.layer.cornerRadius = 25
+        return view
+    }()
+
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        setupUI()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupUI() {
+        backgroundColor = .clear
+        frame = CGSize(width: 50, height: 50).asRect()
+
+        addSubview(imageView)
+        addSubview(overlayView)
+        addSubview(countLabel)
+        addSubview(borderView)
+
+        imageView.frame = bounds
+        overlayView.frame = bounds
+        countLabel.frame = bounds
+        borderView.frame = bounds
+    }
+
+    func configure(image: UIImage?, count: Int) {
+        imageView.image = image
+        countLabel.text = "\(count)"
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.image = nil
+        countLabel.text = nil
+    }
+}
+
+private extension CGSize {
+    func asRect() -> CGRect {
+        return CGRect(origin: .zero, size: self)
+    }
+}

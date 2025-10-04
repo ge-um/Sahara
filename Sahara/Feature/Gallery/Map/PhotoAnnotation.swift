@@ -24,3 +24,7 @@ final class PhotoAnnotation: NSObject, MKAnnotation, IsIdentifiable {
         super.init()
     }
 }
+
+extension PhotoAnnotation {
+    static let clusterID = "PhotoCluster"
+}

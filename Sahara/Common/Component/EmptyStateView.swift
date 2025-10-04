@@ -17,10 +17,11 @@ final class EmptyStateView: UIView {
 
     private let actionButton: UIButton = {
         let button = UIButton()
+        var config = UIButton.Configuration.plain()
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+        button.configuration = config
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
-        button.titleLabel?.numberOfLines = 1
-        button.titleLabel?.adjustsFontSizeToFitWidth = false
         return button
     }()
 
@@ -83,8 +84,10 @@ final class EmptyStateView: UIView {
 
     func configure(message: String, buttonTitle: String) {
         messageLabel.attributedText = FontSystem.TextStyle.emptyStateMessage.attributedString(message, color: .black)
-        actionButton.setAttributedTitle(FontSystem.TextStyle.buttonTitle.attributedString(buttonTitle, color: .white), for: .normal)
-        actionButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+
+        var config = actionButton.configuration ?? UIButton.Configuration.plain()
+        config.attributedTitle = AttributedString(FontSystem.TextStyle.buttonTitle.attributedString(buttonTitle, color: .white))
+        actionButton.configuration = config
         actionButton.sizeToFit()
     }
 }
