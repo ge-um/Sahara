@@ -60,6 +60,7 @@ final class MediaSelectionViewController: UIViewController {
             registerPhotoLibraryChangeObserverIfNeeded()
             fetchPhotos()
         }
+        collectionView.reloadData()
     }
 
     deinit {
@@ -148,12 +149,12 @@ final class MediaSelectionViewController: UIViewController {
         switch status {
         case .authorized:
             registerPhotoLibraryChangeObserverIfNeeded()
-            fetchPhotos()
             presentPHPicker()
+            fetchPhotos()
         case .limited:
             registerPhotoLibraryChangeObserverIfNeeded()
-            fetchPhotos()
             PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+            fetchPhotos()
         case .denied:
             PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
         case .notDetermined:
@@ -163,10 +164,8 @@ final class MediaSelectionViewController: UIViewController {
                 switch status {
                 case .authorized:
                     self.fetchPhotos()
-                    self.presentPHPicker()
                 case .limited:
                     self.fetchPhotos()
-                    PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
                 case .denied:
                     PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
                 case .notDetermined:
@@ -200,7 +199,8 @@ extension MediaSelectionViewController: UICollectionViewDataSource {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if section == 0 {
-            return 2 // Camera and Library
+            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+            return status == .authorized ? 1 : 2
         } else {
             return photos.count
         }
@@ -209,10 +209,16 @@ extension MediaSelectionViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.section == 0 {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ActionCell", for: indexPath) as! ActionCell
-            if indexPath.item == 0 {
+            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+            if status == .authorized {
                 cell.configure(icon: "camera.fill", title: NSLocalizedString("media_selection.camera", comment: ""))
             } else {
-                cell.configure(icon: "photo.on.rectangle", title: NSLocalizedString("media_selection.library", comment: ""))
+                if indexPath.item == 0 {
+                    cell.configure(icon: "camera.fill", title: NSLocalizedString("media_selection.camera", comment: ""))
+                } else {
+                    cell.configure(icon: "photo.on.rectangle", title: NSLocalizedString("media_selection.library", comment: ""))
+                }
             }
             return cell
         } else {
@@ -227,10 +233,16 @@ extension MediaSelectionViewController: UICollectionViewDataSource {
 extension MediaSelectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if indexPath.section == 0 {
-            if indexPath.item == 0 {
+            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+            if status == .authorized {
                 openCamera()
             } else {
-                openPHPicker()
+                if indexPath.item == 0 {
+                    openCamera()
+                } else {
+                    openPHPicker()
+                }
             }
         } else {
             let asset = photos[indexPath.item]
