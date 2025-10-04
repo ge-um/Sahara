@@ -54,8 +54,8 @@
 "photo_detail.save_success_message" = "Photo saved to album.";
 "photo_detail.save_failed" = "Save Failed";
 "photo_detail.image_load_error" = "Unable to load image.";
-"photo_detail.swipe_left_hint" = "← Swipe to view memo";
-"photo_detail.swipe_right_hint" = "→ Swipe to view photo";
+"photo_detail.swipe_left_hint" = "Swipe to view memo";
+"photo_detail.swipe_right_hint" = "Swipe to view photo";
 "photo_detail.date_format" = "EEEE, MMMM d, yyyy";
 
 /* Location Search */

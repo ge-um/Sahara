@@ -51,8 +51,8 @@
 "photo_detail.save_success_message" = "写真がアルバムに保存されました。";
 "photo_detail.save_failed" = "保存失敗";
 "photo_detail.image_load_error" = "画像を読み込めません。";
-"photo_detail.swipe_left_hint" = "← スワイプしてメモを表示";
-"photo_detail.swipe_right_hint" = "→ スワイプして写真を表示";
+"photo_detail.swipe_left_hint" = "スワイプしてメモを表示";
+"photo_detail.swipe_right_hint" = "スワイプして写真を表示";
 "photo_detail.date_format" = "yyyy年MM月dd日 EEEE";
 
 /* Location Search */
