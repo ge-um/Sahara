@@ -18,7 +18,7 @@ final class MediaEditorViewController: UIViewController {
     private let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.isUserInteractionEnabled = true
+        imageView.isUserInteractionEnabled = false
         imageView.backgroundColor = .clear
         return imageView
     }()
@@ -30,6 +30,13 @@ final class MediaEditorViewController: UIViewController {
         canvas.drawingPolicy = .anyInput
         canvas.isUserInteractionEnabled = false
         return canvas
+    }()
+
+    private let stickerContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = true
+        return view
     }()
 
     private let toolBarContainer: UIView = {
@@ -222,6 +229,7 @@ final class MediaEditorViewController: UIViewController {
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
+    private var lastContainerSize: CGSize = .zero
     private var currentMode = BehaviorRelay<EditMode?>(value: nil)
     private let toolPicker = PKToolPicker()
     private var originalImage: UIImage?
@@ -463,10 +471,6 @@ final class MediaEditorViewController: UIViewController {
     private func addStickerToPhoto(_ sticker: KlipySticker) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: sticker)
-        stickerView.frame = CGRect(x: photoImageView.bounds.midX - 50,
-                                   y: photoImageView.bounds.midY - 50,
-                                   width: 100,
-                                   height: 100)
 
         stickerView.onDragChanged = { [weak self] view in
             self?.dragHandler.handleDragChanged(view: view)
@@ -477,17 +481,18 @@ final class MediaEditorViewController: UIViewController {
             _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
         }
 
-        photoImageView.addSubview(stickerView)
+        stickerContainerView.addSubview(stickerView)
+
+        let centerX = stickerContainerView.bounds.midX
+        let centerY = stickerContainerView.bounds.midY
+        stickerView.frame = CGRect(x: centerX - 50, y: centerY - 50, width: 100, height: 100)
+
         stickerViews.append(stickerView)
     }
 
     private func addPhotoToCanvas(_ image: UIImage) {
         let imageView = DraggableImageView(frame: .zero)
         imageView.configure(with: image)
-        imageView.frame = CGRect(x: photoImageView.bounds.midX - 50,
-                                y: photoImageView.bounds.midY - 50,
-                                width: 100,
-                                height: 100)
 
         imageView.onDragChanged = { [weak self] view in
             self?.dragHandler.handleDragChanged(view: view)
@@ -498,8 +503,60 @@ final class MediaEditorViewController: UIViewController {
             _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
         }
 
-        photoImageView.addSubview(imageView)
+        stickerContainerView.addSubview(imageView)
+
+        let centerX = stickerContainerView.bounds.midX
+        let centerY = stickerContainerView.bounds.midY
+        imageView.frame = CGRect(x: centerX - 50, y: centerY - 50, width: 100, height: 100)
+
         photoViews.append(imageView)
+    }
+
+    private func adjustStickerPositions() {
+        view.layoutIfNeeded()
+
+        guard lastContainerSize.width > 0, lastContainerSize.height > 0,
+              stickerContainerView.bounds.width > 0, stickerContainerView.bounds.height > 0 else {
+            lastContainerSize = stickerContainerView.bounds.size
+            return
+        }
+
+        let scaleX = stickerContainerView.bounds.width / lastContainerSize.width
+        let scaleY = stickerContainerView.bounds.height / lastContainerSize.height
+
+        guard scaleX != 1.0 || scaleY != 1.0 else {
+            return
+        }
+
+        adjustViewsWithScale(scaleX: scaleX, scaleY: scaleY)
+        adjustDrawingWithScale(scaleX: scaleX, scaleY: scaleY)
+
+        lastContainerSize = stickerContainerView.bounds.size
+    }
+
+    private func adjustViewsWithScale(scaleX: CGFloat, scaleY: CGFloat) {
+        UIView.animate(withDuration: 0.3) {
+            self.stickerViews.forEach { view in
+                view.center = CGPoint(
+                    x: view.center.x * scaleX,
+                    y: view.center.y * scaleY
+                )
+            }
+
+            self.photoViews.forEach { view in
+                view.center = CGPoint(
+                    x: view.center.x * scaleX,
+                    y: view.center.y * scaleY
+                )
+            }
+        }
+    }
+
+    private func adjustDrawingWithScale(scaleX: CGFloat, scaleY: CGFloat) {
+        guard !canvasView.drawing.strokes.isEmpty else { return }
+
+        let scaleTransform = CGAffineTransform(scaleX: scaleX, y: scaleY)
+        canvasView.drawing = canvasView.drawing.transformed(using: scaleTransform)
     }
 
 
@@ -507,7 +564,8 @@ final class MediaEditorViewController: UIViewController {
         filterCollectionView.isHidden = true
         canvasView.isUserInteractionEnabled = false
         toolPicker.setVisible(false, forFirstResponder: canvasView)
-        photoImageView.isUserInteractionEnabled = true
+        photoImageView.isUserInteractionEnabled = false
+        stickerContainerView.isUserInteractionEnabled = true
         cropOverlayView.isHidden = true
         cropApplyButton.isHidden = true
         cropCancelButton.isHidden = true
@@ -524,6 +582,10 @@ final class MediaEditorViewController: UIViewController {
             make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
         }
 
+        stickerContainerView.snp.remakeConstraints { make in
+            make.edges.equalTo(photoImageView)
+        }
+
         canvasView.snp.remakeConstraints { make in
             make.edges.equalTo(photoImageView)
         }
@@ -536,6 +598,8 @@ final class MediaEditorViewController: UIViewController {
 
         UIView.animate(withDuration: 0.3, animations: {
             self.view.layoutIfNeeded()
+        }, completion: { _ in
+            self.adjustStickerPositions()
         })
 
         guard let mode = mode else {
@@ -559,6 +623,8 @@ final class MediaEditorViewController: UIViewController {
 
             UIView.animate(withDuration: 0.3, animations: {
                 self.view.layoutIfNeeded()
+            }, completion: { _ in
+                self.adjustStickerPositions()
             })
 
             toolPicker.setVisible(true, forFirstResponder: canvasView)
@@ -574,6 +640,7 @@ final class MediaEditorViewController: UIViewController {
             UIView.animate(withDuration: 0.3, animations: {
                 self.view.layoutIfNeeded()
             }, completion: { _ in
+                self.adjustStickerPositions()
                 self.filterCollectionView.reloadData()
                 self.filterCollectionView.layoutIfNeeded()
             })
@@ -618,6 +685,7 @@ final class MediaEditorViewController: UIViewController {
             UIView.animate(withDuration: 0.3, animations: {
                 self.view.layoutIfNeeded()
             }, completion: { _ in
+                self.adjustStickerPositions()
                 self.setupCropOverlay()
             })
         }
@@ -680,6 +748,7 @@ final class MediaEditorViewController: UIViewController {
         let image = renderer.image { context in
             context.cgContext.translateBy(x: -imageRect.origin.x, y: -imageRect.origin.y)
             photoImageView.layer.render(in: context.cgContext)
+            stickerContainerView.layer.render(in: context.cgContext)
 
             let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
             drawingImage.draw(at: .zero)
@@ -872,6 +941,7 @@ final class MediaEditorViewController: UIViewController {
 
         view.addSubview(customNavigationBar)
         view.addSubview(photoImageView)
+        view.addSubview(stickerContainerView)
         view.addSubview(canvasView)
         view.addSubview(toolBarContainer)
         view.addSubview(filterCollectionView)
@@ -915,6 +985,10 @@ final class MediaEditorViewController: UIViewController {
             make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
         }
 
+
+        stickerContainerView.snp.makeConstraints { make in
+            make.edges.equalTo(photoImageView)
+        }
 
         canvasView.snp.makeConstraints { make in
             make.edges.equalTo(photoImageView)
