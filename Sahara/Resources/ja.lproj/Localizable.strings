@@ -60,6 +60,8 @@
 "location_search.placeholder" = "位置検索";
 "location_search.use_current_location" = "現在地を使用";
 "location_search.location_error" = "現在地を取得できません。";
+"location_search.location_permission_title" = "位置情報アクセス権限が必要";
+"location_search.location_permission_message" = "現在地を使用するには設定で位置情報アクセス権限を許可してください。";
 
 /* Media Selection */
 "media_selection.title" = "写真選択";
@@ -68,6 +70,8 @@
 "media_selection.sticker" = "写真";
 "media_selection.camera_permission_title" = "カメラアクセス権限が必要";
 "media_selection.camera_permission_message" = "写真を撮影するにはカメラアクセス権限が必要です。";
+"media_selection.photo_permission_title" = "写真アクセス権限が必要";
+"media_selection.photo_permission_message" = "写真を選択するにはフォトライブラリアクセス権限が必要です。";
 "media_selection.go_to_settings" = "設定に移動";
 
 /* Media Editor */

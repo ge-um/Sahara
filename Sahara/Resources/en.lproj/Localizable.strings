@@ -63,6 +63,8 @@
 "location_search.placeholder" = "Search location";
 "location_search.use_current_location" = "Use Current Location";
 "location_search.location_error" = "Unable to get current location.";
+"location_search.location_permission_title" = "Location Access Required";
+"location_search.location_permission_message" = "Please allow location access in Settings to use your current location.";
 
 /* Media Selection */
 "media_selection.title" = "Select Photo";
@@ -71,6 +73,8 @@
 "media_selection.sticker" = "Photo";
 "media_selection.camera_permission_title" = "Camera Access Required";
 "media_selection.camera_permission_message" = "Camera access is required to take photos.";
+"media_selection.photo_permission_title" = "Photo Access Required";
+"media_selection.photo_permission_message" = "Photo library access is required to select photos.";
 "media_selection.go_to_settings" = "Go to Settings";
 
 /* Media Editor */

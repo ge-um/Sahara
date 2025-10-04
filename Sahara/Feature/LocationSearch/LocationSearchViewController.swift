@@ -102,18 +102,7 @@ final class LocationSearchViewController: UIViewController {
     }
 
     private func showLocationPermissionAlert() {
-        let alert = UIAlertController(
-            title: "위치 권한 필요",
-            message: "현재 위치를 사용하려면 설정에서 위치 권한을 허용해주세요.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
-            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsUrl)
-            }
-        })
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        present(alert, animated: true)
+        PermissionManager.shared.showPermissionAlert(for: .location, from: self)
     }
 
     private func configureUI() {

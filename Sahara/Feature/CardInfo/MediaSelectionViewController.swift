@@ -1,3 +1,10 @@
+//
+//  MediaSelectionViewController.swift
+//  Sahara
+//
+//  Created by 금가경 on 9/26/25.
+//
+
 import AVFoundation
 import Photos
 import PhotosUI
@@ -102,40 +109,25 @@ final class MediaSelectionViewController: UIViewController {
         collectionView.reloadData()
     }
 
-    private func showPermissionAlert() {
-        let alert = UIAlertController(
-            title: "사진 접근 권한 필요",
-            message: "사진을 선택하려면 사진 라이브러리 접근 권한이 필요합니다.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        })
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        present(alert, animated: true)
-    }
 
     private func openCamera() {
-        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        let status = PermissionManager.shared.checkPermission(for: .camera)
 
         switch status {
         case .authorized:
             presentCamera()
-        case .denied, .restricted:
-            showCameraPermissionAlert()
+        case .denied:
+            PermissionManager.shared.showPermissionAlert(for: .camera, from: self)
         case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                DispatchQueue.main.async {
-                    if granted {
-                        self?.presentCamera()
-                    } else {
-                        self?.showCameraPermissionAlert()
-                    }
+            PermissionManager.shared.requestPermission(for: .camera, from: self) { [weak self] status in
+                guard let self = self else { return }
+                if status == .authorized {
+                    self.presentCamera()
+                } else {
+                    PermissionManager.shared.showPermissionAlert(for: .camera, from: self)
                 }
             }
-        @unknown default:
+        case .limited:
             break
         }
     }
@@ -149,23 +141,9 @@ final class MediaSelectionViewController: UIViewController {
         present(picker, animated: true)
     }
 
-    private func showCameraPermissionAlert() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("media_selection.camera_permission_title", comment: ""),
-            message: NSLocalizedString("media_selection.camera_permission_message", comment: ""),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
-        present(alert, animated: true)
-    }
 
     private func openPHPicker() {
-        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
 
         switch status {
         case .authorized:
@@ -176,18 +154,10 @@ final class MediaSelectionViewController: UIViewController {
             registerPhotoLibraryChangeObserverIfNeeded()
             fetchPhotos()
             PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
-        case .denied, .restricted:
-            showPermissionAlert()
+        case .denied:
+            PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
         case .notDetermined:
-            requestPhotoLibraryAccessAndOpenPicker()
-        @unknown default:
-            break
-        }
-    }
-
-    private func requestPhotoLibraryAccessAndOpenPicker() {
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { [weak self] status in
-            DispatchQueue.main.async {
+            PermissionManager.shared.requestPermission(for: .photoLibrary, from: self) { [weak self] status in
                 guard let self = self else { return }
                 self.registerPhotoLibraryChangeObserverIfNeeded()
                 switch status {
@@ -197,11 +167,9 @@ final class MediaSelectionViewController: UIViewController {
                 case .limited:
                     self.fetchPhotos()
                     PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
-                case .denied, .restricted:
-                    self.showPermissionAlert()
+                case .denied:
+                    PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
                 case .notDetermined:
-                    break
-                @unknown default:
                     break
                 }
             }
