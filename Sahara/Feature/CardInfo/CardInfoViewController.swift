@@ -690,20 +690,6 @@ extension CardInfoViewController: UITextViewDelegate {
             textView.text = ""
             textView.textColor = ColorSystem.labelSecondary
         }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            guard let self = self else { return }
-            let contentHeight = self.scrollView.contentSize.height
-            let scrollViewHeight = self.scrollView.frame.height
-            let bottomInset = self.scrollView.contentInset.bottom
-
-            if contentHeight > scrollViewHeight {
-                let bottomOffset = CGPoint(x: 0, y: contentHeight - scrollViewHeight + bottomInset)
-                UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut) {
-                    self.scrollView.setContentOffset(bottomOffset, animated: false)
-                }
-            }
-        }
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -722,15 +708,6 @@ extension CardInfoViewController: UITextViewDelegate {
         let count = textView.text.count
         characterCountLabel.text = "\(count)"
         characterCountLabel.textColor = ColorSystem.labelPrimary
-
-        let contentHeight = scrollView.contentSize.height
-        let scrollViewHeight = scrollView.frame.height
-        let bottomInset = scrollView.contentInset.bottom
-
-        if contentHeight > scrollViewHeight {
-            let bottomOffset = CGPoint(x: 0, y: contentHeight - scrollViewHeight + bottomInset)
-            scrollView.setContentOffset(bottomOffset, animated: true)
-        }
     }
 
     private func createPlaceholderText() -> NSAttributedString {
