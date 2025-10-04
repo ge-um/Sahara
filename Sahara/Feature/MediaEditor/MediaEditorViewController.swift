@@ -185,8 +185,8 @@ final class MediaEditorViewController: UIViewController {
 
     private let trashIconView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "trash.fill")
-        imageView.tintColor = .systemRed
+        imageView.image = UIImage(named: "trash")?.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .white
         imageView.contentMode = .scaleAspectFit
         imageView.isHidden = true
         return imageView
@@ -929,7 +929,7 @@ final class MediaEditorViewController: UIViewController {
         trashIconView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-            make.width.height.equalTo(60)
+            make.width.height.equalTo(40)
         }
 
 

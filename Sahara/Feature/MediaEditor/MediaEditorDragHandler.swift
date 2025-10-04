@@ -19,14 +19,15 @@ final class MediaEditorDragHandler {
     func handleDragChanged(view: UIView) {
         guard let parentView = parentView else { return }
 
+        if trashIconView.isHidden {
+            trashIconView.isHidden = false
+        }
+
         let convertedPoint = parentView.convert(view.center, from: view.superview)
         let trashCenter = CGPoint(x: trashIconView.frame.midX, y: trashIconView.frame.midY)
         let distance = hypot(convertedPoint.x - trashCenter.x, convertedPoint.y - trashCenter.y)
 
         if distance < 150 {
-            if trashIconView.isHidden {
-                trashIconView.isHidden = false
-            }
             let scale = max(1.0, 1.5 - (distance / 150))
             UIView.animate(withDuration: 0.1) {
                 self.trashIconView.transform = CGAffineTransform(scaleX: scale, y: scale)
