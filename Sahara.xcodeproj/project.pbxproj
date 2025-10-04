@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		030F3A402E8B6E02000E04B5 /* RxDataSources in Frameworks */ = {isa = PBXBuildFile; productRef = 030F3A3F2E8B6E02000E04B5 /* RxDataSources */; };
+		035A09142E90D2B900221B3E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 035A09132E90D2B900221B3E /* FirebaseAnalytics */; };
+		035A09162E90D2B900221B3E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 035A09152E90D2B900221B3E /* FirebaseCrashlytics */; };
 		039745922E86DFD100BDA511 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 039745912E86DFD100BDA511 /* Alamofire */; };
 		039745952E86E08500BDA511 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 039745942E86E08500BDA511 /* RealmSwift */; };
 		039745962E86E24A00BDA511 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 039745942E86E08500BDA511 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -65,9 +67,11 @@
 			files = (
 				039745952E86E08500BDA511 /* RealmSwift in Frameworks */,
 				03E2B5DA2E866F3C00A8C8DA /* RxCocoa in Frameworks */,
+				035A09142E90D2B900221B3E /* FirebaseAnalytics in Frameworks */,
 				03E2B5D42E866F0B00A8C8DA /* SnapKit in Frameworks */,
 				03E2B5DC2E866F3C00A8C8DA /* RxSwift in Frameworks */,
 				030F3A402E8B6E02000E04B5 /* RxDataSources in Frameworks */,
+				035A09162E90D2B900221B3E /* FirebaseCrashlytics in Frameworks */,
 				039745922E86DFD100BDA511 /* Alamofire in Frameworks */,
 				03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */,
 			);
@@ -121,6 +125,8 @@
 				039745912E86DFD100BDA511 /* Alamofire */,
 				039745942E86E08500BDA511 /* RealmSwift */,
 				030F3A3F2E8B6E02000E04B5 /* RxDataSources */,
+				035A09132E90D2B900221B3E /* FirebaseAnalytics */,
+				035A09152E90D2B900221B3E /* FirebaseCrashlytics */,
 			);
 			productName = Sahara;
 			productReference = 03E2B5B52E8664AB00A8C8DA /* Sahara.app */;
@@ -159,6 +165,7 @@
 				039745902E86DFD100BDA511 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				039745932E86E08500BDA511 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				030F3A3E2E8B6E02000E04B5 /* XCRemoteSwiftPackageReference "RxDataSources" */,
+				035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 03E2B5B62E8664AB00A8C8DA /* Products */;
@@ -413,6 +420,14 @@
 				minimumVersion = 5.0.2;
 			};
 		};
+		035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.3.0;
+			};
+		};
 		039745902E86DFD100BDA511 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire";
@@ -460,6 +475,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 030F3A3E2E8B6E02000E04B5 /* XCRemoteSwiftPackageReference "RxDataSources" */;
 			productName = RxDataSources;
+		};
+		035A09132E90D2B900221B3E /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		035A09152E90D2B900221B3E /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 		039745912E86DFD100BDA511 /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
