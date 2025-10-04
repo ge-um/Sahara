@@ -19,6 +19,8 @@ final class EmptyStateView: UIView {
         let button = UIButton()
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
+        button.titleLabel?.numberOfLines = 1
+        button.titleLabel?.adjustsFontSizeToFitWidth = false
         return button
     }()
 
@@ -61,7 +63,8 @@ final class EmptyStateView: UIView {
             make.top.equalTo(messageLabel.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
             make.height.equalTo(50)
-            make.width.equalTo(200)
+            make.width.greaterThanOrEqualTo(150)
+            make.width.lessThanOrEqualTo(250)
         }
 
         // 버튼 그라디언트 설정
@@ -81,5 +84,7 @@ final class EmptyStateView: UIView {
     func configure(message: String, buttonTitle: String) {
         messageLabel.attributedText = FontSystem.TextStyle.emptyStateMessage.attributedString(message, color: .black)
         actionButton.setAttributedTitle(FontSystem.TextStyle.buttonTitle.attributedString(buttonTitle, color: .white), for: .normal)
+        actionButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        actionButton.sizeToFit()
     }
 }

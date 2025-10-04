@@ -325,12 +325,12 @@ final class CardDetailViewController: UIViewController {
 
     private func showDeleteAlert() {
         let alert = UIAlertController(
-            title: "사진 삭제",
-            message: "이 사진을 삭제하시겠습니까?",
+            title: NSLocalizedString("card_detail.delete_title", comment: ""),
+            message: NSLocalizedString("card_detail.delete_message", comment: ""),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_cancel", comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_confirm", comment: ""), style: .destructive) { [weak self] _ in
             self?.deleteConfirmedRelay.accept(())
         })
         present(alert, animated: true)
