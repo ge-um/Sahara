@@ -234,7 +234,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         )
     }
 
-    // MARK: - Private Methods
     private func createFilter(at index: Int) -> CIFilter? {
         let filterNames = [
             nil,

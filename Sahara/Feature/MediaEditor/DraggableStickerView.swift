@@ -56,7 +56,6 @@ final class DraggableStickerView: UIView, UIGestureRecognizerDelegate {
         isUserInteractionEnabled = true
     }
 
-    // MARK: - UIGestureRecognizerDelegate
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
@@ -80,7 +79,6 @@ final class DraggableStickerView: UIView, UIGestureRecognizerDelegate {
         }
     }
 
-    // MARK: - Gesture Handlers
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         let translation = gesture.translation(in: superview)
 
