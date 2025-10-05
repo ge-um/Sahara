@@ -93,7 +93,15 @@ final class LocationSearchViewController: UIViewController {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
-            locationManager.requestLocation()
+            var config = currentLocationButton.configuration
+            config?.showsActivityIndicator = true
+            currentLocationButton.configuration = config
+
+            if let cachedLocation = locationManager.location {
+                handleLocation(cachedLocation)
+            } else {
+                locationManager.requestLocation()
+            }
         case .denied, .restricted:
             showLocationPermissionAlert()
         @unknown default:
@@ -219,9 +227,17 @@ extension LocationSearchViewController: UITableViewDataSource, UITableViewDelega
 extension LocationSearchViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        currentLocationButton.configuration?.showsActivityIndicator = false
+        handleLocation(location)
+    }
 
+    private func handleLocation(_ location: CLLocation) {
         LocationUtility.reverseGeocode(location: location) { [weak self] address in
             guard let self = self else { return }
+            var config = self.currentLocationButton.configuration
+            config?.showsActivityIndicator = false
+            self.currentLocationButton.configuration = config
+
             let finalAddress = address.isEmpty ? "현재 위치" : address
             self.onLocationSelected?(location.coordinate, finalAddress)
             self.dismiss(animated: true)
@@ -229,6 +245,7 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        currentLocationButton.configuration?.showsActivityIndicator = false
         showToast(message: NSLocalizedString("location_search.location_error", comment: ""))
     }
 
@@ -236,7 +253,15 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
         let status = manager.authorizationStatus
 
         if status == .authorizedWhenInUse || status == .authorizedAlways {
-            manager.requestLocation()
+            var config = currentLocationButton.configuration
+            config?.showsActivityIndicator = true
+            currentLocationButton.configuration = config
+
+            if let cachedLocation = locationManager.location {
+                handleLocation(cachedLocation)
+            } else {
+                locationManager.requestLocation()
+            }
         }
     }
 }
