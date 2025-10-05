@@ -88,7 +88,11 @@ final class ThemeViewModel: BaseViewModelProtocol {
                     }
 
                     let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
-                        .sorted { $0.category.localizedName < $1.category.localizedName }
+                        .sorted { first, second in
+                            if first.category == .others { return false }
+                            if second.category == .others { return true }
+                            return first.category.localizedName < second.category.localizedName
+                        }
 
                     themeGroupsRelay.accept(groups)
 
@@ -118,7 +122,11 @@ final class ThemeViewModel: BaseViewModelProtocol {
             }
 
             let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
-                .sorted { $0.category.localizedName < $1.category.localizedName }
+                .sorted { first, second in
+                    if first.category == .others { return false }
+                    if second.category == .others { return true }
+                    return first.category.localizedName < second.category.localizedName
+                }
 
             observer.onNext(groups)
             observer.onCompleted()
