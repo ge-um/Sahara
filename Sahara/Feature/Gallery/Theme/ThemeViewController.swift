@@ -1,5 +1,5 @@
 //
-//  ThemeGalleryViewController.swift
+//  ThemeViewController.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -10,8 +10,8 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class ThemeGalleryViewController: UIViewController {
-    private let viewModel = ThemeGalleryViewModel()
+final class ThemeViewController: UIViewController {
+    private let viewModel = ThemeViewModel()
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
 
@@ -63,7 +63,7 @@ final class ThemeGalleryViewController: UIViewController {
     }
 
     private func bind() {
-        let input = ThemeGalleryViewModel.Input(
+        let input = ThemeViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             itemSelected: tableView.rx.itemSelected.asObservable()
         )

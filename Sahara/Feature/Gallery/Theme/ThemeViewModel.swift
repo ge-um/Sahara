@@ -1,5 +1,5 @@
 //
-//  ThemeGalleryViewModel.swift
+//  ThemeViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/2/25.
@@ -12,7 +12,7 @@ import RxSwift
 import UIKit
 import Vision
 
-final class ThemeGalleryViewModel: BaseViewModelProtocol {
+final class ThemeViewModel: BaseViewModelProtocol {
     private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 

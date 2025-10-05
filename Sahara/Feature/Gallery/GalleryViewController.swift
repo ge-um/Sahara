@@ -71,8 +71,8 @@ final class GalleryViewController: UIViewController {
         return view
     }()
 
-    private lazy var themeGalleryVC: ThemeGalleryViewController = {
-        let vc = ThemeGalleryViewController()
+    private lazy var themeVC: ThemeViewController = {
+        let vc = ThemeViewController()
         return vc
     }()
 
@@ -141,12 +141,12 @@ final class GalleryViewController: UIViewController {
     }
 
     private func setupThemeView() {
-        addChild(themeGalleryVC)
-        themeContainerView.addSubview(themeGalleryVC.view)
-        themeGalleryVC.view.snp.makeConstraints { make in
+        addChild(themeVC)
+        themeContainerView.addSubview(themeVC.view)
+        themeVC.view.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        themeGalleryVC.didMove(toParent: self)
+        themeVC.didMove(toParent: self)
     }
 
     private func setupMapView() {
@@ -291,7 +291,7 @@ final class GalleryViewController: UIViewController {
                     if viewType == .location {
                         owner.loadMapAnnotations()
                     } else if viewType == .theme {
-                        owner.themeGalleryVC.refreshData()
+                        owner.themeVC.refreshData()
                     }
                 }
             }
@@ -306,7 +306,7 @@ final class GalleryViewController: UIViewController {
             if viewType == .location {
                 owner.loadMapAnnotations()
             } else if viewType == .theme {
-                owner.themeGalleryVC.refreshData()
+                owner.themeVC.refreshData()
             }
         }
         .disposed(by: disposeBag)
