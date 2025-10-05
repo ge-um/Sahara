@@ -890,7 +890,7 @@ final class MediaEditorViewController: UIViewController {
     private func setupModeButtons() {
         let buttonConfigs: [(button: UIButton, imageName: String, titleKey: String)] = [
             (stickerModeButton, "sticker", "media_editor.sticker"),
-            (drawingModeButton, "edit", "media_editor.drawing"),
+            (drawingModeButton, "pencil", "media_editor.drawing"),
             (filterModeButton, "sliders", "media_editor.filter"),
             (photoModeButton, "image", "media_editor.photo"),
             (cropModeButton, "crop", "media_editor.crop")
