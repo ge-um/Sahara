@@ -417,17 +417,9 @@ final class CardInfoViewController: UIViewController {
             if let location = output.initialLocation {
                 initialLocationSubject.onNext(location)
 
-                let geocoder = CLGeocoder()
-                geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                    if let placemark = placemarks?.first {
-                        let address = [
-                            placemark.locality,
-                            placemark.thoroughfare,
-                            placemark.subThoroughfare
-                        ].compactMap { $0 }.joined(separator: " ")
-                        self?.selectedLocationLabel.text = address
-                        self?.selectedLocationLabel.textColor = ColorSystem.labelSecondary
-                    }
+                LocationUtility.reverseGeocode(location: location) { [weak self] address in
+                    self?.selectedLocationLabel.text = address
+                    self?.selectedLocationLabel.textColor = ColorSystem.labelSecondary
                 }
 
                 updateMapView(with: location.coordinate)
@@ -538,25 +530,12 @@ final class CardInfoViewController: UIViewController {
                 self.selectedLocation = location
                 self.initialLocationSubject.onNext(location)
 
-                let geocoder = CLGeocoder()
-                geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-                    guard let self = self,
-                          let placemark = placemarks?.first else { return }
-
-                    var addressString = ""
-                    if let locality = placemark.locality {
-                        addressString += locality
+                LocationUtility.reverseGeocode(location: location) { [weak self] address in
+                    self?.selectedLocationLabel.text = address.isEmpty ? "사진 위치" : address
+                    self?.selectedLocationLabel.textColor = ColorSystem.labelSecondary
+                    if let coord = self?.selectedLocation?.coordinate {
+                        self?.updateMapView(with: coord)
                     }
-                    if let subLocality = placemark.subLocality {
-                        addressString += " " + subLocality
-                    }
-                    if let thoroughfare = placemark.thoroughfare {
-                        addressString += " " + thoroughfare
-                    }
-
-                    self.selectedLocationLabel.text = addressString.isEmpty ? "사진 위치" : addressString
-                    self.selectedLocationLabel.textColor = ColorSystem.labelSecondary
-                    self.updateMapView(with: location.coordinate)
                 }
             }
 

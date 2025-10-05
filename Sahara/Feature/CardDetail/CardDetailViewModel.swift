@@ -87,18 +87,8 @@ final class CardDetailViewModel {
 
                 return Observable.create { observer in
                     let location = CLLocation(latitude: latitude, longitude: longitude)
-                    let geocoder = CLGeocoder()
-                    geocoder.reverseGeocodeLocation(location) { placemarks, error in
-                        if let placemark = placemarks?.first {
-                            let address = [
-                                placemark.locality,
-                                placemark.thoroughfare,
-                                placemark.subThoroughfare
-                            ].compactMap { $0 }.joined(separator: " ")
-                            observer.onNext(address)
-                        } else {
-                            observer.onNext("")
-                        }
+                    LocationUtility.reverseGeocode(location: location) { address in
+                        observer.onNext(address)
                         observer.onCompleted()
                     }
                     return Disposables.create()
