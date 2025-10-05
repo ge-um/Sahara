@@ -220,23 +220,9 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
 
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
-            guard let self = self,
-                  let placemark = placemarks?.first else { return }
-
-            var addressString = ""
-            if let locality = placemark.locality {
-                addressString += locality
-            }
-            if let subLocality = placemark.subLocality {
-                addressString += " " + subLocality
-            }
-            if let thoroughfare = placemark.thoroughfare {
-                addressString += " " + thoroughfare
-            }
-
-            let finalAddress = addressString.isEmpty ? "현재 위치" : addressString
+        LocationUtility.reverseGeocode(location: location) { [weak self] address in
+            guard let self = self else { return }
+            let finalAddress = address.isEmpty ? "현재 위치" : address
             self.onLocationSelected?(location.coordinate, finalAddress)
             self.dismiss(animated: true)
         }
