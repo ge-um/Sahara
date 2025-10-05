@@ -32,17 +32,18 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
         let isLoadingRelay = BehaviorRelay<Bool>(value: false)
 
         input.viewWillAppear
+            .take(1)
             .withUnretained(self)
             .do(onNext: { _, _ in
                 isLoadingRelay.accept(true)
             })
-            .flatMap { owner, _ -> Observable<[ThemeGroup]> in
-                return owner.analyzePhotos()
+            .flatMap { owner, _ -> Observable<Void> in
+                return owner.observeAndAnalyzePhotos(themeGroupsRelay: themeGroupsRelay)
             }
             .do(onNext: { _ in
                 isLoadingRelay.accept(false)
             })
-            .bind(to: themeGroupsRelay)
+            .subscribe()
             .disposed(by: disposeBag)
 
         let navigateToPhotos = input.itemSelected
@@ -56,6 +57,50 @@ final class ThemeGalleryViewModel: BaseViewModelProtocol {
             isLoading: isLoadingRelay.asDriver(),
             navigateToPhotos: navigateToPhotos
         )
+    }
+
+    private func observeAndAnalyzePhotos(themeGroupsRelay: BehaviorRelay<[ThemeGroup]>) -> Observable<Void> {
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let realm = try! Realm()
+            let cards = realm.objects(Card.self)
+
+            observer.onNext(())
+
+            let token = cards.observe { [weak self] changes in
+                guard let self = self else { return }
+
+                switch changes {
+                case .initial(let results), .update(let results, _, _, _):
+                    let memos = Array(results)
+                    var categoryDict: [ThemeCategory: [Card]] = [:]
+
+                    for photoMemo in memos {
+                        guard let image = UIImage(data: photoMemo.editedImageData),
+                              let cgImage = image.cgImage else { continue }
+
+                        let category = self.classifyImage(cgImage)
+                        categoryDict[category, default: []].append(photoMemo)
+                    }
+
+                    let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
+                        .sorted { $0.category.localizedName < $1.category.localizedName }
+
+                    themeGroupsRelay.accept(groups)
+
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
     }
 
     private func analyzePhotos() -> Observable<[ThemeGroup]> {
