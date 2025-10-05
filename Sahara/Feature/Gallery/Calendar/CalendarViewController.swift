@@ -67,6 +67,26 @@ final class CalendarViewController: UIViewController {
         collectionView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        setupSwipeGestures()
+    }
+
+    private func setupSwipeGestures() {
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeLeft))
+        swipeLeft.direction = .left
+        collectionView.addGestureRecognizer(swipeLeft)
+
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeRight))
+        swipeRight.direction = .right
+        collectionView.addGestureRecognizer(swipeRight)
+    }
+
+    @objc private func handleSwipeLeft() {
+        nextMonthRelay.accept(())
+    }
+
+    @objc private func handleSwipeRight() {
+        previousMonthRelay.accept(())
     }
 
     private func bind() {
