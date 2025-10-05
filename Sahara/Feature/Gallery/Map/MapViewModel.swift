@@ -1,5 +1,5 @@
 //
-//  MapPhotoGalleryViewModel.swift
+//  MapViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/2/25.
@@ -10,7 +10,7 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 
-final class MapPhotoGalleryViewModel: BaseViewModelProtocol {
+final class MapViewModel: BaseViewModelProtocol {
     private let photoMemoIds: [ObjectId]
     private let disposeBag = DisposeBag()
     private let photoMemosRelay = BehaviorRelay<[Card]>(value: [])

@@ -1,5 +1,5 @@
 //
-//  BasePhotoAnnotationView.swift
+//  BaseMediaAnnotationView.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/4/25.
@@ -8,7 +8,7 @@
 import MapKit
 import UIKit
 
-class BasePhotoAnnotationView: MKAnnotationView {
+class BaseMediaAnnotationView: MKAnnotationView {
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill

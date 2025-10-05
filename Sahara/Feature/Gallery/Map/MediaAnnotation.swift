@@ -1,5 +1,5 @@
 //
-//  PhotoAnnotation.swift
+//  MediaAnnotation.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -8,7 +8,7 @@
 import MapKit
 import RealmSwift
 
-final class PhotoAnnotation: NSObject, MKAnnotation, IsIdentifiable {
+final class MediaAnnotation: NSObject, MKAnnotation, IsIdentifiable {
     let coordinate: CLLocationCoordinate2D
     let photoMemoIds: [ObjectId]
     let photoCount: Int
@@ -25,6 +25,6 @@ final class PhotoAnnotation: NSObject, MKAnnotation, IsIdentifiable {
     }
 }
 
-extension PhotoAnnotation {
-    static let clusterID = "PhotoCluster"
+extension MediaAnnotation {
+    static let clusterID = "MediaCluster"
 }

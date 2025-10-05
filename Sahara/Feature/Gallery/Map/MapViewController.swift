@@ -1,5 +1,5 @@
 //
-//  MapPhotoGalleryViewController.swift
+//  MapViewController.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -11,8 +11,8 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class MapPhotoGalleryViewController: UIViewController {
-    private let viewModel: MapPhotoGalleryViewModel
+final class MapViewController: UIViewController {
+    private let viewModel: MapViewModel
     private let disposeBag = DisposeBag()
     private let viewDidLoadRelay = PublishRelay<Void>()
 
@@ -37,7 +37,7 @@ final class MapPhotoGalleryViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(MapPhotoCell.self, forCellWithReuseIdentifier: MapPhotoCell.identifier)
+        collectionView.register(MapMediaCell.self, forCellWithReuseIdentifier: MapMediaCell.identifier)
         return collectionView
     }()
 
@@ -45,7 +45,7 @@ final class MapPhotoGalleryViewController: UIViewController {
     private let customTitle: String?
 
     init(photoMemos: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
-        self.viewModel = MapPhotoGalleryViewModel(photoMemos: photoMemos)
+        self.viewModel = MapViewModel(photoMemos: photoMemos)
         self.themeCategory = themeCategory
         self.customTitle = customTitle
         super.init(nibName: nil, bundle: nil)
@@ -99,7 +99,7 @@ final class MapPhotoGalleryViewController: UIViewController {
     }
 
     private func bind() {
-        let input = MapPhotoGalleryViewModel.Input(
+        let input = MapViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable()
@@ -108,7 +108,7 @@ final class MapPhotoGalleryViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.photoMemos
-            .drive(collectionView.rx.items(cellIdentifier: MapPhotoCell.identifier, cellType: MapPhotoCell.self)) { _, memo, cell in
+            .drive(collectionView.rx.items(cellIdentifier: MapMediaCell.identifier, cellType: MapMediaCell.self)) { _, memo, cell in
                 cell.configure(with: memo)
             }
             .disposed(by: disposeBag)
@@ -128,7 +128,7 @@ final class MapPhotoGalleryViewController: UIViewController {
     }
 }
 
-extension MapPhotoGalleryViewController: PinterestLayoutDelegate {
+extension MapViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
         guard let cell = viewModel.getCard(at: indexPath.item),
               let image = UIImage(data: cell.editedImageData) else {
@@ -141,8 +141,8 @@ extension MapPhotoGalleryViewController: PinterestLayoutDelegate {
     }
 }
 
-final class MapPhotoCell: UICollectionViewCell {
-    static let identifier = "MapPhotoCell"
+final class MapMediaCell: UICollectionViewCell {
+    static let identifier = "MapMediaCell"
 
     private let imageView: UIImageView = {
         let imageView = UIImageView()

@@ -88,7 +88,7 @@ final class ThemeGalleryViewController: UIViewController {
 
         output.navigateToPhotos
             .drive(with: self) { owner, themeGroup in
-                let galleryVC = MapPhotoGalleryViewController(photoMemos: themeGroup.photoMemos, themeCategory: themeGroup.category)
+                let galleryVC = MapViewController(photoMemos: themeGroup.photoMemos, themeCategory: themeGroup.category)
                 if let parentGalleryVC = owner.parent as? GalleryViewController {
                     parentGalleryVC.navigationController?.pushViewController(galleryVC, animated: true)
                 }

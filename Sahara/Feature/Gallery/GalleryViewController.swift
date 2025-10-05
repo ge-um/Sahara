@@ -150,8 +150,8 @@ final class GalleryViewController: UIViewController {
     }
 
     private func setupMapView() {
-        mapView.register(PhotoAnnotationView.self, forAnnotationViewWithReuseIdentifier: PhotoAnnotation.identifier)
-        mapView.register(PhotoClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
+        mapView.register(MediaAnnotationView.self, forAnnotationViewWithReuseIdentifier: MediaAnnotation.identifier)
+        mapView.register(MediaClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
     }
 
     private func loadMapAnnotations() {
@@ -161,11 +161,11 @@ final class GalleryViewController: UIViewController {
             .filter("latitude != nil AND longitude != nil")
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
-        let annotations = Array(memos.compactMap { memo -> PhotoAnnotation? in
+        let annotations = Array(memos.compactMap { memo -> MediaAnnotation? in
             guard let lat = memo.latitude, let lon = memo.longitude,
                   lat != 0, lon != 0 else { return nil }
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            return PhotoAnnotation(coordinate: coordinate, photoMemoIds: [memo.id])
+            return MediaAnnotation(coordinate: coordinate, photoMemoIds: [memo.id])
         })
 
         mapView.addAnnotations(annotations)
@@ -353,15 +353,15 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
 extension GalleryViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if let cluster = annotation as? MKClusterAnnotation {
-            var clusterView = mapView.dequeueReusableAnnotationView(withIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier) as? PhotoClusterAnnotationView
+            var clusterView = mapView.dequeueReusableAnnotationView(withIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier) as? MediaClusterAnnotationView
 
             if clusterView == nil {
-                clusterView = PhotoClusterAnnotationView(annotation: annotation, reuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
+                clusterView = MediaClusterAnnotationView(annotation: annotation, reuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
             } else {
                 clusterView?.annotation = annotation
             }
 
-            let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? PhotoAnnotation }
+            let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
             var representativeImage: UIImage?
             if let randomAnnotation = photoAnnotations.randomElement(),
                let photoId = randomAnnotation.photoMemoIds.first,
@@ -373,17 +373,17 @@ extension GalleryViewController: MKMapViewDelegate {
             return clusterView
         }
 
-        guard let photoAnnotation = annotation as? PhotoAnnotation else { return nil }
+        guard let photoAnnotation = annotation as? MediaAnnotation else { return nil }
 
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: PhotoAnnotation.identifier) as? PhotoAnnotationView
+        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: MediaAnnotation.identifier) as? MediaAnnotationView
 
         if annotationView == nil {
-            annotationView = PhotoAnnotationView(annotation: annotation, reuseIdentifier: PhotoAnnotation.identifier)
+            annotationView = MediaAnnotationView(annotation: annotation, reuseIdentifier: MediaAnnotation.identifier)
         } else {
             annotationView?.annotation = annotation
         }
 
-        annotationView?.clusteringIdentifier = PhotoAnnotation.clusterID
+        annotationView?.clusteringIdentifier = MediaAnnotation.clusterID
 
         if let firstPhotoId = photoAnnotation.photoMemoIds.first,
            let firstPhoto = realm.object(ofType: Card.self, forPrimaryKey: firstPhotoId),
@@ -398,7 +398,7 @@ extension GalleryViewController: MKMapViewDelegate {
         mapView.deselectAnnotation(view.annotation, animated: false)
 
         if let cluster = view.annotation as? MKClusterAnnotation {
-            let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? PhotoAnnotation }
+            let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
             let allPhotoIds = photoAnnotations.flatMap { $0.photoMemoIds }
             let allPhotos = allPhotoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
 
@@ -406,7 +406,7 @@ extension GalleryViewController: MKMapViewDelegate {
                 showGallery(for: allPhotos)
             }
         }
-        else if let photoAnnotation = view.annotation as? PhotoAnnotation {
+        else if let photoAnnotation = view.annotation as? MediaAnnotation {
             let photoMemos = photoAnnotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
             showGallery(for: photoMemos)
         }
@@ -415,7 +415,7 @@ extension GalleryViewController: MKMapViewDelegate {
     private func showGallery(for photoMemos: [Card]) {
         let photoCount = photoMemos.count
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
-        let galleryVC = MapPhotoGalleryViewController(photoMemos: photoMemos, themeCategory: .others, customTitle: title)
+        let galleryVC = MapViewController(photoMemos: photoMemos, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }
 }
