@@ -71,12 +71,12 @@ final class RealmManager {
         guard let realm = realm else { return [] }
         let calendar = Calendar.current
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month)),
-              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth) else {
+              let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
             return []
         }
 
         let results = realm.objects(Card.self)
-            .filter("createdDate >= %@ AND createdDate <= %@", startOfMonth, endOfMonth)
+            .filter("createdDate >= %@ AND createdDate < %@", startOfMonth, nextMonth)
             .sorted(byKeyPath: "createdDate", ascending: true)
 
         return Array(results)
