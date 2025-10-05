@@ -102,6 +102,7 @@ final class CalendarDetailViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(24)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
     }
 
     private func bind() {
