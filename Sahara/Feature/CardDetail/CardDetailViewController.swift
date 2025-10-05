@@ -15,6 +15,7 @@ final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
     private let disposeBag = DisposeBag()
     private var isFrontCardVisible = true
+    private let sourceType: EditSourceType
 
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let swipeLeftRelay = PublishRelay<Void>()
@@ -155,8 +156,9 @@ final class CardDetailViewController: UIViewController {
     }()
 
 
-    init(photoMemoId: ObjectId) {
+    init(photoMemoId: ObjectId, sourceType: EditSourceType = .dateView) {
         self.viewModel = CardDetailViewModel(photoMemoId: photoMemoId)
+        self.sourceType = sourceType
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -173,6 +175,11 @@ final class CardDetailViewController: UIViewController {
         configureUI()
         setupGestures()
         bind()
+        viewDidLoadRelay.accept(())
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         viewDidLoadRelay.accept(())
     }
 
@@ -197,8 +204,8 @@ final class CardDetailViewController: UIViewController {
             }
         }
 
-        customNavigationBar.addRightButton(image: UIImage(systemName: "trash"), tintColor: .systemRed) { [weak self] in
-            self?.showDeleteAlert()
+        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .black) { [weak self] in
+            self?.openEditView()
         }
     }
 
@@ -336,6 +343,13 @@ final class CardDetailViewController: UIViewController {
             self?.deleteConfirmedRelay.accept(())
         })
         present(alert, animated: true)
+    }
+
+    private func openEditView() {
+        guard let photoMemo = viewModel.getPhotoMemo() else { return }
+        let editViewModel = CardInfoViewModel(cardToEdit: photoMemo, sourceType: sourceType)
+        let editVC = CardInfoViewController(viewModel: editViewModel)
+        navigationController?.pushViewController(editVC, animated: true)
     }
 
     private func bind() {

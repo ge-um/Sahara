@@ -44,6 +44,8 @@
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
 "card_info.image_required" = "Image is required.";
+"card_info.delete" = "Delete";
+"card_info.delete_button" = "Delete Card";
 
 /* Card Detail */
 "card_detail.title" = "View Card";

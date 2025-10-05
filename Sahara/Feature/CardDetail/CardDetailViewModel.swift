@@ -42,6 +42,10 @@ final class CardDetailViewModel {
         self.photoMemoId = photoMemoId
     }
 
+    func getPhotoMemo() -> Card? {
+        return realmManager.realm?.object(ofType: Card.self, forPrimaryKey: photoMemoId)
+    }
+
     func transform(input: Input) -> Output {
         let photoMemoData = input.viewDidLoad
             .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in

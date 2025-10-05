@@ -44,6 +44,8 @@
 "card_info.location_placeholder" = "위치를 선택해주세요";
 "card_info.search_location" = "위치 검색";
 "card_info.image_required" = "이미지는 필수값이에요.";
+"card_info.delete" = "삭제";
+"card_info.delete_button" = "카드 삭제하기";
 
 /* Card Detail */
 "card_detail.title" = "카드 보기";
