@@ -192,6 +192,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		035A09452E90D48500221B3E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -232,6 +233,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = RFZY2ACQ74;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sahara/Info.plist;
