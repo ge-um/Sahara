@@ -138,7 +138,7 @@ final class GalleryViewModel {
         }
 
         // 현재 달의 날짜들
-        for day in range {
+        for day in 1...daysInMonth {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
                 let memosForDay = photoMemos.filter {
                     calendar.isDate($0.createdDate, inSameDayAs: date)
