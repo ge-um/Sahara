@@ -168,6 +168,41 @@ final class CardInfoViewController: UIViewController {
         return mapView
     }()
 
+    private let deleteCard: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorSystem.cardBackground
+        view.layer.cornerRadius = 12
+        view.isHidden = true
+        return view
+    }()
+
+    private let deleteLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("card_info.delete", comment: "")
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelTitle
+        return label
+    }()
+
+    private lazy var deleteButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.title = NSLocalizedString("card_info.delete_button", comment: "")
+        config.baseBackgroundColor = .systemRed
+        config.baseForegroundColor = .white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        return button
+    }()
+
     private let saveButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
@@ -357,7 +392,8 @@ final class CardInfoViewController: UIViewController {
             memo: memoTextView.rx.text.asObservable(),
             location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
-            cancelButtonTapped: cancelButton.rx.tap.asObservable()
+            cancelButtonTapped: cancelButton.rx.tap.asObservable(),
+            deleteButtonTapped: deleteButton.rx.tap.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -370,6 +406,33 @@ final class CardInfoViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+
+        if output.isEditMode {
+            deleteCard.isHidden = false
+            selectedDateRelay.accept(output.initialDate)
+            if let memo = output.initialMemo {
+                memoTextView.text = memo
+                memoTextView.textColor = ColorSystem.labelSecondary
+            }
+            if let location = output.initialLocation {
+                initialLocationSubject.onNext(location)
+
+                let geocoder = CLGeocoder()
+                geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+                    if let placemark = placemarks?.first {
+                        let address = [
+                            placemark.locality,
+                            placemark.thoroughfare,
+                            placemark.subThoroughfare
+                        ].compactMap { $0 }.joined(separator: " ")
+                        self?.selectedLocationLabel.text = address
+                        self?.selectedLocationLabel.textColor = ColorSystem.labelSecondary
+                    }
+                }
+
+                updateMapView(with: location.coordinate)
+            }
+        }
 
         output.hasImage
             .drive(with: self) { owner, hasImage in
@@ -392,13 +455,34 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.saved
-            .drive(with: self) { owner, success in
-                if success {
-                    owner.navigationController?.dismiss(animated: true)
+        Observable.zip(
+            output.saved.asObservable(),
+            output.shouldPopToList.asObservable()
+        )
+        .observe(on: MainScheduler.instance)
+        .bind(with: self) { owner, result in
+            let (success, shouldPopToList) = result
+            if success {
+                if shouldPopToList {
+                    if let navController = owner.navigationController {
+                        let viewControllers = navController.viewControllers
+                        if output.isEditMode {
+                            let targetIndex = viewControllers.count >= 4 ? viewControllers.count - 4 : 0
+                            navController.popToViewController(viewControllers[targetIndex], animated: true)
+                        } else {
+                            navController.popToRootViewController(animated: true)
+                        }
+                    }
+                } else {
+                    if owner.navigationController != nil && owner.presentingViewController == nil {
+                        owner.navigationController?.popViewController(animated: true)
+                    } else {
+                        owner.navigationController?.dismiss(animated: true)
+                    }
                 }
             }
-            .disposed(by: disposeBag)
+        }
+        .disposed(by: disposeBag)
 
         output.saveError
             .drive(with: self) { owner, errorMessage in
@@ -408,7 +492,21 @@ final class CardInfoViewController: UIViewController {
 
         output.dismiss
             .drive(with: self) { owner, _ in
-                owner.navigationController?.dismiss(animated: true)
+                if owner.navigationController != nil && owner.presentingViewController == nil {
+                    owner.navigationController?.popViewController(animated: true)
+                } else {
+                    owner.navigationController?.dismiss(animated: true)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.deleted
+            .drive(with: self) { owner, _ in
+                if owner.navigationController != nil && owner.presentingViewController == nil {
+                    owner.navigationController?.popViewController(animated: true)
+                } else {
+                    owner.navigationController?.dismiss(animated: true)
+                }
             }
             .disposed(by: disposeBag)
     }
@@ -558,6 +656,10 @@ final class CardInfoViewController: UIViewController {
         locationCard.addSubview(searchLocationButton)
         locationCard.addSubview(mapView)
 
+        contentView.addSubview(deleteCard)
+        deleteCard.addSubview(deleteLabel)
+        deleteCard.addSubview(deleteButton)
+
         scrollView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom)
             make.horizontalEdges.bottom.equalTo(view.safeAreaLayoutGuide)
@@ -630,7 +732,6 @@ final class CardInfoViewController: UIViewController {
         locationCard.snp.makeConstraints { make in
             make.top.equalTo(memoCard.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-20)
         }
 
         locationLabel.snp.makeConstraints { make in
@@ -652,6 +753,23 @@ final class CardInfoViewController: UIViewController {
             make.top.equalTo(searchLocationButton.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(16)
             mapViewHeightConstraint = make.height.equalTo(0).constraint
+            make.bottom.equalToSuperview().inset(16)
+        }
+
+        deleteCard.snp.makeConstraints { make in
+            make.top.equalTo(locationCard.snp.bottom).offset(16)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().offset(-100)
+        }
+
+        deleteLabel.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview().inset(16)
+        }
+
+        deleteButton.snp.makeConstraints { make in
+            make.top.equalTo(deleteLabel.snp.bottom).offset(12)
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.height.equalTo(44)
             make.bottom.equalToSuperview().inset(16)
         }
     }

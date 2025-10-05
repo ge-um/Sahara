@@ -115,7 +115,8 @@ final class MapViewController: UIViewController {
 
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
-                let detailVC = CardDetailViewController(photoMemoId: photoMemoId)
+                let sourceType: EditSourceType = owner.themeCategory == .others ? .locationView : .themeView
+                let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
                 owner.navigationController?.pushViewController(detailVC, animated: true)
             }
             .disposed(by: disposeBag)
