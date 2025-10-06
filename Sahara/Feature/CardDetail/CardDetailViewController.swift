@@ -349,7 +349,9 @@ final class CardDetailViewController: UIViewController {
         guard let photoMemo = viewModel.getPhotoMemo() else { return }
         let editViewModel = CardInfoViewModel(cardToEdit: photoMemo, sourceType: sourceType)
         let editVC = CardInfoViewController(viewModel: editViewModel)
-        navigationController?.pushViewController(editVC, animated: true)
+        let navController = UINavigationController(rootViewController: editVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
 
     private func bind() {
