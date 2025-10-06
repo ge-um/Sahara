@@ -194,9 +194,23 @@ final class CardInfoViewController: UIViewController {
                     owner.selectedLocation = location
                     owner.contentView.selectedLocationLabel.text = address
                     owner.contentView.selectedLocationLabel.textColor = ColorSystem.labelSecondary
+                    owner.contentView.removeLocationButton.isHidden = false
                     owner.updateMapView(with: coordinate)
                     locationSubject.onNext(location)
                 }
+            }
+            .disposed(by: disposeBag)
+
+        contentView.removeLocationButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.selectedLocation = nil
+                owner.contentView.selectedLocationLabel.text = NSLocalizedString("card_info.location_placeholder", comment: "")
+                owner.contentView.selectedLocationLabel.textColor = ColorSystem.labelPrimary
+                owner.contentView.removeLocationButton.isHidden = true
+                owner.contentView.mapView.isHidden = true
+                owner.contentView.mapViewHeightConstraint?.update(offset: 0)
+                owner.contentView.mapView.removeAnnotations(owner.contentView.mapView.annotations)
+                locationSubject.onNext(CLLocation(latitude: 0, longitude: 0))
             }
             .disposed(by: disposeBag)
 
@@ -273,6 +287,7 @@ final class CardInfoViewController: UIViewController {
             }
             if let location = output.initialLocation {
                 initialLocationSubject.onNext(location)
+                contentView.removeLocationButton.isHidden = false
 
                 LocationUtility.reverseGeocode(location: location) { [weak self] address in
                     self?.contentView.selectedLocationLabel.text = address
@@ -350,6 +365,7 @@ final class CardInfoViewController: UIViewController {
         if let location = location {
             selectedLocation = location
             initialLocationSubject.onNext(location)
+            contentView.removeLocationButton.isHidden = false
 
             LocationUtility.reverseGeocode(location: location) { [weak self] address in
                 self?.contentView.selectedLocationLabel.text = address.isEmpty ? "사진 위치" : address

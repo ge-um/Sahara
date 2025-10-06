@@ -133,6 +133,24 @@ final class CardInfoView: UIView {
         return label
     }()
 
+    let removeLocationButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.title = "✕"
+        config.baseBackgroundColor = UIColor(hex: "4D4D4D")
+        config.baseForegroundColor = .white
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 10)
+        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
+
+        button.configuration = config
+        button.isHidden = true
+        return button
+    }()
+
     let searchLocationButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
@@ -258,6 +276,7 @@ final class CardInfoView: UIView {
         contentView.addSubview(locationCard)
         locationCard.addSubview(locationLabel)
         locationCard.addSubview(selectedLocationLabel)
+        locationCard.addSubview(removeLocationButton)
         locationCard.addSubview(searchLocationButton)
         locationCard.addSubview(mapView)
 
@@ -349,7 +368,14 @@ final class CardInfoView: UIView {
 
         selectedLocationLabel.snp.makeConstraints { make in
             make.top.equalTo(locationLabel.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(16)
+            make.leading.equalToSuperview().inset(16)
+            make.trailing.equalTo(removeLocationButton.snp.leading).offset(-8)
+        }
+
+        removeLocationButton.snp.makeConstraints { make in
+            make.centerY.equalTo(selectedLocationLabel)
+            make.trailing.equalToSuperview().inset(16)
+            make.width.height.equalTo(16)
         }
 
         searchLocationButton.snp.makeConstraints { make in
