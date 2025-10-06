@@ -43,14 +43,14 @@ final class CardDetailViewModel {
     }
 
     func getPhotoMemo() -> Card? {
-        return realmManager.realm?.object(ofType: Card.self, forPrimaryKey: photoMemoId)
+        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: photoMemoId)
     }
 
     func transform(input: Input) -> Output {
         let photoMemoData = input.viewDidLoad
             .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in
                 guard let self = self,
-                      let photoMemo = self.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: self.photoMemoId) else {
+                      let photoMemo = self.realmManager.realm.object(ofType: Card.self, forPrimaryKey: self.photoMemoId) else {
                     return nil
                 }
                 return (
@@ -130,7 +130,7 @@ final class CardDetailViewModel {
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
             .map { owner, _ -> Void in
-                guard let photoMemo = owner.realmManager.realm?.object(ofType: Card.self, forPrimaryKey: owner.photoMemoId) else {
+                guard let photoMemo = owner.realmManager.realm.object(ofType: Card.self, forPrimaryKey: owner.photoMemoId) else {
                     return ()
                 }
                 owner.realmManager.delete(photoMemo)

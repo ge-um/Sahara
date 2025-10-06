@@ -109,7 +109,7 @@ final class ThemeViewModel: BaseViewModelProtocol {
 
     private func analyzePhotos() -> Observable<[ThemeGroup]> {
         return Observable.create { observer in
-            let memos = self.realmManager.fetch(Card.self).map { Array($0) } ?? []
+            let memos = Array(self.realmManager.fetch(Card.self))
 
             var categoryDict: [ThemeCategory: [Card]] = [:]
 
