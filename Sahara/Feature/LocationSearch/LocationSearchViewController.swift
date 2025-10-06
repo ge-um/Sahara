@@ -250,19 +250,7 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let status = manager.authorizationStatus
 
-        if status == .authorizedWhenInUse || status == .authorizedAlways {
-            var config = currentLocationButton.configuration
-            config?.showsActivityIndicator = true
-            currentLocationButton.configuration = config
-
-            if let cachedLocation = locationManager.location {
-                handleLocation(cachedLocation)
-            } else {
-                locationManager.requestLocation()
-            }
-        }
     }
 }
 
