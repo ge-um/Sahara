@@ -31,6 +31,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let date: Observable<Date>
         let memo: Observable<String?>
         let location: Observable<CLLocation>
+        let isLocked: Observable<Bool>
         let saveButtonTapped: Observable<Void>
         let cancelButtonTapped: Observable<Void>
         let deleteButtonTapped: Observable<Void>
@@ -47,6 +48,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialDate: Date
         let initialMemo: String?
         let initialLocation: CLLocation?
+        let initialIsLocked: Bool
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
     }
@@ -110,10 +112,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 Observable.combineLatest(
                     input.date,
                     input.memo,
-                    locationRelay.asObservable()
+                    locationRelay.asObservable(),
+                    input.isLocked
                 )
             )
-            .map { [weak self] date, memo, location -> Bool in
+            .map { [weak self] date, memo, location, isLocked -> Bool in
                 guard let self = self else { return false }
 
                 if self.editedImage == nil {
@@ -124,13 +127,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 if let card = self.cardToEdit {
                     let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
                     if shouldPop {
-                        self.replaceCard(card, date: date, memo: memo, location: location)
+                        self.replaceCard(card, date: date, memo: memo, location: location, isLocked: isLocked)
                     } else {
-                        self.updateCard(card, date: date, memo: memo, location: location)
+                        self.updateCard(card, date: date, memo: memo, location: location, isLocked: isLocked)
                     }
                     shouldPopToListRelay.accept(shouldPop)
                 } else {
-                    self.saveToRealm(date: date, memo: memo, location: location)
+                    self.saveToRealm(date: date, memo: memo, location: location, isLocked: isLocked)
                     shouldPopToListRelay.accept(false)
                 }
                 return true
@@ -163,6 +166,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             initialDate: originalDate ?? cardToEdit?.createdDate ?? Date(),
             initialMemo: cardToEdit?.memo,
             initialLocation: initialLocation,
+            initialIsLocked: cardToEdit?.isLocked ?? false,
             deleted: deleted,
             shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false)
         )
@@ -195,7 +199,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func saveToRealm(date: Date, memo: String?, location: CLLocation?) {
+    private func saveToRealm(date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
@@ -210,14 +214,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editedImageData: imageData,
             memo: memoText,
             latitude: location?.coordinate.latitude,
-            longitude: location?.coordinate.longitude
+            longitude: location?.coordinate.longitude,
+            isLocked: isLocked
         )
 
         RealmManager.shared.save(photoMemo)
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func updateCard(_ card: Card, date: Date, memo: String?, location: CLLocation?) {
+    private func updateCard(_ card: Card, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
@@ -231,6 +236,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.createdDate = date
             card.editedImageData = imageData
             card.memo = memoText
+            card.isLocked = isLocked
             card.latitude = location?.coordinate.latitude
             card.longitude = location?.coordinate.longitude
         }
@@ -238,7 +244,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func replaceCard(_ card: Card, date: Date, memo: String?, location: CLLocation?) {
+    private func replaceCard(_ card: Card, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
@@ -255,7 +261,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editedImageData: imageData,
             memo: memoText,
             latitude: location?.coordinate.latitude,
-            longitude: location?.coordinate.longitude
+            longitude: location?.coordinate.longitude,
+            isLocked: isLocked
         )
 
         RealmManager.shared.save(newCard)

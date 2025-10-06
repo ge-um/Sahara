@@ -41,7 +41,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
 
         let loadMemos: () -> Void = { [weak self] in
             guard let self = self else { return }
-            let memos = self.realmManager.fetchMemos(on: self.date)
+            let memos = self.realmManager.fetcCards(on: self.date)
             memosRelay.accept(memos)
         }
 

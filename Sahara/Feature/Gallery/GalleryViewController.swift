@@ -363,13 +363,15 @@ extension GalleryViewController: MKMapViewDelegate {
 
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
             var representativeImage: UIImage?
+            var isLocked = false
             if let randomAnnotation = photoAnnotations.randomElement(),
                let photoId = randomAnnotation.photoMemoIds.first,
                let photo = realm.object(ofType: Card.self, forPrimaryKey: photoId) {
                 representativeImage = UIImage(data: photo.editedImageData)
+                isLocked = photo.isLocked
             }
 
-            clusterView?.configure(with: cluster.memberAnnotations.count, image: representativeImage)
+            clusterView?.configure(with: cluster.memberAnnotations.count, image: representativeImage, isLocked: isLocked)
             return clusterView
         }
 
@@ -388,7 +390,7 @@ extension GalleryViewController: MKMapViewDelegate {
         if let firstPhotoId = photoAnnotation.photoMemoIds.first,
            let firstPhoto = realm.object(ofType: Card.self, forPrimaryKey: firstPhotoId),
            let image = UIImage(data: firstPhoto.editedImageData) {
-            annotationView?.configure(with: image)
+            annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
         }
 
         return annotationView

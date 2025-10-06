@@ -9,7 +9,7 @@ import MapKit
 import UIKit
 
 final class MediaAnnotationView: BaseMediaAnnotationView {
-    func configure(with image: UIImage?) {
-        configure(image: image, count: 1)
+    func configure(with image: UIImage?, isLocked: Bool = false) {
+        configure(image: image, count: 1, isLocked: isLocked)
     }
 }

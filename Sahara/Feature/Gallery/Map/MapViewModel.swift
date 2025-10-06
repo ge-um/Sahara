@@ -87,4 +87,8 @@ final class MapViewModel: BaseViewModelProtocol {
         guard index < photoMemos.count else { return nil }
         return photoMemos[index]
     }
+
+    func getCard(by id: ObjectId) -> Card? {
+        return photoMemosRelay.value.first { $0.id == id }
+    }
 }

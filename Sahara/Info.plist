@@ -4,14 +4,8 @@
 <dict>
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>카드를 만들기 위해 사진 라이브러리 접근 권한을 허용해주세요.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>카드를 만들기 위해 카메라 접근 권한을 허용해주세요.</string>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>현재 위치를 기록하기 위해 위치 접근 권한을 허용해주세요.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>GalmuriMono11.ttf</string>

@@ -45,6 +45,8 @@
 "card_info.image_required" = "画像は必須です。";
 "card_info.delete" = "削除";
 "card_info.delete_button" = "カードを削除";
+"card_info.secret" = "秘密にする";
+"card_info.secret_description" = "Face IDでロック";
 
 /* Card Detail */
 "card_detail.title" = "カード表示";
@@ -106,3 +108,9 @@
 "filter.process" = "プロセス";
 "filter.transfer" = "トランスファー";
 "filter.tonal" = "トーナル";
+
+/* Biometric */
+"biometric.reason" = "秘密カードを表示するには認証が必要です";
+"biometric.no_biometric" = "Face IDまたはTouch IDを使用できません";
+"biometric.permission_required" = "生体認証権限が必要";
+"biometric.permission_message" = "秘密カードを使用するには、設定でFace IDまたはTouch IDを有効にしてください";

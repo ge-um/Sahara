@@ -11,6 +11,7 @@ import RxCocoa
 import RxSwift
 import SnapKit
 import UIKit
+import LocalAuthentication
 
 final class CardInfoViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
@@ -166,6 +167,34 @@ final class CardInfoViewController: UIViewController {
         mapView.clipsToBounds = true
         mapView.isHidden = true
         return mapView
+    }()
+
+    private let secretCard: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorSystem.cardBackground
+        view.layer.cornerRadius = 12
+        return view
+    }()
+
+    private let secretLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("card_info.secret", comment: "")
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.labelTitle
+        return label
+    }()
+
+    private let secretDescriptionLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("card_info.secret_description", comment: "")
+        label.font = FontSystem.galmuriMono(size: 12)
+        label.textColor = ColorSystem.labelPrimary
+        return label
+    }()
+
+    private let secretSwitch: UISwitch = {
+        let switchControl = UISwitch()
+        return switchControl
     }()
 
     private let deleteCard: UIView = {
@@ -386,11 +415,50 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        secretSwitch.rx.isOn
+            .skip(1)
+            .filter { $0 == true }
+            .bind(with: self) { owner, _ in
+                let biometricType = BiometricAuthManager.shared.biometricType
+
+                if biometricType != .none {
+                    BiometricAuthManager.shared.authenticate { success, error in
+                        if !success {
+                            owner.secretSwitch.isOn = false
+
+                            if let error = error as NSError? {
+                                if error.code == LAError.userCancel.rawValue || error.code == LAError.systemCancel.rawValue {
+                                    return
+                                }
+
+                                let alert = UIAlertController(
+                                    title: NSLocalizedString("biometric.permission_required", comment: ""),
+                                    message: NSLocalizedString("biometric.permission_message", comment: ""),
+                                    preferredStyle: .alert
+                                )
+                                alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
+                                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                                        UIApplication.shared.open(url)
+                                    }
+                                })
+                                alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
+                                owner.present(alert, animated: true)
+                            }
+                        }
+                    }
+                } else {
+                    owner.secretSwitch.isOn = false
+                    owner.showToast(message: NSLocalizedString("biometric.no_biometric", comment: ""))
+                }
+            }
+            .disposed(by: disposeBag)
+
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             date: selectedDateRelay.asObservable(),
             memo: memoTextView.rx.text.asObservable(),
             location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
+            isLocked: secretSwitch.rx.isOn.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             cancelButtonTapped: cancelButton.rx.tap.asObservable(),
             deleteButtonTapped: deleteButton.rx.tap.asObservable()
@@ -409,6 +477,7 @@ final class CardInfoViewController: UIViewController {
 
         if output.isEditMode {
             deleteCard.isHidden = false
+            secretSwitch.isOn = output.initialIsLocked
             selectedDateRelay.accept(output.initialDate)
             if let memo = output.initialMemo {
                 memoTextView.text = memo
@@ -632,6 +701,11 @@ final class CardInfoViewController: UIViewController {
         locationCard.addSubview(searchLocationButton)
         locationCard.addSubview(mapView)
 
+        contentView.addSubview(secretCard)
+        secretCard.addSubview(secretLabel)
+        secretCard.addSubview(secretDescriptionLabel)
+        secretCard.addSubview(secretSwitch)
+
         contentView.addSubview(deleteCard)
         deleteCard.addSubview(deleteLabel)
         deleteCard.addSubview(deleteButton)
@@ -732,8 +806,28 @@ final class CardInfoViewController: UIViewController {
             make.bottom.equalToSuperview().inset(16)
         }
 
-        deleteCard.snp.makeConstraints { make in
+        secretCard.snp.makeConstraints { make in
             make.top.equalTo(locationCard.snp.bottom).offset(16)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        secretLabel.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview().inset(16)
+        }
+
+        secretDescriptionLabel.snp.makeConstraints { make in
+            make.top.equalTo(secretLabel.snp.bottom).offset(4)
+            make.leading.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().inset(16)
+        }
+
+        secretSwitch.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalToSuperview().inset(16)
+        }
+
+        deleteCard.snp.makeConstraints { make in
+            make.top.equalTo(secretCard.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().offset(-100)
         }

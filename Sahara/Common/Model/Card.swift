@@ -40,7 +40,6 @@ enum VisionTag: String, PersistableEnum {
     case indoor
     case outdoor
 
-    // 교통
     case car
     case bicycle
 

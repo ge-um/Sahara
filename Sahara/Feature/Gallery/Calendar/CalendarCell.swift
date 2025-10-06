@@ -28,6 +28,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     }()
 
     private var imageViews: [UIImageView] = []
+    private var blurViews: [UIVisualEffectView] = []
     private var isToday = false
 
     override init(frame: CGRect) {
@@ -63,6 +64,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     func configure(with item: DayItem) {
         imageViews.forEach { $0.removeFromSuperview() }
         imageViews.removeAll()
+        blurViews.forEach { $0.removeFromSuperview() }
+        blurViews.removeAll()
 
         isToday = false
         contentView.layer.borderWidth = 0
@@ -126,6 +129,16 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        if photoMemo.isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(imageView)
+            }
+        }
     }
 
     private func layoutTwoImages(_ photo1: Card, _ photo2: Card) {
@@ -153,6 +166,28 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageView2.snp.makeConstraints { make in
             make.bottom.leading.trailing.equalToSuperview()
             make.top.equalTo(containerView.snp.centerY).offset(0.5)
+        }
+
+        if photo1.isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(imageView1)
+            }
+        }
+
+        if photo2.isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurView.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(imageView2)
+            }
         }
     }
 
@@ -197,6 +232,39 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             make.top.equalTo(containerView.snp.centerY).offset(0.5)
             make.leading.equalTo(containerView.snp.centerX).offset(0.5)
         }
+
+        if cards[0].isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(topImageView)
+            }
+        }
+
+        if cards[1].isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurView.layer.maskedCorners = [.layerMinXMaxYCorner]
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(bottomLeftImageView)
+            }
+        }
+
+        if cards[2].isLocked {
+            let blurView = createBlurView()
+            blurView.layer.cornerRadius = 8
+            blurView.layer.maskedCorners = [.layerMaxXMaxYCorner]
+            blurViews.append(blurView)
+            containerView.addSubview(blurView)
+            blurView.snp.makeConstraints { make in
+                make.edges.equalTo(bottomRightImageView)
+            }
+        }
     }
 
     private func createImageView() -> UIImageView {
@@ -207,10 +275,19 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         return imageView
     }
 
+    private func createBlurView() -> UIVisualEffectView {
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        let effectView = UIVisualEffectView(effect: blurEffect)
+        effectView.clipsToBounds = true
+        return effectView
+    }
+
     override func prepareForReuse() {
         super.prepareForReuse()
         imageViews.forEach { $0.removeFromSuperview() }
         imageViews.removeAll()
+        blurViews.forEach { $0.removeFromSuperview() }
+        blurViews.removeAll()
         dayLabel.text = ""
         contentView.layer.borderWidth = 0
         isToday = false

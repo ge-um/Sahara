@@ -135,8 +135,23 @@ final class CalendarDetailViewController: UIViewController {
 
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
-                let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: .dateView)
-                owner.navigationController?.pushViewController(detailVC, animated: true)
+                guard let card = owner.viewModel.getCard(by: photoMemoId) else { return }
+
+                if card.isLocked {
+                    BiometricAuthManager.shared.authenticate { success, error in
+                        if success {
+                            let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: .dateView)
+                            owner.navigationController?.pushViewController(detailVC, animated: true)
+                        } else {
+                            if let error = error {
+                                owner.showToast(message: error.localizedDescription)
+                            }
+                        }
+                    }
+                } else {
+                    let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: .dateView)
+                    owner.navigationController?.pushViewController(detailVC, animated: true)
+                }
             }
             .disposed(by: disposeBag)
     }

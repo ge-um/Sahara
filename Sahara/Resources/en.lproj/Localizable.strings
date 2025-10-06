@@ -46,6 +46,8 @@
 "card_info.image_required" = "Image is required.";
 "card_info.delete" = "Delete";
 "card_info.delete_button" = "Delete Card";
+"card_info.secret" = "Make Secret";
+"card_info.secret_description" = "Lock with Face ID";
 
 /* Card Detail */
 "card_detail.title" = "View Card";
@@ -107,3 +109,9 @@
 "filter.process" = "Process";
 "filter.transfer" = "Transfer";
 "filter.tonal" = "Tonal";
+
+/* Biometric */
+"biometric.reason" = "Authentication required to view secret card";
+"biometric.no_biometric" = "Face ID or Touch ID is not available";
+"biometric.permission_required" = "Biometric Permission Required";
+"biometric.permission_message" = "Please enable Face ID or Touch ID in Settings to use secret cards";

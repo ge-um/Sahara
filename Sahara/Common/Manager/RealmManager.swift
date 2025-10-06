@@ -52,7 +52,7 @@ final class RealmManager {
         }
     }
 
-    func fetchMemos(on date: Date) -> [Card] {
+    func fetcCards(on date: Date) -> [Card] {
         guard let realm = realm else { return [] }
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
@@ -67,7 +67,7 @@ final class RealmManager {
         return Array(results)
     }
 
-    func fetchMemos(in month: Date) -> [Card] {
+    func fetchCards(in month: Date) -> [Card] {
         guard let realm = realm else { return [] }
         let calendar = Calendar.current
         guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month)),

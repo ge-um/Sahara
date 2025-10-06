@@ -112,7 +112,7 @@ final class GalleryViewModel {
     }
     
     private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Card]>) {
-        let memos = realmManager.fetchMemos(in: date)
+        let memos = realmManager.fetchCards(in: date)
         photos.accept(memos)
     }
     

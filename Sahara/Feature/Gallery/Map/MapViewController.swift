@@ -117,8 +117,23 @@ final class MapViewController: UIViewController {
         output.navigateToDetail
             .drive(with: self) { owner, photoMemoId in
                 let sourceType: EditSourceType = owner.themeCategory == .others ? .locationView : .themeView
-                let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
-                owner.navigationController?.pushViewController(detailVC, animated: true)
+                guard let card = owner.viewModel.getCard(by: photoMemoId) else { return }
+
+                if card.isLocked {
+                    BiometricAuthManager.shared.authenticate { success, error in
+                        if success {
+                            let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
+                            owner.navigationController?.pushViewController(detailVC, animated: true)
+                        } else {
+                            if let error = error {
+                                owner.showToast(message: error.localizedDescription)
+                            }
+                        }
+                    }
+                } else {
+                    let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
+                    owner.navigationController?.pushViewController(detailVC, animated: true)
+                }
             }
             .disposed(by: disposeBag)
 
@@ -154,6 +169,15 @@ final class MapMediaCell: UICollectionViewCell {
         return imageView
     }()
 
+    private let blurEffectView: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        let effectView = UIVisualEffectView(effect: blurEffect)
+        effectView.layer.cornerRadius = 8
+        effectView.clipsToBounds = true
+        effectView.isHidden = true
+        return effectView
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureUI()
@@ -165,10 +189,15 @@ final class MapMediaCell: UICollectionViewCell {
 
     private func configureUI() {
         contentView.addSubview(imageView)
+        contentView.addSubview(blurEffectView)
         contentView.layer.cornerRadius = 8
         contentView.clipsToBounds = true
 
         imageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        blurEffectView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
@@ -177,10 +206,12 @@ final class MapMediaCell: UICollectionViewCell {
         if let image = UIImage(data: photoMemo.editedImageData) {
             imageView.image = image
         }
+        blurEffectView.isHidden = !photoMemo.isLocked
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
+        blurEffectView.isHidden = true
     }
 }
