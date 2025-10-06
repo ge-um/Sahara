@@ -207,8 +207,11 @@ final class CardInfoViewController: UIViewController {
                 let biometricType = BiometricAuthManager.shared.biometricType
 
                 if biometricType != .none {
-                    BiometricAuthManager.shared.authenticate { success, error in
-                        if !success {
+                    BiometricAuthManager.shared.authenticate(feature: "card_lock") { success, error in
+                        if success {
+                            let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
+                            AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
+                        } else {
                             owner.contentView.secretSwitch.isOn = false
 
                             if let error = error as NSError? {

@@ -245,6 +245,8 @@ final class GalleryViewController: UIViewController {
             .asObservable()
             .bind(with: self) { owner, viewType in
                 owner.updateButtonStyles(selectedType: viewType)
+                let viewTypeString = viewType == .date ? "calendar" : (viewType == .location ? "map" : "theme")
+                AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
             }
             .disposed(by: disposeBag)
 
@@ -423,6 +425,7 @@ extension GalleryViewController: MKMapViewDelegate {
 
     private func showGallery(for photoMemos: [Card]) {
         let photoCount = photoMemos.count
+        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
         let galleryVC = MapViewController(photoMemos: photoMemos, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
