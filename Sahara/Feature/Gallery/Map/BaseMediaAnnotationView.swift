@@ -17,6 +17,10 @@ class BaseMediaAnnotationView: MKAnnotationView {
         return imageView
     }()
 
+    private lazy var blurEffectView: UIVisualEffectView = {
+        return BlurUtility.createBlurView(cornerRadius: 25)
+    }()
+
     private let overlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
@@ -55,25 +59,29 @@ class BaseMediaAnnotationView: MKAnnotationView {
         frame = CGSize(width: 50, height: 50).asRect()
 
         addSubview(imageView)
+        addSubview(blurEffectView)
         addSubview(overlayView)
         addSubview(countLabel)
         addSubview(borderView)
 
         imageView.frame = bounds
+        blurEffectView.frame = bounds
         overlayView.frame = bounds
         countLabel.frame = bounds
         borderView.frame = bounds
     }
 
-    func configure(image: UIImage?, count: Int) {
+    func configure(image: UIImage?, count: Int, isLocked: Bool = false) {
         imageView.image = image
         countLabel.text = "\(count)"
+        blurEffectView.isHidden = !isLocked
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
         countLabel.text = nil
+        blurEffectView.isHidden = true
     }
 }
 

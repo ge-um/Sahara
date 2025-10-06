@@ -18,6 +18,15 @@ final class CalendarDetailCell: UICollectionViewCell, IsIdentifiable {
         return imageView
     }()
 
+    private let blurEffectView: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        let effectView = UIVisualEffectView(effect: blurEffect)
+        effectView.layer.cornerRadius = 12
+        effectView.clipsToBounds = true
+        effectView.isHidden = true
+        return effectView
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureUI()
@@ -30,18 +39,25 @@ final class CalendarDetailCell: UICollectionViewCell, IsIdentifiable {
         backgroundColor = .clear
 
         contentView.addSubview(cardImageView)
+        contentView.addSubview(blurEffectView)
 
         cardImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        blurEffectView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
 
     func configure(with card: Card) {
         cardImageView.image = UIImage(data: card.editedImageData)
+        blurEffectView.isHidden = !card.isLocked
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         cardImageView.image = nil
+        blurEffectView.isHidden = true
     }
 }

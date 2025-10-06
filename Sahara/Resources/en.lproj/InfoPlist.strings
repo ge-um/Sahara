@@ -10,3 +10,6 @@
 
 /* Privacy - Location When In Use */
 "NSLocationWhenInUseUsageDescription" = "Please allow location access to record your current location.";
+
+/* Privacy - Face ID */
+"NSFaceIDUsageDescription" = "Face ID authentication is required to view secret cards.";

@@ -16,6 +16,15 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         return imageView
     }()
 
+    private let blurEffectView: UIVisualEffectView = {
+        let blurEffect = UIBlurEffect(style: .extraLight)
+        let effectView = UIVisualEffectView(effect: blurEffect)
+        effectView.layer.cornerRadius = 8
+        effectView.clipsToBounds = true
+        effectView.isHidden = true
+        return effectView
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 18)
@@ -44,6 +53,7 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         selectionStyle = .none
 
         contentView.addSubview(thumbnailImageView)
+        contentView.addSubview(blurEffectView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(countLabel)
 
@@ -51,6 +61,10 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
             make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(80)
+        }
+
+        blurEffectView.snp.makeConstraints { make in
+            make.edges.equalTo(thumbnailImageView)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -73,6 +87,7 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         if let firstPhoto = group.photoMemos.first,
            let image = UIImage(data: firstPhoto.editedImageData) {
             thumbnailImageView.image = image
+            blurEffectView.isHidden = !firstPhoto.isLocked
         }
     }
 
@@ -81,5 +96,6 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         thumbnailImageView.image = nil
         titleLabel.text = nil
         countLabel.text = nil
+        blurEffectView.isHidden = true
     }
 }
