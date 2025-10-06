@@ -94,7 +94,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
                 dayLabel.textColor = ColorSystem.label
             }
 
-            let photoCount = item.cards.count
+            let sortedCards = item.cards.sorted { !$0.isLocked && $1.isLocked }
+            let photoCount = sortedCards.count
 
             if photoCount == 0 {
                 containerView.backgroundColor = ColorSystem.clear
@@ -102,11 +103,11 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             } else {
                 addButton.isHidden = true
                 if photoCount == 1 {
-                    layoutSingleImage(item.cards[0])
+                    layoutSingleImage(sortedCards[0])
                 } else if photoCount == 2 {
-                    layoutTwoImages(item.cards[0], item.cards[1])
+                    layoutTwoImages(sortedCards[0], sortedCards[1])
                 } else {
-                    layoutMultipleImages(cards: Array(item.cards.prefix(3)))
+                    layoutMultipleImages(cards: Array(sortedCards.prefix(3)))
                 }
             }
         } else {
