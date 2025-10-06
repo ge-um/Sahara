@@ -33,7 +33,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
     }
 
     func getCard(by id: ObjectId) -> Card? {
-        return realmManager.realm?.object(ofType: Card.self, forPrimaryKey: id)
+        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: id)
     }
 
     func transform(input: Input) -> Output {
