@@ -21,7 +21,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let label = UILabel()
         label.text = "+"
         label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = UIColor(hex: "#555555")
+        label.textColor = ColorSystem.todayIndicator
         label.textAlignment = .center
         label.isHidden = true
         return label
@@ -38,13 +38,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     required init?(coder: NSCoder) { fatalError() }
 
     private func configureUI() {
-        contentView.backgroundColor = .clear
+        contentView.backgroundColor = ColorSystem.clear
 
         addSubview(containerView)
         addSubview(dayLabel)
         addSubview(addButton)
 
-        containerView.backgroundColor = .clear
+        containerView.backgroundColor = ColorSystem.clear
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -76,7 +76,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let calendar = Calendar.current
             if calendar.isDateInToday(date) {
                 isToday = true
-                contentView.layer.borderColor = UIColor(hex: "#555555").cgColor
+                contentView.layer.borderColor = ColorSystem.todayIndicator.cgColor
                 contentView.layer.borderWidth = 2
                 contentView.layer.cornerRadius = 8
             }
@@ -84,17 +84,17 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             if !item.isCurrentMonth {
                 dayLabel.textColor = ColorSystem.labelNotCurrentMonth
             } else if weekday == 1 {
-                dayLabel.textColor = .systemRed
+                dayLabel.textColor = ColorSystem.systemRed
             } else if weekday == 7 {
-                dayLabel.textColor = .systemBlue
+                dayLabel.textColor = ColorSystem.systemBlue
             } else {
-                dayLabel.textColor = .label
+                dayLabel.textColor = ColorSystem.label
             }
 
             let photoCount = item.cards.count
 
             if photoCount == 0 {
-                containerView.backgroundColor = .clear
+                containerView.backgroundColor = ColorSystem.clear
                 addButton.isHidden = !isToday
             } else {
                 addButton.isHidden = true
@@ -108,8 +108,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             }
         } else {
             dayLabel.text = ""
-            dayLabel.textColor = .label
-            containerView.backgroundColor = .clear
+            dayLabel.textColor = ColorSystem.label
+            containerView.backgroundColor = ColorSystem.clear
             addButton.isHidden = true
         }
     }
@@ -203,7 +203,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray6
+        imageView.backgroundColor = ColorSystem.systemGray6
         return imageView
     }
 

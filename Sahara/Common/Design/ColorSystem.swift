@@ -20,6 +20,17 @@ enum ColorSystem {
     static let labelTitle = UIColor.black
     static let labelInactive = UIColor(hex: "#494949")
     static let labelNotCurrentMonth = UIColor(hex: "#A2A2A2")
+    static let todayIndicator = UIColor(hex: "#555555")
+
+    static let white = UIColor.white
+    static let black = UIColor.black
+    static let clear = UIColor.clear
+    static let systemRed = UIColor.systemRed
+    static let systemBlue = UIColor.systemBlue
+    static let systemGray6 = UIColor.systemGray6
+    static let label = UIColor.label
+    static let secondaryLabel = UIColor.secondaryLabel
+    static let systemBackground = UIColor.systemBackground
 
     enum Gradient {
         case pinkBlue
