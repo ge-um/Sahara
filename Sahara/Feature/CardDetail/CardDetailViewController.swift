@@ -453,9 +453,6 @@ final class CardDetailViewController: UIViewController {
         let imageHeight = image.heightForWidth(imageWidth)
 
         photoImageHeightConstraint?.update(offset: imageHeight)
-
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
+        view.layoutIfNeeded()
     }
 }
