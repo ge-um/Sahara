@@ -17,7 +17,18 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         return label
     }()
 
+    private let addButton: UILabel = {
+        let label = UILabel()
+        label.text = "+"
+        label.font = FontSystem.galmuriMono(size: 18)
+        label.textColor = UIColor(hex: "#555555")
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
     private var imageViews: [UIImageView] = []
+    private var isToday = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -31,6 +42,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
         addSubview(containerView)
         addSubview(dayLabel)
+        addSubview(addButton)
 
         containerView.backgroundColor = .clear
 
@@ -42,17 +54,32 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             make.top.equalToSuperview().offset(8)
             make.leading.equalToSuperview().offset(8)
         }
+
+        addButton.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
     }
 
     func configure(with item: DayItem) {
         imageViews.forEach { $0.removeFromSuperview() }
         imageViews.removeAll()
 
+        isToday = false
+        contentView.layer.borderWidth = 0
+
         if let date = item.date {
             let day = Calendar.current.component(.day, from: date)
             dayLabel.text = "\(day)"
 
             let weekday = Calendar.current.component(.weekday, from: date)
+
+            let calendar = Calendar.current
+            if calendar.isDateInToday(date) {
+                isToday = true
+                contentView.layer.borderColor = UIColor(hex: "#555555").cgColor
+                contentView.layer.borderWidth = 2
+                contentView.layer.cornerRadius = 8
+            }
 
             if !item.isCurrentMonth {
                 dayLabel.textColor = ColorSystem.labelNotCurrentMonth
@@ -68,17 +95,22 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             if photoCount == 0 {
                 containerView.backgroundColor = .clear
-            } else if photoCount == 1 {
-                layoutSingleImage(item.cards[0])
-            } else if photoCount == 2 {
-                layoutTwoImages(item.cards[0], item.cards[1])
+                addButton.isHidden = !isToday
             } else {
-                layoutMultipleImages(cards: Array(item.cards.prefix(3)))
+                addButton.isHidden = true
+                if photoCount == 1 {
+                    layoutSingleImage(item.cards[0])
+                } else if photoCount == 2 {
+                    layoutTwoImages(item.cards[0], item.cards[1])
+                } else {
+                    layoutMultipleImages(cards: Array(item.cards.prefix(3)))
+                }
             }
         } else {
             dayLabel.text = ""
             dayLabel.textColor = .label
             containerView.backgroundColor = .clear
+            addButton.isHidden = true
         }
     }
 
@@ -180,5 +212,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.forEach { $0.removeFromSuperview() }
         imageViews.removeAll()
         dayLabel.text = ""
+        contentView.layer.borderWidth = 0
+        isToday = false
+        addButton.isHidden = true
     }
 }
