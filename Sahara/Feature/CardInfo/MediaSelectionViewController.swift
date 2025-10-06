@@ -257,6 +257,7 @@ extension MediaSelectionViewController: UICollectionViewDelegate {
                 options: options
             ) { [weak self] image, _ in
                 if let image = image {
+                    AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
                     let location = asset.location
                     let date = asset.creationDate
                     self?.onMediaSelected?(image, location, date)
@@ -272,7 +273,7 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            // 카메라로 찍은 사진은 위치 정보와 날짜 정보 없음
+            AnalyticsManager.shared.logPhotoSourceSelected(source: "camera")
             onMediaSelected?(image, nil, nil)
             dismiss(animated: true)
         }
@@ -293,6 +294,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
+                        AnalyticsManager.shared.logPhotoSourceSelected(source: "library")
                         self?.onMediaSelected?(image, nil, nil)
                         self?.dismiss(animated: true)
                     }

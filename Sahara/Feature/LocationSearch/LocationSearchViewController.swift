@@ -103,6 +103,7 @@ final class LocationSearchViewController: UIViewController {
                 locationManager.requestLocation()
             }
         case .denied, .restricted:
+            AnalyticsManager.shared.logLocationPermissionDenied()
             showLocationPermissionAlert()
         @unknown default:
             break
@@ -165,6 +166,9 @@ final class LocationSearchViewController: UIViewController {
 extension LocationSearchViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchCompleter.queryFragment = searchText
+        if !searchText.isEmpty {
+            AnalyticsManager.shared.logLocationSearchUsed()
+        }
     }
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -214,6 +218,7 @@ extension LocationSearchViewController: UITableViewDataSource, UITableViewDelega
             let subtitle = result.subtitle
             let fullAddress = subtitle.isEmpty ? title : "\(title), \(subtitle)"
 
+            AnalyticsManager.shared.logLocationSaved(source: "search")
             self?.onLocationSelected?(coordinate, fullAddress)
             self?.dismiss(animated: true)
         }
@@ -239,6 +244,7 @@ extension LocationSearchViewController: CLLocationManagerDelegate {
             self.currentLocationButton.configuration = config
 
             let finalAddress = address.isEmpty ? "현재 위치" : address
+            AnalyticsManager.shared.logLocationSaved(source: "current_location")
             self.onLocationSelected?(location.coordinate, finalAddress)
             self.dismiss(animated: true)
         }

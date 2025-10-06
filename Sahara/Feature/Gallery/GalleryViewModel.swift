@@ -94,6 +94,10 @@ final class GalleryViewModel {
             .skip(1)
             .bind(with: self) { owner, month in
                 owner.reloadCurrentMonthPhotos(month, photos: photos)
+                let calendar = Calendar.current
+                let year = calendar.component(.year, from: month)
+                let monthValue = calendar.component(.month, from: month)
+                AnalyticsManager.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
             }
             .disposed(by: disposeBag)
         

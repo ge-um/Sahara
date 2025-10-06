@@ -136,6 +136,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     self.saveToRealm(date: date, memo: memo, location: location, isLocked: isLocked)
                     shouldPopToListRelay.accept(false)
                 }
+
+                AnalyticsManager.shared.logCardSave(
+                    hasPhoto: self.editedImage != nil,
+                    hasMemo: !(memo?.isEmpty ?? true),
+                    hasLocation: location != nil,
+                    isLocked: isLocked
+                )
+
                 return true
             }
             .asDriver(onErrorJustReturn: false)
@@ -146,6 +154,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 guard let card = owner.cardToEdit else { return () }
                 RealmManager.shared.delete(card)
                 NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
+                AnalyticsManager.shared.logCardDelete()
                 return ()
             }
             .asDriver(onErrorJustReturn: ())
@@ -218,7 +227,19 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
+        let isFirstCard = RealmManager.shared.isEmpty(Card.self)
+        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+
         RealmManager.shared.save(photoMemo)
+
+        if isFirstCard {
+            AnalyticsManager.shared.logFirstCardCreated()
+        }
+
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
+        }
+
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
@@ -232,6 +253,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
+        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+
         RealmManager.shared.update {
             card.createdDate = date
             card.editedImageData = imageData
@@ -239,6 +262,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.isLocked = isLocked
             card.latitude = location?.coordinate.latitude
             card.longitude = location?.coordinate.longitude
+        }
+
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
         }
 
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
@@ -254,6 +281,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
+        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+
         RealmManager.shared.delete(card)
 
         let newCard = Card(
@@ -266,6 +295,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         )
 
         RealmManager.shared.save(newCard)
+
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
+        }
+
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 }

@@ -32,12 +32,15 @@ final class BiometricAuthManager {
         }
     }
 
-    func authenticate(completion: @escaping (Bool, Error?) -> Void) {
+    func authenticate(feature: String = "card_view", completion: @escaping (Bool, Error?) -> Void) {
         let context = LAContext()
         context.localizedFallbackTitle = ""
         var error: NSError?
 
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            if let nsError = error, nsError.code == LAError.biometryNotAvailable.rawValue {
+                AnalyticsManager.shared.logBiometricPermissionDenied()
+            }
             DispatchQueue.main.async {
                 completion(false, error)
             }
@@ -48,6 +51,7 @@ final class BiometricAuthManager {
 
         context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, error in
             if success {
+                AnalyticsManager.shared.logBiometricAuthResult(success: true, feature: feature)
                 DispatchQueue.main.async {
                     completion(true, nil)
                 }
@@ -56,6 +60,7 @@ final class BiometricAuthManager {
                 var error2: NSError?
 
                 guard context2.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error2) else {
+                    AnalyticsManager.shared.logBiometricAuthResult(success: false, feature: feature)
                     DispatchQueue.main.async {
                         completion(false, error)
                     }
@@ -63,6 +68,7 @@ final class BiometricAuthManager {
                 }
 
                 context2.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success2, error2 in
+                    AnalyticsManager.shared.logBiometricAuthResult(success: success2, feature: feature)
                     DispatchQueue.main.async {
                         completion(success2, error2)
                     }

@@ -241,6 +241,7 @@ final class MediaEditorViewController: UIViewController {
     private let cropAppliedRelay = PublishRelay<(UIImage, CGRect, CGRect)>()
     private let photoSelectedRelay = PublishRelay<UIImage>()
     private let viewWillAppearRelay = PublishRelay<Void>()
+    private var usedTools: Set<String> = []
 
     private lazy var dragHandler = MediaEditorDragHandler(
         trashIconView: trashIconView,
@@ -327,6 +328,8 @@ final class MediaEditorViewController: UIViewController {
                 } else {
                     owner.currentMode.accept(.sticker)
                     owner.presentStickerModal()
+                    owner.usedTools.insert("sticker")
+                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "sticker")
                 }
             }
             .disposed(by: disposeBag)
@@ -337,6 +340,8 @@ final class MediaEditorViewController: UIViewController {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.drawing)
+                    owner.usedTools.insert("drawing")
+                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "drawing")
                 }
             }
             .disposed(by: disposeBag)
@@ -347,6 +352,8 @@ final class MediaEditorViewController: UIViewController {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.filter)
+                    owner.usedTools.insert("filter")
+                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "filter")
                 }
             }
             .disposed(by: disposeBag)
@@ -357,6 +364,8 @@ final class MediaEditorViewController: UIViewController {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.photo)
+                    owner.usedTools.insert("photo")
+                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "photo")
                 }
             }
             .disposed(by: disposeBag)
@@ -367,6 +376,8 @@ final class MediaEditorViewController: UIViewController {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.crop)
+                    owner.usedTools.insert("crop")
+                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "crop")
                 }
             }
             .disposed(by: disposeBag)
@@ -437,6 +448,8 @@ final class MediaEditorViewController: UIViewController {
 
         output.navigateToMetadata
             .drive(with: self) { owner, editedImage in
+                AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: owner.usedTools.count)
+
                 if let callback = owner.onEditingComplete {
                     callback(editedImage)
                     owner.dismiss(animated: true)
