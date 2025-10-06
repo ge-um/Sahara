@@ -585,10 +585,7 @@ final class CardInfoViewController: UIViewController {
     private func updateMapView(with coordinate: CLLocationCoordinate2D) {
         mapView.isHidden = false
         mapViewHeightConstraint?.update(offset: 200)
-
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
+        view.layoutIfNeeded()
 
         let region = MKCoordinateRegion(
             center: coordinate,
@@ -762,9 +759,7 @@ final class CardInfoViewController: UIViewController {
             make.height.equalTo(photoImageView.snp.width).multipliedBy(aspectRatio)
         }
 
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
+        view.layoutIfNeeded()
     }
 
     private func resetPhotoImageHeight() {
@@ -774,9 +769,7 @@ final class CardInfoViewController: UIViewController {
             make.height.equalTo(300)
         }
 
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
+        view.layoutIfNeeded()
     }
 
 }
