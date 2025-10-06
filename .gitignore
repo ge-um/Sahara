@@ -8,6 +8,9 @@ claude.md
 settings.local.json
 *.local
 
+### Documentation ###
+ANALYTICS.md
+
 ### API ###
 Sahara/API/
 API/
