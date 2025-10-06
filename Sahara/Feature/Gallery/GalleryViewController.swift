@@ -364,11 +364,16 @@ extension GalleryViewController: MKMapViewDelegate {
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
             var representativeImage: UIImage?
             var isLocked = false
-            if let randomAnnotation = photoAnnotations.randomElement(),
-               let photoId = randomAnnotation.photoMemoIds.first,
-               let photo = realm.object(ofType: Card.self, forPrimaryKey: photoId) {
-                representativeImage = UIImage(data: photo.editedImageData)
-                isLocked = photo.isLocked
+
+            let allPhotos = photoAnnotations.flatMap { annotation in
+                annotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+            }
+
+            let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
+
+            if let firstPhoto = sortedPhotos.first {
+                representativeImage = UIImage(data: firstPhoto.editedImageData)
+                isLocked = firstPhoto.isLocked
             }
 
             clusterView?.configure(with: cluster.memberAnnotations.count, image: representativeImage, isLocked: isLocked)
@@ -387,8 +392,10 @@ extension GalleryViewController: MKMapViewDelegate {
 
         annotationView?.clusteringIdentifier = MediaAnnotation.clusterID
 
-        if let firstPhotoId = photoAnnotation.photoMemoIds.first,
-           let firstPhoto = realm.object(ofType: Card.self, forPrimaryKey: firstPhotoId),
+        let photos = photoAnnotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+        let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
+
+        if let firstPhoto = sortedPhotos.first,
            let image = UIImage(data: firstPhoto.editedImageData) {
             annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
         }
