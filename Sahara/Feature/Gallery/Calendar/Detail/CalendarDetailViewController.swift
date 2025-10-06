@@ -83,8 +83,6 @@ final class CalendarDetailViewController: UIViewController {
         viewWillAppearRelay.accept(())
     }
 
-
-
     private func configureUI() {
         view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
