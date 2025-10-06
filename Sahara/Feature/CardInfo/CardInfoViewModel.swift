@@ -57,6 +57,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = nil
     }
 
+    init(initialDate: Date, sourceType: EditSourceType) {
+        self.editedImage = nil
+        self.cardToEdit = nil
+        self.originalDate = initialDate
+        self.sourceType = sourceType
+    }
+
     init(cardToEdit: Card, sourceType: EditSourceType) {
         self.cardToEdit = cardToEdit
         self.editedImage = UIImage(data: cardToEdit.editedImageData)
@@ -153,7 +160,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             saveError: saveErrorRelay.asDriver(onErrorJustReturn: ""),
             dismiss: dismiss,
             isEditMode: isEditMode,
-            initialDate: cardToEdit?.createdDate ?? Date(),
+            initialDate: originalDate ?? cardToEdit?.createdDate ?? Date(),
             initialMemo: cardToEdit?.memo,
             initialLocation: initialLocation,
             deleted: deleted,

@@ -146,12 +146,22 @@ final class CalendarViewController: UIViewController {
             .disposed(by: disposeBag)
 
         collectionView.rx.modelSelected(DayItem.self)
-            .filter { $0.hasCards }
-            .compactMap { $0.date }
-            .bind(with: self) { owner, date in
-                let detailVC = CalendarDetailViewController(date: date)
-                if let galleryVC = owner.parent as? GalleryViewController {
-                    galleryVC.navigationController?.pushViewController(detailVC, animated: true)
+            .bind(with: self) { owner, item in
+                guard let date = item.date else { return }
+
+                if item.hasCards {
+                    let detailVC = CalendarDetailViewController(date: date)
+                    if let galleryVC = owner.parent as? GalleryViewController {
+                        galleryVC.navigationController?.pushViewController(detailVC, animated: true)
+                    }
+                } else {
+                    let viewModel = CardInfoViewModel(initialDate: date, sourceType: .dateView)
+                    let cardInfoVC = CardInfoViewController(viewModel: viewModel)
+                    let navController = UINavigationController(rootViewController: cardInfoVC)
+                    navController.modalPresentationStyle = .fullScreen
+                    if let galleryVC = owner.parent as? GalleryViewController {
+                        galleryVC.present(navController, animated: true)
+                    }
                 }
             }
             .disposed(by: disposeBag)
