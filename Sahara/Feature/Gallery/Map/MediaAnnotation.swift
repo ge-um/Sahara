@@ -10,17 +10,17 @@ import RealmSwift
 
 final class MediaAnnotation: NSObject, MKAnnotation, IsIdentifiable {
     let coordinate: CLLocationCoordinate2D
-    let photoMemoIds: [ObjectId]
+    let cardIds: [ObjectId]
     let photoCount: Int
 
     var title: String? {
         return String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
     }
 
-    init(coordinate: CLLocationCoordinate2D, photoMemoIds: [ObjectId]) {
+    init(coordinate: CLLocationCoordinate2D, cardIds: [ObjectId]) {
         self.coordinate = coordinate
-        self.photoMemoIds = photoMemoIds
-        self.photoCount = photoMemoIds.count
+        self.cardIds = cardIds
+        self.photoCount = cardIds.count
         super.init()
     }
 }

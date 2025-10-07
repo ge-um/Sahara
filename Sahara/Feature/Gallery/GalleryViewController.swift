@@ -165,7 +165,7 @@ final class GalleryViewController: UIViewController {
             guard let lat = memo.latitude, let lon = memo.longitude,
                   lat != 0, lon != 0 else { return nil }
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            return MediaAnnotation(coordinate: coordinate, photoMemoIds: [memo.id])
+            return MediaAnnotation(coordinate: coordinate, cardIds: [memo.id])
         })
 
         mapView.addAnnotations(annotations)
@@ -368,7 +368,7 @@ extension GalleryViewController: MKMapViewDelegate {
             var isLocked = false
 
             let allPhotos = photoAnnotations.flatMap { annotation in
-                annotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+                annotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
             }
 
             let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
@@ -394,7 +394,7 @@ extension GalleryViewController: MKMapViewDelegate {
 
         annotationView?.clusteringIdentifier = MediaAnnotation.clusterID
 
-        let photos = photoAnnotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+        let photos = photoAnnotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
         let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first,
@@ -410,7 +410,7 @@ extension GalleryViewController: MKMapViewDelegate {
 
         if let cluster = view.annotation as? MKClusterAnnotation {
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
-            let allPhotoIds = photoAnnotations.flatMap { $0.photoMemoIds }
+            let allPhotoIds = photoAnnotations.flatMap { $0.cardIds }
             let allPhotos = allPhotoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
 
             if !allPhotos.isEmpty {
@@ -418,16 +418,16 @@ extension GalleryViewController: MKMapViewDelegate {
             }
         }
         else if let photoAnnotation = view.annotation as? MediaAnnotation {
-            let photoMemos = photoAnnotation.photoMemoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
-            showGallery(for: photoMemos)
+            let cards = photoAnnotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+            showGallery(for: cards)
         }
     }
 
-    private func showGallery(for photoMemos: [Card]) {
-        let photoCount = photoMemos.count
+    private func showGallery(for cards: [Card]) {
+        let photoCount = cards.count
         AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
-        let galleryVC = MapViewController(photoMemos: photoMemos, themeCategory: .others, customTitle: title)
+        let galleryVC = MapViewController(cards: cards, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }
 }

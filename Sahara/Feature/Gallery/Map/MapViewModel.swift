@@ -11,9 +11,9 @@ import RxCocoa
 import RxSwift
 
 final class MapViewModel: BaseViewModelProtocol {
-    private let photoMemoIds: [ObjectId]
+    private let cardIds: [ObjectId]
     private let disposeBag = DisposeBag()
-    private let photoMemosRelay = BehaviorRelay<[Card]>(value: [])
+    private let cardsRelay = BehaviorRelay<[Card]>(value: [])
 
     struct Input {
         let viewDidLoad: Observable<Void>
@@ -22,26 +22,26 @@ final class MapViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let photoMemos: Driver<[Card]>
+        let cards: Driver<[Card]>
         let navigateToDetail: Driver<ObjectId>
         let dismiss: Driver<Void>
     }
 
-    init(photoMemos: [Card]) {
-        self.photoMemoIds = photoMemos.map { $0.id }
+    init(cards: [Card]) {
+        self.cardIds = cards.map { $0.id }
     }
 
     func transform(input: Input) -> Output {
         input.viewDidLoad
             .withUnretained(self)
             .bind { owner, _ in
-                owner.observePhotoMemos()
+                owner.observeCards()
             }
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(photoMemosRelay.asObservable()) { indexPath, photoMemos in
-                photoMemos[indexPath.item].id
+            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in
+                cards[indexPath.item].id
             }
             .asDriver(onErrorDriveWith: .empty())
 
@@ -49,17 +49,17 @@ final class MapViewModel: BaseViewModelProtocol {
             .asDriver(onErrorJustReturn: ())
 
         return Output(
-            photoMemos: photoMemosRelay.asDriver(),
+            cards: cardsRelay.asDriver(),
             navigateToDetail: navigateToDetail,
             dismiss: dismiss
         )
     }
 
-    private func observePhotoMemos() {
+    private func observeCards() {
         let realm = try! Realm()
 
         Observable<[Card]>.create { observer in
-            let cards = realm.objects(Card.self).filter("id IN %@", self.photoMemoIds)
+            let cards = realm.objects(Card.self).filter("id IN %@", self.cardIds)
 
             observer.onNext(Array(cards))
 
@@ -78,17 +78,17 @@ final class MapViewModel: BaseViewModelProtocol {
                 token.invalidate()
             }
         }
-        .bind(to: photoMemosRelay)
+        .bind(to: cardsRelay)
         .disposed(by: disposeBag)
     }
 
     func getCard(at index: Int) -> Card? {
-        let photoMemos = photoMemosRelay.value
-        guard index < photoMemos.count else { return nil }
-        return photoMemos[index]
+        let cards = cardsRelay.value
+        guard index < cards.count else { return nil }
+        return cards[index]
     }
 
     func getCard(by id: ObjectId) -> Card? {
-        return photoMemosRelay.value.first { $0.id == id }
+        return cardsRelay.value.first { $0.id == id }
     }
 }

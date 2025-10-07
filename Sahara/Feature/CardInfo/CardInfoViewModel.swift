@@ -229,7 +229,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
-        let photoMemo = Card(
+        let card = Card(
             createdDate: date,
             editedImageData: imageData,
             memo: memoText,
@@ -241,7 +241,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let isFirstCard = RealmManager.shared.isEmpty(Card.self)
         let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
-        RealmManager.shared.save(photoMemo)
+        RealmManager.shared.save(card)
 
         if isFirstCard {
             AnalyticsManager.shared.logFirstCardCreated()

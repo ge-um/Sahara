@@ -39,8 +39,8 @@ final class GalleryViewModel {
         
         let calendarItems = Observable
             .combineLatest(currentMonth, photos)
-            .map { month, photoMemos in
-                self.generateCalendar(for: month, photoMemos: photoMemos)
+            .map { month, cards in
+                self.generateCalendar(for: month, cards: cards)
             }
         
         let currentMonthTitle = currentMonth
@@ -120,7 +120,7 @@ final class GalleryViewModel {
         photos.accept(memos)
     }
     
-    private func generateCalendar(for month: Date, photoMemos: [Card]) -> [DayItem] {
+    private func generateCalendar(for month: Date, cards: [Card]) -> [DayItem] {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
 
@@ -144,10 +144,10 @@ final class GalleryViewModel {
         // 현재 달의 날짜들
         for day in 1...daysInMonth {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
-                let memosForDay = photoMemos.filter {
+                let cardsForDay = cards.filter {
                     calendar.isDate($0.createdDate, inSameDayAs: date)
                 }
-                items.append(DayItem(date: date, cards: memosForDay, isCurrentMonth: true))
+                items.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
             }
         }
 
