@@ -130,10 +130,7 @@ final class CardDetailViewModel {
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
             .map { owner, _ -> Void in
-                guard let photoMemo = owner.realmManager.realm.object(ofType: Card.self, forPrimaryKey: owner.photoMemoId) else {
-                    return ()
-                }
-                owner.realmManager.delete(photoMemo)
+                owner.realmManager.deleteCard(id: owner.photoMemoId)
                 return ()
             }
             .asDriver(onErrorJustReturn: ())

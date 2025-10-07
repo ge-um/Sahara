@@ -75,23 +75,29 @@ final class CardInfoCoordinator: Coordinator {
     }
 
     func dismiss() {
-        if let navController = parentViewController?.navigationController,
-           navController.presentingViewController == nil {
-            navController.popViewController(animated: true)
-        } else {
-            parentViewController?.navigationController?.dismiss(animated: true)
-        }
+        parentViewController?.dismiss(animated: true)
     }
 
     func popToList(isEditMode: Bool) {
-        if let navController = parentViewController?.navigationController {
-            let viewControllers = navController.viewControllers
-            if isEditMode {
-                let targetIndex = viewControllers.count >= 4 ? viewControllers.count - 4 : 0
-                navController.popToViewController(viewControllers[targetIndex], animated: true)
-            } else {
-                navController.popToRootViewController(animated: true)
-            }
+        guard let parentVC = parentViewController,
+              let presentingVC = parentVC.presentingViewController else {
+            return
+        }
+
+        var navController: UINavigationController?
+
+        if let tabBarController = presentingVC as? UITabBarController {
+            navController = tabBarController.selectedViewController as? UINavigationController
+        } else if let nav = presentingVC as? UINavigationController {
+            navController = nav
+        } else {
+            navController = presentingVC.navigationController
+        }
+
+        guard let nav = navController else { return }
+
+        parentVC.dismiss(animated: true) {
+            nav.popViewController(animated: true)
         }
     }
 }
