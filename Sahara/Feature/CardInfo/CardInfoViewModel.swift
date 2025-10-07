@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import RealmSwift
 import RxCocoa
 import RxSwift
 import UIKit
@@ -20,11 +21,13 @@ enum EditSourceType {
 final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private var editedImage: UIImage?
-    private var cardToEdit: Card?
+    private var cardToEditId: ObjectId?
     private var originalDate: Date?
     private var originalLocation: CLLocation?
     private var sourceType: EditSourceType?
     private var imageChanged = false
+    private var initialMemo: String?
+    private var initialIsLocked: Bool = false
 
     struct Input {
         let selectedImage: Observable<UIImage?>
@@ -51,25 +54,28 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialIsLocked: Bool
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
+        let shouldPopToListOnDelete: Driver<Bool>
     }
 
     init(editedImage: UIImage?) {
         self.editedImage = editedImage
-        self.cardToEdit = nil
+        self.cardToEditId = nil
         self.sourceType = nil
     }
 
     init(initialDate: Date, sourceType: EditSourceType) {
         self.editedImage = nil
-        self.cardToEdit = nil
+        self.cardToEditId = nil
         self.originalDate = initialDate
         self.sourceType = sourceType
     }
 
     init(cardToEdit: Card, sourceType: EditSourceType) {
-        self.cardToEdit = cardToEdit
+        self.cardToEditId = cardToEdit.id
         self.editedImage = UIImage(data: cardToEdit.editedImageData)
         self.originalDate = cardToEdit.createdDate
+        self.initialMemo = cardToEdit.memo
+        self.initialIsLocked = cardToEdit.isLocked
         self.sourceType = sourceType
         if let lat = cardToEdit.latitude, let lon = cardToEdit.longitude {
             self.originalLocation = CLLocation(latitude: lat, longitude: lon)
@@ -77,13 +83,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let isEditMode = cardToEdit != nil
-        let initialLocation: CLLocation? = {
-            guard let card = cardToEdit,
-                  let lat = card.latitude,
-                  let lon = card.longitude else { return nil }
-            return CLLocation(latitude: lat, longitude: lon)
-        }()
+        let isEditMode = cardToEditId != nil
+        let initialLocation: CLLocation? = originalLocation
 
         let locationRelay = BehaviorRelay<CLLocation?>(value: initialLocation)
         let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
@@ -93,7 +94,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .bind(with: self) { owner, image in
                 owner.editedImage = image
                 imageRelay.accept(image)
-                if owner.cardToEdit != nil {
+                if owner.cardToEditId != nil {
                     owner.imageChanged = true
                 }
             }
@@ -106,6 +107,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let saveErrorRelay = PublishRelay<String>()
         let shouldPopToListRelay = PublishRelay<Bool>()
+        let shouldPopToListOnDeleteRelay = PublishRelay<Bool>()
 
         let saved = input.saveButtonTapped
             .withLatestFrom(
@@ -124,12 +126,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     return false
                 }
 
-                if let card = self.cardToEdit {
+                if let cardId = self.cardToEditId {
                     let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
                     if shouldPop {
-                        self.replaceCard(card, date: date, memo: memo, location: location, isLocked: isLocked)
+                        self.replaceCard(cardId: cardId, date: date, memo: memo, location: location, isLocked: isLocked)
                     } else {
-                        self.updateCard(card, date: date, memo: memo, location: location, isLocked: isLocked)
+                        self.updateCard(cardId: cardId, date: date, memo: memo, location: location, isLocked: isLocked)
                     }
                     shouldPopToListRelay.accept(shouldPop)
                 } else {
@@ -151,10 +153,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
             .map { owner, _ -> Void in
-                guard let card = owner.cardToEdit else { return () }
-                RealmManager.shared.delete(card)
+                guard let cardId = owner.cardToEditId else { return () }
+
+                RealmManager.shared.deleteCard(id: cardId)
                 NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
                 AnalyticsManager.shared.logCardDelete()
+
+                if owner.sourceType != nil {
+                    shouldPopToListOnDeleteRelay.accept(true)
+                } else {
+                    shouldPopToListOnDeleteRelay.accept(false)
+                }
+
                 return ()
             }
             .asDriver(onErrorJustReturn: ())
@@ -172,12 +182,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             saveError: saveErrorRelay.asDriver(onErrorJustReturn: ""),
             dismiss: dismiss,
             isEditMode: isEditMode,
-            initialDate: originalDate ?? cardToEdit?.createdDate ?? Date(),
-            initialMemo: cardToEdit?.memo,
+            initialDate: originalDate ?? Date(),
+            initialMemo: initialMemo,
             initialLocation: initialLocation,
-            initialIsLocked: cardToEdit?.isLocked ?? false,
+            initialIsLocked: initialIsLocked,
             deleted: deleted,
-            shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false)
+            shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false),
+            shouldPopToListOnDelete: shouldPopToListOnDeleteRelay.asDriver(onErrorJustReturn: false)
         )
     }
 
@@ -243,7 +254,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func updateCard(_ card: Card, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
+    private func updateCard(cardId: ObjectId, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
@@ -253,7 +264,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
-        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+        let realm = RealmManager.shared.realm
+        guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+
+        let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
         RealmManager.shared.update {
             card.createdDate = date
@@ -271,7 +285,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func replaceCard(_ card: Card, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
+    private func replaceCard(cardId: ObjectId, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
@@ -281,9 +295,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
-        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+        let realm = RealmManager.shared.realm
+        let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
-        RealmManager.shared.delete(card)
+        RealmManager.shared.deleteCard(id: cardId)
 
         let newCard = Card(
             createdDate: date,

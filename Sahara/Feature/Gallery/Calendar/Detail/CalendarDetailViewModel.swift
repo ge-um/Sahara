@@ -65,7 +65,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
                 guard index < memos.count else { return }
                 let memo = memos[index]
 
-                owner.realmManager.delete(memo)
+                owner.realmManager.deleteCard(id: memo.id)
 
                 var updatedMemos = memos
                 updatedMemos.remove(at: index)

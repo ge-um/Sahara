@@ -79,4 +79,20 @@ final class RealmManager {
     func isEmpty<T: Object>(_ type: T.Type) -> Bool {
         return realm.objects(type).isEmpty
     }
+
+    func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) {
+        let realm = self.realm
+        guard let object = realm.object(ofType: type, forPrimaryKey: key) else { return }
+
+        do {
+            try realm.write {
+                realm.delete(object)
+            }
+        } catch {
+        }
+    }
+
+    func deleteCard(id: ObjectId) {
+        delete(Card.self, forPrimaryKey: id)
+    }
 }

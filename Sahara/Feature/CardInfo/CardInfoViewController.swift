@@ -54,6 +54,7 @@ final class CardInfoViewController: UIViewController {
     var selectedImage: UIImage?
     let initialLocationSubject = PublishSubject<CLLocation>()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
+    let deleteConfirmedRelay = PublishRelay<Void>()
 
     init(viewModel: CardInfoViewModel) {
         self.viewModel = viewModel
@@ -214,6 +215,12 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        contentView.deleteButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.showDeleteAlert()
+            }
+            .disposed(by: disposeBag)
+
         contentView.secretSwitch.rx.isOn
             .skip(1)
             .filter { $0 == true }
@@ -263,7 +270,7 @@ final class CardInfoViewController: UIViewController {
             isLocked: contentView.secretSwitch.rx.isOn.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             cancelButtonTapped: cancelButton.rx.tap.asObservable(),
-            deleteButtonTapped: contentView.deleteButton.rx.tap.asObservable()
+            deleteButtonTapped: deleteConfirmedRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -350,11 +357,20 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.deleted
-            .drive(with: self) { owner, _ in
+        Observable.zip(
+            output.deleted.asObservable(),
+            output.shouldPopToListOnDelete.asObservable()
+        )
+        .observe(on: MainScheduler.instance)
+        .bind(with: self) { owner, result in
+            let (_, shouldPopToList) = result
+            if shouldPopToList {
+                owner.coordinator.popToList(isEditMode: output.isEditMode)
+            } else {
                 owner.coordinator.dismiss()
             }
-            .disposed(by: disposeBag)
+        }
+        .disposed(by: disposeBag)
     }
 
     private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>) {
@@ -445,6 +461,19 @@ final class CardInfoViewController: UIViewController {
                 .font: FontSystem.galmuriMono(size: 16)
             ]
         )
+    }
+
+    private func showDeleteAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("card_detail.delete_title", comment: ""),
+            message: NSLocalizedString("card_detail.delete_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_cancel", comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_confirm", comment: ""), style: .destructive) { [weak self] _ in
+            self?.deleteConfirmedRelay.accept(())
+        })
+        present(alert, animated: true)
     }
 }
 
