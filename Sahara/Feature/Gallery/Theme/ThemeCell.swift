@@ -82,9 +82,9 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     func configure(with group: ThemeGroup) {
         titleLabel.text = group.category.localizedName
-        countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.photoMemos.count)
+        countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cards.count)
 
-        let sortedPhotos = group.photoMemos.sorted { !$0.isLocked && $1.isLocked }
+        let sortedPhotos = group.cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first,
            let image = UIImage(data: firstPhoto.editedImageData) {

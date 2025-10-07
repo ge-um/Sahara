@@ -79,15 +79,15 @@ final class ThemeViewModel: BaseViewModelProtocol {
                     let memos = Array(results)
                     var categoryDict: [ThemeCategory: [Card]] = [:]
 
-                    for photoMemo in memos {
-                        guard let image = UIImage(data: photoMemo.editedImageData),
+                    for card in memos {
+                        guard let image = UIImage(data: card.editedImageData),
                               let cgImage = image.cgImage else { continue }
 
                         let category = self.classifyImage(cgImage)
-                        categoryDict[category, default: []].append(photoMemo)
+                        categoryDict[category, default: []].append(card)
                     }
 
-                    let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
+                    let groups = categoryDict.map { ThemeGroup(category: $0.key, cards: $0.value) }
                         .sorted { first, second in
                             if first.category == .others { return false }
                             if second.category == .others { return true }
@@ -113,15 +113,15 @@ final class ThemeViewModel: BaseViewModelProtocol {
 
             var categoryDict: [ThemeCategory: [Card]] = [:]
 
-            for photoMemo in memos {
-                guard let image = UIImage(data: photoMemo.editedImageData),
+            for card in memos {
+                guard let image = UIImage(data: card.editedImageData),
                       let cgImage = image.cgImage else { continue }
 
                 let category = self.classifyImage(cgImage)
-                categoryDict[category, default: []].append(photoMemo)
+                categoryDict[category, default: []].append(card)
             }
 
-            let groups = categoryDict.map { ThemeGroup(category: $0.key, photoMemos: $0.value) }
+            let groups = categoryDict.map { ThemeGroup(category: $0.key, cards: $0.value) }
                 .sorted { first, second in
                     if first.category == .others { return false }
                     if second.category == .others { return true }

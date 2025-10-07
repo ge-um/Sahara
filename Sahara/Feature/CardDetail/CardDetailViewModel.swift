@@ -13,7 +13,7 @@ import RxSwift
 import UIKit
 
 final class CardDetailViewModel {
-    private let photoMemoId: ObjectId
+    private let cardId: ObjectId
     private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
@@ -38,38 +38,38 @@ final class CardDetailViewModel {
         let deleteCompleted: Driver<Void>
     }
 
-    init(photoMemoId: ObjectId) {
-        self.photoMemoId = photoMemoId
+    init(cardId: ObjectId) {
+        self.cardId = cardId
     }
 
-    func getPhotoMemo() -> Card? {
-        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: photoMemoId)
+    func getCard() -> Card? {
+        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: cardId)
     }
 
     func transform(input: Input) -> Output {
-        let photoMemoData = input.viewDidLoad
+        let cardData = input.viewDidLoad
             .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in
                 guard let self = self,
-                      let photoMemo = self.realmManager.realm.object(ofType: Card.self, forPrimaryKey: self.photoMemoId) else {
+                      let card = self.realmManager.realm.object(ofType: Card.self, forPrimaryKey: self.cardId) else {
                     return nil
                 }
                 return (
-                    image: photoMemo.editedImageData,
-                    date: photoMemo.createdDate,
-                    latitude: photoMemo.latitude,
-                    longitude: photoMemo.longitude,
-                    memo: photoMemo.memo
+                    image: card.editedImageData,
+                    date: card.createdDate,
+                    latitude: card.latitude,
+                    longitude: card.longitude,
+                    memo: card.memo
                 )
             }
             .share(replay: 1)
 
-        let photoImage = photoMemoData
+        let photoImage = cardData
             .map { data -> UIImage? in
                 UIImage(data: data.image)
             }
             .asDriver(onErrorJustReturn: nil)
 
-        let dateText = photoMemoData
+        let dateText = cardData
             .map { data -> String in
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = NSLocalizedString("photo_detail.date_format", comment: "")
@@ -78,7 +78,7 @@ final class CardDetailViewModel {
             }
             .asDriver(onErrorJustReturn: "")
 
-        let locationText = photoMemoData
+        let locationText = cardData
             .flatMap { data -> Observable<String> in
                 guard let latitude = data.latitude,
                       let longitude = data.longitude else {
@@ -97,7 +97,7 @@ final class CardDetailViewModel {
             }
             .asDriver(onErrorJustReturn: "")
 
-        let memoText = photoMemoData
+        let memoText = cardData
             .map { data -> String in
                 return data.memo ?? ""
             }
@@ -110,7 +110,7 @@ final class CardDetailViewModel {
             .asDriver(onErrorJustReturn: ())
 
         let saveResult = input.saveButtonTapped
-            .withLatestFrom(photoMemoData)
+            .withLatestFrom(cardData)
             .map { data -> Result<Void, Error> in
                 guard let image = UIImage(data: data.image) else {
                     return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")]))
@@ -121,7 +121,7 @@ final class CardDetailViewModel {
             .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
 
         let shareImage = input.shareButtonTapped
-            .withLatestFrom(photoMemoData)
+            .withLatestFrom(cardData)
             .compactMap { data -> UIImage? in
                 UIImage(data: data.image)
             }
@@ -130,7 +130,7 @@ final class CardDetailViewModel {
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
             .map { owner, _ -> Void in
-                owner.realmManager.deleteCard(id: owner.photoMemoId)
+                owner.realmManager.deleteCard(id: owner.cardId)
                 return ()
             }
             .asDriver(onErrorJustReturn: ())

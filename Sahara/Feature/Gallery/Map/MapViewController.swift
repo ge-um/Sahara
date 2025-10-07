@@ -44,8 +44,8 @@ final class MapViewController: UIViewController {
     private let themeCategory: ThemeCategory
     private let customTitle: String?
 
-    init(photoMemos: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
-        self.viewModel = MapViewModel(photoMemos: photoMemos)
+    init(cards: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
+        self.viewModel = MapViewModel(cards: cards)
         self.themeCategory = themeCategory
         self.customTitle = customTitle
         super.init(nibName: nil, bundle: nil)
@@ -108,21 +108,21 @@ final class MapViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        output.photoMemos
-            .drive(collectionView.rx.items(cellIdentifier: MapMediaCell.identifier, cellType: MapMediaCell.self)) { _, memo, cell in
-                cell.configure(with: memo)
+        output.cards
+            .drive(collectionView.rx.items(cellIdentifier: MapMediaCell.identifier, cellType: MapMediaCell.self)) { _, card, cell in
+                cell.configure(with: card)
             }
             .disposed(by: disposeBag)
 
         output.navigateToDetail
-            .drive(with: self) { owner, photoMemoId in
+            .drive(with: self) { owner, cardId in
                 let sourceType: EditSourceType = owner.themeCategory == .others ? .locationView : .themeView
-                guard let card = owner.viewModel.getCard(by: photoMemoId) else { return }
+                guard let card = owner.viewModel.getCard(by: cardId) else { return }
 
                 if card.isLocked {
                     BiometricAuthManager.shared.authenticate { success, error in
                         if success {
-                            let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
+                            let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
                             owner.navigationController?.pushViewController(detailVC, animated: true)
                         } else {
                             if let error = error {
@@ -131,7 +131,7 @@ final class MapViewController: UIViewController {
                         }
                     }
                 } else {
-                    let detailVC = CardDetailViewController(photoMemoId: photoMemoId, sourceType: sourceType)
+                    let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
                     owner.navigationController?.pushViewController(detailVC, animated: true)
                 }
             }
@@ -202,11 +202,11 @@ final class MapMediaCell: UICollectionViewCell {
         }
     }
 
-    func configure(with photoMemo: Card) {
-        if let image = UIImage(data: photoMemo.editedImageData) {
+    func configure(with card: Card) {
+        if let image = UIImage(data: card.editedImageData) {
             imageView.image = image
         }
-        blurEffectView.isHidden = !photoMemo.isLocked
+        blurEffectView.isHidden = !card.isLocked
     }
 
     override func prepareForReuse() {

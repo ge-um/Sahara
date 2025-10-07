@@ -156,8 +156,8 @@ final class CardDetailViewController: UIViewController {
     }()
 
 
-    init(photoMemoId: ObjectId, sourceType: EditSourceType = .dateView) {
-        self.viewModel = CardDetailViewModel(photoMemoId: photoMemoId)
+    init(cardId: ObjectId, sourceType: EditSourceType = .dateView) {
+        self.viewModel = CardDetailViewModel(cardId: cardId)
         self.sourceType = sourceType
         super.init(nibName: nil, bundle: nil)
     }
@@ -346,8 +346,8 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func openEditView() {
-        guard let photoMemo = viewModel.getPhotoMemo() else { return }
-        let editViewModel = CardInfoViewModel(cardToEdit: photoMemo, sourceType: sourceType)
+        guard let card = viewModel.getCard() else { return }
+        let editViewModel = CardInfoViewModel(cardToEdit: card, sourceType: sourceType)
         let editVC = CardInfoViewController(viewModel: editViewModel)
         editVC.modalPresentationStyle = .fullScreen
         present(editVC, animated: true)

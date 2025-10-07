@@ -118,12 +118,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutSingleImage(_ photoMemo: Card) {
+    private func layoutSingleImage(_ card: Card) {
         let imageView = createImageView()
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        imageView.image = UIImage(data: photoMemo.editedImageData)
+        imageView.image = UIImage(data: card.editedImageData)
         imageView.layer.cornerRadius = 8
         imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
@@ -131,7 +131,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             make.edges.equalToSuperview()
         }
 
-        if photoMemo.isLocked {
+        if card.isLocked {
             let blurView = createBlurView()
             blurView.layer.cornerRadius = 8
             blurViews.append(blurView)
