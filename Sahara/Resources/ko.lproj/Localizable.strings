@@ -9,6 +9,7 @@
 
 /* Tab */
 "tab.gallery" = "갤러리";
+"tab.search" = "검색";
 
 /* Gallery */
 "gallery.date_view" = "날짜별";
@@ -115,3 +116,8 @@
 "biometric.no_biometric" = "Face ID 또는 Touch ID를 사용할 수 없어요";
 "biometric.permission_required" = "생체 인증 권한 필요";
 "biometric.permission_message" = "비밀 카드를 사용하려면 설정에서 Face ID 또는 Touch ID를 활성화해주세요";
+
+/* Search */
+"search.placeholder" = "메모를 검색해요";
+"search.no_results" = "검색결과가 없습니다";
+"search.initial_message" = "메모를 검색해보세요";
