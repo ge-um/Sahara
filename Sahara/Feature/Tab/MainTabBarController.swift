@@ -14,27 +14,26 @@ final class MainTabBarController: UITabBarController {
         return view
     }()
 
-    private let galleryStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.alignment = .center
-        stack.spacing = 4
-        return stack
+    private lazy var galleryTabButton: TabButton = {
+        let button = TabButton(
+            icon: UIImage(named: "gallery"),
+            title: NSLocalizedString("tab.gallery", comment: "")
+        )
+        button.onTap = { [weak self] in
+            self?.galleryTabTapped()
+        }
+        return button
     }()
 
-    private let galleryIconView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "gallery")
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
-
-    private let galleryLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("tab.gallery", comment: "")
-        label.font = FontSystem.TextStyle.tabBarLabel.font
-        label.textColor = .black
-        return label
+    private lazy var searchTabButton: TabButton = {
+        let button = TabButton(
+            icon: UIImage(systemName: "magnifyingglass"),
+            title: NSLocalizedString("tab.search", comment: "")
+        )
+        button.onTap = { [weak self] in
+            self?.searchTabTapped()
+        }
+        return button
     }()
 
     override func viewDidLoad() {
@@ -46,10 +45,8 @@ final class MainTabBarController: UITabBarController {
 
     private func setupCustomTabBar() {
         view.addSubview(customTabBar)
-        customTabBar.addSubview(galleryStackView)
-
-        galleryStackView.addArrangedSubview(galleryIconView)
-        galleryStackView.addArrangedSubview(galleryLabel)
+        customTabBar.addSubview(galleryTabButton)
+        customTabBar.addSubview(searchTabButton)
 
         customTabBar.applyGradient(.barBack)
 
@@ -59,12 +56,16 @@ final class MainTabBarController: UITabBarController {
             make.height.equalTo(72)
         }
 
-        galleryStackView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+        galleryTabButton.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.equalTo(customTabBar.snp.centerX).offset(-80)
+            make.width.height.equalTo(52)
         }
 
-        galleryIconView.snp.makeConstraints { make in
-            make.width.height.equalTo(24)
+        searchTabButton.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.equalTo(customTabBar.snp.centerX).offset(20)
+            make.width.height.equalTo(52)
         }
     }
 
@@ -78,6 +79,26 @@ final class MainTabBarController: UITabBarController {
         let galleryVC = GalleryViewController(viewModel: galleryVM)
         let galleryNav = UINavigationController(rootViewController: galleryVC)
 
-        viewControllers = [galleryNav]
+        let searchVC = SearchViewController()
+        let searchNav = UINavigationController(rootViewController: searchVC)
+
+        viewControllers = [galleryNav, searchNav]
+
+        updateTabSelection()
+    }
+
+    @objc private func galleryTabTapped() {
+        selectedIndex = 0
+        updateTabSelection()
+    }
+
+    @objc private func searchTabTapped() {
+        selectedIndex = 1
+        updateTabSelection()
+    }
+
+    private func updateTabSelection() {
+        galleryTabButton.setSelected(selectedIndex == 0)
+        searchTabButton.setSelected(selectedIndex == 1)
     }
 }

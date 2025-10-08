@@ -8,6 +8,7 @@
 
 /* Tab */
 "tab.gallery" = "ギャラリー";
+"tab.search" = "検索";
 
 /* Gallery */
 "gallery.date_view" = "日付順";
@@ -114,3 +115,8 @@
 "biometric.no_biometric" = "Face IDまたはTouch IDを使用できません";
 "biometric.permission_required" = "生体認証権限が必要";
 "biometric.permission_message" = "秘密カードを使用するには、設定でFace IDまたはTouch IDを有効にしてください";
+
+/* Search */
+"search.placeholder" = "メモを検索";
+"search.no_results" = "検索結果がありません";
+"search.initial_message" = "メモを検索してみてください";

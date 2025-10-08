@@ -16,6 +16,7 @@ enum EditSourceType {
     case dateView
     case locationView
     case themeView
+    case searchView
 }
 
 final class CardInfoViewModel: BaseViewModelProtocol {
@@ -216,6 +217,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         case .themeView:
             return imageChanged
+
+        case .searchView:
+            return false
         }
     }
 
