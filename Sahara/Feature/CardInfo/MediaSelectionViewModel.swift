@@ -1,0 +1,172 @@
+//
+//  MediaSelectionViewModel.swift
+//  Sahara
+//
+//  Created by 금가경 on 10/9/25.
+//
+
+import AVFoundation
+import CoreLocation
+import Foundation
+import Photos
+import PhotosUI
+import RxCocoa
+import RxSwift
+import UIKit
+
+enum MediaSource {
+    case camera
+    case library
+}
+
+final class MediaSelectionViewModel: BaseViewModelProtocol {
+    private let disposeBag = DisposeBag()
+
+    struct Input {
+        let viewWillAppear: Observable<Void>
+        let cameraButtonTapped: Observable<Void>
+        let libraryButtonTapped: Observable<Void>
+        let photoSelected: Observable<PHAsset>
+        let imagePickerResult: Observable<(UIImage, CLLocation?, Date?)>
+    }
+
+    struct Output {
+        let photos: Driver<[PHAsset]>
+        let showActionButtons: Driver<Bool>
+        let showCamera: Driver<Void>
+        let showPHPicker: Driver<Void>
+        let showCameraPermissionAlert: Driver<Void>
+        let showPhotoPermissionAlert: Driver<Void>
+        let selectedMedia: Driver<(UIImage, CLLocation?, Date?)>
+        let requestPhotoPermission: Driver<Void>
+        let requestCameraPermission: Driver<Void>
+        let showLimitedLibraryPicker: Driver<Void>
+    }
+
+    func transform(input: Input) -> Output {
+        let photosRelay = BehaviorRelay<[PHAsset]>(value: [])
+        let showCameraRelay = PublishRelay<Void>()
+        let showPHPickerRelay = PublishRelay<Void>()
+        let showCameraPermissionAlertRelay = PublishRelay<Void>()
+        let showPhotoPermissionAlertRelay = PublishRelay<Void>()
+        let selectedMediaRelay = PublishRelay<(UIImage, CLLocation?, Date?)>()
+        let requestPhotoPermissionRelay = PublishRelay<Void>()
+        let requestCameraPermissionRelay = PublishRelay<Void>()
+        let showLimitedLibraryPickerRelay = PublishRelay<Void>()
+
+        input.viewWillAppear
+            .bind(with: self) { owner, _ in
+                owner.fetchPhotos(relay: photosRelay)
+            }
+            .disposed(by: disposeBag)
+
+        input.cameraButtonTapped
+            .bind(with: self) { owner, _ in
+                let status = PermissionManager.shared.checkPermission(for: .camera)
+
+                switch status {
+                case .authorized:
+                    showCameraRelay.accept(())
+                case .denied:
+                    showCameraPermissionAlertRelay.accept(())
+                case .notDetermined:
+                    requestCameraPermissionRelay.accept(())
+                case .limited:
+                    break
+                }
+            }
+            .disposed(by: disposeBag)
+
+        input.libraryButtonTapped
+            .bind(with: self) { owner, _ in
+                let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
+
+                switch status {
+                case .authorized:
+                    showPHPickerRelay.accept(())
+                case .limited:
+                    showLimitedLibraryPickerRelay.accept(())
+                case .denied:
+                    showPhotoPermissionAlertRelay.accept(())
+                case .notDetermined:
+                    requestPhotoPermissionRelay.accept(())
+                }
+            }
+            .disposed(by: disposeBag)
+
+        input.photoSelected
+            .withUnretained(self)
+            .flatMap { owner, asset -> Observable<(UIImage, CLLocation?, Date?)> in
+                return owner.loadImage(from: asset)
+            }
+            .bind(to: selectedMediaRelay)
+            .disposed(by: disposeBag)
+
+        input.imagePickerResult
+            .bind(to: selectedMediaRelay)
+            .disposed(by: disposeBag)
+
+        let showActionButtons = Observable.just(true)
+            .asDriver(onErrorJustReturn: true)
+
+        return Output(
+            photos: photosRelay.asDriver(),
+            showActionButtons: showActionButtons,
+            showCamera: showCameraRelay.asDriver(onErrorJustReturn: ()),
+            showPHPicker: showPHPickerRelay.asDriver(onErrorJustReturn: ()),
+            showCameraPermissionAlert: showCameraPermissionAlertRelay.asDriver(onErrorJustReturn: ()),
+            showPhotoPermissionAlert: showPhotoPermissionAlertRelay.asDriver(onErrorJustReturn: ()),
+            selectedMedia: selectedMediaRelay.asDriver(onErrorDriveWith: .empty()),
+            requestPhotoPermission: requestPhotoPermissionRelay.asDriver(onErrorJustReturn: ()),
+            requestCameraPermission: requestCameraPermissionRelay.asDriver(onErrorJustReturn: ()),
+            showLimitedLibraryPicker: showLimitedLibraryPickerRelay.asDriver(onErrorJustReturn: ())
+        )
+    }
+
+    private func fetchPhotos(relay: BehaviorRelay<[PHAsset]>) {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .authorized || status == .limited else {
+            relay.accept([])
+            return
+        }
+
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+
+        let results = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        var photos: [PHAsset] = []
+        results.enumerateObjects { asset, _, _ in
+            photos.append(asset)
+        }
+
+        relay.accept(photos)
+    }
+
+    private func loadImage(from asset: PHAsset) -> Observable<(UIImage, CLLocation?, Date?)> {
+        return Observable.create { observer in
+            let imageManager = PHCachingImageManager()
+            let options = PHImageRequestOptions()
+            options.isSynchronous = false
+            options.deliveryMode = .highQualityFormat
+
+            imageManager.requestImage(
+                for: asset,
+                targetSize: PHImageManagerMaximumSize,
+                contentMode: .aspectFit,
+                options: options
+            ) { image, _ in
+                if let image = image {
+                    AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
+                    let location = asset.location
+                    let date = asset.creationDate
+                    observer.onNext((image, location, date))
+                    observer.onCompleted()
+                } else {
+                    observer.onCompleted()
+                }
+            }
+
+            return Disposables.create()
+        }
+    }
+}

@@ -65,7 +65,7 @@ final class MainTabBarController: UITabBarController {
         customTabBar.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(72)
+            make.height.equalTo(84)
         }
 
         galleryTabButton.snp.makeConstraints { make in

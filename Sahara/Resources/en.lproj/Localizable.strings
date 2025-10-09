@@ -72,6 +72,7 @@
 "location_search.title" = "Search Location";
 "location_search.placeholder" = "Search location";
 "location_search.use_current_location" = "Use Current Location";
+"location_search.current_location" = "Current Location";
 "location_search.location_error" = "Unable to get current location.";
 "location_search.location_permission_title" = "Location Access Required";
 "location_search.location_permission_message" = "Please allow location access in Settings to use your current location.";

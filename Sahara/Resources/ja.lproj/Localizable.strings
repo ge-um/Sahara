@@ -71,6 +71,7 @@
 "location_search.title" = "位置検索";
 "location_search.placeholder" = "位置検索";
 "location_search.use_current_location" = "現在地を使用";
+"location_search.current_location" = "現在地";
 "location_search.location_error" = "現在地を取得できません。";
 "location_search.location_permission_title" = "位置情報アクセス権限が必要";
 "location_search.location_permission_message" = "現在地を使用するには設定で位置情報アクセス権限を許可してください。";
