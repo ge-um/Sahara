@@ -10,6 +10,7 @@
 /* Tab */
 "tab.gallery" = "갤러리";
 "tab.search" = "검색";
+"tab.stats" = "통계";
 
 /* Gallery */
 "gallery.date_view" = "날짜별";
@@ -121,3 +122,27 @@
 "search.placeholder" = "메모를 검색해요";
 "search.no_results" = "검색결과가 없습니다";
 "search.initial_message" = "메모를 검색해보세요";
+
+/* Stats */
+"stats.title" = "통계";
+"stats.total_cards" = "총 카드";
+"stats.days_since_start" = "기록 시작";
+"stats.this_month" = "이번 달";
+"stats.vs_last_month" = "지난 달 대비";
+"stats.current_streak" = "연속 기록";
+"stats.monthly_chart" = "월별 카드 수";
+"stats.weekday_pattern" = "요일별 패턴";
+"stats.time_pattern" = "시간대별 패턴";
+"stats.top_locations" = "자주 가는 장소";
+"stats.unique_locations" = "방문한 장소";
+"stats.mood_distribution" = "감정 분포";
+"stats.days_unit" = "일";
+"stats.cards_unit" = "개";
+"stats.locations_unit" = "곳";
+"stats.time_morning" = "아침";
+"stats.time_afternoon" = "낮";
+"stats.time_evening" = "저녁";
+"stats.time_night" = "밤";
+"stats.no_data" = "데이터가 없습니다";
+"stats.increase" = "+%d개";
+"stats.decrease" = "%d개";

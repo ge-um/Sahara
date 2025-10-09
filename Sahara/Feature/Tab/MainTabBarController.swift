@@ -36,6 +36,17 @@ final class MainTabBarController: UITabBarController {
         return button
     }()
 
+    private lazy var statsTabButton: TabButton = {
+        let button = TabButton(
+            icon: UIImage(systemName: "chart.bar.fill"),
+            title: NSLocalizedString("tab.stats", comment: "")
+        )
+        button.onTap = { [weak self] in
+            self?.statsTabTapped()
+        }
+        return button
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         tabBar.isHidden = true
@@ -47,6 +58,7 @@ final class MainTabBarController: UITabBarController {
         view.addSubview(customTabBar)
         customTabBar.addSubview(galleryTabButton)
         customTabBar.addSubview(searchTabButton)
+        customTabBar.addSubview(statsTabButton)
 
         customTabBar.applyGradient(.barBack)
 
@@ -58,13 +70,19 @@ final class MainTabBarController: UITabBarController {
 
         galleryTabButton.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.equalTo(customTabBar.snp.centerX).offset(-80)
+            make.trailing.equalTo(customTabBar.snp.centerX).offset(-70)
             make.width.height.equalTo(52)
         }
 
         searchTabButton.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.equalTo(customTabBar.snp.centerX).offset(20)
+            make.centerX.equalToSuperview()
+            make.width.height.equalTo(52)
+        }
+
+        statsTabButton.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.equalTo(customTabBar.snp.centerX).offset(70)
             make.width.height.equalTo(52)
         }
     }
@@ -82,7 +100,10 @@ final class MainTabBarController: UITabBarController {
         let searchVC = SearchViewController()
         let searchNav = UINavigationController(rootViewController: searchVC)
 
-        viewControllers = [galleryNav, searchNav]
+        let statsVC = StatsViewController()
+        let statsNav = UINavigationController(rootViewController: statsVC)
+
+        viewControllers = [galleryNav, searchNav, statsNav]
 
         updateTabSelection()
     }
@@ -97,8 +118,14 @@ final class MainTabBarController: UITabBarController {
         updateTabSelection()
     }
 
+    @objc private func statsTabTapped() {
+        selectedIndex = 2
+        updateTabSelection()
+    }
+
     private func updateTabSelection() {
         galleryTabButton.setSelected(selectedIndex == 0)
         searchTabButton.setSelected(selectedIndex == 1)
+        statsTabButton.setSelected(selectedIndex == 2)
     }
 }

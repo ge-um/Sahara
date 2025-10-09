@@ -9,6 +9,7 @@
 /* Tab */
 "tab.gallery" = "ギャラリー";
 "tab.search" = "検索";
+"tab.stats" = "統計";
 
 /* Gallery */
 "gallery.date_view" = "日付順";
@@ -120,3 +121,27 @@
 "search.placeholder" = "メモを検索";
 "search.no_results" = "検索結果がありません";
 "search.initial_message" = "メモを検索してみてください";
+
+/* Stats */
+"stats.title" = "統計";
+"stats.total_cards" = "総カード数";
+"stats.days_since_start" = "記録日数";
+"stats.this_month" = "今月";
+"stats.vs_last_month" = "先月比";
+"stats.current_streak" = "連続記録";
+"stats.monthly_chart" = "月別カード数";
+"stats.weekday_pattern" = "曜日別パターン";
+"stats.time_pattern" = "時間帯別パターン";
+"stats.top_locations" = "よく行く場所";
+"stats.unique_locations" = "訪問場所";
+"stats.mood_distribution" = "感情分布";
+"stats.days_unit" = "日";
+"stats.cards_unit" = "枚";
+"stats.locations_unit" = "箇所";
+"stats.time_morning" = "朝";
+"stats.time_afternoon" = "昼";
+"stats.time_evening" = "夕方";
+"stats.time_night" = "夜";
+"stats.no_data" = "データがありません";
+"stats.increase" = "+%d枚";
+"stats.decrease" = "%d枚";
