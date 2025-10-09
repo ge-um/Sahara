@@ -10,6 +10,7 @@
 /* Tab */
 "tab.gallery" = "Gallery";
 "tab.search" = "Search";
+"tab.stats" = "Stats";
 
 /* Gallery */
 "gallery.date_view" = "By Date";
@@ -121,3 +122,27 @@
 "search.placeholder" = "Search memos";
 "search.no_results" = "No results found";
 "search.initial_message" = "Search your memos";
+
+/* Stats */
+"stats.title" = "Stats";
+"stats.total_cards" = "Total";
+"stats.days_since_start" = "Days";
+"stats.this_month" = "This Month";
+"stats.vs_last_month" = "vs Last Month";
+"stats.current_streak" = "Streak";
+"stats.monthly_chart" = "Monthly Cards";
+"stats.weekday_pattern" = "Weekday Pattern";
+"stats.time_pattern" = "Time Pattern";
+"stats.top_locations" = "Top Locations";
+"stats.unique_locations" = "Unique Places";
+"stats.mood_distribution" = "Mood Distribution";
+"stats.days_unit" = "days";
+"stats.cards_unit" = "cards";
+"stats.locations_unit" = "places";
+"stats.time_morning" = "Morning";
+"stats.time_afternoon" = "Afternoon";
+"stats.time_evening" = "Evening";
+"stats.time_night" = "Night";
+"stats.no_data" = "No data available";
+"stats.increase" = "+%d";
+"stats.decrease" = "%d";
