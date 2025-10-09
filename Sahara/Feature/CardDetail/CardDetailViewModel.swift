@@ -12,7 +12,7 @@ import RxCocoa
 import RxSwift
 import UIKit
 
-final class CardDetailViewModel {
+final class CardDetailViewModel: BaseViewModelProtocol {
     private let cardId: ObjectId
     private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()

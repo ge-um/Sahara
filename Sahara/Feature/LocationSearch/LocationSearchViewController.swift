@@ -6,10 +6,17 @@
 //
 
 import MapKit
+import RxCocoa
+import RxSwift
 import SnapKit
 import UIKit
 
 final class LocationSearchViewController: UIViewController {
+    private let viewModel = LocationSearchViewModel()
+    private let disposeBag = DisposeBag()
+    private let viewDidLoadRelay = PublishRelay<Void>()
+    private let locationSelectedRelay = PublishRelay<MKLocalSearchCompletion>()
+
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
@@ -23,8 +30,6 @@ final class LocationSearchViewController: UIViewController {
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.register(LocationSearchCell.self, forCellReuseIdentifier: LocationSearchCell.identifier)
-        tableView.delegate = self
-        tableView.dataSource = self
         tableView.keyboardDismissMode = .onDrag
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         tableView.backgroundColor = .clear
@@ -55,17 +60,14 @@ final class LocationSearchViewController: UIViewController {
         return button
     }()
 
-    private let searchCompleter = MKLocalSearchCompleter()
-    private var searchResults: [MKLocalSearchCompletion] = []
     var onLocationSelected: ((CLLocationCoordinate2D, String) -> Void)?
-    private let locationManager = CLLocationManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
-        setupSearchCompleter()
-        setupActions()
+        bind()
         currentLocationButton.applyGradient(.blueGradient)
+        viewDidLoadRelay.accept(())
     }
 
     override func viewDidLayoutSubviews() {
@@ -73,45 +75,60 @@ final class LocationSearchViewController: UIViewController {
         currentLocationButton.applyGradient(.blueGradient)
     }
 
-    private func setupSearchCompleter() {
-        searchCompleter.delegate = self
-        searchCompleter.resultTypes = [.address, .pointOfInterest]
-        searchBar.delegate = self
+    private func bind() {
+        let input = LocationSearchViewModel.Input(
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            searchText: searchBar.rx.text.orEmpty.asObservable(),
+            currentLocationTapped: currentLocationButton.rx.tap.asObservable(),
+            locationSelected: locationSelectedRelay.asObservable()
+        )
 
-        locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    }
+        let output = viewModel.transform(input: input)
 
-    private func setupActions() {
-        currentLocationButton.addTarget(self, action: #selector(currentLocationTapped), for: .touchUpInside)
-    }
-
-    @objc private func currentLocationTapped() {
-        let authStatus = locationManager.authorizationStatus
-
-        switch authStatus {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            var config = currentLocationButton.configuration
-            config?.showsActivityIndicator = true
-            currentLocationButton.configuration = config
-
-            if let cachedLocation = locationManager.location {
-                handleLocation(cachedLocation)
-            } else {
-                locationManager.requestLocation()
+        output.searchResults
+            .drive(tableView.rx.items(cellIdentifier: LocationSearchCell.identifier, cellType: LocationSearchCell.self)) { _, result, cell in
+                cell.configure(with: result)
             }
-        case .denied, .restricted:
-            AnalyticsManager.shared.logLocationPermissionDenied()
-            showLocationPermissionAlert()
-        @unknown default:
-            break
-        }
-    }
+            .disposed(by: disposeBag)
 
-    private func showLocationPermissionAlert() {
-        PermissionManager.shared.showPermissionAlert(for: .location, from: self)
+        output.selectedLocation
+            .drive(with: self) { owner, location in
+                owner.onLocationSelected?(location.0, location.1)
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        output.showPermissionAlert
+            .drive(with: self) { owner, _ in
+                PermissionManager.shared.showPermissionAlert(for: .location, from: owner)
+            }
+            .disposed(by: disposeBag)
+
+        output.isLoadingLocation
+            .drive(with: self) { owner, isLoading in
+                var config = owner.currentLocationButton.configuration
+                config?.showsActivityIndicator = isLoading
+                owner.currentLocationButton.configuration = config
+            }
+            .disposed(by: disposeBag)
+
+        tableView.rx.modelSelected(MKLocalSearchCompletion.self)
+            .bind(with: self) { owner, completion in
+                owner.locationSelectedRelay.accept(completion)
+            }
+            .disposed(by: disposeBag)
+
+        tableView.rx.itemSelected
+            .bind(with: self) { owner, indexPath in
+                owner.tableView.deselectRow(at: indexPath, animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        searchBar.rx.searchButtonClicked
+            .bind(with: self) { owner, _ in
+                owner.searchBar.resignFirstResponder()
+            }
+            .disposed(by: disposeBag)
     }
 
     private func configureUI() {
@@ -160,98 +177,5 @@ final class LocationSearchViewController: UIViewController {
 
     @objc private func cancelTapped() {
         dismiss(animated: true)
-    }
-}
-
-extension LocationSearchViewController: UISearchBarDelegate {
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        searchCompleter.queryFragment = searchText
-        if !searchText.isEmpty {
-            AnalyticsManager.shared.logLocationSearchUsed()
-        }
-    }
-
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.resignFirstResponder()
-    }
-}
-
-extension LocationSearchViewController: MKLocalSearchCompleterDelegate {
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        searchResults = completer.results
-        tableView.reloadData()
-    }
-
-    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-    }
-}
-
-extension LocationSearchViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return searchResults.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: LocationSearchCell.identifier,
-            for: indexPath
-        ) as? LocationSearchCell else {
-            return UITableViewCell()
-        }
-
-        let result = searchResults[indexPath.row]
-        cell.configure(with: result)
-        return cell
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        let result = searchResults[indexPath.row]
-        let searchRequest = MKLocalSearch.Request(completion: result)
-        let search = MKLocalSearch(request: searchRequest)
-
-        search.start { [weak self] response, error in
-            guard let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-
-            let title = result.title
-            let subtitle = result.subtitle
-            let fullAddress = subtitle.isEmpty ? title : "\(title), \(subtitle)"
-
-            AnalyticsManager.shared.logLocationSaved(source: "search")
-            self?.onLocationSelected?(coordinate, fullAddress)
-            self?.dismiss(animated: true)
-        }
-    }
-
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 60
-    }
-}
-
-extension LocationSearchViewController: CLLocationManagerDelegate {
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        currentLocationButton.configuration?.showsActivityIndicator = false
-        handleLocation(location)
-    }
-
-    private func handleLocation(_ location: CLLocation) {
-        LocationUtility.reverseGeocode(location: location) { [weak self] address in
-            guard let self = self else { return }
-            var config = self.currentLocationButton.configuration
-            config?.showsActivityIndicator = false
-            self.currentLocationButton.configuration = config
-
-            let finalAddress = address.isEmpty ? "현재 위치" : address
-            AnalyticsManager.shared.logLocationSaved(source: "current_location")
-            self.onLocationSelected?(location.coordinate, finalAddress)
-            self.dismiss(animated: true)
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        currentLocationButton.configuration?.showsActivityIndicator = false
-        showToast(message: NSLocalizedString("location_search.location_error", comment: ""))
     }
 }

@@ -8,19 +8,30 @@
 import AVFoundation
 import Photos
 import PhotosUI
+import RxCocoa
+import RxDataSources
+import RxSwift
 import SnapKit
 import UIKit
 
-final class MediaSelectionViewController: UIViewController {
-    private enum Section: Int, CaseIterable {
-        case actions = 0
-        case photos = 1
-    }
+enum MediaCollectionItem {
+    case action(icon: String, title: String, type: ActionType)
+    case photo(asset: PHAsset)
+}
 
-    private enum ActionItem: Int, CaseIterable {
-        case camera = 0
-        case library = 1
-    }
+enum ActionType {
+    case camera
+    case library
+}
+
+final class MediaSelectionViewController: UIViewController {
+    private let viewModel = MediaSelectionViewModel()
+    private let disposeBag = DisposeBag()
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    private let cameraButtonTappedRelay = PublishRelay<Void>()
+    private let libraryButtonTappedRelay = PublishRelay<Void>()
+    private let photoSelectedRelay = PublishRelay<PHAsset>()
+    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?)>()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -37,40 +48,201 @@ final class MediaSelectionViewController: UIViewController {
         cv.showsHorizontalScrollIndicator = false
         cv.register(PhotoSelectionCell.self, forCellWithReuseIdentifier: "PhotoSelectionCell")
         cv.register(ActionCell.self, forCellWithReuseIdentifier: "ActionCell")
-        cv.delegate = self
-        cv.dataSource = self
         return cv
     }()
 
     var onMediaSelected: ((UIImage, CLLocation?, Date?) -> Void)?
-    private var photos: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
     private var isObserverRegistered = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        bind()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         if status == .authorized || status == .limited {
             registerPhotoLibraryChangeObserverIfNeeded()
-            fetchPhotos()
         }
-        collectionView.reloadData()
+        viewWillAppearRelay.accept(())
     }
 
     deinit {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
 
+    private func registerPhotoLibraryChangeObserverIfNeeded() {
+        guard !isObserverRegistered else { return }
+        PHPhotoLibrary.shared().register(self)
+        isObserverRegistered = true
+    }
+
+    private func bind() {
+        let input = MediaSelectionViewModel.Input(
+            viewWillAppear: viewWillAppearRelay.asObservable(),
+            cameraButtonTapped: cameraButtonTappedRelay.asObservable(),
+            libraryButtonTapped: libraryButtonTappedRelay.asObservable(),
+            photoSelected: photoSelectedRelay.asObservable(),
+            imagePickerResult: imagePickerResultRelay.asObservable()
+        )
+
+        let output = viewModel.transform(input: input)
+
+        let dataSource = RxCollectionViewSectionedReloadDataSource<SectionModel<String, MediaCollectionItem>>(
+            configureCell: { [weak self] _, collectionView, indexPath, item in
+                guard let self = self else { return UICollectionViewCell() }
+
+                switch item {
+                case .action(let icon, let title, _):
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ActionCell", for: indexPath) as! ActionCell
+                    cell.configure(icon: icon, title: title)
+                    return cell
+                case .photo(let asset):
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoSelectionCell", for: indexPath) as! PhotoSelectionCell
+                    cell.configure(with: asset, imageManager: self.imageManager)
+                    return cell
+                }
+            }
+        )
+
+        Observable.combineLatest(output.showActionButtons.asObservable(), output.photos.asObservable())
+            .map { showButtons, photos -> [SectionModel<String, MediaCollectionItem>] in
+                var sections: [SectionModel<String, MediaCollectionItem>] = []
+
+                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                var actionItems: [MediaCollectionItem] = []
+
+                if status == .authorized {
+                    actionItems.append(.action(
+                        icon: "camera.fill",
+                        title: NSLocalizedString("media_selection.camera", comment: ""),
+                        type: .camera
+                    ))
+                } else {
+                    actionItems.append(.action(
+                        icon: "camera.fill",
+                        title: NSLocalizedString("media_selection.camera", comment: ""),
+                        type: .camera
+                    ))
+                    actionItems.append(.action(
+                        icon: "photo.on.rectangle",
+                        title: NSLocalizedString("media_selection.library", comment: ""),
+                        type: .library
+                    ))
+                }
+
+                sections.append(SectionModel(model: "actions", items: actionItems))
+
+                let photoItems = photos.map { MediaCollectionItem.photo(asset: $0) }
+                sections.append(SectionModel(model: "photos", items: photoItems))
+
+                return sections
+            }
+            .bind(to: collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+
+        collectionView.rx.modelSelected(MediaCollectionItem.self)
+            .bind(with: self) { owner, item in
+                switch item {
+                case .action(_, _, let type):
+                    switch type {
+                    case .camera:
+                        owner.cameraButtonTappedRelay.accept(())
+                    case .library:
+                        owner.libraryButtonTappedRelay.accept(())
+                    }
+                case .photo(let asset):
+                    owner.photoSelectedRelay.accept(asset)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.showCamera
+            .drive(with: self) { owner, _ in
+                owner.presentCamera()
+            }
+            .disposed(by: disposeBag)
+
+        output.showPHPicker
+            .drive(with: self) { owner, _ in
+                owner.presentPHPicker()
+            }
+            .disposed(by: disposeBag)
+
+        output.showCameraPermissionAlert
+            .drive(with: self) { owner, _ in
+                PermissionManager.shared.showPermissionAlert(for: .camera, from: owner)
+            }
+            .disposed(by: disposeBag)
+
+        output.showPhotoPermissionAlert
+            .drive(with: self) { owner, _ in
+                PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: owner)
+            }
+            .disposed(by: disposeBag)
+
+        output.requestCameraPermission
+            .drive(with: self) { owner, _ in
+                PermissionManager.shared.requestPermission(for: .camera, from: owner) { [weak owner] status in
+                    guard let owner = owner else { return }
+                    if status == .authorized {
+                        owner.presentCamera()
+                    } else {
+                        PermissionManager.shared.showPermissionAlert(for: .camera, from: owner)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.requestPhotoPermission
+            .drive(with: self) { owner, _ in
+                PermissionManager.shared.requestPermission(for: .photoLibrary, from: owner) { [weak owner] status in
+                    guard let owner = owner else { return }
+                    owner.registerPhotoLibraryChangeObserverIfNeeded()
+                    owner.viewWillAppearRelay.accept(())
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.showLimitedLibraryPicker
+            .drive(with: self) { owner, _ in
+                PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: owner)
+            }
+            .disposed(by: disposeBag)
+
+        output.selectedMedia
+            .drive(with: self) { owner, media in
+                owner.onMediaSelected?(media.0, media.1, media.2)
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func presentCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
+
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
+    private func presentPHPicker() {
+        var configuration = PHPickerConfiguration()
+        configuration.selectionLimit = 1
+        configuration.filter = .images
+
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+
     private func configureUI() {
         view.applyGradient(.grayGradient)
 
-        // 커스텀 타이틀 뷰로 폰트 적용
         let titleLabel = UILabel()
         titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
         titleLabel.font = FontSystem.galmuriMono(size: 16)
@@ -95,177 +267,6 @@ final class MediaSelectionViewController: UIViewController {
     @objc private func closeTapped() {
         dismiss(animated: true)
     }
-
-
-    private func fetchPhotos() {
-        let fetchOptions = PHFetchOptions()
-        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-
-        let results = PHAsset.fetchAssets(with: .image, options: fetchOptions)
-        photos = []
-        results.enumerateObjects { asset, _, _ in
-            self.photos.append(asset)
-        }
-
-        collectionView.reloadData()
-    }
-
-
-    private func openCamera() {
-        let status = PermissionManager.shared.checkPermission(for: .camera)
-
-        switch status {
-        case .authorized:
-            presentCamera()
-        case .denied:
-            PermissionManager.shared.showPermissionAlert(for: .camera, from: self)
-        case .notDetermined:
-            PermissionManager.shared.requestPermission(for: .camera, from: self) { [weak self] status in
-                guard let self = self else { return }
-                if status == .authorized {
-                    self.presentCamera()
-                } else {
-                    PermissionManager.shared.showPermissionAlert(for: .camera, from: self)
-                }
-            }
-        case .limited:
-            break
-        }
-    }
-
-    private func presentCamera() {
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
-
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-
-
-    private func openPHPicker() {
-        let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
-
-        switch status {
-        case .authorized:
-            registerPhotoLibraryChangeObserverIfNeeded()
-            presentPHPicker()
-            fetchPhotos()
-        case .limited:
-            registerPhotoLibraryChangeObserverIfNeeded()
-            PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
-            fetchPhotos()
-        case .denied:
-            PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
-        case .notDetermined:
-            PermissionManager.shared.requestPermission(for: .photoLibrary, from: self) { [weak self] status in
-                guard let self = self else { return }
-                self.registerPhotoLibraryChangeObserverIfNeeded()
-                switch status {
-                case .authorized:
-                    self.fetchPhotos()
-                case .limited:
-                    self.fetchPhotos()
-                case .denied:
-                    PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: self)
-                case .notDetermined:
-                    break
-                }
-            }
-        }
-    }
-
-    private func registerPhotoLibraryChangeObserverIfNeeded() {
-        guard !isObserverRegistered else { return }
-        PHPhotoLibrary.shared().register(self)
-        isObserverRegistered = true
-    }
-
-    private func presentPHPicker() {
-        var configuration = PHPickerConfiguration()
-        configuration.selectionLimit = 1
-        configuration.filter = .images
-
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-}
-
-extension MediaSelectionViewController: UICollectionViewDataSource {
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 2
-    }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if section == 0 {
-            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-            return status == .authorized ? 1 : 2
-        } else {
-            return photos.count
-        }
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if indexPath.section == 0 {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ActionCell", for: indexPath) as! ActionCell
-            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-
-            if status == .authorized {
-                cell.configure(icon: "camera.fill", title: NSLocalizedString("media_selection.camera", comment: ""))
-            } else {
-                if indexPath.item == 0 {
-                    cell.configure(icon: "camera.fill", title: NSLocalizedString("media_selection.camera", comment: ""))
-                } else {
-                    cell.configure(icon: "photo.on.rectangle", title: NSLocalizedString("media_selection.library", comment: ""))
-                }
-            }
-            return cell
-        } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoSelectionCell", for: indexPath) as! PhotoSelectionCell
-            let asset = photos[indexPath.item]
-            cell.configure(with: asset, imageManager: imageManager)
-            return cell
-        }
-    }
-}
-
-extension MediaSelectionViewController: UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if indexPath.section == 0 {
-            let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-
-            if status == .authorized {
-                openCamera()
-            } else {
-                if indexPath.item == 0 {
-                    openCamera()
-                } else {
-                    openPHPicker()
-                }
-            }
-        } else {
-            let asset = photos[indexPath.item]
-            let options = PHImageRequestOptions()
-            options.isSynchronous = false
-            options.deliveryMode = .highQualityFormat
-
-            imageManager.requestImage(
-                for: asset,
-                targetSize: PHImageManagerMaximumSize,
-                contentMode: .aspectFit,
-                options: options
-            ) { [weak self] image, _ in
-                if let image = image {
-                    AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
-                    let location = asset.location
-                    let date = asset.creationDate
-                    self?.onMediaSelected?(image, location, date)
-                    self?.dismiss(animated: true)
-                }
-            }
-        }
-    }
 }
 
 extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
@@ -274,8 +275,7 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
 
         if let image = info[.originalImage] as? UIImage {
             AnalyticsManager.shared.logPhotoSourceSelected(source: "camera")
-            onMediaSelected?(image, nil, nil)
-            dismiss(animated: true)
+            imagePickerResultRelay.accept((image, nil, nil))
         }
     }
 
@@ -295,8 +295,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
                         AnalyticsManager.shared.logPhotoSourceSelected(source: "library")
-                        self?.onMediaSelected?(image, nil, nil)
-                        self?.dismiss(animated: true)
+                        self?.imagePickerResultRelay.accept((image, nil, nil))
                     }
                 }
             }
@@ -307,7 +306,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
 extension MediaSelectionViewController: PHPhotoLibraryChangeObserver {
     func photoLibraryDidChange(_ changeInstance: PHChange) {
         DispatchQueue.main.async { [weak self] in
-            self?.fetchPhotos()
+            self?.viewWillAppearRelay.accept(())
         }
     }
 }

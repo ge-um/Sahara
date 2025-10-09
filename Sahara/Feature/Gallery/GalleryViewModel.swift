@@ -10,10 +10,10 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 
-final class GalleryViewModel {
+final class GalleryViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let realmManager = RealmManager.shared
-    
+
     struct Input {
         let viewWillAppear: Observable<Void>
         let addButtonTapped: Observable<Void>
