@@ -15,6 +15,8 @@ final class SearchViewController: UIViewController {
     private let viewModel = SearchViewModel()
     private let disposeBag = DisposeBag()
 
+    private let customNavigationBar = CustomNavigationBar()
+
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("search.placeholder", comment: "")
@@ -56,8 +58,14 @@ final class SearchViewController: UIViewController {
         super.viewDidLoad()
         navigationController?.setNavigationBarHidden(true, animated: false)
         configureUI()
+        setupCustomNavigationBar()
         setupKeyboardDismiss()
         bind()
+    }
+
+    private func setupCustomNavigationBar() {
+        customNavigationBar.configure(title: NSLocalizedString("tab.search", comment: ""))
+        customNavigationBar.hideLeftButton()
     }
 
     private func setupKeyboardDismiss() {
@@ -73,12 +81,19 @@ final class SearchViewController: UIViewController {
     private func configureUI() {
         view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
+        view.addSubview(customNavigationBar)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
         view.addSubview(emptyStateLabel)
 
-        searchBar.snp.makeConstraints { make in
+        customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalToSuperview()
+            make.height.equalTo(54)
+        }
+
+        searchBar.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom)
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
