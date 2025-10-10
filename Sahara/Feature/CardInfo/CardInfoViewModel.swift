@@ -300,9 +300,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }()
 
         let realm = RealmManager.shared.realm
-        let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+        guard let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
 
-        RealmManager.shared.deleteCard(id: cardId)
+        let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
         let newCard = Card(
             createdDate: date,
@@ -313,7 +313,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        RealmManager.shared.save(newCard)
+        do {
+            try realm.write {
+                realm.delete(cardToDelete)
+                realm.add(newCard)
+            }
+        } catch {
+        }
 
         if !hadLocationBefore && location != nil {
             AnalyticsManager.shared.logFirstLocationAdded()
