@@ -80,7 +80,7 @@ final class MainTabBarController: UITabBarController {
 //        }
 
         tabButtonStackView.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview().inset(60)
+            make.centerX.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
         }
 
