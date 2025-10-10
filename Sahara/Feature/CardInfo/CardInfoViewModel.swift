@@ -285,6 +285,25 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
+        var editTypes: [String] = []
+        if imageChanged {
+            editTypes.append("photo")
+        }
+        if initialMemo != memoText {
+            editTypes.append("memo")
+        }
+        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
+        if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
+            editTypes.append("location")
+        }
+        if initialIsLocked != isLocked {
+            editTypes.append("lock")
+        }
+
+        if !editTypes.isEmpty {
+            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        }
+
         do {
             try realm.write {
                 card.createdDate = date
@@ -316,6 +335,25 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
 
         let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+
+        var editTypes: [String] = []
+        if imageChanged {
+            editTypes.append("photo")
+        }
+        if initialMemo != memoText {
+            editTypes.append("memo")
+        }
+        let oldLocation = (cardToDelete.latitude != nil && cardToDelete.longitude != nil) ? CLLocation(latitude: cardToDelete.latitude!, longitude: cardToDelete.longitude!) : nil
+        if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
+            editTypes.append("location")
+        }
+        if initialIsLocked != isLocked {
+            editTypes.append("lock")
+        }
+
+        if !editTypes.isEmpty {
+            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        }
 
         let newCard = Card(
             createdDate: date,
