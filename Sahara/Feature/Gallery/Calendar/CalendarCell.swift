@@ -77,7 +77,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let weekday = Calendar.current.component(.weekday, from: date)
 
             let calendar = Calendar.current
-            if calendar.isDateInToday(date) {
+            if calendar.isDateInToday(date) && item.isCurrentMonth {
                 isToday = true
                 contentView.layer.borderColor = ColorSystem.todayIndicator.cgColor
                 contentView.layer.borderWidth = 2
@@ -99,7 +99,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             if photoCount == 0 {
                 containerView.backgroundColor = ColorSystem.clear
-                addButton.isHidden = !isToday
+                addButton.isHidden = !(isToday && item.isCurrentMonth)
             } else {
                 addButton.isHidden = true
                 if photoCount == 1 {
