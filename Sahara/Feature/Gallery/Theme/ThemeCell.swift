@@ -27,13 +27,13 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = FontSystem.galmuriMono(size: 16)
         return label
     }()
 
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .secondaryLabel
         return label
     }()
