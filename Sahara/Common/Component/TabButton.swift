@@ -35,7 +35,7 @@ final class TabButton: UIView {
 
     private let label: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.TextStyle.tabBarLabel.font
+        label.font = FontSystem.galmuriMono(size: 10)
         label.textColor = .black
         return label
     }()
@@ -62,7 +62,7 @@ final class TabButton: UIView {
 
         backgroundView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(52)
+            make.width.height.equalTo(48)
         }
 
         stackView.snp.makeConstraints { make in

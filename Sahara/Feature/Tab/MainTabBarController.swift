@@ -14,6 +14,14 @@ final class MainTabBarController: UITabBarController {
         return view
     }()
 
+    private lazy var tabButtonStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.distribution = .equalSpacing
+        stack.alignment = .center
+        return stack
+    }()
+
     private lazy var galleryTabButton: TabButton = {
         let button = TabButton(
             icon: UIImage(named: "gallery"),
@@ -56,34 +64,35 @@ final class MainTabBarController: UITabBarController {
 
     private func setupCustomTabBar() {
         view.addSubview(customTabBar)
-        customTabBar.addSubview(galleryTabButton)
-        customTabBar.addSubview(searchTabButton)
-        customTabBar.addSubview(statsTabButton)
+        customTabBar.addSubview(tabButtonStackView)
+
+        tabButtonStackView.addArrangedSubview(galleryTabButton)
+        tabButtonStackView.addArrangedSubview(searchTabButton)
+        tabButtonStackView.addArrangedSubview(statsTabButton)
 
         customTabBar.applyGradient(.barBack)
+
+        galleryTabButton.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
+
+        searchTabButton.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
+
+        statsTabButton.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
+
+        tabButtonStackView.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(60)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
+        }
 
         customTabBar.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(84)
-        }
-
-        galleryTabButton.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.trailing.equalTo(customTabBar.snp.centerX).offset(-70)
-            make.width.height.equalTo(52)
-        }
-
-        searchTabButton.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.centerX.equalToSuperview()
-            make.width.height.equalTo(52)
-        }
-
-        statsTabButton.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.leading.equalTo(customTabBar.snp.centerX).offset(70)
-            make.width.height.equalTo(52)
+            make.top.equalTo(tabButtonStackView.snp.top).offset(-8)
         }
     }
 

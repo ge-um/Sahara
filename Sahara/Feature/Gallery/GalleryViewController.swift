@@ -192,7 +192,7 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(54)
+            make.height.equalTo(56)
         }
 
         emptyStateView.snp.makeConstraints { make in
@@ -207,21 +207,21 @@ final class GalleryViewController: UIViewController {
         }
 
         calendarContainerView.snp.makeConstraints { make in
-            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(90) // 70(tabBar) + 20(spacing)
+            make.bottom.equalToSuperview().inset(112)
         }
 
         mapView.snp.makeConstraints { make in
-            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(90)
+            make.bottom.equalToSuperview().inset(112)
         }
 
         themeContainerView.snp.makeConstraints { make in
-            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(10)
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(90)
+            make.bottom.equalToSuperview().inset(112)
         }
     }
     
