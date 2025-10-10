@@ -67,7 +67,7 @@ final class MainTabBarController: UITabBarController {
         customTabBar.addSubview(tabButtonStackView)
 
         tabButtonStackView.addArrangedSubview(galleryTabButton)
-//        tabButtonStackView.addArrangedSubview(searchTabButton)
+        tabButtonStackView.addArrangedSubview(searchTabButton)
 
         customTabBar.applyGradient(.barBack)
 
@@ -75,9 +75,9 @@ final class MainTabBarController: UITabBarController {
             make.width.height.equalTo(44)
         }
 
-//        searchTabButton.snp.makeConstraints { make in
-//            make.width.height.equalTo(44)
-//        }
+        searchTabButton.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
 
         tabButtonStackView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
@@ -101,10 +101,10 @@ final class MainTabBarController: UITabBarController {
         let galleryVC = GalleryViewController(viewModel: galleryVM)
         let galleryNav = UINavigationController(rootViewController: galleryVC)
 
-//        let searchVC = SearchViewController()
-//        let searchNav = UINavigationController(rootViewController: searchVC)
+        let searchVC = SearchViewController()
+        let searchNav = UINavigationController(rootViewController: searchVC)
 
-        viewControllers = [galleryNav]
+        viewControllers = [galleryNav, searchNav]
 
         updateTabSelection()
     }
@@ -126,6 +126,6 @@ final class MainTabBarController: UITabBarController {
 
     private func updateTabSelection() {
         galleryTabButton.setSelected(selectedIndex == 0)
-//        searchTabButton.setSelected(selectedIndex == 1)
+        searchTabButton.setSelected(selectedIndex == 1)
     }
 }
