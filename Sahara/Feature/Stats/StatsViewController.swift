@@ -119,8 +119,8 @@ final class StatsViewController: UIViewController {
         contentStackView.addArrangedSubview(weekdayChartView)
         contentStackView.addArrangedSubview(sectionTitleLabel)
         contentStackView.addArrangedSubview(monthlyChartView)
-        contentStackView.addArrangedSubview(moodTitleLabel)
-        contentStackView.addArrangedSubview(moodChartView)
+//        contentStackView.addArrangedSubview(moodTitleLabel)
+//        contentStackView.addArrangedSubview(moodChartView)
 
         basicStatsStackView.addArrangedSubview(streakView)
         basicStatsStackView.addArrangedSubview(totalCardView)
@@ -159,9 +159,9 @@ final class StatsViewController: UIViewController {
             make.height.equalTo(180)
         }
 
-        moodChartView.snp.makeConstraints { make in
-            make.height.equalTo(250)
-        }
+//        moodChartView.snp.makeConstraints { make in
+//            make.height.equalTo(250)
+//        }
     }
 
     private func bind() {
@@ -214,13 +214,13 @@ final class StatsViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.moodData
-            .drive(with: self) { owner, data in
-                let labels = data.map { $0.mood.rawValue.capitalized }
-                let values = data.map { CGFloat($0.count) }
-                owner.moodChartView.configure(labels: labels, values: values)
-            }
-            .disposed(by: disposeBag)
+//        output.moodData
+//            .drive(with: self) { owner, data in
+//                let labels = data.map { $0.mood.rawValue.capitalized }
+//                let values = data.map { CGFloat($0.count) }
+//                owner.moodChartView.configure(labels: labels, values: values)
+//            }
+//            .disposed(by: disposeBag)
     }
 }
 
