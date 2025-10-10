@@ -74,7 +74,6 @@ final class CardInfoViewController: UIViewController {
         setupCustomNavigationBar()
         bind()
         setupKeyboardDismiss()
-        setupPlaceholder()
         setupKeyboardHandling()
     }
 
@@ -299,6 +298,9 @@ final class CardInfoViewController: UIViewController {
             if let memo = output.initialMemo {
                 contentView.memoTextView.text = memo
                 contentView.memoTextView.textColor = ColorSystem.labelSecondary
+                contentView.characterCountLabel.text = "\(memo.count)"
+            } else {
+                setupPlaceholder()
             }
             if let location = output.initialLocation {
                 initialLocationSubject.onNext(location)
@@ -311,6 +313,8 @@ final class CardInfoViewController: UIViewController {
 
                 updateMapView(with: location.coordinate)
             }
+        } else {
+            setupPlaceholder()
         }
 
         output.hasImage
