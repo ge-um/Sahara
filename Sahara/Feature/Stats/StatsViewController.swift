@@ -302,7 +302,7 @@ final class SimpleBarChartView: UIView {
 
             let labelText = label as NSString
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: FontSystem.galmuriMono(size: 9),
+                .font: FontSystem.galmuriMono(size: 11),
                 .foregroundColor: UIColor.black
             ]
             let labelSize = labelText.size(withAttributes: attributes)
@@ -463,13 +463,13 @@ final class PieChartView: UIView {
             let labelText = "\(labels[index])\n\(Int(percent * 100))%"
             let textLayer = CATextLayer()
             textLayer.string = labelText
-            textLayer.font = FontSystem.galmuriMono(size: 10)
-            textLayer.fontSize = 10
+            textLayer.font = FontSystem.galmuriMono(size: 12)
+            textLayer.fontSize = 12
             textLayer.foregroundColor = ColorSystem.black.cgColor
             textLayer.alignmentMode = .center
             textLayer.contentsScale = UIScreen.main.scale
 
-            let textSize = (labelText as NSString).size(withAttributes: [.font: FontSystem.galmuriMono(size: 10)])
+            let textSize = (labelText as NSString).size(withAttributes: [.font: FontSystem.galmuriMono(size: 12)])
             textLayer.frame = CGRect(
                 x: labelX - textSize.width / 2,
                 y: labelY - textSize.height / 2,
