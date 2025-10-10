@@ -235,10 +235,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入力してください"]
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
-            return placeholders.contains(memo) ? nil : memo
+            return memo
         }()
 
         let realm = try! Realm()
@@ -276,10 +275,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入력してください"]
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
-            return placeholders.contains(memo) ? nil : memo
+            return memo
         }()
 
         let realm = try! Realm()
@@ -309,11 +307,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func replaceCard(cardId: ObjectId, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
-
-        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入력してください"]
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
-            return placeholders.contains(memo) ? nil : memo
+            return memo
         }()
 
         let realm = try! Realm()

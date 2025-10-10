@@ -265,7 +265,15 @@ final class CardInfoViewController: UIViewController {
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             date: selectedDateRelay.asObservable(),
-            memo: contentView.memoTextView.rx.text.asObservable(),
+            memo: contentView.memoTextView.rx.text
+                .map { [weak self] text in
+                    guard let self = self else { return nil }
+                    if self.contentView.memoTextView.textColor == ColorSystem.labelPrimary {
+                        return nil
+                    }
+                    return text
+                }
+                .asObservable(),
             location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
             isLocked: contentView.secretSwitch.rx.isOn.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
