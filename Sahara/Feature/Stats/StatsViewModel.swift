@@ -177,7 +177,7 @@ final class StatsViewModel: BaseViewModelProtocol {
         let calendar = Calendar.current
         let now = Date()
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy.MM"
+        dateFormatter.dateFormat = "yy/MM"
 
         var monthlyDict: [String: Int] = [:]
 
