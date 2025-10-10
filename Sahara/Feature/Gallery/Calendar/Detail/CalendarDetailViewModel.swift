@@ -12,7 +12,6 @@ import RxSwift
 
 final class CalendarDetailViewModel: BaseViewModelProtocol {
     private let date: Date
-    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -33,7 +32,8 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
     }
 
     func getCard(by id: ObjectId) -> Card? {
-        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: id)
+        let realm = try! Realm()
+        return realm.object(ofType: Card.self, forPrimaryKey: id)
     }
 
     func transform(input: Input) -> Output {
@@ -41,8 +41,19 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
 
         let loadMemos: () -> Void = { [weak self] in
             guard let self = self else { return }
-            let memos = self.realmManager.fetcCards(on: self.date)
-            memosRelay.accept(memos)
+            let realm = try! Realm()
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: self.date)
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+                memosRelay.accept([])
+                return
+            }
+
+            let results = realm.objects(Card.self)
+                .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
+                .sorted(byKeyPath: "createdDate", ascending: true)
+
+            memosRelay.accept(Array(results))
         }
 
         Observable.merge(
@@ -65,7 +76,14 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
                 guard index < memos.count else { return }
                 let memo = memos[index]
 
-                owner.realmManager.deleteCard(id: memo.id)
+                let realm = try! Realm()
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: memo.id) else { return }
+
+                do {
+                    try realm.write {
+                        realm.delete(card)
+                    }
+                } catch {}
 
                 var updatedMemos = memos
                 updatedMemos.remove(at: index)

@@ -156,7 +156,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .map { owner, _ -> Void in
                 guard let cardId = owner.cardToEditId else { return () }
 
-                RealmManager.shared.deleteCard(id: cardId)
+                let realm = try! Realm()
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return () }
+
+                do {
+                    try realm.write {
+                        realm.delete(card)
+                    }
+                } catch {}
+
                 NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
                 AnalyticsManager.shared.logCardDelete()
 
@@ -233,6 +241,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return placeholders.contains(memo) ? nil : memo
         }()
 
+        let realm = try! Realm()
+        let isFirstCard = realm.objects(Card.self).isEmpty
+        let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
+
         let card = Card(
             createdDate: date,
             editedImageData: imageData,
@@ -242,10 +254,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        let isFirstCard = RealmManager.shared.isEmpty(Card.self)
-        let hadLocationBefore = !RealmManager.shared.realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
-
-        RealmManager.shared.save(card)
+        do {
+            try realm.write {
+                realm.add(card)
+            }
+        } catch {
+        }
 
         if isFirstCard {
             AnalyticsManager.shared.logFirstCardCreated()
@@ -262,24 +276,27 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入力してください"]
+        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入력してください"]
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return placeholders.contains(memo) ? nil : memo
         }()
 
-        let realm = RealmManager.shared.realm
+        let realm = try! Realm()
         guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
 
         let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty
 
-        RealmManager.shared.update {
-            card.createdDate = date
-            card.editedImageData = imageData
-            card.memo = memoText
-            card.isLocked = isLocked
-            card.latitude = location?.coordinate.latitude
-            card.longitude = location?.coordinate.longitude
+        do {
+            try realm.write {
+                card.createdDate = date
+                card.editedImageData = imageData
+                card.memo = memoText
+                card.isLocked = isLocked
+                card.latitude = location?.coordinate.latitude
+                card.longitude = location?.coordinate.longitude
+            }
+        } catch {
         }
 
         if !hadLocationBefore && location != nil {
@@ -293,13 +310,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入力してください"]
+        let placeholders = ["메모를 입력하세요", "Enter memo", "メモを入력してください"]
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return placeholders.contains(memo) ? nil : memo
         }()
 
-        let realm = RealmManager.shared.realm
+        let realm = try! Realm()
         guard let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
 
         let hadLocationBefore = !realm.objects(Card.self).filter("latitude != nil AND longitude != nil").isEmpty

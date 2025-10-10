@@ -14,7 +14,6 @@ import UIKit
 
 final class CardDetailViewModel: BaseViewModelProtocol {
     private let cardId: ObjectId
-    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -43,14 +42,16 @@ final class CardDetailViewModel: BaseViewModelProtocol {
     }
 
     func getCard() -> Card? {
-        return realmManager.realm.object(ofType: Card.self, forPrimaryKey: cardId)
+        let realm = try! Realm()
+        return realm.object(ofType: Card.self, forPrimaryKey: cardId)
     }
 
     func transform(input: Input) -> Output {
         let cardData = input.viewDidLoad
             .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in
-                guard let self = self,
-                      let card = self.realmManager.realm.object(ofType: Card.self, forPrimaryKey: self.cardId) else {
+                guard let self = self else { return nil }
+                let realm = try! Realm()
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: self.cardId) else {
                     return nil
                 }
                 return (
@@ -130,7 +131,15 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
             .map { owner, _ -> Void in
-                owner.realmManager.deleteCard(id: owner.cardId)
+                let realm = try! Realm()
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return () }
+
+                do {
+                    try realm.write {
+                        realm.delete(card)
+                    }
+                } catch {}
+
                 return ()
             }
             .asDriver(onErrorJustReturn: ())

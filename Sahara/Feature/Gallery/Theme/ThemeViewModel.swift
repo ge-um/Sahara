@@ -13,7 +13,6 @@ import UIKit
 import Vision
 
 final class ThemeViewModel: BaseViewModelProtocol {
-    private let realmManager = RealmManager.shared
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -107,33 +106,6 @@ final class ThemeViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func analyzePhotos() -> Observable<[ThemeGroup]> {
-        return Observable.create { observer in
-            let memos = Array(self.realmManager.fetch(Card.self))
-
-            var categoryDict: [ThemeCategory: [Card]] = [:]
-
-            for card in memos {
-                guard let image = UIImage(data: card.editedImageData),
-                      let cgImage = image.cgImage else { continue }
-
-                let category = self.classifyImage(cgImage)
-                categoryDict[category, default: []].append(card)
-            }
-
-            let groups = categoryDict.map { ThemeGroup(category: $0.key, cards: $0.value) }
-                .sorted { first, second in
-                    if first.category == .others { return false }
-                    if second.category == .others { return true }
-                    return first.category.localizedName < second.category.localizedName
-                }
-
-            observer.onNext(groups)
-            observer.onCompleted()
-
-            return Disposables.create()
-        }
-    }
 
     private func classifyImage(_ cgImage: CGImage) -> ThemeCategory {
         let request = VNClassifyImageRequest()

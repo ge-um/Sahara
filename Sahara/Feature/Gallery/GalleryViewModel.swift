@@ -12,7 +12,6 @@ import RxSwift
 
 final class GalleryViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let realmManager = RealmManager.shared
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -56,9 +55,9 @@ final class GalleryViewModel: BaseViewModelProtocol {
 
         let isEmptyRelay = BehaviorRelay<Bool>(value: true)
 
-        let checkEmpty: () -> Void = { [weak self] in
-            guard let self = self else { return }
-            let isEmpty = self.realmManager.isEmpty(Card.self)
+        let checkEmpty: () -> Void = {
+            let realm = try! Realm()
+            let isEmpty = realm.objects(Card.self).isEmpty
             isEmptyRelay.accept(isEmpty)
         }
 
@@ -116,8 +115,19 @@ final class GalleryViewModel: BaseViewModelProtocol {
     }
     
     private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Card]>) {
-        let memos = realmManager.fetchCards(in: date)
-        photos.accept(memos)
+        let realm = try! Realm()
+        let calendar = Calendar.current
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
+              let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
+            photos.accept([])
+            return
+        }
+
+        let results = realm.objects(Card.self)
+            .filter("createdDate >= %@ AND createdDate < %@", startOfMonth, nextMonth)
+            .sorted(byKeyPath: "createdDate", ascending: true)
+
+        photos.accept(Array(results))
     }
     
     private func generateCalendar(for month: Date, cards: [Card]) -> [DayItem] {
