@@ -14,114 +14,27 @@ import UIKit
 final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
     private let disposeBag = DisposeBag()
-    private var isFrontCardVisible = true
     private let sourceType: EditSourceType
 
     private let viewDidLoadRelay = PublishRelay<Void>()
-    private let swipeLeftRelay = PublishRelay<Void>()
-    private let swipeRightRelay = PublishRelay<Void>()
     private let deleteConfirmedRelay = PublishRelay<Void>()
-    private var photoImageHeightConstraint: Constraint?
 
     private let customNavigationBar = CustomNavigationBar()
 
-    private let cardContainerView: UIView = {
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.backgroundColor = .clear
+        return scrollView
+    }()
+
+    private let contentView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         return view
     }()
 
-    private let frontCardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemBackground
-        view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
-        return view
-    }()
-
-    private let backCardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemBackground
-        view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
-        view.isHidden = true
-        return view
-    }()
-
-    private let photoImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 20
-        return imageView
-    }()
-
-    private let overlayView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground.withAlphaComponent(0.6)
-        view.layer.cornerRadius = 20
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-        return view
-    }()
-
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = .white
-        return label
-    }()
-
-    private let locationLabel: UILabel = {
-        let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .white
-        label.numberOfLines = 2
-        return label
-    }()
-
-    private lazy var swipeHintLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = .white.withAlphaComponent(0.8)
-        label.textAlignment = .right
-        return label
-    }()
-
-    private let memoScrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.backgroundColor = .clear
-        scrollView.showsVerticalScrollIndicator = false
-        scrollView.showsHorizontalScrollIndicator = false
-        return scrollView
-    }()
-
-    private let memoLabel: UILabel = {
-        let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = .label
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        return label
-    }()
-
-    private lazy var backSwipeHintLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = .secondaryLabel
-        label.textAlignment = .right
-        return label
-    }()
-
+    private let photoCardView = PhotoCardView()
 
     private let buttonContainerView: UIView = {
         let view = UIView()
@@ -173,7 +86,6 @@ final class CardDetailViewController: UIViewController {
         navigationController?.interactivePopGestureRecognizer?.delegate = nil
         setupCustomNavigationBar()
         configureUI()
-        setupGestures()
         bind()
         viewDidLoadRelay.accept(())
     }
@@ -213,21 +125,11 @@ final class CardDetailViewController: UIViewController {
         view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(cardContainerView)
-        view.addSubview(buttonContainerView)
+        view.addSubview(scrollView)
 
-        cardContainerView.addSubview(frontCardView)
-        cardContainerView.addSubview(backCardView)
-
-        frontCardView.addSubview(photoImageView)
-        frontCardView.addSubview(overlayView)
-        overlayView.addSubview(dateLabel)
-        overlayView.addSubview(locationLabel)
-        overlayView.addSubview(swipeHintLabel)
-
-        backCardView.addSubview(memoScrollView)
-        backCardView.addSubview(backSwipeHintLabel)
-        memoScrollView.addSubview(memoLabel)
+        scrollView.addSubview(contentView)
+        contentView.addSubview(photoCardView)
+        contentView.addSubview(buttonContainerView)
 
         buttonContainerView.addSubview(saveButton)
         buttonContainerView.addSubview(shareButton)
@@ -238,64 +140,26 @@ final class CardDetailViewController: UIViewController {
             make.height.equalTo(54)
         }
 
-        cardContainerView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(32)
-            make.horizontalEdges.equalToSuperview().inset(32)
-            photoImageHeightConstraint = make.height.equalTo(300).constraint
-        }
-
-        frontCardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        backCardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        photoImageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        overlayView.snp.makeConstraints { make in
+        scrollView.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom)
             make.horizontalEdges.bottom.equalToSuperview()
         }
 
-        dateLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        locationLabel.snp.makeConstraints { make in
-            make.top.equalTo(dateLabel.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        swipeHintLabel.snp.makeConstraints { make in
-            make.top.equalTo(locationLabel.snp.bottom).offset(4)
-            make.trailing.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-16)
-        }
-
-        memoScrollView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(40)
-            make.horizontalEdges.equalToSuperview().inset(30)
-            make.bottom.equalTo(backSwipeHintLabel.snp.top).offset(-20)
-        }
-
-        memoLabel.snp.makeConstraints { make in
+        contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.width.equalTo(memoScrollView.snp.width)
+            make.width.equalTo(scrollView.snp.width)
         }
 
-        backSwipeHintLabel.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().offset(-20)
-            make.trailing.equalToSuperview().inset(20)
+        photoCardView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(32)
+            make.horizontalEdges.equalToSuperview().inset(32)
         }
 
         buttonContainerView.snp.makeConstraints { make in
-            make.top.equalTo(cardContainerView.snp.bottom).offset(32)
+            make.top.equalTo(photoCardView.snp.bottom).offset(32)
             make.centerX.equalToSuperview()
             make.height.equalTo(70)
+            make.bottom.equalToSuperview().offset(-88)
         }
 
         saveButton.snp.makeConstraints { make in
@@ -310,26 +174,6 @@ final class CardDetailViewController: UIViewController {
             make.centerY.equalToSuperview()
             make.width.height.equalTo(70)
         }
-    }
-
-    private func setupGestures() {
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeLeft))
-        swipeLeft.direction = .left
-        cardContainerView.addGestureRecognizer(swipeLeft)
-
-        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeRight))
-        swipeRight.direction = .right
-        cardContainerView.addGestureRecognizer(swipeRight)
-    }
-
-    @objc private func handleSwipeLeft() {
-        guard isFrontCardVisible else { return }
-        swipeLeftRelay.accept(())
-    }
-
-    @objc private func handleSwipeRight() {
-        guard !isFrontCardVisible else { return }
-        swipeRightRelay.accept(())
     }
 
     private func showDeleteAlert() {
@@ -359,42 +203,33 @@ final class CardDetailViewController: UIViewController {
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             shareButtonTapped: shareButton.rx.tap.asObservable(),
             deleteConfirmed: deleteConfirmedRelay.asObservable(),
-            swipeLeft: swipeLeftRelay.asObservable(),
-            swipeRight: swipeRightRelay.asObservable()
+            swipeLeft: photoCardView.swipeLeftRelay.asObservable(),
+            swipeRight: photoCardView.swipeRightRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
 
-        output.photoImage
-            .drive(with: self) { owner, image in
-                owner.photoImageView.image = image
-                if let image = image {
-                    owner.updatePhotoImageHeight(for: image)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        output.dateText
-            .drive(dateLabel.rx.text)
-            .disposed(by: disposeBag)
-
-        output.locationText
-            .drive(locationLabel.rx.text)
-            .disposed(by: disposeBag)
-
-        output.memoText
-            .drive(memoLabel.rx.text)
-            .disposed(by: disposeBag)
+        Driver.combineLatest(
+            output.photoImage,
+            output.dateText,
+            output.locationText,
+            output.memoText
+        )
+        .drive(with: self) { owner, data in
+            let (image, date, location, memo) = data
+            owner.photoCardView.configure(image: image, date: date, location: location, memo: memo)
+        }
+        .disposed(by: disposeBag)
 
         output.shouldFlipToBack
             .drive(with: self) { owner, _ in
-                owner.flipToBack()
+                owner.photoCardView.flipToBack()
             }
             .disposed(by: disposeBag)
 
         output.shouldFlipToFront
             .drive(with: self) { owner, _ in
-                owner.flipToFront()
+                owner.photoCardView.flipToFront()
             }
             .disposed(by: disposeBag)
 
@@ -429,31 +264,5 @@ final class CardDetailViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
-    }
-
-    private func flipToBack() {
-        UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromLeft]) {
-            self.frontCardView.isHidden = true
-            self.backCardView.isHidden = false
-        } completion: { _ in
-            self.isFrontCardVisible = false
-        }
-    }
-
-    private func flipToFront() {
-        UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromRight]) {
-            self.frontCardView.isHidden = false
-            self.backCardView.isHidden = true
-        } completion: { _ in
-            self.isFrontCardVisible = true
-        }
-    }
-
-    private func updatePhotoImageHeight(for image: UIImage) {
-        let imageWidth = view.frame.width - 64
-        let imageHeight = image.heightForWidth(imageWidth)
-
-        photoImageHeightConstraint?.update(offset: imageHeight)
-        view.layoutIfNeeded()
     }
 }
