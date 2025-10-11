@@ -291,10 +291,11 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        selectedDateRelay.accept(output.initialDate)
+
         if output.isEditMode {
             contentView.deleteCard.isHidden = false
             contentView.secretSwitch.isOn = output.initialIsLocked
-            selectedDateRelay.accept(output.initialDate)
             if let memo = output.initialMemo {
                 contentView.memoTextView.text = memo
                 contentView.memoTextView.textColor = ColorSystem.labelSecondary
