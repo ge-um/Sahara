@@ -17,6 +17,7 @@ final class PhotoCardView: UIView {
 
     let swipeLeftRelay = PublishRelay<Void>()
     let swipeRightRelay = PublishRelay<Void>()
+    let deleteButtonTappedRelay = PublishRelay<Void>()
 
     private let cardContainerView: UIView = {
         let view = UIView()
@@ -55,6 +56,26 @@ final class PhotoCardView: UIView {
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 20
         return imageView
+    }()
+
+    private let deleteButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = ColorSystem.white.withAlphaComponent(0.9)
+        button.layer.cornerRadius = 18
+        button.clipsToBounds = true
+
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(named: "xmark")
+        config.baseForegroundColor = ColorSystem.black
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+        button.configuration = config
+
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.2
+
+        return button
     }()
 
     private let overlayView: UIView = {
@@ -119,6 +140,7 @@ final class PhotoCardView: UIView {
         super.init(frame: frame)
         configureUI()
         setupGestures()
+        setupActions()
     }
 
     required init?(coder: NSCoder) {
@@ -134,6 +156,7 @@ final class PhotoCardView: UIView {
 
         frontCardView.addSubview(photoImageView)
         frontCardView.addSubview(overlayView)
+        frontCardView.addSubview(deleteButton)
         overlayView.addSubview(dateLabel)
         overlayView.addSubview(locationLabel)
         overlayView.addSubview(swipeHintLabel)
@@ -161,6 +184,12 @@ final class PhotoCardView: UIView {
 
         overlayView.snp.makeConstraints { make in
             make.horizontalEdges.bottom.equalToSuperview()
+        }
+
+        deleteButton.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(8)
+            make.trailing.equalToSuperview().inset(8)
+            make.width.height.equalTo(36)
         }
 
         dateLabel.snp.makeConstraints { make in
@@ -204,6 +233,12 @@ final class PhotoCardView: UIView {
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeRight))
         swipeRight.direction = .right
         cardContainerView.addGestureRecognizer(swipeRight)
+    }
+
+    private func setupActions() {
+        deleteButton.rx.tap
+            .bind(to: deleteButtonTappedRelay)
+            .disposed(by: disposeBag)
     }
 
     @objc private func handleSwipeLeft() {

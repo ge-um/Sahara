@@ -477,16 +477,9 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func showDeleteAlert() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("card_detail.delete_title", comment: ""),
-            message: NSLocalizedString("card_detail.delete_message", comment: ""),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_cancel", comment: ""), style: .cancel))
-        alert.addAction(UIAlertAction(title: NSLocalizedString("card_detail.delete_confirm", comment: ""), style: .destructive) { [weak self] _ in
+        AlertUtility.showDeleteConfirmation(on: self) { [weak self] in
             self?.deleteConfirmedRelay.accept(())
-        })
-        present(alert, animated: true)
+        }
     }
 }
 
