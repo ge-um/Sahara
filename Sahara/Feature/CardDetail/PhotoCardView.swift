@@ -13,6 +13,7 @@ import UIKit
 final class PhotoCardView: UIView {
     private var isFrontCardVisible = true
     private var photoImageHeightConstraint: Constraint?
+    private let disposeBag = DisposeBag()
 
     let swipeLeftRelay = PublishRelay<Void>()
     let swipeRightRelay = PublishRelay<Void>()
@@ -215,18 +216,49 @@ final class PhotoCardView: UIView {
         swipeRightRelay.accept(())
     }
 
-    func configure(image: UIImage?, date: String?, location: String?, memo: String?) {
-        photoImageView.image = image
-        dateLabel.text = date
-        locationLabel.text = location
-        memoLabel.text = memo
+    func bind(
+        photoImage: Driver<UIImage?>,
+        dateText: Driver<String>,
+        locationText: Driver<String>,
+        memoText: Driver<String>,
+        shouldFlipToBack: Observable<Void>,
+        shouldFlipToFront: Observable<Void>
+    ) {
+        photoImage
+            .drive(with: self) { owner, image in
+                owner.photoImageView.image = image
+                if let image = image {
+                    owner.updatePhotoImageHeight(for: image)
+                }
+            }
+            .disposed(by: disposeBag)
 
-        if let image = image {
-            updatePhotoImageHeight(for: image)
-        }
+        dateText
+            .drive(dateLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        locationText
+            .drive(locationLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        memoText
+            .drive(memoLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        shouldFlipToBack
+            .bind(with: self) { owner, _ in
+                owner.flipToBack()
+            }
+            .disposed(by: disposeBag)
+
+        shouldFlipToFront
+            .bind(with: self) { owner, _ in
+                owner.flipToFront()
+            }
+            .disposed(by: disposeBag)
     }
 
-    func flipToBack() {
+    private func flipToBack() {
         UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromLeft]) {
             self.frontCardView.isHidden = true
             self.backCardView.isHidden = false
@@ -235,7 +267,7 @@ final class PhotoCardView: UIView {
         }
     }
 
-    func flipToFront() {
+    private func flipToFront() {
         UIView.transition(with: cardContainerView, duration: 0.6, options: [.transitionFlipFromRight]) {
             self.frontCardView.isHidden = false
             self.backCardView.isHidden = true
