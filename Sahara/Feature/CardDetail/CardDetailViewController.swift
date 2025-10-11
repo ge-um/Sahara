@@ -209,29 +209,14 @@ final class CardDetailViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        Driver.combineLatest(
-            output.photoImage,
-            output.dateText,
-            output.locationText,
-            output.memoText
+        photoCardView.bind(
+            photoImage: output.photoImage,
+            dateText: output.dateText,
+            locationText: output.locationText,
+            memoText: output.memoText,
+            shouldFlipToBack: output.shouldFlipToBack.asObservable(),
+            shouldFlipToFront: output.shouldFlipToFront.asObservable()
         )
-        .drive(with: self) { owner, data in
-            let (image, date, location, memo) = data
-            owner.photoCardView.configure(image: image, date: date, location: location, memo: memo)
-        }
-        .disposed(by: disposeBag)
-
-        output.shouldFlipToBack
-            .drive(with: self) { owner, _ in
-                owner.photoCardView.flipToBack()
-            }
-            .disposed(by: disposeBag)
-
-        output.shouldFlipToFront
-            .drive(with: self) { owner, _ in
-                owner.photoCardView.flipToFront()
-            }
-            .disposed(by: disposeBag)
 
         output.saveResult
             .drive(with: self) { owner, result in

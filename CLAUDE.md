@@ -580,6 +580,30 @@ final class SomeViewController: UIViewController {
    - `configureUI()`: Setup views and constraints
    - `bind()`: Setup RxSwift bindings
 
+6. **Write Rx-style declarative code**
+   - **ALWAYS prefer reactive binding over imperative method calls**
+   - When passing data to child views/components, use `bind()` methods that accept Observable/Driver streams
+   - Avoid direct method calls like `.configure()` or `.update()` when reactive binding is possible
+   - Examples:
+     ```swift
+     // ✅ Good - Rx-style with bind()
+     customView.bind(
+         data: output.data,
+         isSelected: output.isSelected,
+         shouldAnimate: output.shouldAnimate.asObservable()
+     )
+
+     // ❌ Bad - Imperative style
+     output.data
+         .drive(with: self) { owner, data in
+             owner.customView.configure(data: data)
+         }
+         .disposed(by: disposeBag)
+     ```
+   - Components should have a `bind()` method that handles all reactive subscriptions internally
+   - The component manages its own `DisposeBag` and subscribes to streams inside `bind()`
+   - This keeps ViewControllers clean and maintains consistent Rx patterns throughout the codebase
+
 ### Realm Usage
 - Initialize: `let realm = try! Realm()`
 - Query photos by date range: Use `.filter("date >= %@ AND date <= %@", start, end)`
