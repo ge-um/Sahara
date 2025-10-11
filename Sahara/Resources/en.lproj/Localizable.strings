@@ -11,6 +11,7 @@
 "tab.gallery" = "Gallery";
 "tab.search" = "Search";
 "tab.stats" = "Stats";
+"tab.settings" = "Settings";
 
 /* Gallery */
 "gallery.date_view" = "By Date";
@@ -147,3 +148,12 @@
 "stats.no_data" = "No data available";
 "stats.increase" = "+%d";
 "stats.decrease" = "%d";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.section_support" = "Support";
+"settings.section_about" = "About";
+"settings.contact_developer" = "Contact Developer";
+"settings.version_info" = "Version";
+"settings.mail_error_title" = "Mail Unavailable";
+"settings.mail_error_message" = "Mail app is not available.";

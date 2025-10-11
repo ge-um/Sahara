@@ -10,6 +10,7 @@
 "tab.gallery" = "ギャラリー";
 "tab.search" = "検索";
 "tab.stats" = "統計";
+"tab.settings" = "設定";
 
 /* Gallery */
 "gallery.date_view" = "日付順";
@@ -146,3 +147,12 @@
 "stats.no_data" = "データがありません";
 "stats.increase" = "+%d枚";
 "stats.decrease" = "%d枚";
+
+/* Settings */
+"settings.title" = "設定";
+"settings.section_support" = "サポート";
+"settings.section_about" = "情報";
+"settings.contact_developer" = "開発者に問い合わせ";
+"settings.version_info" = "バージョン情報";
+"settings.mail_error_title" = "メール送信不可";
+"settings.mail_error_message" = "メールアプリを使用できません。";
