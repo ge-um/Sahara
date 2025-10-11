@@ -403,6 +403,15 @@ final class CardInfoViewController: UIViewController {
                     self?.updateMapView(with: coord)
                 }
             }
+        } else {
+            selectedLocation = nil
+            contentView.selectedLocationLabel.text = NSLocalizedString("card_info.location_placeholder", comment: "")
+            contentView.selectedLocationLabel.textColor = ColorSystem.labelPrimary
+            contentView.removeLocationButton.isHidden = true
+            contentView.mapView.isHidden = true
+            contentView.mapViewHeightConstraint?.update(offset: 0)
+            contentView.mapView.removeAnnotations(contentView.mapView.annotations)
+            initialLocationSubject.onNext(CLLocation(latitude: 0, longitude: 0))
         }
 
         coordinator.presentMediaEditor(image: image, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
