@@ -23,6 +23,7 @@ final class ReleaseNotesViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
         tableView.register(ReleaseNoteCell.self, forCellReuseIdentifier: ReleaseNoteCell.identifier)
+        tableView.showsVerticalScrollIndicator = false
         return tableView
     }()
 
@@ -79,7 +80,7 @@ final class ReleaseNotesViewController: UIViewController {
         tableView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-80)
         }
     }
 

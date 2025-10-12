@@ -28,7 +28,7 @@ extension Date {
 
     private func absoluteDateString() -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "yy.MM.dd"
+        formatter.dateFormat = "yy-MM-dd"
         return formatter.string(from: self)
     }
 }
