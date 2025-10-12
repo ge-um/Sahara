@@ -50,9 +50,6 @@ final class CardInfoViewController: UIViewController {
     let coordinator: CardInfoCoordinator
     let viewModel: CardInfoViewModel
     let disposeBag = DisposeBag()
-    var selectedLocation: CLLocation?
-    var selectedImage: UIImage?
-    let initialLocationSubject = PublishSubject<CLLocation?>()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
 
@@ -73,7 +70,6 @@ final class CardInfoViewController: UIViewController {
         configureUI()
         setupCustomNavigationBar()
         bind()
-        setupKeyboardDismiss()
         setupKeyboardHandling()
     }
 
@@ -114,24 +110,6 @@ final class CardInfoViewController: UIViewController {
         customNavigationBar.hideLeftButton()
     }
 
-    func updateMapView(with coordinate: CLLocationCoordinate2D) {
-        contentView.mapView.isHidden = false
-        contentView.mapViewHeightConstraint?.update(offset: 200)
-        view.layoutIfNeeded()
-
-        let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 1000,
-            longitudinalMeters: 1000
-        )
-        contentView.mapView.setRegion(region, animated: true)
-
-        contentView.mapView.removeAnnotations(contentView.mapView.annotations)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        contentView.mapView.addAnnotation(annotation)
-    }
-
     private func configureUI() {
         view.applyGradient(.cardInfoBackground)
 
@@ -156,8 +134,50 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func bind() {
-        let locationSubject = PublishSubject<CLLocation?>()
+        let initialLocationRelay = PublishSubject<CLLocation?>()
+        let selectedLocationRelay = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
+
+        let locationCardViewModel = LocationSelectionCardViewModel()
+        let locationOutput = contentView.locationCard.bind(
+            viewModel: locationCardViewModel,
+            initialLocation: initialLocationRelay.asObservable(),
+            selectedLocation: selectedLocationRelay.asObservable()
+        )
+
+        locationOutput.presentLocationSearch
+            .drive(with: self) { owner, _ in
+                owner.coordinator.presentLocationSearch { coordinate, address in
+                    selectedLocationRelay.onNext((coordinate, address))
+                }
+            }
+            .disposed(by: disposeBag)
+
+        let biometricCardViewModel = BiometricLockCardViewModel(initialIsLocked: false)
+        let biometricOutput = contentView.biometricLockCard.bind(viewModel: biometricCardViewModel)
+
+        biometricOutput.presentPermissionAlert
+            .drive(with: self) { owner, _ in
+                let alert = UIAlertController(
+                    title: NSLocalizedString("biometric.permission_required", comment: ""),
+                    message: NSLocalizedString("biometric.permission_message", comment: ""),
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                })
+                alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
+                owner.present(alert, animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        biometricOutput.showNoSupportToast
+            .drive(with: self) { owner, message in
+                owner.showToast(message: message)
+            }
+            .disposed(by: disposeBag)
 
         let photoImageTapGesture = UITapGestureRecognizer()
         contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
@@ -165,12 +185,20 @@ final class CardInfoViewController: UIViewController {
         photoImageTapGesture.rx.event
             .bind(with: self) { owner, _ in
                 owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject)
+                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
                 }
             }
             .disposed(by: disposeBag)
 
-        contentView.dateSelectButton.rx.tap
+        contentView.photoSelectButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
+                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        contentView.dateCard.selectButton.rx.tap
             .subscribe(with: self) { owner, _ in
                 owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
                     owner.selectedDateRelay.accept(date)
@@ -178,103 +206,28 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        selectedDateRelay
-            .bind(with: self) { owner, date in
-                let formatter = DateFormatter()
-                formatter.locale = Locale.current
-                formatter.dateStyle = .long
-                owner.contentView.dateValueLabel.text = formatter.string(from: date)
-            }
-            .disposed(by: disposeBag)
+        contentView.dateCard.bind(date: selectedDateRelay.asDriver())
 
-        contentView.searchLocationButton.rx.tap
-            .subscribe(with: self) { owner, _ in
-                owner.coordinator.presentLocationSearch { coordinate, address in
-                    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-                    owner.selectedLocation = location
-                    owner.contentView.selectedLocationLabel.text = address
-                    owner.contentView.selectedLocationLabel.textColor = ColorSystem.labelSecondary
-                    owner.contentView.removeLocationButton.isHidden = false
-                    owner.updateMapView(with: coordinate)
-                    locationSubject.onNext(location)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        contentView.removeLocationButton.rx.tap
-            .subscribe(with: self) { owner, _ in
-                owner.selectedLocation = nil
-                owner.contentView.selectedLocationLabel.text = NSLocalizedString("card_info.location_placeholder", comment: "")
-                owner.contentView.selectedLocationLabel.textColor = ColorSystem.labelPrimary
-                owner.contentView.removeLocationButton.isHidden = true
-                owner.contentView.mapView.isHidden = true
-                owner.contentView.mapViewHeightConstraint?.update(offset: 0)
-                owner.contentView.mapView.removeAnnotations(owner.contentView.mapView.annotations)
-                locationSubject.onNext(nil)
-            }
-            .disposed(by: disposeBag)
-
-        contentView.deleteButton.rx.tap
+        contentView.deleteCard.deleteButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.showDeleteAlert()
-            }
-            .disposed(by: disposeBag)
-
-        contentView.secretSwitch.rx.isOn
-            .skip(1)
-            .filter { $0 == true }
-            .bind(with: self) { owner, _ in
-                let biometricType = BiometricAuthManager.shared.biometricType
-
-                if biometricType != .none {
-                    BiometricAuthManager.shared.authenticate(feature: "card_lock") { success, error in
-                        if success {
-                            let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
-                            AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
-                        } else {
-                            owner.contentView.secretSwitch.isOn = false
-
-                            if let error = error as NSError? {
-                                if error.code == LAError.userCancel.rawValue || error.code == LAError.systemCancel.rawValue {
-                                    return
-                                }
-
-                                let alert = UIAlertController(
-                                    title: NSLocalizedString("biometric.permission_required", comment: ""),
-                                    message: NSLocalizedString("biometric.permission_message", comment: ""),
-                                    preferredStyle: .alert
-                                )
-                                alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
-                                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                                        UIApplication.shared.open(url)
-                                    }
-                                })
-                                alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
-                                owner.present(alert, animated: true)
-                            }
-                        }
-                    }
-                } else {
-                    owner.contentView.secretSwitch.isOn = false
-                    owner.showToast(message: NSLocalizedString("biometric.no_biometric", comment: ""))
-                }
             }
             .disposed(by: disposeBag)
 
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             date: selectedDateRelay.asObservable(),
-            memo: contentView.memoTextView.rx.text
+            memo: contentView.memoCard.textView.rx.text
                 .map { [weak self] text in
                     guard let self = self else { return nil }
-                    if self.contentView.memoTextView.textColor == ColorSystem.labelPrimary {
+                    if self.contentView.memoCard.textView.textColor == ColorSystem.labelPrimary {
                         return nil
                     }
                     return text
                 }
                 .asObservable(),
-            location: Observable.merge(locationSubject.asObservable(), initialLocationSubject.asObservable()),
-            isLocked: contentView.secretSwitch.rx.isOn.asObservable(),
+            location: locationOutput.location.asObservable(),
+            isLocked: biometricOutput.isLocked.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             cancelButtonTapped: cancelButton.rx.tap.asObservable(),
             deleteButtonTapped: deleteConfirmedRelay.asObservable()
@@ -292,30 +245,20 @@ final class CardInfoViewController: UIViewController {
             .disposed(by: disposeBag)
 
         selectedDateRelay.accept(output.initialDate)
+        contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
 
         if output.isEditMode {
             contentView.deleteCard.isHidden = false
-            contentView.secretSwitch.isOn = output.initialIsLocked
             if let memo = output.initialMemo {
-                contentView.memoTextView.text = memo
-                contentView.memoTextView.textColor = ColorSystem.labelSecondary
-                contentView.characterCountLabel.text = "\(memo.count)"
+                contentView.memoCard.setMemo(memo)
             } else {
-                setupPlaceholder()
+                contentView.memoCard.showPlaceholder()
             }
             if let location = output.initialLocation {
-                initialLocationSubject.onNext(location)
-                contentView.removeLocationButton.isHidden = false
-
-                LocationUtility.reverseGeocode(location: location) { [weak self] address in
-                    self?.contentView.selectedLocationLabel.text = address
-                    self?.contentView.selectedLocationLabel.textColor = ColorSystem.labelSecondary
-                }
-
-                updateMapView(with: location.coordinate)
+                initialLocationRelay.onNext(location)
             }
         } else {
-            setupPlaceholder()
+            contentView.memoCard.showPlaceholder()
         }
 
         output.hasImage
@@ -323,20 +266,11 @@ final class CardInfoViewController: UIViewController {
                 owner.contentView.photoImageView.isHidden = !hasImage
                 owner.contentView.photoSelectButton.isHidden = hasImage
                 if hasImage {
-                    owner.selectedImage = owner.contentView.photoImageView.image
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)
                     }
                 } else {
                     owner.contentView.resetPhotoImageHeight()
-                }
-            }
-            .disposed(by: disposeBag)
-
-        contentView.photoSelectButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject)
                 }
             }
             .disposed(by: disposeBag)
@@ -384,38 +318,30 @@ final class CardInfoViewController: UIViewController {
             }
         }
         .disposed(by: disposeBag)
+
+        let tapGesture = UITapGestureRecognizer()
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+
+        tapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                owner.view.endEditing(true)
+            }
+            .disposed(by: disposeBag)
     }
 
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>) {
+    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: PublishSubject<CLLocation?>) {
         if let date = date {
             selectedDateRelay.accept(date)
         }
 
         if let location = location {
-            selectedLocation = location
-            initialLocationSubject.onNext(location)
-            contentView.removeLocationButton.isHidden = false
-
-            LocationUtility.reverseGeocode(location: location) { [weak self] address in
-                self?.contentView.selectedLocationLabel.text = address.isEmpty ? "사진 위치" : address
-                self?.contentView.selectedLocationLabel.textColor = ColorSystem.labelSecondary
-                if let coord = self?.selectedLocation?.coordinate {
-                    self?.updateMapView(with: coord)
-                }
-            }
+            initialLocationRelay.onNext(location)
         } else {
-            selectedLocation = nil
-            contentView.selectedLocationLabel.text = NSLocalizedString("card_info.location_placeholder", comment: "")
-            contentView.selectedLocationLabel.textColor = ColorSystem.labelPrimary
-            contentView.removeLocationButton.isHidden = true
-            contentView.mapView.isHidden = true
-            contentView.mapViewHeightConstraint?.update(offset: 0)
-            contentView.mapView.removeAnnotations(contentView.mapView.annotations)
-            initialLocationSubject.onNext(nil)
+            initialLocationRelay.onNext(nil)
         }
 
         coordinator.presentMediaEditor(image: image, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
-            self?.selectedImage = editedImage
             self?.contentView.photoImageView.image = editedImage
             self?.contentView.photoImageView.isHidden = false
             self?.contentView.photoSelectButton.isHidden = true
@@ -459,62 +385,9 @@ final class CardInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func setupKeyboardDismiss() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-
-        contentView.memoTextView.delegate = self
-    }
-
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
-    }
-
-    private func setupPlaceholder() {
-        contentView.memoTextView.attributedText = createPlaceholderText()
-    }
-
-    private func createPlaceholderText() -> NSAttributedString {
-        return NSAttributedString(
-            string: NSLocalizedString("card_info.memo_placeholder", comment: ""),
-            attributes: [
-                .foregroundColor: ColorSystem.labelPrimary,
-                .font: FontSystem.galmuriMono(size: 16)
-            ]
-        )
-    }
-
     private func showDeleteAlert() {
         AlertUtility.showDeleteConfirmation(on: self) { [weak self] in
             self?.deleteConfirmedRelay.accept(())
         }
-    }
-}
-
-extension CardInfoViewController: UITextViewDelegate {
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if textView.textColor == ColorSystem.labelPrimary {
-            textView.text = ""
-            textView.textColor = ColorSystem.labelSecondary
-        }
-    }
-
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if textView.text.isEmpty {
-            textView.attributedText = createPlaceholderText()
-            contentView.characterCountLabel.text = "0"
-            contentView.characterCountLabel.textColor = ColorSystem.labelPrimary
-        }
-    }
-
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        return true
-    }
-
-    func textViewDidChange(_ textView: UITextView) {
-        let count = textView.text.count
-        contentView.characterCountLabel.text = "\(count)"
-        contentView.characterCountLabel.textColor = ColorSystem.labelPrimary
     }
 }
