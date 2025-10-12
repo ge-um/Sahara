@@ -25,7 +25,7 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
 
     private let changesLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = ColorSystem.labelPrimary
         label.numberOfLines = 0
         return label
@@ -33,7 +33,7 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(hex: "#D2D1E4").withAlphaComponent(0.2)
+        view.backgroundColor = ColorSystem.transparentCardBackground
         view.layer.cornerRadius = 12
         return view
     }()
