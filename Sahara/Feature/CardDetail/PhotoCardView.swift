@@ -313,9 +313,13 @@ final class PhotoCardView: UIView {
 
     private func updatePhotoImageHeight(for image: UIImage) {
         let imageWidth = frame.width
-        let imageHeight = image.heightForWidth(imageWidth)
+        guard imageWidth > 0 else { return }
 
-        photoImageHeightConstraint?.update(offset: imageHeight)
+        let imageHeight = image.heightForWidth(imageWidth)
+        let minimumHeight: CGFloat = 200
+        let finalHeight = max(imageHeight, minimumHeight)
+
+        photoImageHeightConstraint?.update(offset: finalHeight)
         layoutIfNeeded()
     }
 }
