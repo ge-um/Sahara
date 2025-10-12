@@ -9,12 +9,15 @@ import Foundation
 
 enum SettingsMenuItem: CaseIterable {
     case contactDeveloper
+    case releaseNotes
     case versionInfo
 
     var title: String {
         switch self {
         case .contactDeveloper:
             return NSLocalizedString("settings.contact_developer", comment: "")
+        case .releaseNotes:
+            return NSLocalizedString("settings.release_notes", comment: "")
         case .versionInfo:
             return NSLocalizedString("settings.version_info", comment: "")
         }
@@ -31,7 +34,7 @@ enum SettingsMenuItem: CaseIterable {
 
     var isSelectable: Bool {
         switch self {
-        case .contactDeveloper:
+        case .contactDeveloper, .releaseNotes:
             return true
         case .versionInfo:
             return false

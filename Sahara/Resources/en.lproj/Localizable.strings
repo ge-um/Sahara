@@ -154,6 +154,14 @@
 "settings.section_support" = "Support";
 "settings.section_about" = "About";
 "settings.contact_developer" = "Contact Developer";
+"settings.release_notes" = "Release Notes";
 "settings.version_info" = "Version";
 "settings.mail_error_title" = "Mail Unavailable";
 "settings.mail_error_message" = "Mail app is not available.";
+
+/* Release Notes */
+"release_notes.title" = "Release Notes";
+
+/* Date */
+"date.today" = "Today";
+"date.days_ago" = "%d days ago";

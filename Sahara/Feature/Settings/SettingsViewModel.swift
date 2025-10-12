@@ -20,12 +20,13 @@ final class SettingsViewModel: BaseViewModelProtocol {
     struct Output {
         let sections: Driver<[SettingsSection]>
         let openMailComposer: Driver<String>
+        let openReleaseNotes: Driver<Void>
     }
 
     func transform(input: Input) -> Output {
         let defaultSections = [
             SettingsSection(type: .support, items: [.contactDeveloper]),
-            SettingsSection(type: .about, items: [.versionInfo])
+            SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])
         ]
 
         let sections = input.viewWillAppear
@@ -37,7 +38,18 @@ final class SettingsViewModel: BaseViewModelProtocol {
                 switch item {
                 case .contactDeveloper:
                     return "gageum0@gmail.com"
-                case .versionInfo:
+                default:
+                    return nil
+                }
+            }
+            .asDriver(onErrorDriveWith: .empty())
+
+        let openReleaseNotes = input.itemSelected
+            .compactMap { item in
+                switch item {
+                case .releaseNotes:
+                    return ()
+                default:
                     return nil
                 }
             }
@@ -45,7 +57,8 @@ final class SettingsViewModel: BaseViewModelProtocol {
 
         return Output(
             sections: sections,
-            openMailComposer: openMailComposer
+            openMailComposer: openMailComposer,
+            openReleaseNotes: openReleaseNotes
         )
     }
 }

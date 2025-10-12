@@ -116,6 +116,13 @@ final class SettingsViewController: UIViewController {
                 owner.presentMailComposer(to: email)
             }
             .disposed(by: disposeBag)
+
+        output.openReleaseNotes
+            .drive(with: self) { owner, _ in
+                let releaseNotesVC = ReleaseNotesViewController()
+                owner.navigationController?.pushViewController(releaseNotesVC, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 
     private func presentMailComposer(to email: String) {

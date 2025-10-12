@@ -154,6 +154,14 @@
 "settings.section_support" = "지원";
 "settings.section_about" = "정보";
 "settings.contact_developer" = "개발자에게 문의하기";
+"settings.release_notes" = "버전 기록";
 "settings.version_info" = "버전 정보";
 "settings.mail_error_title" = "메일 전송 불가";
 "settings.mail_error_message" = "메일 앱을 사용할 수 없어요";
+
+/* Release Notes */
+"release_notes.title" = "버전 기록";
+
+/* Date */
+"date.today" = "오늘";
+"date.days_ago" = "%d일 전";
