@@ -17,6 +17,13 @@ final class SearchViewController: UIViewController {
 
     private let customNavigationBar = CustomNavigationBar()
 
+    private let searchBarBackgroundView: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorSystem.transparentCardBackground
+        view.layer.cornerRadius = 12
+        return view
+    }()
+
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("search.placeholder", comment: "")
@@ -82,6 +89,7 @@ final class SearchViewController: UIViewController {
         view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
+        view.addSubview(searchBarBackgroundView)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
         view.addSubview(emptyStateLabel)
@@ -92,9 +100,14 @@ final class SearchViewController: UIViewController {
             make.height.equalTo(54)
         }
 
-        searchBar.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
+        searchBarBackgroundView.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(8)
             make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(48)
+        }
+
+        searchBar.snp.makeConstraints { make in
+            make.edges.equalTo(searchBarBackgroundView)
         }
 
         collectionView.snp.makeConstraints { make in

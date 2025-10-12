@@ -27,7 +27,7 @@ final class ListItemView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = UIColor(hex: "#D2D1E4").withAlphaComponent(0.2)
+        backgroundColor = ColorSystem.transparentCardBackground
         layer.cornerRadius = 12
         clipsToBounds = true
 
