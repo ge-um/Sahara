@@ -37,7 +37,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
             .compactMap { item in
                 switch item {
                 case .contactDeveloper:
-                    return "gageum0@gmail.com"
+                    return DeveloperConfig.developerEmail
                 default:
                     return nil
                 }
