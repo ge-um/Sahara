@@ -13,6 +13,7 @@ import UIKit
 
 final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
+    private let photoCardViewModel: PhotoCardViewModel
     private let disposeBag = DisposeBag()
     private let sourceType: EditSourceType
 
@@ -71,6 +72,7 @@ final class CardDetailViewController: UIViewController {
 
     init(cardId: ObjectId, sourceType: EditSourceType = .dateView) {
         self.viewModel = CardDetailViewModel(cardId: cardId)
+        self.photoCardViewModel = PhotoCardViewModel(cardId: cardId)
         self.sourceType = sourceType
         super.init(nibName: nil, bundle: nil)
     }
@@ -197,25 +199,31 @@ final class CardDetailViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let input = CardDetailViewModel.Input(
+        let photoCardInput = PhotoCardViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
-            saveButtonTapped: saveButton.rx.tap.asObservable(),
-            shareButtonTapped: shareButton.rx.tap.asObservable(),
-            deleteConfirmed: deleteConfirmedRelay.asObservable(),
             swipeLeft: photoCardView.swipeLeftRelay.asObservable(),
             swipeRight: photoCardView.swipeRightRelay.asObservable()
         )
 
-        let output = viewModel.transform(input: input)
+        let photoCardOutput = photoCardViewModel.transform(input: photoCardInput)
 
         photoCardView.bind(
-            photoImage: output.photoImage,
-            dateText: output.dateText,
-            locationText: output.locationText,
-            memoText: output.memoText,
-            shouldFlipToBack: output.shouldFlipToBack.asObservable(),
-            shouldFlipToFront: output.shouldFlipToFront.asObservable()
+            photoImage: photoCardOutput.photoImage,
+            dateText: photoCardOutput.dateText,
+            locationText: photoCardOutput.locationText,
+            memoText: photoCardOutput.memoText,
+            shouldFlipToBack: photoCardOutput.shouldFlipToBack.asObservable(),
+            shouldFlipToFront: photoCardOutput.shouldFlipToFront.asObservable()
         )
+
+        let input = CardDetailViewModel.Input(
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            saveButtonTapped: saveButton.rx.tap.asObservable(),
+            shareButtonTapped: shareButton.rx.tap.asObservable(),
+            deleteConfirmed: deleteConfirmedRelay.asObservable()
+        )
+
+        let output = viewModel.transform(input: input)
 
         output.saveResult
             .drive(with: self) { owner, result in
