@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import Photos
 import RealmSwift
 import RxCocoa
 import RxSwift
@@ -47,22 +48,27 @@ final class CardDetailViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let cardData = input.viewDidLoad
-            .compactMap { [weak self] _ -> (image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)? in
-                guard let self = self else { return nil }
+        let cardDataRelay = BehaviorRelay<(image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)?>(value: nil)
+
+        input.viewDidLoad
+            .withUnretained(self)
+            .observe(on: MainScheduler.instance)
+            .bind { owner, _ in
                 let realm = try! Realm()
-                guard let card = realm.object(ofType: Card.self, forPrimaryKey: self.cardId) else {
-                    return nil
-                }
-                return (
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return }
+
+                let data = (
                     image: card.editedImageData,
                     date: card.createdDate,
                     latitude: card.latitude,
                     longitude: card.longitude,
                     memo: card.memo
                 )
+                cardDataRelay.accept(data)
             }
-            .share(replay: 1)
+            .disposed(by: disposeBag)
+
+        let cardData = cardDataRelay.compactMap { $0 }.asObservable()
 
         let photoImage = cardData
             .map { data -> UIImage? in
@@ -112,12 +118,26 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         let saveResult = input.saveButtonTapped
             .withLatestFrom(cardData)
-            .map { data -> Result<Void, Error> in
+            .flatMap { data -> Observable<Result<Void, Error>> in
                 guard let image = UIImage(data: data.image) else {
-                    return .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")]))
+                    return .just(.failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")])))
                 }
-                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-                return .success(())
+
+                return Observable.create { observer in
+                    PHPhotoLibrary.shared().performChanges({
+                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    }) { success, error in
+                        if success {
+                            observer.onNext(.success(()))
+                        } else if let error = error {
+                            observer.onNext(.failure(error))
+                        } else {
+                            observer.onNext(.failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+                        }
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
+                }
             }
             .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
 
