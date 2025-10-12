@@ -19,17 +19,17 @@ struct ReleaseNote {
     static let allVersions: [ReleaseNote] = [
         ReleaseNote(
             version: "1.3.0",
-            date: Date(),
+            date: DateComponents(calendar: .current, year: 2025, month: 10, day: 13).date!,
             changes: [
-                "검색 결과 두 줄 표시 개선",
-                "위치 권한 허용 시 즉시 현재 위치 사용",
-                "개발자 이메일 설정 보안 강화",
-                "설정 화면 계층 구조 개선"
+                "설정 탭이 추가되어 앱을 더 편리하게 관리할 수 있어요",
+                "개발자에게 문의하기 기능으로 의견을 쉽게 전달할 수 있어요",
+                "버전 기록에서 업데이트 내용을 확인할 수 있어요",
+                "카드 보기 화면에서 긴 이미지가 스크롤되지 않던 문제를 해결했어요"
             ]
         ),
         ReleaseNote(
             version: "1.2.0",
-            date: Calendar.current.date(byAdding: .day, value: -1, to: Date())!,
+            date: DateComponents(calendar: .current, year: 2025, month: 10, day: 10).date!,
             changes: [
                 "검색 기능으로 원하는 카드를 빠르게 찾을 수 있어요",
                 "통계 기능으로 나의 기록 습관을 한눈에 확인할 수 있어요",
@@ -39,7 +39,7 @@ struct ReleaseNote {
         ),
         ReleaseNote(
             version: "1.1.0",
-            date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!,
+            date: DateComponents(calendar: .current, year: 2025, month: 10, day: 6).date!,
             changes: [
                 "카드 잠금 기능이 추가되었어요",
                 "위치 정보 수정이 더 쉬워졌어요",
@@ -48,7 +48,7 @@ struct ReleaseNote {
         ),
         ReleaseNote(
             version: "1.0.0",
-            date: Calendar.current.date(byAdding: .day, value: -5, to: Date())!,
+            date: DateComponents(calendar: .current, year: 2025, month: 10, day: 6).date!,
             changes: []
         )
     ]
