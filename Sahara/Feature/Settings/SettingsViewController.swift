@@ -61,6 +61,7 @@ final class SettingsViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("settings.title", comment: ""))
+        customNavigationBar.hideLeftButton()
     }
 
     private func configureUI() {
