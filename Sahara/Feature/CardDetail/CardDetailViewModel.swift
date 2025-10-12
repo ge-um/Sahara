@@ -22,17 +22,9 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let saveButtonTapped: Observable<Void>
         let shareButtonTapped: Observable<Void>
         let deleteConfirmed: Observable<Void>
-        let swipeLeft: Observable<Void>
-        let swipeRight: Observable<Void>
     }
 
     struct Output {
-        let photoImage: Driver<UIImage?>
-        let dateText: Driver<String>
-        let locationText: Driver<String>
-        let memoText: Driver<String>
-        let shouldFlipToBack: Driver<Void>
-        let shouldFlipToFront: Driver<Void>
         let saveResult: Driver<Result<Void, Error>>
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
@@ -48,7 +40,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let cardDataRelay = BehaviorRelay<(image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)?>(value: nil)
+        let cardImageRelay = BehaviorRelay<Data?>(value: nil)
 
         input.viewDidLoad
             .withUnretained(self)
@@ -56,71 +48,17 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .bind { owner, _ in
                 let realm = try! Realm()
                 guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return }
-
-                let data = (
-                    image: card.editedImageData,
-                    date: card.createdDate,
-                    latitude: card.latitude,
-                    longitude: card.longitude,
-                    memo: card.memo
-                )
-                cardDataRelay.accept(data)
+                cardImageRelay.accept(card.editedImageData)
             }
             .disposed(by: disposeBag)
 
-        let cardData = cardDataRelay.compactMap { $0 }.asObservable()
-
-        let photoImage = cardData
-            .map { data -> UIImage? in
-                UIImage(data: data.image)
-            }
-            .asDriver(onErrorJustReturn: nil)
-
-        let dateText = cardData
-            .map { data -> String in
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = NSLocalizedString("photo_detail.date_format", comment: "")
-                dateFormatter.locale = Locale.current
-                return dateFormatter.string(from: data.date)
-            }
-            .asDriver(onErrorJustReturn: "")
-
-        let locationText = cardData
-            .flatMap { data -> Observable<String> in
-                guard let latitude = data.latitude,
-                      let longitude = data.longitude else {
-                    return .just("")
-                }
-
-                return Observable.create { observer in
-                    let location = CLLocation(latitude: latitude, longitude: longitude)
-                    LocationUtility.reverseGeocode(location: location) { address in
-                        observer.onNext(address)
-                        observer.onCompleted()
-                    }
-                    return Disposables.create()
-                }
-                .observe(on: MainScheduler.instance)
-            }
-            .asDriver(onErrorJustReturn: "")
-
-        let memoText = cardData
-            .map { data -> String in
-                return data.memo ?? ""
-            }
-            .asDriver(onErrorJustReturn: "")
-
-        let shouldFlipToBack = input.swipeLeft
-            .asDriver(onErrorJustReturn: ())
-
-        let shouldFlipToFront = input.swipeRight
-            .asDriver(onErrorJustReturn: ())
+        let cardImage = cardImageRelay.compactMap { $0 }.asObservable()
 
         let saveResult = input.saveButtonTapped
-            .withLatestFrom(cardData)
-            .flatMap { data -> Observable<Result<Void, Error>> in
-                guard let image = UIImage(data: data.image) else {
-                    return .just(.failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")])))
+            .withLatestFrom(cardImage)
+            .flatMap { imageData -> Observable<Result<Void, Error>> in
+                guard let image = UIImage(data: imageData) else {
+                    return .just(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")])))
                 }
 
                 return Observable.create { observer in
@@ -132,19 +70,19 @@ final class CardDetailViewModel: BaseViewModelProtocol {
                         } else if let error = error {
                             observer.onNext(.failure(error))
                         } else {
-                            observer.onNext(.failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+                            observer.onNext(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
                         }
                         observer.onCompleted()
                     }
                     return Disposables.create()
                 }
             }
-            .asDriver(onErrorJustReturn: .failure(NSError(domain: "PhotoDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+            .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
 
         let shareImage = input.shareButtonTapped
-            .withLatestFrom(cardData)
-            .compactMap { data -> UIImage? in
-                UIImage(data: data.image)
+            .withLatestFrom(cardImage)
+            .compactMap { imageData -> UIImage? in
+                UIImage(data: imageData)
             }
             .asDriver(onErrorDriveWith: .empty())
 
@@ -165,12 +103,6 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .asDriver(onErrorJustReturn: ())
 
         return Output(
-            photoImage: photoImage,
-            dateText: dateText,
-            locationText: locationText,
-            memoText: memoText,
-            shouldFlipToBack: shouldFlipToBack,
-            shouldFlipToFront: shouldFlipToFront,
             saveResult: saveResult,
             shareImage: shareImage,
             deleteCompleted: deleteCompleted
