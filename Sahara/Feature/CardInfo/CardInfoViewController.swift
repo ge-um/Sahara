@@ -52,7 +52,7 @@ final class CardInfoViewController: UIViewController {
     let disposeBag = DisposeBag()
     var selectedLocation: CLLocation?
     var selectedImage: UIImage?
-    let initialLocationSubject = PublishSubject<CLLocation>()
+    let initialLocationSubject = PublishSubject<CLLocation?>()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
 
@@ -156,7 +156,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func bind() {
-        let locationSubject = PublishSubject<CLLocation>()
+        let locationSubject = PublishSubject<CLLocation?>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
         let photoImageTapGesture = UITapGestureRecognizer()
@@ -210,7 +210,7 @@ final class CardInfoViewController: UIViewController {
                 owner.contentView.mapView.isHidden = true
                 owner.contentView.mapViewHeightConstraint?.update(offset: 0)
                 owner.contentView.mapView.removeAnnotations(owner.contentView.mapView.annotations)
-                locationSubject.onNext(CLLocation(latitude: 0, longitude: 0))
+                locationSubject.onNext(nil)
             }
             .disposed(by: disposeBag)
 
@@ -411,7 +411,7 @@ final class CardInfoViewController: UIViewController {
             contentView.mapView.isHidden = true
             contentView.mapViewHeightConstraint?.update(offset: 0)
             contentView.mapView.removeAnnotations(contentView.mapView.annotations)
-            initialLocationSubject.onNext(CLLocation(latitude: 0, longitude: 0))
+            initialLocationSubject.onNext(nil)
         }
 
         coordinator.presentMediaEditor(image: image, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
