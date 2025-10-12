@@ -56,6 +56,23 @@ final class CustomNavigationBar: UIView {
         }
     }
 
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        enableSwipeBackGesture()
+    }
+
+    private func enableSwipeBackGesture() {
+        var responder: UIResponder? = self
+        while let nextResponder = responder?.next {
+            if let viewController = nextResponder as? UIViewController {
+                viewController.navigationController?.interactivePopGestureRecognizer?.isEnabled = true
+                viewController.navigationController?.interactivePopGestureRecognizer?.delegate = nil
+                break
+            }
+            responder = nextResponder
+        }
+    }
+
     private func setupUI() {
         backgroundColor = .clear
 
