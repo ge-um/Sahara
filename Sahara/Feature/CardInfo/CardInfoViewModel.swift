@@ -366,8 +366,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         do {
             try realm.write {
-                realm.delete(cardToDelete)
                 realm.add(newCard)
+                realm.delete(cardToDelete)
             }
         } catch {
         }
