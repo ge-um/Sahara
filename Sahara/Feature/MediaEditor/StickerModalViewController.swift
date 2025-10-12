@@ -64,6 +64,24 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func bind() {
+        let viewTapGesture = UITapGestureRecognizer()
+        viewTapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(viewTapGesture)
+
+        let collectionViewTapGesture = UITapGestureRecognizer()
+        collectionViewTapGesture.cancelsTouchesInView = false
+        stickerCollectionView.addGestureRecognizer(collectionViewTapGesture)
+
+        Observable.merge(
+            viewTapGesture.rx.event.map { _ in () },
+            collectionViewTapGesture.rx.event.map { _ in () },
+            stickerCollectionView.rx.didScroll.map { _ in () }
+        )
+        .bind(with: self) { owner, _ in
+            owner.view.endEditing(true)
+        }
+        .disposed(by: disposeBag)
+
         let searchQuery = searchBar.rx.text
             .orEmpty
             .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
@@ -147,14 +165,16 @@ final class StickerModalViewController: UIViewController {
         let closeButton = UIBarButtonItem(
             image: UIImage(systemName: "xmark"),
             style: .plain,
-            target: self,
-            action: #selector(closeButtonTapped)
+            target: nil,
+            action: nil
         )
         closeButton.tintColor = .label
         navigationItem.leftBarButtonItem = closeButton
-    }
 
-    @objc private func closeButtonTapped() {
-        dismiss(animated: true)
+        closeButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.dismiss(animated: true)
+            }
+            .disposed(by: disposeBag)
     }
 }
