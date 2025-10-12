@@ -140,21 +140,25 @@ final class MainTabBarController: UITabBarController {
     @objc private func galleryTabTapped() {
         selectedIndex = 0
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "gallery")
     }
 
     @objc private func searchTabTapped() {
         selectedIndex = 1
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "search")
     }
 
     @objc private func statsTabTapped() {
         selectedIndex = 2
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "stats")
     }
 
     @objc private func settingsTabTapped() {
         selectedIndex = 3
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "settings")
     }
 
     private func updateTabSelection() {
