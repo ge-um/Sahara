@@ -11,9 +11,8 @@ settings.local.json
 ### Documentation ###
 ANALYTICS.md
 
-### API ###
-Sahara/API/
-API/
+### Secret ###
+Sahara/Secret/
 
 ### Swift ###
 # Xcode
