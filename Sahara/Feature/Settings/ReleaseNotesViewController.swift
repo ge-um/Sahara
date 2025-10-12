@@ -6,6 +6,7 @@
 //
 
 import RxCocoa
+import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
@@ -15,8 +16,6 @@ final class ReleaseNotesViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
 
-    private var releaseNotes: [ReleaseNote] = []
-
     private let customNavigationBar = CustomNavigationBar()
 
     private lazy var tableView: UITableView = {
@@ -24,8 +23,6 @@ final class ReleaseNotesViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
         tableView.register(ReleaseNoteCell.self, forCellReuseIdentifier: ReleaseNoteCell.identifier)
-        tableView.delegate = self
-        tableView.dataSource = self
         return tableView
     }()
 
@@ -93,31 +90,26 @@ final class ReleaseNotesViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        output.releaseNotes
-            .drive(with: self) { owner, notes in
-                owner.releaseNotes = notes
-                owner.tableView.reloadData()
+        let dataSource = RxTableViewSectionedReloadDataSource<ReleaseNoteSection>(
+            configureCell: { _, tableView, indexPath, item in
+                guard let cell = tableView.dequeueReusableCell(
+                    withIdentifier: ReleaseNoteCell.identifier,
+                    for: indexPath
+                ) as? ReleaseNoteCell else {
+                    return UITableViewCell()
+                }
+                cell.configure(with: item)
+                return cell
             }
+        )
+
+        output.releaseNotes
+            .map { [ReleaseNoteSection(items: $0)] }
+            .drive(tableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
-    }
-}
 
-extension ReleaseNotesViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return releaseNotes.count
-    }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: ReleaseNoteCell.identifier,
-            for: indexPath
-        ) as? ReleaseNoteCell else {
-            return UITableViewCell()
-        }
-
-        let releaseNote = releaseNotes[indexPath.row]
-        cell.configure(with: releaseNote)
-        return cell
+        tableView.rx.setDelegate(self)
+            .disposed(by: disposeBag)
     }
 }
 
@@ -128,5 +120,18 @@ extension ReleaseNotesViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
+    }
+}
+
+struct ReleaseNoteSection {
+    var items: [ReleaseNote]
+}
+
+extension ReleaseNoteSection: SectionModelType {
+    typealias Item = ReleaseNote
+
+    init(original: ReleaseNoteSection, items: [ReleaseNote]) {
+        self = original
+        self.items = items
     }
 }
