@@ -1,5 +1,5 @@
 //
-//  PhotoMemo.swift
+//  Card.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/27/25.
