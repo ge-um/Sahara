@@ -35,7 +35,10 @@ final class CardDetailViewController: UIViewController {
         return view
     }()
 
-    private let photoCardView = PhotoCardView()
+    private lazy var photoCardView: PhotoCardView = {
+        let cardWidth = view.bounds.width - 64
+        return PhotoCardView(cardWidth: cardWidth)
+    }()
 
     private let buttonContainerView: UIView = {
         let view = UIView()

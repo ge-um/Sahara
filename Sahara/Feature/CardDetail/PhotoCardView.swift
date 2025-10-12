@@ -14,6 +14,7 @@ final class PhotoCardView: UIView {
     private var isFrontCardVisible = true
     private var photoImageHeightConstraint: Constraint?
     private let disposeBag = DisposeBag()
+    private let cardWidth: CGFloat
 
     let swipeLeftRelay = PublishRelay<Void>()
     let swipeRightRelay = PublishRelay<Void>()
@@ -136,8 +137,9 @@ final class PhotoCardView: UIView {
         return label
     }()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(cardWidth: CGFloat) {
+        self.cardWidth = cardWidth
+        super.init(frame: .zero)
         configureUI()
         setupGestures()
         setupActions()
@@ -263,7 +265,10 @@ final class PhotoCardView: UIView {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 if let image = image {
-                    owner.updatePhotoImageHeight(for: image)
+                    let imageHeight = image.heightForWidth(owner.cardWidth)
+                    let minimumHeight: CGFloat = 200
+                    let finalHeight = max(imageHeight, minimumHeight)
+                    owner.photoImageHeightConstraint?.update(offset: finalHeight)
                 }
             }
             .disposed(by: disposeBag)
@@ -309,17 +314,5 @@ final class PhotoCardView: UIView {
         } completion: { _ in
             self.isFrontCardVisible = true
         }
-    }
-
-    private func updatePhotoImageHeight(for image: UIImage) {
-        let imageWidth = frame.width
-        guard imageWidth > 0 else { return }
-
-        let imageHeight = image.heightForWidth(imageWidth)
-        let minimumHeight: CGFloat = 200
-        let finalHeight = max(imageHeight, minimumHeight)
-
-        photoImageHeightConstraint?.update(offset: finalHeight)
-        layoutIfNeeded()
     }
 }
