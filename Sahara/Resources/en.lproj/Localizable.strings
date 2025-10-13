@@ -17,6 +17,7 @@
 "gallery.date_view" = "By Date";
 "gallery.location_view" = "By Location";
 "gallery.theme_view" = "By Theme";
+"gallery.folder_view" = "By Folder";
 "gallery.month_format" = "MMMM yyyy";
 "gallery.empty_message" = "Capture your memories as cards!";
 "gallery.empty_button" = "Create Card";
@@ -43,6 +44,7 @@
 "card_info.date" = "Date";
 "card_info.memo" = "Memo";
 "card_info.memo_placeholder" = "Enter memo";
+"card_info.folder" = "Folder";
 "card_info.location" = "Location";
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
@@ -165,3 +167,6 @@
 /* Date */
 "date.today" = "Today";
 "date.days_ago" = "%d days ago";
+
+/* Folder */
+"folder.default" = "Default Folder";

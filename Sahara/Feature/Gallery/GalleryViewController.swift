@@ -44,6 +44,12 @@ final class GalleryViewController: UIViewController {
         button.tag = 2
         return button
     }()
+
+    private lazy var folderButton: GradientButton = {
+        let button = GradientButton(title: NSLocalizedString("gallery.folder_view", comment: ""))
+        button.tag = 3
+        return button
+    }()
     
     private lazy var calendarContainerView: UIView = {
         let view = UIView()
@@ -76,6 +82,17 @@ final class GalleryViewController: UIViewController {
         return vc
     }()
 
+    private lazy var folderContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private lazy var folderVC: FolderViewController = {
+        let vc = FolderViewController()
+        return vc
+    }()
+
     private let realm = try! Realm()
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
@@ -97,6 +114,7 @@ final class GalleryViewController: UIViewController {
         setupCalendarView()
         setupMapView()
         setupThemeView()
+        setupFolderView()
         setupCustomNavigationBar()
         bind()
     }
@@ -149,6 +167,15 @@ final class GalleryViewController: UIViewController {
         themeVC.didMove(toParent: self)
     }
 
+    private func setupFolderView() {
+        addChild(folderVC)
+        folderContainerView.addSubview(folderVC.view)
+        folderVC.view.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        folderVC.didMove(toParent: self)
+    }
+
     private func setupMapView() {
         mapView.register(MediaAnnotationView.self, forAnnotationViewWithReuseIdentifier: MediaAnnotation.identifier)
         mapView.register(MediaClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
@@ -184,10 +211,12 @@ final class GalleryViewController: UIViewController {
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
         viewTypeButtonStackView.addArrangedSubview(themeButton)
+        viewTypeButtonStackView.addArrangedSubview(folderButton)
 
         view.addSubview(calendarContainerView)
         view.addSubview(mapView)
         view.addSubview(themeContainerView)
+        view.addSubview(folderContainerView)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -223,6 +252,12 @@ final class GalleryViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().inset(112)
         }
+
+        folderContainerView.snp.makeConstraints { make in
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(112)
+        }
     }
     
     private func bind() {
@@ -241,11 +276,26 @@ final class GalleryViewController: UIViewController {
             .bind(to: viewTypeRelay)
             .disposed(by: disposeBag)
 
+        folderButton.rx.tap
+            .map { GalleryViewType.folder }
+            .bind(to: viewTypeRelay)
+            .disposed(by: disposeBag)
+
         viewTypeRelay
             .asObservable()
             .bind(with: self) { owner, viewType in
                 owner.updateButtonStyles(selectedType: viewType)
-                let viewTypeString = viewType == .date ? "calendar" : (viewType == .location ? "map" : "theme")
+                let viewTypeString: String
+                switch viewType {
+                case .date:
+                    viewTypeString = "calendar"
+                case .location:
+                    viewTypeString = "map"
+                case .theme:
+                    viewTypeString = "theme"
+                case .folder:
+                    viewTypeString = "folder"
+                }
                 AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
             }
             .disposed(by: disposeBag)
@@ -285,10 +335,12 @@ final class GalleryViewController: UIViewController {
                     owner.calendarContainerView.isHidden = true
                     owner.mapView.isHidden = true
                     owner.themeContainerView.isHidden = true
+                    owner.folderContainerView.isHidden = true
                 } else {
                     owner.calendarContainerView.isHidden = viewType != .date
                     owner.mapView.isHidden = viewType != .location
                     owner.themeContainerView.isHidden = viewType != .theme
+                    owner.folderContainerView.isHidden = viewType != .folder
 
                     if viewType == .location {
                         owner.loadMapAnnotations()
@@ -315,8 +367,8 @@ final class GalleryViewController: UIViewController {
     }
 
     private func updateButtonStyles(selectedType: GalleryViewType) {
-        let buttons = [dateButton, locationButton, themeButton]
-        let types: [GalleryViewType] = [.date, .location, .theme]
+        let buttons = [dateButton, locationButton, themeButton, folderButton]
+        let types: [GalleryViewType] = [.date, .location, .theme, .folder]
 
         for (button, type) in zip(buttons, types) {
             if type == selectedType {

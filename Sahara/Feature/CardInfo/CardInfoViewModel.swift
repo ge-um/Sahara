@@ -29,11 +29,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private var imageChanged = false
     private var initialMemo: String?
     private var initialIsLocked: Bool = false
+    private var initialCustomFolder: String?
 
     struct Input {
         let selectedImage: Observable<UIImage?>
         let date: Observable<Date>
         let memo: Observable<String?>
+        let customFolder: Observable<String?>
         let location: Observable<CLLocation?>
         let isLocked: Observable<Bool>
         let saveButtonTapped: Observable<Void>
@@ -51,6 +53,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let isEditMode: Bool
         let initialDate: Date
         let initialMemo: String?
+        let initialCustomFolder: String?
         let initialLocation: CLLocation?
         let initialIsLocked: Bool
         let deleted: Driver<Void>
@@ -77,6 +80,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.originalDate = cardToEdit.createdDate
         self.initialMemo = cardToEdit.memo
         self.initialIsLocked = cardToEdit.isLocked
+        self.initialCustomFolder = cardToEdit.customFolder
         self.sourceType = sourceType
         if let lat = cardToEdit.latitude, let lon = cardToEdit.longitude {
             self.originalLocation = CLLocation(latitude: lat, longitude: lon)
@@ -114,11 +118,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 Observable.combineLatest(
                     input.date,
                     input.memo,
+                    input.customFolder,
                     locationRelay.asObservable(),
                     input.isLocked
                 )
             )
-            .map { [weak self] date, memo, location, isLocked -> Bool in
+            .map { [weak self] date, memo, customFolder, location, isLocked -> Bool in
                 guard let self = self else { return false }
 
                 if self.editedImage == nil {
@@ -129,13 +134,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 if let cardId = self.cardToEditId {
                     let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
                     if shouldPop {
-                        self.replaceCard(cardId: cardId, date: date, memo: memo, location: location, isLocked: isLocked)
+                        self.replaceCard(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
                     } else {
-                        self.updateCard(cardId: cardId, date: date, memo: memo, location: location, isLocked: isLocked)
+                        self.updateCard(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
                     }
                     shouldPopToListRelay.accept(shouldPop)
                 } else {
-                    self.saveToRealm(date: date, memo: memo, location: location, isLocked: isLocked)
+                    self.saveToRealm(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
                     shouldPopToListRelay.accept(false)
                 }
 
@@ -192,6 +197,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isEditMode: isEditMode,
             initialDate: originalDate ?? Date(),
             initialMemo: initialMemo,
+            initialCustomFolder: initialCustomFolder,
             initialLocation: initialLocation,
             initialIsLocked: initialIsLocked,
             deleted: deleted,
@@ -230,13 +236,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func saveToRealm(date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
+    private func saveToRealm(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
+        }()
+
+        let folderText: String? = {
+            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
+            return customFolder
         }()
 
         let realm = try! Realm()
@@ -251,6 +262,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             longitude: location?.coordinate.longitude,
             isLocked: isLocked
         )
+        card.customFolder = folderText
 
         do {
             try realm.write {
@@ -270,13 +282,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func updateCard(cardId: ObjectId, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
+    private func updateCard(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
 
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
+        }()
+
+        let folderText: String? = {
+            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
+            return customFolder
         }()
 
         let realm = try! Realm()
@@ -290,6 +307,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
         if initialMemo != memoText {
             editTypes.append("memo")
+        }
+        if initialCustomFolder != folderText {
+            editTypes.append("folder")
         }
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
@@ -308,6 +328,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 card.createdDate = date
                 card.editedImageData = imageData
                 card.memo = memoText
+                card.customFolder = folderText
                 card.isLocked = isLocked
                 card.latitude = location?.coordinate.latitude
                 card.longitude = location?.coordinate.longitude
@@ -322,12 +343,17 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
     }
 
-    private func replaceCard(cardId: ObjectId, date: Date, memo: String?, location: CLLocation?, isLocked: Bool = false) {
+    private func replaceCard(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) {
         guard let editedImage = editedImage,
               let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return }
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
+        }()
+
+        let folderText: String? = {
+            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
+            return customFolder
         }()
 
         let realm = try! Realm()
@@ -341,6 +367,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
         if initialMemo != memoText {
             editTypes.append("memo")
+        }
+        if initialCustomFolder != folderText {
+            editTypes.append("folder")
         }
         let oldLocation = (cardToDelete.latitude != nil && cardToDelete.longitude != nil) ? CLLocation(latitude: cardToDelete.latitude!, longitude: cardToDelete.longitude!) : nil
         if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
@@ -362,6 +391,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             longitude: location?.coordinate.longitude,
             isLocked: isLocked
         )
+        newCard.customFolder = folderText
 
         do {
             try realm.write {

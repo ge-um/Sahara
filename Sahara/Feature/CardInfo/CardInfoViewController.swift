@@ -226,6 +226,7 @@ final class CardInfoViewController: UIViewController {
                     return text
                 }
                 .asObservable(),
+            customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
             location: locationOutput.location.asObservable(),
             isLocked: biometricOutput.isLocked.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
@@ -257,6 +258,7 @@ final class CardInfoViewController: UIViewController {
             if let location = output.initialLocation {
                 initialLocationRelay.onNext(location)
             }
+            contentView.folderCard.setFolder(output.initialCustomFolder)
         } else {
             contentView.memoCard.showPlaceholder()
         }
@@ -283,6 +285,7 @@ final class CardInfoViewController: UIViewController {
         .bind(with: self) { owner, result in
             let (success, shouldPopToList) = result
             if success {
+                owner.contentView.folderCard.refreshFolderTags()
                 if shouldPopToList {
                     owner.coordinator.popToList(isEditMode: output.isEditMode)
                 } else {

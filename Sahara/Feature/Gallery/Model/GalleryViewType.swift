@@ -11,4 +11,5 @@ enum GalleryViewType {
     case date
     case location
     case theme
+    case folder
 }
