@@ -11,7 +11,8 @@ import RxCocoa
 import RxSwift
 
 final class MapViewModel: BaseViewModelProtocol {
-    private let cardIds: [ObjectId]
+    private let cardIds: [ObjectId]?
+    private let folderName: String?
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[Card]>(value: [])
 
@@ -29,6 +30,12 @@ final class MapViewModel: BaseViewModelProtocol {
 
     init(cards: [Card]) {
         self.cardIds = cards.map { $0.id }
+        self.folderName = nil
+    }
+
+    init(folderName: String) {
+        self.cardIds = nil
+        self.folderName = folderName
     }
 
     func transform(input: Input) -> Output {
@@ -59,16 +66,29 @@ final class MapViewModel: BaseViewModelProtocol {
         let realm = try! Realm()
 
         Observable<[Card]>.create { observer in
-            let cards = realm.objects(Card.self).filter("id IN %@", self.cardIds)
+            let cards: Results<Card>
 
-            observer.onNext(Array(cards))
+            if let folderName = self.folderName {
+                let defaultFolderName = NSLocalizedString("folder.default", comment: "")
+                if folderName == defaultFolderName {
+                    cards = realm.objects(Card.self).filter("customFolder == nil OR customFolder == ''")
+                } else {
+                    cards = realm.objects(Card.self).filter("customFolder == %@", folderName)
+                }
+            } else if let cardIds = self.cardIds {
+                cards = realm.objects(Card.self).filter("id IN %@", cardIds)
+            } else {
+                cards = realm.objects(Card.self)
+            }
+
+            observer.onNext(Array(cards).sorted { $0.createdDate > $1.createdDate })
 
             let token = cards.observe { changes in
                 switch changes {
                 case .initial(let results):
-                    observer.onNext(Array(results))
+                    observer.onNext(Array(results).sorted { $0.createdDate > $1.createdDate })
                 case .update(let results, _, _, _):
-                    observer.onNext(Array(results))
+                    observer.onNext(Array(results).sorted { $0.createdDate > $1.createdDate })
                 case .error(let error):
                     observer.onError(error)
                 }

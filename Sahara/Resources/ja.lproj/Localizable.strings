@@ -16,6 +16,7 @@
 "gallery.date_view" = "日付順";
 "gallery.location_view" = "場所順";
 "gallery.theme_view" = "テーマ順";
+"gallery.folder_view" = "フォルダ順";
 "gallery.month_format" = "yyyy年MM月";
 "gallery.empty_message" = "思い出をカードに残しましょう！";
 "gallery.empty_button" = "カード作成";
@@ -42,6 +43,7 @@
 "card_info.date" = "日付";
 "card_info.memo" = "メモ";
 "card_info.memo_placeholder" = "メモを入力してください";
+"card_info.folder" = "フォルダ";
 "card_info.location" = "位置";
 "card_info.location_placeholder" = "位置を選択してください";
 "card_info.search_location" = "位置検索";
@@ -164,3 +166,6 @@
 /* Date */
 "date.today" = "今日";
 "date.days_ago" = "%d日前";
+
+/* Folder */
+"folder.default" = "デフォルトフォルダ";

@@ -47,29 +47,6 @@ enum VisionTag: String, PersistableEnum {
     case screenshot
 }
 
-enum UserTag: String, PersistableEnum {
-    case travel
-    case birthday
-    case wedding
-    case graduation
-    case party
-
-    case workout
-    case cooking
-    case reading
-    case study
-    case work
-
-    case family
-    case friends
-    case couple
-    case solo
-
-    case favorite
-    case important
-    case todo
-}
-
 enum Mood: String, PersistableEnum {
     case happy
     case excited
@@ -98,10 +75,10 @@ final class Card: Object {
     @Persisted var shareCount: Int = 0
     @Persisted var isFavorite: Bool = false
     @Persisted var visionTags: List<VisionTag>
-    @Persisted var userTags: List<UserTag>
     @Persisted var locationName: String?
     @Persisted var mood: Mood?
     @Persisted var stickers: List<Sticker>
+    @Persisted var customFolder: String?
 
     convenience init(
         createdDate: Date,
