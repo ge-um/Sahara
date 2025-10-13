@@ -1,5 +1,5 @@
 //
-//  MapMediaCell.swift
+//  CardListCell.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/13/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class MapMediaCell: UICollectionViewCell, IsIdentifiable {
+final class CardListCell: UICollectionViewCell, IsIdentifiable {
 
     private let imageView: UIImageView = {
         let imageView = UIImageView()

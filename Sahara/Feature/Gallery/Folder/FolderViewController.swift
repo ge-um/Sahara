@@ -83,7 +83,7 @@ final class FolderViewController: UIViewController {
 
         output.navigateToPhotos
             .drive(with: self) { owner, folderGroup in
-                let galleryVC = MapViewController(folderName: folderGroup.folderName)
+                let galleryVC = CardListViewController(folderName: folderGroup.folderName)
                 if let parentGalleryVC = owner.parent as? GalleryViewController {
                     parentGalleryVC.navigationController?.pushViewController(galleryVC, animated: true)
                 }

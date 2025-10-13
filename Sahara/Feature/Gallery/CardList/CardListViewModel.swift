@@ -1,5 +1,5 @@
 //
-//  MapViewModel.swift
+//  CardListViewModel.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/2/25.
@@ -10,7 +10,7 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 
-final class MapViewModel: BaseViewModelProtocol {
+final class CardListViewModel: BaseViewModelProtocol {
     private let cardIds: [ObjectId]?
     private let folderName: String?
     private let disposeBag = DisposeBag()

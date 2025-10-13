@@ -1,5 +1,5 @@
 //
-//  MapViewController.swift
+//  CardListViewController.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/1/25.
@@ -11,8 +11,8 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class MapViewController: UIViewController {
-    private let viewModel: MapViewModel
+final class CardListViewController: UIViewController {
+    private let viewModel: CardListViewModel
     private let disposeBag = DisposeBag()
     private let viewDidLoadRelay = PublishRelay<Void>()
 
@@ -37,7 +37,7 @@ final class MapViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(MapMediaCell.self, forCellWithReuseIdentifier: MapMediaCell.identifier)
+        collectionView.register(CardListCell.self, forCellWithReuseIdentifier: CardListCell.identifier)
         return collectionView
     }()
 
@@ -45,14 +45,14 @@ final class MapViewController: UIViewController {
     private let customTitle: String?
 
     init(cards: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
-        self.viewModel = MapViewModel(cards: cards)
+        self.viewModel = CardListViewModel(cards: cards)
         self.themeCategory = themeCategory
         self.customTitle = customTitle
         super.init(nibName: nil, bundle: nil)
     }
 
     init(folderName: String) {
-        self.viewModel = MapViewModel(folderName: folderName)
+        self.viewModel = CardListViewModel(folderName: folderName)
         self.themeCategory = .others
         self.customTitle = folderName
         super.init(nibName: nil, bundle: nil)
@@ -107,7 +107,7 @@ final class MapViewController: UIViewController {
     }
 
     private func bind() {
-        let input = MapViewModel.Input(
+        let input = CardListViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable()
@@ -116,7 +116,7 @@ final class MapViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.cards
-            .drive(collectionView.rx.items(cellIdentifier: MapMediaCell.identifier, cellType: MapMediaCell.self)) { _, card, cell in
+            .drive(collectionView.rx.items(cellIdentifier: CardListCell.identifier, cellType: CardListCell.self)) { _, card, cell in
                 cell.configure(with: card)
             }
             .disposed(by: disposeBag)
@@ -152,7 +152,7 @@ final class MapViewController: UIViewController {
     }
 }
 
-extension MapViewController: PinterestLayoutDelegate {
+extension CardListViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
         guard let cell = viewModel.getCard(at: indexPath.item),
               let image = UIImage(data: cell.editedImageData) else {
