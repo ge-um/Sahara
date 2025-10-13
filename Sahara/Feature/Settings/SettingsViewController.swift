@@ -7,16 +7,15 @@
 
 import MessageUI
 import RxCocoa
+import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
 
-// TODO: - RxDataSource로 Refactor
 final class SettingsViewController: UIViewController {
     private let viewModel: SettingsViewModel
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
-    private var sections: [SettingsSection] = []
 
     private let customNavigationBar = CustomNavigationBar()
 
@@ -34,7 +33,6 @@ final class SettingsViewController: UIViewController {
             withReuseIdentifier: SettingsSectionHeader.identifier
         )
         collectionView.delegate = self
-        collectionView.dataSource = self
         return collectionView
     }()
 
@@ -85,18 +83,38 @@ final class SettingsViewController: UIViewController {
     }
 
     private func bind() {
-        let itemSelected = collectionView.rx.itemSelected
-            .withUnretained(self)
-            .filter { owner, indexPath in
-                guard indexPath.section < owner.sections.count else { return false }
-                let section = owner.sections[indexPath.section]
-                guard indexPath.item < section.items.count else { return false }
-                let item = section.items[indexPath.item]
-                return item.isSelectable
+        let dataSource = RxCollectionViewSectionedReloadDataSource<SettingsSection>(
+            configureCell: { _, collectionView, indexPath, item in
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: SettingsMenuCell.identifier,
+                    for: indexPath
+                ) as? SettingsMenuCell else {
+                    return UICollectionViewCell()
+                }
+                cell.configure(with: item)
+                return cell
+            },
+            configureSupplementaryView: { dataSource, collectionView, kind, indexPath in
+                guard kind == UICollectionView.elementKindSectionHeader else {
+                    return UICollectionReusableView()
+                }
+
+                guard let header = collectionView.dequeueReusableSupplementaryView(
+                    ofKind: kind,
+                    withReuseIdentifier: SettingsSectionHeader.identifier,
+                    for: indexPath
+                ) as? SettingsSectionHeader else {
+                    return UICollectionReusableView()
+                }
+
+                let section = dataSource[indexPath.section]
+                header.configure(with: section.title)
+                return header
             }
-            .map { owner, indexPath in
-                owner.sections[indexPath.section].items[indexPath.item]
-            }
+        )
+
+        let itemSelected = collectionView.rx.modelSelected(SettingsMenuItem.self)
+            .filter { $0.isSelectable }
 
         let input = SettingsViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
@@ -106,10 +124,7 @@ final class SettingsViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.sections
-            .drive(with: self) { owner, sections in
-                owner.sections = sections
-                owner.collectionView.reloadData()
-            }
+            .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
 
         output.openMailComposer
@@ -149,47 +164,6 @@ final class SettingsViewController: UIViewController {
         )
         alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
         present(alert, animated: true)
-    }
-}
-
-extension SettingsViewController: UICollectionViewDataSource {
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return sections.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return sections[section].items.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: SettingsMenuCell.identifier,
-            for: indexPath
-        ) as? SettingsMenuCell else {
-            return UICollectionViewCell()
-        }
-
-        let item = sections[indexPath.section].items[indexPath.item]
-        cell.configure(with: item)
-        return cell
-    }
-
-    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
-        guard kind == UICollectionView.elementKindSectionHeader else {
-            return UICollectionReusableView()
-        }
-
-        guard let header = collectionView.dequeueReusableSupplementaryView(
-            ofKind: kind,
-            withReuseIdentifier: SettingsSectionHeader.identifier,
-            for: indexPath
-        ) as? SettingsSectionHeader else {
-            return UICollectionReusableView()
-        }
-
-        let section = sections[indexPath.section]
-        header.configure(with: section.title)
-        return header
     }
 }
 
