@@ -19,21 +19,21 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelSecondary
+        label.textColor = ColorSystem.charcoal
         return label
     }()
 
     private let changesLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         label.numberOfLines = 0
         return label
     }()
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.transparentCardBackground
+        view.backgroundColor = ColorSystem.lavender20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -94,7 +94,7 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
                 string: bulletPoints,
                 attributes: [
                     .font: FontSystem.galmuriMono(size: 14),
-                    .foregroundColor: ColorSystem.labelPrimary,
+                    .foregroundColor: ColorSystem.darkGray,
                     .paragraphStyle: paragraphStyle
                 ]
             )

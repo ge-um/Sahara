@@ -14,7 +14,7 @@ import UIKit
 final class FolderSelectionCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -23,14 +23,14 @@ final class FolderSelectionCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.folder", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder")
-        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.tintColor = ColorSystem.darkGray
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -39,7 +39,7 @@ final class FolderSelectionCard: UIView {
         let textField = UITextField()
         textField.placeholder = NSLocalizedString("folder.default", comment: "")
         textField.font = FontSystem.galmuriMono(size: 16)
-        textField.textColor = ColorSystem.labelPrimary
+        textField.textColor = ColorSystem.darkGray
         textField.returnKeyType = .done
         return textField
     }()
@@ -159,7 +159,7 @@ final class FolderSelectionCard: UIView {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.3)
-        config.baseForegroundColor = ColorSystem.labelPrimary
+        config.baseForegroundColor = ColorSystem.darkGray
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 

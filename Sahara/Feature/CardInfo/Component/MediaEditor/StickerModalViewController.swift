@@ -133,9 +133,9 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.grayGradient)
+        view.applyGradient(.whiteToGray)
 
-        navigationController?.view.applyGradient(.grayGradient)
+        navigationController?.view.applyGradient(.whiteToGray)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.navigationBar.isTranslucent = true

@@ -19,7 +19,7 @@ final class SearchViewController: UIViewController {
 
     private let searchBarBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.transparentCardBackground
+        view.backgroundColor = ColorSystem.lavender20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -86,7 +86,7 @@ final class SearchViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(searchBarBackgroundView)

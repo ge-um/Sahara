@@ -28,7 +28,7 @@ final class PieChartView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = ColorSystem.transparentCardBackground
+        backgroundColor = ColorSystem.lavender20
         layer.cornerRadius = 12
         clipsToBounds = true
     }

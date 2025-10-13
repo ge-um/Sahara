@@ -143,7 +143,7 @@ final class CardInfoView: UIView {
     }
 
     func applyGradients() {
-        photoSelectButton.applyGradient(.barBack)
-        locationCard.searchButton.applyGradient(.searchLocationButton)
+        photoSelectButton.applyGradient(.paleBlueToGray)
+        locationCard.searchButton.applyGradient(.lemonToLime)
     }
 }

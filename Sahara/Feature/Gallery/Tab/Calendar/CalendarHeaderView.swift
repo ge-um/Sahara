@@ -25,7 +25,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.layer.cornerRadius = 10
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
-        button.setTitleColor(ColorSystem.labelInactive, for: .normal)
+        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
         return button
     }()
@@ -36,7 +36,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.layer.cornerRadius = 10
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
-        button.setTitleColor(ColorSystem.labelInactive, for: .normal)
+        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
         button.titleLabel?.font = FontSystem.galmuri14(size: 14)
         return button
     }()
@@ -131,8 +131,8 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        previousMonthButton.applyGradient(.grayGradient, removeExisting: true)
-        nextMonthButton.applyGradient(.grayGradient, removeExisting: true)
+        previousMonthButton.applyGradient(.whiteToGray, removeExisting: true)
+        nextMonthButton.applyGradient(.whiteToGray, removeExisting: true)
     }
 
     func configure(monthTitle: String) {

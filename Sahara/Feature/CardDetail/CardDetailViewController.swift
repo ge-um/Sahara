@@ -100,8 +100,8 @@ final class CardDetailViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.saveShareButton)
-        shareButton.applyGradient(.saveShareButton)
+        saveButton.applyGradient(.yellowGreen)
+        shareButton.applyGradient(.yellowGreen)
     }
 
     private func setupCustomNavigationBar() {
@@ -125,7 +125,7 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)

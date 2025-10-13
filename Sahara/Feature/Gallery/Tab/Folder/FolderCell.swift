@@ -11,7 +11,7 @@ import UIKit
 final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.calendarBackground
+        view.backgroundColor = ColorSystem.white30
         view.layer.cornerRadius = 12
         return view
     }()
@@ -19,7 +19,7 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private let folderIconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder.fill")
-        imageView.tintColor = ColorSystem.gradientBlue
+        imageView.tintColor = ColorSystem.skyBlue
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -27,7 +27,7 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private let folderNameLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 

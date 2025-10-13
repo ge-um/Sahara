@@ -75,7 +75,7 @@ final class CardInfoViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.buttonPink)
+        saveButton.applyGradient(.hotPink)
         contentView.applyGradients()
     }
 
@@ -111,7 +111,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.cardInfoBackground)
+        view.applyGradient(.mintToOrange)
 
         view.addSubview(customNavigationBar)
         view.addSubview(contentView)
@@ -220,7 +220,7 @@ final class CardInfoViewController: UIViewController {
             memo: contentView.memoCard.textView.rx.text
                 .map { [weak self] text in
                     guard let self = self else { return nil }
-                    if self.contentView.memoCard.textView.textColor == ColorSystem.labelPrimary {
+                    if self.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
                         return nil
                     }
                     return text
