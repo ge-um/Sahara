@@ -1,5 +1,5 @@
-/* App Name */
-"CFBundleDisplayName" = "사하라";
+///* App Name */
+"CFBundleDisplayName" = "사하라Dev";
 "CFBundleName" = "사하라";
 
 /* Privacy - Photo Library */
