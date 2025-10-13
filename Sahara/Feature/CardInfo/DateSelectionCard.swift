@@ -13,7 +13,7 @@ import UIKit
 final class DateSelectionCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -22,14 +22,14 @@ final class DateSelectionCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.date", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "calendar")
-        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.tintColor = ColorSystem.darkGray
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -41,7 +41,7 @@ final class DateSelectionCard: UIView {
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
         label.font = FontSystem.galmuriMono(size: 16)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 

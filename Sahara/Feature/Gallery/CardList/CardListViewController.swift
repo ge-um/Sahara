@@ -87,7 +87,7 @@ final class CardListViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(collectionView)

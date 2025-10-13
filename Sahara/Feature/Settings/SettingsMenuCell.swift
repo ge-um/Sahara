@@ -12,21 +12,21 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelSecondary
+        label.textColor = ColorSystem.charcoal
         return label
     }()
 
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.tintColor = ColorSystem.darkGray
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()

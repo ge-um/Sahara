@@ -168,7 +168,7 @@ final class MediaEditorViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = ColorSystem.cardBackground
+        collectionView.backgroundColor = ColorSystem.purpleGray20
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(FilterCell.self, forCellWithReuseIdentifier: FilterCell.identifier)
         collectionView.dataSource = self
@@ -270,8 +270,8 @@ final class MediaEditorViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         toolBarContainer.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = toolBarContainer.bounds
-        doneButton.applyGradient(.buttonPink)
-        cropApplyButton.applyGradient(.buttonPink)
+        doneButton.applyGradient(.hotPink)
+        cropApplyButton.applyGradient(.hotPink)
         updateStarPositions()
     }
 
@@ -950,7 +950,7 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.cardInfoBackground)
+        view.applyGradient(.mintToOrange)
 
         view.addSubview(customNavigationBar)
         view.addSubview(photoImageView)
@@ -969,7 +969,7 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.addSubview(toolBarScrollView)
         toolBarScrollView.addSubview(modeButtonStackView)
 
-        toolBarContainer.applyGradient(.barBack)
+        toolBarContainer.applyGradient(.paleBlueToGray)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)

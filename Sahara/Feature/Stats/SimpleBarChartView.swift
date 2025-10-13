@@ -11,11 +11,11 @@ final class SimpleBarChartView: UIView {
     private var labels: [String] = []
     private var values: [CGFloat] = []
     private var gradientLayers: [CAGradientLayer] = []
-    private var barGradient: ColorSystem.Gradient = .cardInfoBackground
+    private var barGradient: ColorSystem.Gradient = .mintToOrange
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = ColorSystem.transparentCardBackground
+        backgroundColor = ColorSystem.lavender20
         layer.cornerRadius = 12
         clipsToBounds = true
     }

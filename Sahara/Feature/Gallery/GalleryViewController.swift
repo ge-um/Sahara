@@ -203,7 +203,7 @@ final class GalleryViewController: UIViewController {
     }
     
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(emptyStateView)
@@ -372,9 +372,9 @@ final class GalleryViewController: UIViewController {
 
         for (button, type) in zip(buttons, types) {
             if type == selectedType {
-                button.setGradient(.blueGradient, isSelected: true)
+                button.setGradient(.royalBlue, isSelected: true)
             } else {
-                button.setGradient(.grayGradient, isSelected: false)
+                button.setGradient(.whiteToGray, isSelected: false)
             }
         }
     }

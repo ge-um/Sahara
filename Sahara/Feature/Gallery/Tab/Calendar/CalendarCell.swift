@@ -21,7 +21,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let label = UILabel()
         label.text = "+"
         label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = ColorSystem.todayIndicator
+        label.textColor = ColorSystem.darkestGray
         label.textAlignment = .center
         label.isHidden = true
         return label
@@ -79,13 +79,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let calendar = Calendar.current
             if calendar.isDateInToday(date) && item.isCurrentMonth {
                 isToday = true
-                contentView.layer.borderColor = ColorSystem.todayIndicator.cgColor
+                contentView.layer.borderColor = ColorSystem.darkestGray.cgColor
                 contentView.layer.borderWidth = 2
                 contentView.layer.cornerRadius = 8
             }
 
             if !item.isCurrentMonth {
-                dayLabel.textColor = ColorSystem.labelNotCurrentMonth
+                dayLabel.textColor = ColorSystem.lightGray
             } else if weekday == 1 {
                 dayLabel.textColor = ColorSystem.systemRed
             } else if weekday == 7 {

@@ -15,7 +15,7 @@ import UIKit
 final class LocationSelectionCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -24,7 +24,7 @@ final class LocationSelectionCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 
@@ -32,7 +32,7 @@ final class LocationSelectionCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         label.numberOfLines = 2
         return label
     }()

@@ -102,11 +102,11 @@ final class StatsViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
-        timeChartView.setBarGradient(.saveShareButton)
-        weekdayChartView.setBarGradient(.saveShareButton)
-        monthlyChartView.setBarGradient(.saveShareButton)
+        timeChartView.setBarGradient(.yellowGreen)
+        weekdayChartView.setBarGradient(.yellowGreen)
+        monthlyChartView.setBarGradient(.yellowGreen)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)

@@ -20,7 +20,7 @@ final class CalendarViewController: UIViewController {
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: CalendarHeaderView.identifier
         )
-        collectionView.backgroundColor = ColorSystem.calendarBackground
+        collectionView.backgroundColor = ColorSystem.white30
         collectionView.isScrollEnabled = false
         collectionView.layer.cornerRadius = 12
         collectionView.clipsToBounds = true

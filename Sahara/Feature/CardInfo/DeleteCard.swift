@@ -13,7 +13,7 @@ import UIKit
 final class DeleteCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -22,7 +22,7 @@ final class DeleteCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.delete", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 

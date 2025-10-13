@@ -13,7 +13,7 @@ import UIKit
 final class MemoCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -22,14 +22,14 @@ final class MemoCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.memo", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 
     let textView: UITextView = {
         let textView = UITextView()
         textView.font = FontSystem.galmuriMono(size: 16)
-        textView.textColor = ColorSystem.labelSecondary
+        textView.textColor = ColorSystem.charcoal
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         return textView
@@ -39,7 +39,7 @@ final class MemoCard: UIView {
         let label = UILabel()
         label.text = "0"
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         label.textAlignment = .right
         return label
     }()
@@ -88,9 +88,9 @@ final class MemoCard: UIView {
         textView.rx.didBeginEditing
             .withUnretained(self)
             .bind { owner, _ in
-                if owner.textView.textColor == ColorSystem.labelPrimary {
+                if owner.textView.textColor == ColorSystem.darkGray {
                     owner.textView.text = ""
-                    owner.textView.textColor = ColorSystem.labelSecondary
+                    owner.textView.textColor = ColorSystem.charcoal
                 }
             }
             .disposed(by: disposeBag)
@@ -108,9 +108,9 @@ final class MemoCard: UIView {
             .orEmpty
             .withUnretained(self)
             .bind { owner, text in
-                let count = owner.textView.textColor == ColorSystem.labelPrimary ? 0 : text.count
+                let count = owner.textView.textColor == ColorSystem.darkGray ? 0 : text.count
                 owner.characterCountLabel.text = "\(count)"
-                owner.characterCountLabel.textColor = ColorSystem.labelPrimary
+                owner.characterCountLabel.textColor = ColorSystem.darkGray
             }
             .disposed(by: disposeBag)
     }
@@ -119,17 +119,17 @@ final class MemoCard: UIView {
         textView.attributedText = NSAttributedString(
             string: placeholderText,
             attributes: [
-                .foregroundColor: ColorSystem.labelPrimary,
+                .foregroundColor: ColorSystem.darkGray,
                 .font: FontSystem.galmuriMono(size: 16)
             ]
         )
         characterCountLabel.text = "0"
-        characterCountLabel.textColor = ColorSystem.labelPrimary
+        characterCountLabel.textColor = ColorSystem.darkGray
     }
 
     func setMemo(_ memo: String) {
         textView.text = memo
-        textView.textColor = ColorSystem.labelSecondary
+        textView.textColor = ColorSystem.charcoal
         characterCountLabel.text = "\(memo.count)"
     }
 }

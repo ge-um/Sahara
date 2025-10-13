@@ -81,7 +81,7 @@ final class PhotoCardView: UIView {
 
     private let overlayView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground.withAlphaComponent(0.6)
+        view.backgroundColor = ColorSystem.purpleGray20.withAlphaComponent(0.6)
         view.layer.cornerRadius = 20
         view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         return view

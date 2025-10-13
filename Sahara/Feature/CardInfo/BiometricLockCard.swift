@@ -13,7 +13,7 @@ import UIKit
 final class BiometricLockCard: UIView {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
+        view.backgroundColor = ColorSystem.purpleGray20
         view.layer.cornerRadius = 12
         return view
     }()
@@ -22,7 +22,7 @@ final class BiometricLockCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.secret", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
+        label.textColor = ColorSystem.black
         return label
     }()
 
@@ -30,7 +30,7 @@ final class BiometricLockCard: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.secret_description", comment: "")
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 

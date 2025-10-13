@@ -52,7 +52,7 @@ final class CustomNavigationBar: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         if containerView.layer.sublayers?.first as? CAGradientLayer == nil {
-            containerView.applyGradient(.barBack)
+            containerView.applyGradient(.paleBlueToGray)
         }
     }
 
