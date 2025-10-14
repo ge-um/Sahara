@@ -86,6 +86,7 @@ final class LocationSelectionCard: UIView {
     }()
 
     var mapViewHeightConstraint: Constraint?
+    private var viewModel: LocationSelectionCardViewModel?
     private let disposeBag = DisposeBag()
 
     override init(frame: CGRect) {
@@ -164,11 +165,12 @@ final class LocationSelectionCard: UIView {
     }
 
     func bind(
-        viewModel: LocationSelectionCardViewModel,
         initialLocation: Observable<CLLocation?>,
-        selectedLocation: Observable<(coordinate: CLLocationCoordinate2D, address: String)>,
-        disposeBag: DisposeBag
+        selectedLocation: Observable<(coordinate: CLLocationCoordinate2D, address: String)>
     ) -> LocationSelectionCardViewModel.Output {
+        let viewModel = LocationSelectionCardViewModel()
+        self.viewModel = viewModel
+
         let input = LocationSelectionCardViewModel.Input(
             searchButtonTapped: searchButton.rx.tap.asObservable(),
             removeButtonTapped: removeButton.rx.tap.asObservable(),
