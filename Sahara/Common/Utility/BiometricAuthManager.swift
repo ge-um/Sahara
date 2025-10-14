@@ -32,14 +32,42 @@ final class BiometricAuthManager {
         }
     }
 
+    func checkPermission(completion: @escaping (Bool, Error?) -> Void) {
+        let context = LAContext()
+        var error: NSError?
+
+        let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+
+        if !canEvaluate {
+            if let nsError = error, nsError.code == LAError.biometryNotAvailable.rawValue {
+                AnalyticsManager.shared.logBiometricPermissionDenied()
+            }
+        }
+
+        DispatchQueue.main.async {
+            completion(canEvaluate, error)
+        }
+    }
+
     func authenticate(feature: String = "card_view", completion: @escaping (Bool, Error?) -> Void) {
         let context = LAContext()
         context.localizedFallbackTitle = ""
         var error: NSError?
 
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            if let nsError = error, nsError.code == LAError.biometryNotAvailable.rawValue {
-                AnalyticsManager.shared.logBiometricPermissionDenied()
+            if let nsError = error {
+                if nsError.code == LAError.biometryNotAvailable.rawValue {
+                    AnalyticsManager.shared.logBiometricPermissionDenied()
+                    let permissionError = NSError(
+                        domain: "BiometricPermissionError",
+                        code: nsError.code,
+                        userInfo: nsError.userInfo
+                    )
+                    DispatchQueue.main.async {
+                        completion(false, permissionError)
+                    }
+                    return
+                }
             }
             DispatchQueue.main.async {
                 completion(false, error)

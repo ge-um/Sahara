@@ -121,6 +121,7 @@
 "biometric.no_biometric" = "Face ID 또는 Touch ID를 사용할 수 없어요";
 "biometric.permission_required" = "생체 인증 권한 필요";
 "biometric.permission_message" = "비밀 카드를 사용하려면 설정에서 Face ID 또는 Touch ID를 활성화해주세요";
+"biometric.permission_denied" = "Face ID 권한이 없어서 사용할 수 없어요";
 
 /* Search */
 "search.placeholder" = "메모를 검색해요";
@@ -153,8 +154,10 @@
 
 /* Settings */
 "settings.title" = "설정";
+"settings.section_privacy" = "개인정보";
 "settings.section_support" = "지원";
 "settings.section_about" = "정보";
+"settings.biometric_permission" = "Face ID / Touch ID 권한 설정";
 "settings.contact_developer" = "개발자에게 문의하기";
 "settings.release_notes" = "버전 기록";
 "settings.version_info" = "버전 정보";
