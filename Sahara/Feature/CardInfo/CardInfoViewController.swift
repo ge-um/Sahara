@@ -134,21 +134,33 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func bind() {
-        let initialLocationRelay = PublishSubject<CLLocation?>()
-        let selectedLocationRelay = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
+        let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
+        let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
         let locationCardViewModel = LocationSelectionCardViewModel()
+
         let locationOutput = contentView.locationCard.bind(
             viewModel: locationCardViewModel,
             initialLocation: initialLocationRelay.asObservable(),
-            selectedLocation: selectedLocationRelay.asObservable()
+            selectedLocation: selectedLocationSubject.asObservable(),
+            disposeBag: disposeBag
         )
+
+        selectedLocationSubject
+            .bind(with: self) { owner, result in
+                let (coordinate, address) = result
+                owner.contentView.locationCard.locationLabel.text = address
+                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
+                owner.contentView.locationCard.removeButton.isHidden = false
+                owner.contentView.locationCard.updateMapView(with: coordinate)
+            }
+            .disposed(by: disposeBag)
 
         locationOutput.presentLocationSearch
             .drive(with: self) { owner, _ in
                 owner.coordinator.presentLocationSearch { coordinate, address in
-                    selectedLocationRelay.onNext((coordinate, address))
+                    selectedLocationSubject.onNext((coordinate, address))
                 }
             }
             .disposed(by: disposeBag)
@@ -333,7 +345,7 @@ final class CardInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: PublishSubject<CLLocation?>) {
+    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
         if let date = date {
             selectedDateRelay.accept(date)
         }
