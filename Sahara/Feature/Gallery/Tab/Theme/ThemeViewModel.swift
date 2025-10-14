@@ -76,17 +76,17 @@ final class ThemeViewModel: BaseViewModelProtocol {
                 switch changes {
                 case .initial(let results), .update(let results, _, _, _):
                     let memos = Array(results)
-                    var categoryDict: [ThemeCategory: [Card]] = [:]
+                    var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
                     for card in memos {
                         guard let image = UIImage(data: card.editedImageData),
                               let cgImage = image.cgImage else { continue }
 
                         let category = self.classifyImage(cgImage)
-                        categoryDict[category, default: []].append(card)
+                        categoryDict[category, default: []].append(card.id)
                     }
 
-                    let groups = categoryDict.map { ThemeGroup(category: $0.key, cards: $0.value) }
+                    let groups = categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }
                         .sorted { first, second in
                             if first.category == .others { return false }
                             if second.category == .others { return true }

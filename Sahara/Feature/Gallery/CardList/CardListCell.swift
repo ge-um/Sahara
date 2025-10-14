@@ -43,11 +43,11 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    func configure(with card: Card) {
-        if let image = UIImage(data: card.editedImageData) {
+    func configure(with item: CardListItemDTO) {
+        if let image = UIImage(data: item.editedImageData) {
             imageView.image = image
         }
-        blurEffectView.isHidden = !card.isLocked
+        blurEffectView.isHidden = !item.isLocked
     }
 
     override func prepareForReuse() {
