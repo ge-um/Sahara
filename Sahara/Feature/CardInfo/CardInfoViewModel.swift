@@ -140,15 +140,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     return .just(false)
                 }
 
-                let shouldPop: Bool
-                if let cardId = self.cardToEditId {
-                    shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
-                    shouldPopToListRelay.accept(shouldPop)
-                } else {
-                    shouldPop = false
-                    shouldPopToListRelay.accept(false)
-                }
-
                 AnalyticsManager.shared.logCardSave(
                     hasPhoto: self.editedImage != nil,
                     hasMemo: !(memo?.isEmpty ?? true),
@@ -157,6 +148,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
 
                 if let cardId = self.cardToEditId {
+                    let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
+                    shouldPopToListRelay.accept(shouldPop)
+
                     if shouldPop {
                         return self.replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
                             .map { true }
@@ -165,6 +159,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                             .map { true }
                     }
                 } else {
+                    shouldPopToListRelay.accept(false)
                     return self.saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
                         .map { true }
                 }
