@@ -56,9 +56,19 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
             memosRelay.accept(Array(results))
         }
 
+        let photoSaved = NotificationCenter.default.rx
+            .notification(AppNotification.photoSaved.name)
+            .map { _ in () }
+
+        let photoDeleted = NotificationCenter.default.rx
+            .notification(AppNotification.photoDeleted.name)
+            .map { _ in () }
+
         Observable.merge(
             input.viewDidLoad,
-            input.viewWillAppear
+            input.viewWillAppear,
+            photoSaved,
+            photoDeleted
         )
         .throttle(.milliseconds(100), scheduler: MainScheduler.instance)
         .bind(with: self) { _, _ in

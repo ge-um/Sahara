@@ -7,92 +7,269 @@
 
 import Foundation
 import RealmSwift
+import RxSwift
 
-final class RealmManager {
+enum DatePeriod {
+    case day(Date)
+    case month(Date)
+}
+
+protocol RealmManagerProtocol {
+    func add<T: Object>(_ object: T) -> Observable<Void>
+    func fetch<T: Object>(_ type: T.Type, filter: String?, sortKey: String?, ascending: Bool) -> [T]
+    func fetchObject<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> T?
+    func delete<T: Object>(_ object: T) -> Observable<Void>
+    func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> Observable<Void>
+    func update(_ block: @escaping (Realm) -> Void) -> Observable<Void>
+    func isEmpty<T: Object>(_ type: T.Type) -> Bool
+    func fetchCards(for period: DatePeriod) -> [Card]
+}
+
+extension RealmManagerProtocol {
+    func fetch<T: Object>(_ type: T.Type) -> [T] {
+        return fetch(type, filter: nil, sortKey: nil, ascending: true)
+    }
+}
+
+final class RealmManager: RealmManagerProtocol {
     static let shared = RealmManager()
 
-    var realm: Realm {
-        return try! Realm()
+    private let configuration: Realm.Configuration
+
+    init(configuration: Realm.Configuration = .defaultConfiguration) {
+        self.configuration = configuration
     }
 
-    private init() {}
+    private func getRealm() throws -> Realm {
+        return try Realm(configuration: configuration)
+    }
 
-    func save<T: Object>(_ object: T) {
-        do {
-            try realm.write {
-                realm.add(object)
+    func add<T: Object>(_ object: T) -> Observable<Void> {
+        return Observable.create { observer in
+            DispatchQueue.main.async {
+                do {
+                    let realm = try self.getRealm()
+                    realm.writeAsync {
+                        realm.add(object)
+                    } onComplete: { error in
+                        if let error = error {
+                            observer.onError(error)
+                        } else {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                } catch {
+                    observer.onError(error)
+                }
             }
-        } catch {
+            return Disposables.create()
         }
     }
 
-    func fetch<T: Object>(_ type: T.Type) -> Results<T> {
-        return realm.objects(type)
-    }
+    func fetch<T: Object>(_ type: T.Type, filter: String? = nil, sortKey: String? = nil, ascending: Bool = true) -> [T] {
+        guard let realm = try? getRealm() else { return [] }
+        var results = realm.objects(type)
 
-    func delete<T: Object>(_ object: T) {
-        do {
-            try realm.write {
-                realm.delete(object)
-            }
-        } catch {
-        }
-    }
-
-    func update(_ block: () -> Void) {
-        do {
-            try realm.write {
-                block()
-            }
-        } catch {
-        }
-    }
-
-    func fetcCards(on date: Date) -> [Card] {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
-            return []
+        if let filter = filter {
+            results = results.filter(filter)
         }
 
-        let results = realm.objects(Card.self)
-            .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
-            .sorted(byKeyPath: "createdDate", ascending: true)
+        if let sortKey = sortKey {
+            results = results.sorted(byKeyPath: sortKey, ascending: ascending)
+        }
 
         return Array(results)
     }
 
-    func fetchCards(in month: Date) -> [Card] {
-        let calendar = Calendar.current
-        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month)),
-              let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
-            return []
+    func fetchObject<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> T? {
+        guard let realm = try? getRealm() else { return nil }
+        return realm.object(ofType: type, forPrimaryKey: key)
+    }
+
+    func delete<T: Object>(_ object: T) -> Observable<Void> {
+        return Observable.create { observer in
+            DispatchQueue.main.async {
+                do {
+                    let realm = try self.getRealm()
+                    realm.writeAsync {
+                        realm.delete(object)
+                    } onComplete: { error in
+                        if let error = error {
+                            observer.onError(error)
+                        } else {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                } catch {
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
         }
+    }
 
-        let results = realm.objects(Card.self)
-            .filter("createdDate >= %@ AND createdDate < %@", startOfMonth, nextMonth)
-            .sorted(byKeyPath: "createdDate", ascending: true)
+    func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> Observable<Void> {
+        return Observable.create { observer in
+            DispatchQueue.main.async {
+                do {
+                    let realm = try self.getRealm()
+                    guard let object = realm.object(ofType: type, forPrimaryKey: key) else {
+                        observer.onError(RealmError.objectNotFound)
+                        return
+                    }
+                    realm.writeAsync {
+                        realm.delete(object)
+                    } onComplete: { error in
+                        if let error = error {
+                            observer.onError(error)
+                        } else {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                } catch {
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
+    }
 
-        return Array(results)
+    func update(_ block: @escaping (Realm) -> Void) -> Observable<Void> {
+        return Observable.create { observer in
+            DispatchQueue.main.async {
+                do {
+                    let realm = try self.getRealm()
+                    realm.writeAsync {
+                        block(realm)
+                    } onComplete: { error in
+                        if let error = error {
+                            observer.onError(error)
+                        } else {
+                            observer.onNext(())
+                            observer.onCompleted()
+                        }
+                    }
+                } catch {
+                    observer.onError(error)
+                }
+            }
+            return Disposables.create()
+        }
     }
 
     func isEmpty<T: Object>(_ type: T.Type) -> Bool {
+        guard let realm = try? getRealm() else { return true }
         return realm.objects(type).isEmpty
     }
 
-    func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) {
-        let realm = self.realm
-        guard let object = realm.object(ofType: type, forPrimaryKey: key) else { return }
+    func fetchCards(for period: DatePeriod) -> [Card] {
+        let calendar = Calendar.current
+        let startDate: Date
+        let endDate: Date
 
-        do {
-            try realm.write {
-                realm.delete(object)
+        switch period {
+        case .day(let date):
+            startDate = calendar.startOfDay(for: date)
+            guard let end = calendar.date(byAdding: .day, value: 1, to: startDate) else {
+                return []
             }
-        } catch {
+            endDate = end
+
+        case .month(let date):
+            guard let start = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
+                  let end = calendar.date(byAdding: .month, value: 1, to: start) else {
+                return []
+            }
+            startDate = start
+            endDate = end
+        }
+
+        guard let realm = try? getRealm() else { return [] }
+        let results = realm.objects(Card.self)
+            .filter("createdDate >= %@ AND createdDate < %@", startDate, endDate)
+            .sorted(byKeyPath: "createdDate", ascending: true)
+
+        return Array(results)
+    }
+}
+
+enum RealmError: Error {
+    case objectNotFound
+    case writeError
+    case configurationError
+}
+
+final class MockRealmManager: RealmManagerProtocol {
+    var objects: [Object] = []
+    var shouldThrowError = false
+
+    func add<T: Object>(_ object: T) -> Observable<Void> {
+        return Observable.create { observer in
+            if self.shouldThrowError {
+                observer.onError(RealmError.writeError)
+            } else {
+                self.objects.append(object)
+                observer.onNext(())
+                observer.onCompleted()
+            }
+            return Disposables.create()
         }
     }
 
-    func deleteCard(id: ObjectId) {
-        delete(Card.self, forPrimaryKey: id)
+    func fetch<T: Object>(_ type: T.Type, filter: String?, sortKey: String?, ascending: Bool) -> [T] {
+        return objects.compactMap { $0 as? T }
+    }
+
+    func fetchObject<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> T? {
+        return objects.compactMap { $0 as? T }.first
+    }
+
+    func delete<T: Object>(_ object: T) -> Observable<Void> {
+        return Observable.create { observer in
+            if self.shouldThrowError {
+                observer.onError(RealmError.writeError)
+            } else {
+                self.objects.removeAll { $0.isSameObject(as: object) }
+                observer.onNext(())
+                observer.onCompleted()
+            }
+            return Disposables.create()
+        }
+    }
+
+    func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> Observable<Void> {
+        return Observable.create { observer in
+            if self.shouldThrowError {
+                observer.onError(RealmError.objectNotFound)
+            } else {
+                self.objects.removeAll { $0 is T }
+                observer.onNext(())
+                observer.onCompleted()
+            }
+            return Disposables.create()
+        }
+    }
+
+    func update(_ block: @escaping (Realm) -> Void) -> Observable<Void> {
+        return Observable.create { observer in
+            if self.shouldThrowError {
+                observer.onError(RealmError.writeError)
+            } else {
+                observer.onNext(())
+                observer.onCompleted()
+            }
+            return Disposables.create()
+        }
+    }
+
+    func isEmpty<T: Object>(_ type: T.Type) -> Bool {
+        return objects.compactMap { $0 as? T }.isEmpty
+    }
+
+    func fetchCards(for period: DatePeriod) -> [Card] {
+        return objects.compactMap { $0 as? Card }
     }
 }

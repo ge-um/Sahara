@@ -35,7 +35,6 @@ extension SettingsSection: SectionModelType {
     typealias Item = SettingsMenuItem
 
     init(original: SettingsSection, items: [SettingsMenuItem]) {
-        self = original
         self = SettingsSection(type: original.type, items: items)
     }
 }
