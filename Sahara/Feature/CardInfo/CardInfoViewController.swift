@@ -138,13 +138,9 @@ final class CardInfoViewController: UIViewController {
         let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
-        let locationCardViewModel = LocationSelectionCardViewModel()
-
         let locationOutput = contentView.locationCard.bind(
-            viewModel: locationCardViewModel,
             initialLocation: initialLocationRelay.asObservable(),
-            selectedLocation: selectedLocationSubject.asObservable(),
-            disposeBag: disposeBag
+            selectedLocation: selectedLocationSubject.asObservable()
         )
 
         selectedLocationSubject
@@ -165,8 +161,7 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let biometricCardViewModel = BiometricLockCardViewModel(initialIsLocked: false)
-        let biometricOutput = contentView.biometricLockCard.bind(viewModel: biometricCardViewModel)
+        let biometricOutput = contentView.biometricLockCard.bind(initialIsLocked: false)
 
         biometricOutput.presentPermissionAlert
             .drive(with: self) { owner, _ in

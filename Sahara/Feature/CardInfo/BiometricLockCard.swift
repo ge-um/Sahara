@@ -39,6 +39,7 @@ final class BiometricLockCard: UIView {
         return switchControl
     }()
 
+    private var viewModel: BiometricLockCardViewModel?
     private let disposeBag = DisposeBag()
 
     override init(frame: CGRect) {
@@ -76,7 +77,10 @@ final class BiometricLockCard: UIView {
         }
     }
 
-    func bind(viewModel: BiometricLockCardViewModel) -> BiometricLockCardViewModel.Output {
+    func bind(initialIsLocked: Bool) -> BiometricLockCardViewModel.Output {
+        let viewModel = BiometricLockCardViewModel(initialIsLocked: initialIsLocked)
+        self.viewModel = viewModel
+
         let input = BiometricLockCardViewModel.Input(
             switchToggled: lockSwitch.rx.isOn.asObservable()
         )
