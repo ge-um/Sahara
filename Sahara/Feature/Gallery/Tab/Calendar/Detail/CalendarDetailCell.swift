@@ -18,14 +18,7 @@ final class CalendarDetailCell: UICollectionViewCell, IsIdentifiable {
         return imageView
     }()
 
-    private let blurEffectView: UIVisualEffectView = {
-        let blurEffect = UIBlurEffect(style: .extraLight)
-        let effectView = UIVisualEffectView(effect: blurEffect)
-        effectView.layer.cornerRadius = 12
-        effectView.clipsToBounds = true
-        effectView.isHidden = true
-        return effectView
-    }()
+    private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 12)
 
     override init(frame: CGRect) {
         super.init(frame: frame)

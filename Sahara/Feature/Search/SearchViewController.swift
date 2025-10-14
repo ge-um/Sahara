@@ -203,14 +203,7 @@ final class SearchCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let blurEffectView: UIVisualEffectView = {
-        let blurEffect = UIBlurEffect(style: .extraLight)
-        let effectView = UIVisualEffectView(effect: blurEffect)
-        effectView.layer.cornerRadius = 8
-        effectView.clipsToBounds = true
-        effectView.isHidden = true
-        return effectView
-    }()
+    private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
 
     override init(frame: CGRect) {
         super.init(frame: frame)
