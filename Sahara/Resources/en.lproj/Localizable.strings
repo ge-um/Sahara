@@ -121,6 +121,7 @@
 "biometric.no_biometric" = "Face ID or Touch ID is not available";
 "biometric.permission_required" = "Biometric Permission Required";
 "biometric.permission_message" = "Please enable Face ID or Touch ID in Settings to use secret cards";
+"biometric.permission_denied" = "Cannot use without Face ID permission";
 
 /* Search */
 "search.placeholder" = "Search memos";
@@ -153,8 +154,10 @@
 
 /* Settings */
 "settings.title" = "Settings";
+"settings.section_privacy" = "Privacy";
 "settings.section_support" = "Support";
 "settings.section_about" = "About";
+"settings.biometric_permission" = "Face ID / Touch ID Settings";
 "settings.contact_developer" = "Contact Developer";
 "settings.release_notes" = "Release Notes";
 "settings.version_info" = "Version";

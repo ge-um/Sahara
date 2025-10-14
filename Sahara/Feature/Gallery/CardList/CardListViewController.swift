@@ -132,8 +132,12 @@ final class CardListViewController: UIViewController {
                             let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
                             owner.navigationController?.pushViewController(detailVC, animated: true)
                         } else {
-                            if let error = error {
-                                owner.showToast(message: error.localizedDescription)
+                            if let error = error as NSError? {
+                                if error.domain == "BiometricPermissionError" {
+                                    owner.showBiometricPermissionAlert()
+                                } else {
+                                    owner.showToast(message: error.localizedDescription)
+                                }
                             }
                         }
                     }
@@ -149,6 +153,23 @@ final class CardListViewController: UIViewController {
                 owner.navigationController?.popViewController(animated: true)
             }
             .disposed(by: disposeBag)
+    }
+
+    private func showBiometricPermissionAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("biometric.permission_required", comment: ""),
+            message: NSLocalizedString("biometric.permission_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel) { [weak self] _ in
+            self?.showToast(message: NSLocalizedString("biometric.permission_denied", comment: ""))
+        })
+        present(alert, animated: true)
     }
 }
 

@@ -120,6 +120,7 @@
 "biometric.no_biometric" = "Face IDまたはTouch IDを使用できません";
 "biometric.permission_required" = "生体認証権限が必要";
 "biometric.permission_message" = "秘密カードを使用するには、設定でFace IDまたはTouch IDを有効にしてください";
+"biometric.permission_denied" = "Face ID権限がないため使用できません";
 
 /* Search */
 "search.placeholder" = "メモを検索";
@@ -152,8 +153,10 @@
 
 /* Settings */
 "settings.title" = "設定";
+"settings.section_privacy" = "プライバシー";
 "settings.section_support" = "サポート";
 "settings.section_about" = "情報";
+"settings.biometric_permission" = "Face ID / Touch ID設定";
 "settings.contact_developer" = "開発者に問い合わせ";
 "settings.release_notes" = "バージョン履歴";
 "settings.version_info" = "バージョン情報";
