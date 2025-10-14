@@ -31,9 +31,10 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
         self.date = date
     }
 
-    func getCard(by id: ObjectId) -> Card? {
+    func getCard(by id: ObjectId) -> CardListItemDTO? {
         let realm = try! Realm()
-        return realm.object(ofType: Card.self, forPrimaryKey: id)
+        guard let card = realm.object(ofType: Card.self, forPrimaryKey: id) else { return nil }
+        return CardListItemDTO(from: card)
     }
 
     func transform(input: Input) -> Output {

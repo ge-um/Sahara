@@ -46,22 +46,15 @@ final class RealmManager: RealmManagerProtocol {
 
     func add<T: Object>(_ object: T) -> Observable<Void> {
         return Observable.create { observer in
-            DispatchQueue.main.async {
-                do {
-                    let realm = try self.getRealm()
-                    realm.writeAsync {
-                        realm.add(object)
-                    } onComplete: { error in
-                        if let error = error {
-                            observer.onError(error)
-                        } else {
-                            observer.onNext(())
-                            observer.onCompleted()
-                        }
-                    }
-                } catch {
-                    observer.onError(error)
+            do {
+                let realm = try self.getRealm()
+                try realm.write {
+                    realm.add(object)
                 }
+                observer.onNext(())
+                observer.onCompleted()
+            } catch {
+                observer.onError(error)
             }
             return Disposables.create()
         }
@@ -89,22 +82,15 @@ final class RealmManager: RealmManagerProtocol {
 
     func delete<T: Object>(_ object: T) -> Observable<Void> {
         return Observable.create { observer in
-            DispatchQueue.main.async {
-                do {
-                    let realm = try self.getRealm()
-                    realm.writeAsync {
-                        realm.delete(object)
-                    } onComplete: { error in
-                        if let error = error {
-                            observer.onError(error)
-                        } else {
-                            observer.onNext(())
-                            observer.onCompleted()
-                        }
-                    }
-                } catch {
-                    observer.onError(error)
+            do {
+                let realm = try self.getRealm()
+                try realm.write {
+                    realm.delete(object)
                 }
+                observer.onNext(())
+                observer.onCompleted()
+            } catch {
+                observer.onError(error)
             }
             return Disposables.create()
         }
@@ -112,26 +98,19 @@ final class RealmManager: RealmManagerProtocol {
 
     func delete<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> Observable<Void> {
         return Observable.create { observer in
-            DispatchQueue.main.async {
-                do {
-                    let realm = try self.getRealm()
-                    guard let object = realm.object(ofType: type, forPrimaryKey: key) else {
-                        observer.onError(RealmError.objectNotFound)
-                        return
-                    }
-                    realm.writeAsync {
-                        realm.delete(object)
-                    } onComplete: { error in
-                        if let error = error {
-                            observer.onError(error)
-                        } else {
-                            observer.onNext(())
-                            observer.onCompleted()
-                        }
-                    }
-                } catch {
-                    observer.onError(error)
+            do {
+                let realm = try self.getRealm()
+                guard let object = realm.object(ofType: type, forPrimaryKey: key) else {
+                    observer.onError(RealmError.objectNotFound)
+                    return Disposables.create()
                 }
+                try realm.write {
+                    realm.delete(object)
+                }
+                observer.onNext(())
+                observer.onCompleted()
+            } catch {
+                observer.onError(error)
             }
             return Disposables.create()
         }
@@ -139,22 +118,15 @@ final class RealmManager: RealmManagerProtocol {
 
     func update(_ block: @escaping (Realm) -> Void) -> Observable<Void> {
         return Observable.create { observer in
-            DispatchQueue.main.async {
-                do {
-                    let realm = try self.getRealm()
-                    realm.writeAsync {
-                        block(realm)
-                    } onComplete: { error in
-                        if let error = error {
-                            observer.onError(error)
-                        } else {
-                            observer.onNext(())
-                            observer.onCompleted()
-                        }
-                    }
-                } catch {
-                    observer.onError(error)
+            do {
+                let realm = try self.getRealm()
+                try realm.write {
+                    block(realm)
                 }
+                observer.onNext(())
+                observer.onCompleted()
+            } catch {
+                observer.onError(error)
             }
             return Disposables.create()
         }

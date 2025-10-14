@@ -77,16 +77,21 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = sourceType
     }
 
-    init(cardToEdit: Card, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.realmManager = realmManager
-        self.cardToEditId = cardToEdit.id
-        self.editedImage = UIImage(data: cardToEdit.editedImageData)
-        self.originalDate = cardToEdit.createdDate
-        self.initialMemo = cardToEdit.memo
-        self.initialIsLocked = cardToEdit.isLocked
-        self.initialCustomFolder = cardToEdit.customFolder
+        self.cardToEditId = cardId
         self.sourceType = sourceType
-        if let lat = cardToEdit.latitude, let lon = cardToEdit.longitude {
+
+        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else {
+            return
+        }
+
+        self.editedImage = UIImage(data: card.editedImageData)
+        self.originalDate = card.createdDate
+        self.initialMemo = card.memo
+        self.initialIsLocked = card.isLocked
+        self.initialCustomFolder = card.customFolder
+        if let lat = card.latitude, let lon = card.longitude {
             self.originalLocation = CLLocation(latitude: lat, longitude: lon)
         }
     }

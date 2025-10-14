@@ -118,7 +118,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutSingleImage(_ card: Card) {
+    private func layoutSingleImage(_ card: CardCalendarItemDTO) {
         let imageView = createImageView()
         imageViews.append(imageView)
         containerView.addSubview(imageView)
@@ -142,7 +142,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutTwoImages(_ photo1: Card, _ photo2: Card) {
+    private func layoutTwoImages(_ photo1: CardCalendarItemDTO, _ photo2: CardCalendarItemDTO) {
         let imageView1 = createImageView()
         let imageView2 = createImageView()
 
@@ -192,7 +192,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func layoutMultipleImages(cards: [Card]) {
+    private func layoutMultipleImages(cards: [CardCalendarItemDTO]) {
         guard cards.count >= 3 else { return }
 
         let topImageView = createImageView()

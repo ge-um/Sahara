@@ -479,7 +479,8 @@ extension GalleryViewController: MKMapViewDelegate {
         let photoCount = cards.count
         AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
-        let galleryVC = CardListViewController(cards: cards, themeCategory: .others, customTitle: title)
+        let cardIds = cards.map { $0.id }
+        let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }
 }

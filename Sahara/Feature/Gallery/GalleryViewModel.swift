@@ -38,13 +38,13 @@ final class GalleryViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let showPhotoPicker = PublishRelay<Void>()
         let currentMonth = BehaviorRelay(value: Date())
-        let photos = BehaviorRelay<[Card]>(value: [])
+        let photos = BehaviorRelay<[CardCalendarItemDTO]>(value: [])
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
-        
+
         let calendarItems = Observable
             .combineLatest(currentMonth, photos)
-            .map { month, cards in
-                self.generateCalendar(for: month, cards: cards)
+            .map { month, items in
+                self.generateCalendar(for: month, items: items)
             }
         
         let currentMonthTitle = currentMonth
@@ -119,12 +119,13 @@ final class GalleryViewModel: BaseViewModelProtocol {
         )
     }
     
-    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Card]>) {
+    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[CardCalendarItemDTO]>) {
         let cards = realmManager.fetchCards(for: .month(date))
-        photos.accept(cards)
+        let items = cards.map { CardCalendarItemDTO(from: $0) }
+        photos.accept(items)
     }
-    
-    private func generateCalendar(for month: Date, cards: [Card]) -> [DayItem] {
+
+    private func generateCalendar(for month: Date, items: [CardCalendarItemDTO]) -> [DayItem] {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
 
@@ -136,35 +137,35 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let firstWeekday = calendar.component(.weekday, from: firstDay)
         let daysInMonth = range.count
 
-        var items: [DayItem] = []
+        var dayItems: [DayItem] = []
 
         // 이전 달의 날짜들
         for i in (1..<firstWeekday).reversed() {
             if let date = calendar.date(byAdding: .day, value: -i, to: firstDay) {
-                items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+                dayItems.append(DayItem(date: date, cards: [], isCurrentMonth: false))
             }
         }
 
         // 현재 달의 날짜들
         for day in 1...daysInMonth {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
-                let cardsForDay = cards.filter {
+                let cardsForDay = items.filter {
                     calendar.isDate($0.createdDate, inSameDayAs: date)
                 }
-                items.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
+                dayItems.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
             }
         }
 
         // 다음 달의 날짜들 (항상 42칸이 되도록)
-        let remainingCells = 42 - items.count
+        let remainingCells = 42 - dayItems.count
         if let lastDay = calendar.date(byAdding: .day, value: daysInMonth - 1, to: firstDay) {
             for i in 1...remainingCells {
                 if let date = calendar.date(byAdding: .day, value: i, to: lastDay) {
-                    items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+                    dayItems.append(DayItem(date: date, cards: [], isCurrentMonth: false))
                 }
             }
         }
 
-        return items
+        return dayItems
     }
 }

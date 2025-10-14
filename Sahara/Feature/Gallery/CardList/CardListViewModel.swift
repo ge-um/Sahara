@@ -14,7 +14,7 @@ final class CardListViewModel: BaseViewModelProtocol {
     private let cardIds: [ObjectId]?
     private let folderName: String?
     private let disposeBag = DisposeBag()
-    private let cardsRelay = BehaviorRelay<[Card]>(value: [])
+    private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
     struct Input {
         let viewDidLoad: Observable<Void>
@@ -23,13 +23,13 @@ final class CardListViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let cards: Driver<[Card]>
+        let cards: Driver<[CardListItemDTO]>
         let navigateToDetail: Driver<ObjectId>
         let dismiss: Driver<Void>
     }
 
-    init(cards: [Card]) {
-        self.cardIds = cards.map { $0.id }
+    init(cardIds: [ObjectId]) {
+        self.cardIds = cardIds
         self.folderName = nil
     }
 
@@ -65,7 +65,7 @@ final class CardListViewModel: BaseViewModelProtocol {
     private func observeCards() {
         let realm = try! Realm()
 
-        Observable<[Card]>.create { observer in
+        Observable<[CardListItemDTO]>.create { observer in
             let cards: Results<Card>
 
             if let folderName = self.folderName {
@@ -81,14 +81,17 @@ final class CardListViewModel: BaseViewModelProtocol {
                 cards = realm.objects(Card.self)
             }
 
-            observer.onNext(Array(cards).sorted { $0.createdDate > $1.createdDate })
+            let sortedCards = Array(cards).sorted { $0.createdDate > $1.createdDate }
+            observer.onNext(sortedCards.map { CardListItemDTO(from: $0) })
 
             let token = cards.observe { changes in
                 switch changes {
                 case .initial(let results):
-                    observer.onNext(Array(results).sorted { $0.createdDate > $1.createdDate })
+                    let sorted = Array(results).sorted { $0.createdDate > $1.createdDate }
+                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
                 case .update(let results, _, _, _):
-                    observer.onNext(Array(results).sorted { $0.createdDate > $1.createdDate })
+                    let sorted = Array(results).sorted { $0.createdDate > $1.createdDate }
+                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
                 case .error(let error):
                     observer.onError(error)
                 }
@@ -102,13 +105,13 @@ final class CardListViewModel: BaseViewModelProtocol {
         .disposed(by: disposeBag)
     }
 
-    func getCard(at index: Int) -> Card? {
+    func getCard(at index: Int) -> CardListItemDTO? {
         let cards = cardsRelay.value
         guard index < cards.count else { return nil }
         return cards[index]
     }
 
-    func getCard(by id: ObjectId) -> Card? {
+    func getCard(by id: ObjectId) -> CardListItemDTO? {
         return cardsRelay.value.first { $0.id == id }
     }
 }

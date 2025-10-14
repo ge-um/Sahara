@@ -14,7 +14,7 @@ import RxSwift
 import UIKit
 
 final class CardDetailViewModel: BaseViewModelProtocol {
-    private let cardId: ObjectId
+    let cardId: ObjectId
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -32,11 +32,6 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
     init(cardId: ObjectId) {
         self.cardId = cardId
-    }
-
-    func getCard() -> Card? {
-        let realm = try! Realm()
-        return realm.object(ofType: Card.self, forPrimaryKey: cardId)
     }
 
     func transform(input: Input) -> Output {

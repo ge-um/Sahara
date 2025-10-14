@@ -67,8 +67,8 @@ final class CardListViewController: UIViewController {
 
     private let navigationTitle: String
 
-    init(cards: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
-        self.viewModel = CardListViewModel(cards: cards)
+    init(cardIds: [ObjectId], themeCategory: ThemeCategory, customTitle: String? = nil) {
+        self.viewModel = CardListViewModel(cardIds: cardIds)
         self.navigationType = .close
         self.sourceType = themeCategory == .others ? .locationView : .themeView
         self.navigationTitle = customTitle ?? themeCategory.localizedName
@@ -173,8 +173,8 @@ final class CardListViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.cards
-            .drive(collectionView.rx.items(cellIdentifier: CardListCell.identifier, cellType: CardListCell.self)) { _, card, cell in
-                cell.configure(with: card)
+            .drive(collectionView.rx.items(cellIdentifier: CardListCell.identifier, cellType: CardListCell.self)) { _, item, cell in
+                cell.configure(with: item)
             }
             .disposed(by: disposeBag)
 
@@ -230,9 +230,9 @@ final class CardListViewController: UIViewController {
     }
 
     private func navigateToDetail(cardId: ObjectId) {
-        guard let card = getCard(by: cardId) else { return }
+        guard let item = getCard(by: cardId) else { return }
 
-        if card.isLocked {
+        if item.isLocked {
             BiometricAuthManager.shared.authenticate { [weak self] success, error in
                 guard let self = self else { return }
                 if success {
@@ -254,7 +254,7 @@ final class CardListViewController: UIViewController {
         }
     }
 
-    private func getCard(by id: ObjectId) -> Card? {
+    private func getCard(by id: ObjectId) -> CardListItemDTO? {
         if let cardListVM = viewModel as? CardListViewModel {
             return cardListVM.getCard(by: id)
         } else if let calendarDetailVM = viewModel as? CalendarDetailViewModel {
@@ -263,7 +263,7 @@ final class CardListViewController: UIViewController {
         return nil
     }
 
-    private func getCard(at index: Int) -> Card? {
+    private func getCard(at index: Int) -> CardListItemDTO? {
         if let cardListVM = viewModel as? CardListViewModel {
             return cardListVM.getCard(at: index)
         }
@@ -273,20 +273,20 @@ final class CardListViewController: UIViewController {
 
 extension CardListViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
-        let card: Card?
+        let item: CardListItemDTO?
 
         if let cardListVM = viewModel as? CardListViewModel {
-            card = cardListVM.getCard(at: indexPath.item)
+            item = cardListVM.getCard(at: indexPath.item)
         } else if let calendarDetailVM = viewModel as? CalendarDetailViewModel, let dataSource = dataSource {
             guard let cardId = dataSource.itemIdentifier(for: indexPath) else {
                 return 180
             }
-            card = calendarDetailVM.getCard(by: cardId)
+            item = calendarDetailVM.getCard(by: cardId)
         } else {
             return 180
         }
 
-        guard let card = card, let image = UIImage(data: card.editedImageData) else {
+        guard let item = item, let image = UIImage(data: item.editedImageData) else {
             return 180
         }
 
