@@ -5,6 +5,7 @@
 //  Created by 금가경 on 10/2/25.
 //
 
+import RealmSwift
 import UIKit
 final class ThemeCell: UITableViewCell, IsIdentifiable {
     private let thumbnailImageView: UIImageView = {
@@ -75,9 +76,11 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     func configure(with group: ThemeGroup) {
         titleLabel.text = group.category.localizedName
-        countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cards.count)
+        countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cardIds.count)
 
-        let sortedPhotos = group.cards.sorted { !$0.isLocked && $1.isLocked }
+        let realm = try! Realm()
+        let cards = group.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+        let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first,
            let image = UIImage(data: firstPhoto.editedImageData) {

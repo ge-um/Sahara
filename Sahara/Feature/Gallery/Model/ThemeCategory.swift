@@ -89,7 +89,9 @@ enum ThemeCategory: String, CaseIterable {
     }
 }
 
+import RealmSwift
+
 struct ThemeGroup {
     let category: ThemeCategory
-    let cards: [Card]
+    let cardIds: [ObjectId]
 }
