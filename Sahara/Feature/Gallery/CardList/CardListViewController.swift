@@ -12,13 +12,21 @@ import SnapKit
 import UIKit
 
 final class CardListViewController: UIViewController {
-    private let viewModel: CardListViewModel
+    enum NavigationType {
+        case close
+        case back
+    }
+
+    private let viewModel: any BaseViewModelProtocol
+    private let navigationType: NavigationType
+    private let sourceType: EditSourceType
     private let disposeBag = DisposeBag()
     private let viewDidLoadRelay = PublishRelay<Void>()
+    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private let customNavigationBar = CustomNavigationBar()
 
-    private let closeButton: UIButton = {
+    private lazy var closeButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
         config.image = UIImage(named: "chevronLeft")
@@ -41,20 +49,50 @@ final class CardListViewController: UIViewController {
         return collectionView
     }()
 
-    private let themeCategory: ThemeCategory
-    private let customTitle: String?
+    private lazy var dataSource: UICollectionViewDiffableDataSource<Int, ObjectId>? = {
+        guard viewModel is CalendarDetailViewModel else { return nil }
+        return UICollectionViewDiffableDataSource<Int, ObjectId>(collectionView: collectionView) { [weak self] collectionView, indexPath, cardId in
+            guard let self = self,
+                  let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: CardListCell.identifier,
+                for: indexPath
+            ) as? CardListCell,
+                  let card = self.getCard(by: cardId) else {
+                return UICollectionViewCell()
+            }
+            cell.configure(with: card)
+            return cell
+        }
+    }()
+
+    private let navigationTitle: String
 
     init(cards: [Card], themeCategory: ThemeCategory, customTitle: String? = nil) {
         self.viewModel = CardListViewModel(cards: cards)
-        self.themeCategory = themeCategory
-        self.customTitle = customTitle
+        self.navigationType = .close
+        self.sourceType = themeCategory == .others ? .locationView : .themeView
+        self.navigationTitle = customTitle ?? themeCategory.localizedName
         super.init(nibName: nil, bundle: nil)
     }
 
     init(folderName: String) {
         self.viewModel = CardListViewModel(folderName: folderName)
-        self.themeCategory = .others
-        self.customTitle = folderName
+        self.navigationType = .close
+        self.sourceType = .locationView
+        self.navigationTitle = folderName
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    init(date: Date) {
+        self.viewModel = CalendarDetailViewModel(date: date)
+        self.navigationType = .back
+        self.sourceType = .dateView
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateFormat = DateFormatter.dateFormat(fromTemplate: "yyyyMMMMd", options: 0, locale: Locale.current)
+        self.navigationTitle = formatter.string(from: date)
+
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -71,18 +109,29 @@ final class CardListViewController: UIViewController {
         viewDidLoadRelay.accept(())
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewWillAppearRelay.accept(())
+    }
+
     private func setupCustomNavigationBar() {
-        let title = customTitle ?? themeCategory.localizedName
-        customNavigationBar.configure(title: title)
-        customNavigationBar.hideLeftButton()
+        customNavigationBar.configure(title: navigationTitle)
 
-        view.addSubview(closeButton)
+        switch navigationType {
+        case .close:
+            customNavigationBar.hideLeftButton()
+            view.addSubview(closeButton)
 
-        closeButton.snp.makeConstraints { make in
-            make.leading.equalTo(customNavigationBar).offset(8)
-            make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(44)
-            make.height.equalTo(44)
+            closeButton.snp.makeConstraints { make in
+                make.leading.equalTo(customNavigationBar).offset(8)
+                make.centerY.equalTo(customNavigationBar)
+                make.width.equalTo(44)
+                make.height.equalTo(44)
+            }
+        case .back:
+            customNavigationBar.onLeftButtonTapped = { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            }
         }
     }
 
@@ -107,6 +156,14 @@ final class CardListViewController: UIViewController {
     }
 
     private func bind() {
+        if let cardListVM = viewModel as? CardListViewModel {
+            bindCardListViewModel(cardListVM)
+        } else if let calendarDetailVM = viewModel as? CalendarDetailViewModel {
+            bindCalendarDetailViewModel(calendarDetailVM)
+        }
+    }
+
+    private func bindCardListViewModel(_ viewModel: CardListViewModel) {
         let input = CardListViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
@@ -123,28 +180,7 @@ final class CardListViewController: UIViewController {
 
         output.navigateToDetail
             .drive(with: self) { owner, cardId in
-                let sourceType: EditSourceType = owner.themeCategory == .others ? .locationView : .themeView
-                guard let card = owner.viewModel.getCard(by: cardId) else { return }
-
-                if card.isLocked {
-                    BiometricAuthManager.shared.authenticate { success, error in
-                        if success {
-                            let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
-                            owner.navigationController?.pushViewController(detailVC, animated: true)
-                        } else {
-                            if let error = error as NSError? {
-                                if error.domain == "BiometricPermissionError" {
-                                    owner.showBiometricPermissionAlert()
-                                } else {
-                                    owner.showToast(message: error.localizedDescription)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
-                    owner.navigationController?.pushViewController(detailVC, animated: true)
-                }
+                owner.navigateToDetail(cardId: cardId)
             }
             .disposed(by: disposeBag)
 
@@ -155,33 +191,111 @@ final class CardListViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func showBiometricPermissionAlert() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("biometric.permission_required", comment: ""),
-            message: NSLocalizedString("biometric.permission_message", comment: ""),
-            preferredStyle: .alert
+    private func bindCalendarDetailViewModel(_ viewModel: CalendarDetailViewModel) {
+        let input = CalendarDetailViewModel.Input(
+            viewDidLoad: viewDidLoadRelay.asObservable(),
+            viewWillAppear: viewWillAppearRelay.asObservable(),
+            itemSelected: collectionView.rx.itemSelected.asObservable(),
+            itemDeleted: Observable.never()
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
+
+        let output = viewModel.transform(input: input)
+
+        output.shouldPopIfEmpty
+            .drive(with: self) { owner, shouldPop in
+                if shouldPop {
+                    owner.navigationController?.popViewController(animated: true)
+                }
             }
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel) { [weak self] _ in
-            self?.showToast(message: NSLocalizedString("biometric.permission_denied", comment: ""))
-        })
-        present(alert, animated: true)
+            .disposed(by: disposeBag)
+
+        output.cardIds
+            .drive(with: self) { owner, cardIds in
+                guard let dataSource = owner.dataSource else { return }
+                var snapshot = NSDiffableDataSourceSnapshot<Int, ObjectId>()
+                snapshot.appendSections([0])
+                snapshot.appendItems(cardIds)
+                dataSource.apply(snapshot, animatingDifferences: false) {
+                    owner.pinterestLayout.invalidateLayout()
+                    owner.collectionView.reloadData()
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.navigateToDetail
+            .drive(with: self) { owner, cardId in
+                owner.navigateToDetail(cardId: cardId)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func navigateToDetail(cardId: ObjectId) {
+        guard let card = getCard(by: cardId) else { return }
+
+        if card.isLocked {
+            BiometricAuthManager.shared.authenticate { [weak self] success, error in
+                guard let self = self else { return }
+                if success {
+                    let detailVC = CardDetailViewController(cardId: cardId, sourceType: self.sourceType)
+                    self.navigationController?.pushViewController(detailVC, animated: true)
+                } else {
+                    if let error = error as NSError? {
+                        if error.domain == "BiometricPermissionError" {
+                            self.showBiometricPermissionAlert()
+                        } else {
+                            self.showToast(message: error.localizedDescription)
+                        }
+                    }
+                }
+            }
+        } else {
+            let detailVC = CardDetailViewController(cardId: cardId, sourceType: sourceType)
+            navigationController?.pushViewController(detailVC, animated: true)
+        }
+    }
+
+    private func getCard(by id: ObjectId) -> Card? {
+        if let cardListVM = viewModel as? CardListViewModel {
+            return cardListVM.getCard(by: id)
+        } else if let calendarDetailVM = viewModel as? CalendarDetailViewModel {
+            return calendarDetailVM.getCard(by: id)
+        }
+        return nil
+    }
+
+    private func getCard(at index: Int) -> Card? {
+        if let cardListVM = viewModel as? CardListViewModel {
+            return cardListVM.getCard(at: index)
+        }
+        return nil
     }
 }
 
 extension CardListViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
-        guard let cell = viewModel.getCard(at: indexPath.item),
-              let image = UIImage(data: cell.editedImageData) else {
+        let card: Card?
+
+        if let cardListVM = viewModel as? CardListViewModel {
+            card = cardListVM.getCard(at: indexPath.item)
+        } else if let calendarDetailVM = viewModel as? CalendarDetailViewModel, let dataSource = dataSource {
+            guard let cardId = dataSource.itemIdentifier(for: indexPath) else {
+                return 180
+            }
+            card = calendarDetailVM.getCard(by: cardId)
+        } else {
             return 180
         }
 
+        guard let card = card, let image = UIImage(data: card.editedImageData) else {
+            return 180
+        }
+
+        guard image.size.width > 0 else { return 180 }
+
+        let columnWidth = collectionView.bounds.width / 2
         let aspectRatio = image.size.height / image.size.width
-        let cellWidth = (collectionView.bounds.width - 8) / 2
-        return cellWidth * aspectRatio
+        let calculatedHeight = columnWidth * aspectRatio
+
+        return calculatedHeight.isFinite && calculatedHeight > 0 ? calculatedHeight : 180
     }
 }
