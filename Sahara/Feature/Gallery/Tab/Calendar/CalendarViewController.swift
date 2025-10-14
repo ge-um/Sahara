@@ -150,7 +150,7 @@ final class CalendarViewController: UIViewController {
                 guard let date = item.date else { return }
 
                 if item.hasCards {
-                    let detailVC = CalendarDetailViewController(date: date)
+                    let detailVC = CardListViewController(date: date)
                     if let galleryVC = owner.parent as? GalleryViewController {
                         galleryVC.navigationController?.pushViewController(detailVC, animated: true)
                     }
