@@ -166,7 +166,8 @@ final class LocationSelectionCard: UIView {
     func bind(
         viewModel: LocationSelectionCardViewModel,
         initialLocation: Observable<CLLocation?>,
-        selectedLocation: Observable<(coordinate: CLLocationCoordinate2D, address: String)>
+        selectedLocation: Observable<(coordinate: CLLocationCoordinate2D, address: String)>,
+        disposeBag: DisposeBag
     ) -> LocationSelectionCardViewModel.Output {
         let input = LocationSelectionCardViewModel.Input(
             searchButtonTapped: searchButton.rx.tap.asObservable(),

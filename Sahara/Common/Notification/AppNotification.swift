@@ -7,11 +7,16 @@
 
 import Foundation
 
-enum AppNotification: String {
-    case photoSaved = "PhotoSaved"
-    case photoDeleted = "PhotoDeleted"
+enum AppNotification {
+    case photoSaved
+    case photoDeleted
 
     var name: Notification.Name {
-        return Notification.Name(rawValue)
+        switch self {
+        case .photoSaved:
+            return Notification.Name("PhotoSaved")
+        case .photoDeleted:
+            return Notification.Name("PhotoDeleted")
+        }
     }
 }
