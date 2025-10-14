@@ -277,10 +277,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     }
 
     private func createBlurView() -> UIVisualEffectView {
-        let blurEffect = UIBlurEffect(style: .extraLight)
-        let effectView = UIVisualEffectView(effect: blurEffect)
-        effectView.clipsToBounds = true
-        return effectView
+        return BlurUtility.createBlurView()
     }
 
     override func prepareForReuse() {
