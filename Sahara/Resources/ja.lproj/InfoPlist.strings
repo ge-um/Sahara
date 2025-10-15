@@ -4,6 +4,7 @@
 
 /* Privacy - Photo Library */
 "NSPhotoLibraryUsageDescription" = "カードを作成するためにフォトライブラリアクセス権限を許可してください。";
+"NSPhotoLibraryAddUsageDescription" = "カード画像をアルバムに保存するために権限を許可してください。";
 
 /* Privacy - Camera */
 "NSCameraUsageDescription" = "カードを作成するためにカメラアクセス権限を許可してください。";
