@@ -124,9 +124,15 @@
 "biometric.permission_denied" = "Cannot use without Face ID permission";
 
 /* Search */
-"search.placeholder" = "Search memos and text in photos";
-"search.no_results" = "No results found";
-"search.initial_message" = "Search your memos and text in photos";
+"search.placeholder" = "Search your cards";
+"search.no_results" = "No search results found";
+"search.initial_message" = "Please search your cards";
+"search.recent_searches" = "Recent Searches";
+"search.clear_all" = "Clear All";
+"search.clear_all_confirm_title" = "Clear Recent Searches";
+"search.clear_all_confirm_message" = "Are you sure you want to clear all recent searches?";
+"search.delete" = "Delete";
+"search.cancel" = "Cancel";
 
 /* Stats */
 "stats.title" = "Stats";
