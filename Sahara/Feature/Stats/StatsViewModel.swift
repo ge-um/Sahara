@@ -136,7 +136,7 @@ final class StatsViewModel: BaseViewModelProtocol {
             .map { data -> String in
                 guard let mostFrequent = data.max(by: { $0.count < $1.count }),
                       mostFrequent.count > 0 else {
-                    return NSLocalizedString("stats.no_data_time", comment: "")
+                    return "🌙 " + NSLocalizedString("stats.no_data_time", comment: "")
                 }
                 let emoji = self.getTimeEmoji(for: mostFrequent.timeOfDay)
                 return emoji + " " + String(format: NSLocalizedString("stats.time_insight", comment: ""), mostFrequent.timeOfDay)
