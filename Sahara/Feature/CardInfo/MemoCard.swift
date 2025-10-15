@@ -24,7 +24,7 @@ final class MemoCard: BaseCard {
     let characterCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0"
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = FontSystem.galmuriMono(size: 13)
         label.textColor = ColorSystem.darkGray
         label.textAlignment = .right
         return label
