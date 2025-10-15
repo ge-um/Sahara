@@ -161,8 +161,8 @@ final class RealmManager: RealmManagerProtocol {
 
         guard let realm = try? getRealm() else { return [] }
         let results = realm.objects(Card.self)
-            .filter("createdDate >= %@ AND createdDate < %@", startDate, endDate)
-            .sorted(byKeyPath: "createdDate", ascending: true)
+            .filter("date >= %@ AND date < %@", startDate, endDate)
+            .sorted(byKeyPath: "date", ascending: true)
 
         return Array(results)
     }

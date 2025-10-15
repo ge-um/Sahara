@@ -47,7 +47,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
                 let data = (
                     image: card.editedImageData,
-                    date: card.createdDate,
+                    date: card.date,
                     latitude: card.latitude,
                     longitude: card.longitude,
                     memo: card.memo

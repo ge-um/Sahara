@@ -51,6 +51,9 @@ final class StatsViewModel: BaseViewModelProtocol {
         let weekdayData: Driver<[WeekdayData]>
         let timeData: Driver<[TimeData]>
         let moodData: Driver<[MoodData]>
+        let weekdayInsight: Driver<String>
+        let timeInsight: Driver<String>
+        let thisMonthInsight: Driver<String>
     }
 
     func transform(input: Input) -> Output {
@@ -104,12 +107,65 @@ final class StatsViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorJustReturn: [])
 
+        let weekdayInsightDriver = input.viewWillAppear
+            .map { _ -> String in
+                let cards = Array(realm.objects(Card.self))
+                guard !cards.isEmpty else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let calendar = Calendar.current
+                var weekdayDict: [Int: Int] = [:]
+
+                for card in cards {
+                    let weekday = calendar.component(.weekday, from: card.createdDate)
+                    weekdayDict[weekday, default: 0] += 1
+                }
+
+                guard let mostFrequentWeekday = weekdayDict.max(by: { $0.value < $1.value }),
+                      mostFrequentWeekday.value > 0 else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let dateFormatter = DateFormatter()
+                dateFormatter.locale = Locale.current
+                dateFormatter.dateFormat = "EEEE"
+
+                var dateComponents = DateComponents()
+                dateComponents.weekday = mostFrequentWeekday.key
+                guard let sampleDate = calendar.nextDate(after: Date(), matching: dateComponents, matchingPolicy: .nextTime) else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let weekdayName = dateFormatter.string(from: sampleDate)
+                return String(format: NSLocalizedString("stats.weekday_insight", comment: ""), weekdayName)
+            }
+            .asDriver(onErrorJustReturn: NSLocalizedString("stats.no_data_weekday", comment: ""))
+
+        let timeInsightDriver = timeDataDriver
+            .map { data -> String in
+                guard let mostFrequent = data.max(by: { $0.count < $1.count }),
+                      mostFrequent.count > 0 else {
+                    return NSLocalizedString("stats.no_data_time", comment: "")
+                }
+                let emoji = self.getTimeEmoji(for: mostFrequent.timeOfDay)
+                return emoji + " " + String(format: NSLocalizedString("stats.time_insight", comment: ""), mostFrequent.timeOfDay)
+            }
+
+        let thisMonthInsightDriver = basicStatsDriver
+            .map { stats -> String in
+                return String(format: NSLocalizedString("stats.thismonth_insight", comment: ""), stats.thisMonthCards)
+            }
+
         return Output(
             basicStats: basicStatsDriver,
             monthlyData: monthlyDataDriver,
             weekdayData: weekdayDataDriver,
             timeData: timeDataDriver,
-            moodData: moodDataDriver
+            moodData: moodDataDriver,
+            weekdayInsight: weekdayInsightDriver,
+            timeInsight: timeInsightDriver,
+            thisMonthInsight: thisMonthInsightDriver
         )
     }
 
@@ -283,5 +339,25 @@ final class StatsViewModel: BaseViewModelProtocol {
         }
 
         return Array(moodData.prefix(5))
+    }
+
+    private func getTimeEmoji(for timeOfDay: String) -> String {
+        let morningKey = NSLocalizedString("stats.time_morning", comment: "")
+        let afternoonKey = NSLocalizedString("stats.time_afternoon", comment: "")
+        let eveningKey = NSLocalizedString("stats.time_evening", comment: "")
+        let nightKey = NSLocalizedString("stats.time_night", comment: "")
+
+        switch timeOfDay {
+        case morningKey:
+            return "🌅"
+        case afternoonKey:
+            return "☀️"
+        case eveningKey:
+            return "🌆"
+        case nightKey:
+            return "🌙"
+        default:
+            return "🌙"
+        }
     }
 }
