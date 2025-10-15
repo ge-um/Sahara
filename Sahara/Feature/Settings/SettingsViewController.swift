@@ -12,6 +12,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
+// TODO: - RxDataSource로 Refactor
 final class SettingsViewController: UIViewController {
     private let viewModel: SettingsViewModel
     private let disposeBag = DisposeBag()
