@@ -10,22 +10,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class MemoCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.memo", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.black
-        return label
-    }()
-
+final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
         textView.font = FontSystem.galmuriMono(size: 16)
@@ -47,9 +32,9 @@ final class MemoCard: UIView {
     private let disposeBag = DisposeBag()
     private let placeholderText = NSLocalizedString("card_info.memo_placeholder", comment: "")
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.memo", comment: ""))
+        configureContent()
         setupRxBindings()
     }
 
@@ -57,31 +42,23 @@ final class MemoCard: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(textView)
-        cardView.addSubview(characterCountLabel)
-
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
+    private func configureContent() {
+        let container = UIView()
+        container.addSubview(textView)
+        container.addSubview(characterCountLabel)
 
         textView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.horizontalEdges.equalToSuperview().inset(8)
+            make.top.horizontalEdges.equalToSuperview()
             make.height.equalTo(100)
         }
 
         characterCountLabel.snp.makeConstraints { make in
             make.top.equalTo(textView.snp.bottom).offset(4)
-            make.trailing.equalToSuperview().inset(16)
-            make.bottom.equalToSuperview().inset(12)
+            make.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().inset(4)
         }
+
+        addContentView(container, insets: UIEdgeInsets(top: 0, left: 8, bottom: 12, right: 16))
     }
 
     private func setupRxBindings() {
