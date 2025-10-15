@@ -141,7 +141,7 @@ final class FolderSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 12)
+        titleAttr.font = FontSystem.galmuriMono(size: 13)
         config.attributedTitle = AttributedString(title, attributes: titleAttr)
 
         button.configuration = config

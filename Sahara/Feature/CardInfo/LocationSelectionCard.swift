@@ -32,7 +32,7 @@ final class LocationSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 10)
+        titleAttr.font = FontSystem.galmuriMono(size: 13)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -53,7 +53,7 @@ final class LocationSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = FontSystem.galmuriMono(size: 13)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
