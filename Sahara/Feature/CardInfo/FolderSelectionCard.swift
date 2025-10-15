@@ -11,22 +11,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class FolderSelectionCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.folder", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.black
-        return label
-    }()
-
+final class FolderSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder")
@@ -38,7 +23,7 @@ final class FolderSelectionCard: UIView {
     let textField: UITextField = {
         let textField = UITextField()
         textField.placeholder = NSLocalizedString("folder.default", comment: "")
-        textField.font = FontSystem.galmuriMono(size: 16)
+        textField.font = FontSystem.galmuriMono(size: 14)
         textField.textColor = ColorSystem.darkGray
         textField.returnKeyType = .done
         return textField
@@ -60,9 +45,9 @@ final class FolderSelectionCard: UIView {
     private let disposeBag = DisposeBag()
     let selectedFolderRelay = BehaviorRelay<String?>(value: nil)
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.folder", comment: ""))
+        configureContent()
         setupBinding()
         loadExistingFolders()
     }
@@ -71,45 +56,37 @@ final class FolderSelectionCard: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(iconImageView)
-        cardView.addSubview(textField)
-        cardView.addSubview(tagScrollView)
+    private func configureContent() {
+        let container = UIView()
+        container.addSubview(iconImageView)
+        container.addSubview(textField)
+        container.addSubview(tagScrollView)
         tagScrollView.addSubview(tagStackView)
 
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
-
         iconImageView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview().inset(16)
+            make.top.leading.equalToSuperview()
             make.width.height.equalTo(20)
         }
 
         textField.snp.makeConstraints { make in
             make.leading.equalTo(iconImageView.snp.trailing).offset(8)
             make.centerY.equalTo(iconImageView)
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview()
         }
 
         tagScrollView.snp.makeConstraints { make in
             make.top.equalTo(iconImageView.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(16)
+            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(32)
-            make.bottom.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview()
         }
 
         tagStackView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
             make.height.equalToSuperview()
         }
+
+        addContentView(container)
     }
 
     private func setupBinding() {
