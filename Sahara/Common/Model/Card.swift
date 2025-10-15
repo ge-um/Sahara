@@ -79,6 +79,7 @@ final class Card: Object {
     @Persisted var mood: Mood?
     @Persisted var stickers: List<Sticker>
     @Persisted var customFolder: String?
+    @Persisted var ocrText: String?
 
     convenience init(
         createdDate: Date,

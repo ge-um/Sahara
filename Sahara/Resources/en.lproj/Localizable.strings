@@ -124,9 +124,9 @@
 "biometric.permission_denied" = "Cannot use without Face ID permission";
 
 /* Search */
-"search.placeholder" = "Search memos";
+"search.placeholder" = "Search memos and text in photos";
 "search.no_results" = "No results found";
-"search.initial_message" = "Search your memos";
+"search.initial_message" = "Search your memos and text in photos";
 
 /* Stats */
 "stats.title" = "Stats";
