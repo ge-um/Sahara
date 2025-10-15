@@ -41,6 +41,13 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
             .flatMap { owner, _ -> Observable<AuthResult> in
                 return owner.checkBiometricPermission()
             }
+            .do(onNext: { result in
+                if case .success = result {
+                    let biometricType = BiometricAuthManager.shared.biometricType
+                    let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
+                    AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
+                }
+            })
             .bind(with: self) { owner, result in
                 switch result {
                 case .success:
@@ -82,8 +89,6 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
                 return Disposables.create()
             }
 
-            let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
-            AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
             observer.onNext(.success)
             observer.onCompleted()
 
