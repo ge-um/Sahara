@@ -103,6 +103,8 @@
 "media_editor.apply" = "Apply";
 "media_editor.sticker_search_placeholder" = "Search stickers";
 "media_editor.sticker_modal_title" = "Stickers";
+"media_editor.undo" = "Undo";
+"media_editor.redo" = "Redo";
 
 /* Filters */
 "filter.original" = "Original";

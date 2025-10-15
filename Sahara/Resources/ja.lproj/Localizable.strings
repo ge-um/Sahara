@@ -102,6 +102,8 @@
 "media_editor.apply" = "適用";
 "media_editor.sticker_search_placeholder" = "ステッカーを検索";
 "media_editor.sticker_modal_title" = "ステッカー";
+"media_editor.undo" = "元に戻す";
+"media_editor.redo" = "やり直し";
 
 /* Filters */
 "filter.original" = "オリジナル";
