@@ -13,10 +13,11 @@ import UIKit
 final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
-        textView.font = FontSystem.galmuriMono(size: 16)
+        textView.font = FontSystem.galmuriMono(size: 14)
         textView.textColor = ColorSystem.charcoal
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
         return textView
     }()
 
@@ -58,7 +59,7 @@ final class MemoCard: BaseCard {
             make.bottom.equalToSuperview().inset(4)
         }
 
-        addContentView(container, insets: UIEdgeInsets(top: 0, left: 8, bottom: 12, right: 16))
+        addContentView(container)
     }
 
     private func setupRxBindings() {
@@ -97,7 +98,7 @@ final class MemoCard: BaseCard {
             string: placeholderText,
             attributes: [
                 .foregroundColor: ColorSystem.darkGray,
-                .font: FontSystem.galmuriMono(size: 16)
+                .font: FontSystem.galmuriMono(size: 14)
             ]
         )
         characterCountLabel.text = "0"

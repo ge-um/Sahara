@@ -12,22 +12,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class LocationSelectionCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.location", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.black
-        return label
-    }()
-
+final class LocationSelectionCard: BaseCard {
     let locationLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
@@ -89,55 +74,47 @@ final class LocationSelectionCard: UIView {
     private var viewModel: LocationSelectionCardViewModel?
     private let disposeBag = DisposeBag()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.location", comment: ""))
+        configureContent()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(locationLabel)
-        cardView.addSubview(removeButton)
-        cardView.addSubview(searchButton)
-        cardView.addSubview(mapView)
-
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
+    private func configureContent() {
+        let container = UIView()
+        container.addSubview(locationLabel)
+        container.addSubview(removeButton)
+        container.addSubview(searchButton)
+        container.addSubview(mapView)
 
         locationLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview().inset(16)
+            make.top.leading.equalToSuperview()
             make.trailing.equalTo(removeButton.snp.leading).offset(-8)
         }
 
         removeButton.snp.makeConstraints { make in
             make.centerY.equalTo(locationLabel)
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview()
             make.width.height.equalTo(16)
         }
 
         searchButton.snp.makeConstraints { make in
             make.top.equalTo(locationLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(16)
+            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(44)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(searchButton.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(16)
+            make.horizontalEdges.equalToSuperview()
             mapViewHeightConstraint = make.height.equalTo(0).constraint
-            make.bottom.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview()
         }
+
+        addContentView(container)
     }
 
     func updateMapView(with coordinate: CLLocationCoordinate2D) {
