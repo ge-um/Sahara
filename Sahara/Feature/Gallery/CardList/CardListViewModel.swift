@@ -81,16 +81,16 @@ final class CardListViewModel: BaseViewModelProtocol {
                 cards = realm.objects(Card.self)
             }
 
-            let sortedCards = Array(cards).sorted { $0.createdDate > $1.createdDate }
+            let sortedCards = Array(cards).sorted { $0.date > $1.date }
             observer.onNext(sortedCards.map { CardListItemDTO(from: $0) })
 
             let token = cards.observe { changes in
                 switch changes {
                 case .initial(let results):
-                    let sorted = Array(results).sorted { $0.createdDate > $1.createdDate }
+                    let sorted = Array(results).sorted { $0.date > $1.date }
                     observer.onNext(sorted.map { CardListItemDTO(from: $0) })
                 case .update(let results, _, _, _):
-                    let sorted = Array(results).sorted { $0.createdDate > $1.createdDate }
+                    let sorted = Array(results).sorted { $0.date > $1.date }
                     observer.onNext(sorted.map { CardListItemDTO(from: $0) })
                 case .error(let error):
                     observer.onError(error)

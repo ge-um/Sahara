@@ -66,7 +66,7 @@ final class SearchViewModel: BaseViewModelProtocol {
                     let ocrTextMatches = card.ocrText?.localizedCaseInsensitiveContains(query) ?? false
                     return memoMatches || ocrTextMatches
                 }
-                .sorted(by: { $0.createdDate > $1.createdDate })
+                .sorted(by: { $0.date > $1.date })
 
             let cards = Array(results)
             cardsRelay.accept(cards)

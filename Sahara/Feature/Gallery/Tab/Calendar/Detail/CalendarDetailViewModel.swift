@@ -51,8 +51,8 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
             }
 
             let results = realm.objects(Card.self)
-                .filter("createdDate >= %@ AND createdDate < %@", startOfDay, endOfDay)
-                .sorted(byKeyPath: "createdDate", ascending: true)
+                .filter("date >= %@ AND date < %@", startOfDay, endOfDay)
+                .sorted(byKeyPath: "date", ascending: true)
 
             memosRelay.accept(Array(results))
         }

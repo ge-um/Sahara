@@ -151,6 +151,12 @@
 "stats.no_data" = "No data available";
 "stats.increase" = "+%d";
 "stats.decrease" = "%d";
+"stats.my_pattern_header" = "My Card Creation Pattern";
+"stats.weekday_insight" = "Often create cards on %@";
+"stats.time_insight" = "Often create cards in the %@";
+"stats.thismonth_insight" = "Created %d cards this month";
+"stats.no_data_weekday" = "Not enough data yet";
+"stats.no_data_time" = "Not enough data yet";
 
 /* Settings */
 "settings.title" = "Settings";

@@ -22,7 +22,7 @@ struct CardListItemDTO {
 
 struct CardDetailDTO {
     let id: ObjectId
-    let createdDate: Date
+    let date: Date
     let editedImageData: Data
     let memo: String?
     let latitude: Double?
@@ -32,7 +32,7 @@ struct CardDetailDTO {
 
     init(from card: Card) {
         self.id = card.id
-        self.createdDate = card.createdDate
+        self.date = card.date
         self.editedImageData = card.editedImageData
         self.memo = card.memo
         self.latitude = card.latitude
@@ -44,13 +44,13 @@ struct CardDetailDTO {
 
 struct CardCalendarItemDTO {
     let id: ObjectId
-    let createdDate: Date
+    let date: Date
     let editedImageData: Data
     let isLocked: Bool
 
     init(from card: Card) {
         self.id = card.id
-        self.createdDate = card.createdDate
+        self.date = card.date
         self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
