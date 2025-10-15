@@ -31,7 +31,7 @@ final class MediaSelectionViewController: UIViewController {
     private let cameraButtonTappedRelay = PublishRelay<Void>()
     private let libraryButtonTappedRelay = PublishRelay<Void>()
     private let photoSelectedRelay = PublishRelay<PHAsset>()
-    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?)>()
+    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?, MediaSource)>()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -274,8 +274,7 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            AnalyticsManager.shared.logPhotoSourceSelected(source: "camera")
-            imagePickerResultRelay.accept((image, nil, nil))
+            imagePickerResultRelay.accept((image, nil, nil, .camera))
         }
     }
 
@@ -294,8 +293,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        AnalyticsManager.shared.logPhotoSourceSelected(source: "library")
-                        self?.imagePickerResultRelay.accept((image, nil, nil))
+                        self?.imagePickerResultRelay.accept((image, nil, nil, .library))
                     }
                 }
             }

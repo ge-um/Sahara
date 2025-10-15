@@ -27,7 +27,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let cameraButtonTapped: Observable<Void>
         let libraryButtonTapped: Observable<Void>
         let photoSelected: Observable<PHAsset>
-        let imagePickerResult: Observable<(UIImage, CLLocation?, Date?)>
+        let imagePickerResult: Observable<(UIImage, CLLocation?, Date?, MediaSource)>
     }
 
     struct Output {
@@ -96,6 +96,9 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.photoSelected
             .withUnretained(self)
+            .do(onNext: { _ in
+                AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
+            })
             .flatMap { owner, asset -> Observable<(UIImage, CLLocation?, Date?)> in
                 return owner.loadImage(from: asset)
             }
@@ -103,6 +106,11 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         input.imagePickerResult
+            .do(onNext: { _, _, _, source in
+                let sourceString = source == .camera ? "camera" : "library"
+                AnalyticsManager.shared.logPhotoSourceSelected(source: sourceString)
+            })
+            .map { image, location, date, _ in (image, location, date) }
             .bind(to: selectedMediaRelay)
             .disposed(by: disposeBag)
 
@@ -156,7 +164,6 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
                 options: options
             ) { image, _ in
                 if let image = image {
-                    AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
                     let location = asset.location
                     let date = asset.creationDate
                     observer.onNext((image, location, date))
