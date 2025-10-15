@@ -87,7 +87,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
 
         self.editedImage = UIImage(data: card.editedImageData)
-        self.originalDate = card.createdDate
+        self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked
         self.initialCustomFolder = card.customFolder
@@ -266,7 +266,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 guard let self = self else { return .empty() }
 
                 let card = Card(
-                    createdDate: date,
+                    date: date,
+                    createdDate: Date(),
                     editedImageData: imageData,
                     memo: memoText,
                     latitude: location?.coordinate.latitude,
@@ -336,7 +337,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 guard let self = self else { return .empty() }
 
                 return self.realmManager.update { realm in
-                    card.createdDate = date
+                    card.date = date
                     card.editedImageData = imageData
                     card.memo = memoText
                     card.customFolder = folderText
@@ -403,7 +404,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 guard let self = self else { return .empty() }
 
                 let newCard = Card(
-                    createdDate: date,
+                    date: date,
+                    createdDate: Date(),
                     editedImageData: imageData,
                     memo: memoText,
                     latitude: location?.coordinate.latitude,

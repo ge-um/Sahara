@@ -150,6 +150,12 @@
 "stats.no_data" = "データがありません";
 "stats.increase" = "+%d枚";
 "stats.decrease" = "%d枚";
+"stats.my_pattern_header" = "私のカード作成パターン";
+"stats.weekday_insight" = "主に%@にカードを作ります";
+"stats.time_insight" = "主に%@にカードを作ります";
+"stats.thismonth_insight" = "今月%d枚のカードを作りました";
+"stats.no_data_weekday" = "まだパターンが見つかりません";
+"stats.no_data_time" = "まだパターンが見つかりません";
 
 /* Settings */
 "settings.title" = "設定";
