@@ -251,6 +251,7 @@ final class MediaEditorViewController: UIViewController {
     private var photoViews: [DraggableImageView] = []
     private var lastContainerSize: CGSize = .zero
     let currentMode = BehaviorRelay<EditMode?>(value: nil)
+    private var selectedView: BaseGestureView?
     let toolPicker = PKToolPicker()
     var originalImage: UIImage?
     private var croppedImage: UIImage?
@@ -283,6 +284,7 @@ final class MediaEditorViewController: UIViewController {
         setupCustomNavigationBar()
         setupModeButtons()
         setupPencilKit()
+        setupGlobalGestures()
         bind()
     }
 
@@ -309,6 +311,59 @@ final class MediaEditorViewController: UIViewController {
 
         if let window = view.window {
             toolPicker.frameObscured(in: window)
+        }
+    }
+
+    private func setupGlobalGestures() {
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handleGlobalPan))
+        panGesture.delegate = self
+        stickerContainerView.addGestureRecognizer(panGesture)
+
+        let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handleGlobalPinch))
+        pinchGesture.delegate = self
+        stickerContainerView.addGestureRecognizer(pinchGesture)
+
+        let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(handleGlobalRotation))
+        rotationGesture.delegate = self
+        stickerContainerView.addGestureRecognizer(rotationGesture)
+    }
+
+    @objc private func handleGlobalPan(_ gesture: UIPanGestureRecognizer) {
+        guard let selectedView = selectedView, selectedView.isSelected else { return }
+
+        let translation = gesture.translation(in: stickerContainerView)
+        selectedView.applyPanTranslation(translation)
+        gesture.setTranslation(.zero, in: stickerContainerView)
+
+        switch gesture.state {
+        case .changed:
+            dragHandler.handleDragChanged(view: selectedView)
+        case .ended, .cancelled:
+            if let stickerView = selectedView as? DraggableStickerView {
+                _ = dragHandler.handleDragEnded(view: stickerView, in: &stickerViews)
+            } else if let photoView = selectedView as? DraggableImageView {
+                _ = dragHandler.handleDragEnded(view: photoView, in: &photoViews)
+            }
+        default:
+            break
+        }
+    }
+
+    @objc private func handleGlobalPinch(_ gesture: UIPinchGestureRecognizer) {
+        guard let selectedView = selectedView, selectedView.isSelected else { return }
+
+        if gesture.state == .began || gesture.state == .changed {
+            selectedView.applyPinchScale(gesture.scale)
+            gesture.scale = 1.0
+        }
+    }
+
+    @objc private func handleGlobalRotation(_ gesture: UIRotationGestureRecognizer) {
+        guard let selectedView = selectedView, selectedView.isSelected else { return }
+
+        if gesture.state == .began || gesture.state == .changed {
+            selectedView.applyRotation(gesture.rotation)
+            gesture.rotation = 0
         }
     }
 
@@ -517,6 +572,10 @@ final class MediaEditorViewController: UIViewController {
             _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
         }
 
+        stickerView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+
         stickerContainerView.addSubview(stickerView)
 
         let centerX = stickerContainerView.bounds.midX
@@ -524,6 +583,7 @@ final class MediaEditorViewController: UIViewController {
         stickerView.frame = CGRect(x: centerX - 50, y: centerY - 50, width: 100, height: 100)
 
         stickerViews.append(stickerView)
+        selectView(stickerView)
     }
 
     func addPhotoToCanvas(_ image: UIImage) {
@@ -539,6 +599,10 @@ final class MediaEditorViewController: UIViewController {
             _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
         }
 
+        imageView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+
         stickerContainerView.addSubview(imageView)
 
         let centerX = stickerContainerView.bounds.midX
@@ -546,6 +610,7 @@ final class MediaEditorViewController: UIViewController {
         imageView.frame = CGRect(x: centerX - 50, y: centerY - 50, width: 100, height: 100)
 
         photoViews.append(imageView)
+        selectView(imageView)
     }
 
     func adjustStickerPositions() {
@@ -615,6 +680,17 @@ final class MediaEditorViewController: UIViewController {
         undoButton.alpha = undoButton.isEnabled ? 1.0 : 0.5
         redoButton.alpha = redoButton.isEnabled ? 1.0 : 0.5
     }
+
+    private func selectView(_ view: BaseGestureView) {
+        selectedView?.isSelected = false
+        selectedView = view
+        view.isSelected = true
+    }
+
+    private func deselectAll() {
+        selectedView?.isSelected = false
+        selectedView = nil
+    }
 }
 
 extension MediaEditorViewController: UICollectionViewDataSource {
@@ -646,5 +722,11 @@ extension MediaEditorViewController: UICollectionViewDataSource {
 extension MediaEditorViewController: PKCanvasViewDelegate {
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         updateUndoRedoButtons()
+    }
+}
+
+extension MediaEditorViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }

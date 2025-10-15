@@ -60,10 +60,44 @@ enum Mood: String, PersistableEnum {
     case nostalgic
 }
 
+enum WeatherCondition: String, PersistableEnum {
+    case clear
+    case partlyCloudy
+    case cloudy
+    case rain
+    case snow
+    case thunderstorm
+    case fog
+    case unknown
+
+    var icon: String {
+        switch self {
+        case .clear:
+            return "sun.max.fill"
+        case .partlyCloudy:
+            return "cloud.sun.fill"
+        case .cloudy:
+            return "cloud.fill"
+        case .rain:
+            return "cloud.rain.fill"
+        case .snow:
+            return "cloud.snow.fill"
+        case .thunderstorm:
+            return "cloud.bolt.fill"
+        case .fog:
+            return "cloud.fog.fill"
+        case .unknown:
+            return "questionmark.circle.fill"
+        }
+    }
+}
+
 final class Card: Object {
     @Persisted(primaryKey: true) var id: ObjectId
     @Persisted var date: Date
     @Persisted var createdDate: Date
+    @Persisted var modifiedDate: Date?
+    
     @Persisted var editedImageData: Data
     @Persisted var memo: String?
     @Persisted var latitude: Double?
@@ -71,9 +105,6 @@ final class Card: Object {
     @Persisted var isLocked: Bool = false
 
     @Persisted var type: ContentType = .photo
-    @Persisted var modifiedDate: Date?
-    @Persisted var viewCount: Int = 0
-    @Persisted var shareCount: Int = 0
     @Persisted var isFavorite: Bool = false
     @Persisted var visionTags: List<VisionTag>
     @Persisted var locationName: String?
@@ -81,6 +112,7 @@ final class Card: Object {
     @Persisted var stickers: List<Sticker>
     @Persisted var customFolder: String?
     @Persisted var ocrText: String?
+    @Persisted var weatherCondition: WeatherCondition?
 
     convenience init(
         date: Date,
