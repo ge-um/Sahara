@@ -123,9 +123,15 @@
 "biometric.permission_denied" = "Face ID権限がないため使用できません";
 
 /* Search */
-"search.placeholder" = "メモと写真内のテキストを検索";
-"search.no_results" = "検索結果がありません";
-"search.initial_message" = "メモと写真内のテキストを検索してみてください";
+"search.placeholder" = "カードを検索してみてください";
+"search.no_results" = "検索結果が見つかりません";
+"search.initial_message" = "カードを検索してください";
+"search.recent_searches" = "最近の検索";
+"search.clear_all" = "すべて削除";
+"search.clear_all_confirm_title" = "最近の検索を削除";
+"search.clear_all_confirm_message" = "すべての最近の検索を削除しますか？";
+"search.delete" = "削除";
+"search.cancel" = "キャンセル";
 
 /* Stats */
 "stats.title" = "統計";
