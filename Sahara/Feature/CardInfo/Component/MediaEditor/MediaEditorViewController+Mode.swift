@@ -19,6 +19,7 @@ extension MediaEditorViewController {
         cropApplyButton.isHidden = true
         cropCancelButton.isHidden = true
         cropDimOverlay.isHidden = true
+        customNavigationBar.isHidden = false
         toolBarContainer.isHidden = false
         doneButton.isHidden = false
         leftStarImageView.isHidden = false
@@ -110,34 +111,34 @@ extension MediaEditorViewController {
             leftStarImageView.isHidden = true
             rightStarImageView.isHidden = true
             cropDimOverlay.isHidden = false
-            cancelButton.isEnabled = false
-            doneButton.alpha = 0.5
-            doneButton.isEnabled = false
+            customNavigationBar.isHidden = true
+            toolBarContainer.isHidden = true
+            cancelButton.isHidden = true
+            doneButton.isHidden = true
 
-            cropApplyButton.snp.remakeConstraints { make in
-                make.trailing.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
+            cropCancelButton.snp.remakeConstraints { make in
+                make.leading.equalToSuperview().inset(20)
+                make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
                 make.width.greaterThanOrEqualTo(80)
                 make.height.equalTo(44)
             }
 
-            cropCancelButton.snp.remakeConstraints { make in
-                make.leading.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
+            cropApplyButton.snp.remakeConstraints { make in
+                make.trailing.equalToSuperview().inset(20)
+                make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
                 make.width.greaterThanOrEqualTo(80)
                 make.height.equalTo(44)
             }
 
             photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+                make.top.equalTo(cropCancelButton.snp.bottom).offset(40)
                 make.horizontalEdges.equalToSuperview().inset(20)
-                make.bottom.equalTo(cropApplyButton.snp.top).offset(-20)
+                make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
             }
 
             cropOverlayView.isHidden = false
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
-            doneButton.isHidden = false
 
             guard let uncropped = uncropedOriginalImage else { return }
             photoImageView.image = uncropped

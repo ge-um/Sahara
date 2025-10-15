@@ -13,12 +13,13 @@ final class CropOverlayView: UIView {
         view.layer.borderColor = UIColor.white.cgColor
         view.layer.borderWidth = 2
         view.backgroundColor = .clear
+        view.clipsToBounds = false
         return view
     }()
 
     private let dimView: UIView = {
         let view = UIView()
-        view.backgroundColor = .clear
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -53,7 +54,6 @@ final class CropOverlayView: UIView {
     private let rightHandle = CropHandleView()
 
     private var initialCropRect: CGRect = .zero
-    private var currentHandle: CropHandleView?
     var imageRect: CGRect = .zero
 
     var cropRect: CGRect {
@@ -73,14 +73,14 @@ final class CropOverlayView: UIView {
     private func setupViews() {
         addSubview(dimView)
         addSubview(cropBoxView)
-        cropBoxView.addSubview(topLeftHandle)
-        cropBoxView.addSubview(topRightHandle)
-        cropBoxView.addSubview(bottomLeftHandle)
-        cropBoxView.addSubview(bottomRightHandle)
-        cropBoxView.addSubview(topHandle)
-        cropBoxView.addSubview(bottomHandle)
-        cropBoxView.addSubview(leftHandle)
-        cropBoxView.addSubview(rightHandle)
+        addSubview(topLeftHandle)
+        addSubview(topRightHandle)
+        addSubview(bottomLeftHandle)
+        addSubview(bottomRightHandle)
+        addSubview(topHandle)
+        addSubview(bottomHandle)
+        addSubview(leftHandle)
+        addSubview(rightHandle)
 
         dimView.frame = bounds
     }
@@ -107,31 +107,78 @@ final class CropOverlayView: UIView {
     }
 
     private func layoutHandles() {
-        let cornerSize: CGFloat = 40
+        let cornerSize: CGFloat = 50
         let edgeThickness: CGFloat = 4
-        let edgeLength: CGFloat = 60
-        let midX = cropBoxView.bounds.width / 2
-        let midY = cropBoxView.bounds.height / 2
+        let edgeLength: CGFloat = 80
+        let cropFrame = cropBoxView.frame
+        let midX = cropFrame.midX
+        let midY = cropFrame.midY
 
-        // 모서리 핸들 - ㄱ자 (터치 영역 확보를 위해 큰 사각형)
-        topLeftHandle.frame = CGRect(x: -cornerSize/2, y: -cornerSize/2, width: cornerSize, height: cornerSize)
-        topRightHandle.frame = CGRect(x: cropBoxView.bounds.width - cornerSize/2, y: -cornerSize/2, width: cornerSize, height: cornerSize)
-        bottomLeftHandle.frame = CGRect(x: -cornerSize/2, y: cropBoxView.bounds.height - cornerSize/2, width: cornerSize, height: cornerSize)
-        bottomRightHandle.frame = CGRect(x: cropBoxView.bounds.width - cornerSize/2, y: cropBoxView.bounds.height - cornerSize/2, width: cornerSize, height: cornerSize)
+        topLeftHandle.frame = CGRect(
+            x: cropFrame.minX - cornerSize/2,
+            y: cropFrame.minY - cornerSize/2,
+            width: cornerSize,
+            height: cornerSize
+        )
+        topRightHandle.frame = CGRect(
+            x: cropFrame.maxX - cornerSize/2,
+            y: cropFrame.minY - cornerSize/2,
+            width: cornerSize,
+            height: cornerSize
+        )
+        bottomLeftHandle.frame = CGRect(
+            x: cropFrame.minX - cornerSize/2,
+            y: cropFrame.maxY - cornerSize/2,
+            width: cornerSize,
+            height: cornerSize
+        )
+        bottomRightHandle.frame = CGRect(
+            x: cropFrame.maxX - cornerSize/2,
+            y: cropFrame.maxY - cornerSize/2,
+            width: cornerSize,
+            height: cornerSize
+        )
 
-        // 중간 핸들 - 굵은 선
-        topHandle.frame = CGRect(x: midX - edgeLength/2, y: -edgeThickness/2, width: edgeLength, height: edgeThickness)
-        bottomHandle.frame = CGRect(x: midX - edgeLength/2, y: cropBoxView.bounds.height - edgeThickness/2, width: edgeLength, height: edgeThickness)
-        leftHandle.frame = CGRect(x: -edgeThickness/2, y: midY - edgeLength/2, width: edgeThickness, height: edgeLength)
-        rightHandle.frame = CGRect(x: cropBoxView.bounds.width - edgeThickness/2, y: midY - edgeLength/2, width: edgeThickness, height: edgeLength)
+        topHandle.frame = CGRect(
+            x: midX - edgeLength/2,
+            y: cropFrame.minY - edgeThickness/2,
+            width: edgeLength,
+            height: edgeThickness
+        )
+        bottomHandle.frame = CGRect(
+            x: midX - edgeLength/2,
+            y: cropFrame.maxY - edgeThickness/2,
+            width: edgeLength,
+            height: edgeThickness
+        )
+        leftHandle.frame = CGRect(
+            x: cropFrame.minX - edgeThickness/2,
+            y: midY - edgeLength/2,
+            width: edgeThickness,
+            height: edgeLength
+        )
+        rightHandle.frame = CGRect(
+            x: cropFrame.maxX - edgeThickness/2,
+            y: midY - edgeLength/2,
+            width: edgeThickness,
+            height: edgeLength
+        )
 
-        // 다시 그리기
         [topLeftHandle, topRightHandle, bottomLeftHandle, bottomRightHandle, topHandle, bottomHandle, leftHandle, rightHandle].forEach {
             $0.setNeedsDisplay()
         }
     }
 
     private func updateDimMask() {
+        let maskLayer = CAShapeLayer()
+        let path = UIBezierPath(rect: imageRect)
+        let cropPath = UIBezierPath(rect: cropBoxView.frame)
+        path.append(cropPath)
+        path.usesEvenOddFillRule = true
+
+        maskLayer.path = path.cgPath
+        maskLayer.fillRule = .evenOdd
+        dimView.layer.mask = maskLayer
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
@@ -149,6 +196,8 @@ final class CropOverlayView: UIView {
             newFrame.origin.y = max(imageRect.origin.y, min(imageRect.maxY - newFrame.height, newFrame.origin.y))
 
             cropBoxView.frame = newFrame
+            layoutHandles()
+            updateDimMask()
         default:
             break
         }
@@ -161,10 +210,8 @@ final class CropOverlayView: UIView {
         switch gesture.state {
         case .began:
             initialCropRect = cropBoxView.frame
-            currentHandle = handle
         case .changed:
             var newFrame = initialCropRect
-            let minSize: CGFloat = 50
 
             if handle == topLeftHandle {
                 newFrame.origin.x += translation.x
@@ -184,24 +231,9 @@ final class CropOverlayView: UIView {
                 newFrame.size.height += translation.y
             }
 
-            if newFrame.width >= minSize && newFrame.height >= minSize {
-                newFrame.origin.x = max(imageRect.origin.x, newFrame.origin.x)
-                newFrame.origin.y = max(imageRect.origin.y, newFrame.origin.y)
-
-                if newFrame.maxX > imageRect.maxX {
-                    newFrame.size.width = imageRect.maxX - newFrame.origin.x
-                }
-                if newFrame.maxY > imageRect.maxY {
-                    newFrame.size.height = imageRect.maxY - newFrame.origin.y
-                }
-
-                if newFrame.width >= minSize && newFrame.height >= minSize {
-                    cropBoxView.frame = newFrame
-                    layoutHandles()
-                }
-            }
+            constrainFrame(&newFrame)
         default:
-            currentHandle = nil
+            break
         }
     }
 
@@ -212,10 +244,8 @@ final class CropOverlayView: UIView {
         switch gesture.state {
         case .began:
             initialCropRect = cropBoxView.frame
-            currentHandle = handle
         case .changed:
             var newFrame = initialCropRect
-            let minSize: CGFloat = 50
 
             if handle == topHandle {
                 newFrame.origin.y += translation.y
@@ -229,30 +259,38 @@ final class CropOverlayView: UIView {
                 newFrame.size.width += translation.x
             }
 
-            if newFrame.width >= minSize && newFrame.height >= minSize {
-                newFrame.origin.x = max(imageRect.origin.x, newFrame.origin.x)
-                newFrame.origin.y = max(imageRect.origin.y, newFrame.origin.y)
-
-                if newFrame.maxX > imageRect.maxX {
-                    newFrame.size.width = imageRect.maxX - newFrame.origin.x
-                }
-                if newFrame.maxY > imageRect.maxY {
-                    newFrame.size.height = imageRect.maxY - newFrame.origin.y
-                }
-
-                if newFrame.width >= minSize && newFrame.height >= minSize {
-                    cropBoxView.frame = newFrame
-                    layoutHandles()
-                }
-            }
+            constrainFrame(&newFrame)
         default:
-            currentHandle = nil
+            break
         }
+    }
+
+    private func constrainFrame(_ frame: inout CGRect) {
+        let minSize: CGFloat = 50
+
+        guard frame.width >= minSize && frame.height >= minSize else { return }
+
+        frame.origin.x = max(imageRect.origin.x, frame.origin.x)
+        frame.origin.y = max(imageRect.origin.y, frame.origin.y)
+
+        if frame.maxX > imageRect.maxX {
+            frame.size.width = imageRect.maxX - frame.origin.x
+        }
+        if frame.maxY > imageRect.maxY {
+            frame.size.height = imageRect.maxY - frame.origin.y
+        }
+
+        guard frame.width >= minSize && frame.height >= minSize else { return }
+
+        cropBoxView.frame = frame
+        layoutHandles()
+        updateDimMask()
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         dimView.frame = bounds
+        updateDimMask()
     }
 }
 
@@ -263,7 +301,7 @@ final class CropHandleView: UIView {
     }
 
     var handleType: HandleType = .edge
-    var cornerPosition: String = "" // "topLeft", "topRight", "bottomLeft", "bottomRight"
+    var cornerPosition: String = ""
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -288,38 +326,32 @@ final class CropHandleView: UIView {
             let centerX = rect.width / 2
             let centerY = rect.height / 2
 
-            // ㄱ자 그리기 (모서리 기준)
             if cornerPosition == "topLeft" {
-                // 왼쪽 위 모서리: ┌ 형태
                 context.move(to: CGPoint(x: centerX, y: centerY + length))
                 context.addLine(to: CGPoint(x: centerX, y: centerY + offset))
                 context.addLine(to: CGPoint(x: centerX + length, y: centerY + offset))
             } else if cornerPosition == "topRight" {
-                // 오른쪽 위 모서리: ┐ 형태
                 context.move(to: CGPoint(x: centerX - length, y: centerY + offset))
                 context.addLine(to: CGPoint(x: centerX, y: centerY + offset))
                 context.addLine(to: CGPoint(x: centerX, y: centerY + length))
             } else if cornerPosition == "bottomLeft" {
-                // 왼쪽 아래 모서리: └ 형태
                 context.move(to: CGPoint(x: centerX, y: centerY - length))
                 context.addLine(to: CGPoint(x: centerX, y: centerY - offset))
                 context.addLine(to: CGPoint(x: centerX + length, y: centerY - offset))
             } else if cornerPosition == "bottomRight" {
-                // 오른쪽 아래 모서리: ┘ 형태
                 context.move(to: CGPoint(x: centerX - length, y: centerY - offset))
                 context.addLine(to: CGPoint(x: centerX, y: centerY - offset))
                 context.addLine(to: CGPoint(x: centerX, y: centerY - length))
             }
             context.strokePath()
         } else {
-            // 굵은 선
             context.setFillColor(UIColor.white.cgColor)
             context.fill(rect)
         }
     }
 
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        let expandedBounds = bounds.insetBy(dx: -20, dy: -20)
+        let expandedBounds = bounds.insetBy(dx: -40, dy: -40)
         return expandedBounds.contains(point)
     }
 }
