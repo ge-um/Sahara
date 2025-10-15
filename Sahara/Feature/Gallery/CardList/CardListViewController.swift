@@ -21,8 +21,6 @@ final class CardListViewController: UIViewController {
     private let navigationType: NavigationType
     private let sourceType: EditSourceType
     private let disposeBag = DisposeBag()
-    private let viewDidLoadRelay = PublishRelay<Void>()
-    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private let customNavigationBar = CustomNavigationBar()
 
@@ -106,12 +104,6 @@ final class CardListViewController: UIViewController {
         configureUI()
         setupCustomNavigationBar()
         bind()
-        viewDidLoadRelay.accept(())
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewWillAppearRelay.accept(())
     }
 
     private func setupCustomNavigationBar() {
@@ -165,7 +157,6 @@ final class CardListViewController: UIViewController {
 
     private func bindCardListViewModel(_ viewModel: CardListViewModel) {
         let input = CardListViewModel.Input(
-            viewDidLoad: viewDidLoadRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             closeButtonTapped: closeButton.rx.tap.asObservable()
         )
@@ -193,8 +184,6 @@ final class CardListViewController: UIViewController {
 
     private func bindCalendarDetailViewModel(_ viewModel: CalendarDetailViewModel) {
         let input = CalendarDetailViewModel.Input(
-            viewDidLoad: viewDidLoadRelay.asObservable(),
-            viewWillAppear: viewWillAppearRelay.asObservable(),
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             itemDeleted: Observable.never()
         )

@@ -19,7 +19,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
     }
 
     struct Input {
-        let viewWillAppear: Observable<Void>
         let addButtonTapped: Observable<Void>
         let previousMonthTapped: Observable<Void>
         let nextMonthTapped: Observable<Void>
