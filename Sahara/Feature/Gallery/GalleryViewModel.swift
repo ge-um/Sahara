@@ -38,15 +38,21 @@ final class GalleryViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let showPhotoPicker = PublishRelay<Void>()
         let currentMonth = BehaviorRelay(value: Date())
-        let photos = BehaviorRelay<[CardCalendarItemDTO]>(value: [])
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
+
+        let photos = currentMonth
+            .flatMapLatest { [weak self] month -> Observable<[CardCalendarItemDTO]> in
+                guard let self = self else { return .just([]) }
+                return self.realmManager.observeCards(for: .month(month))
+            }
+            .share(replay: 1, scope: .whileConnected)
 
         let calendarItems = Observable
             .combineLatest(currentMonth, photos)
             .map { month, items in
                 self.generateCalendar(for: month, items: items)
             }
-        
+
         let currentMonthTitle = currentMonth
             .map { date -> String in
                 let formatter = DateFormatter()
@@ -54,28 +60,15 @@ final class GalleryViewModel: BaseViewModelProtocol {
                 formatter.dateFormat = NSLocalizedString("gallery.month_format", comment: "")
                 return formatter.string(from: date)
             }
-        
+
         let showCalendar = selectedViewType
             .map { $0 == .date }
 
-        let isEmptyRelay = BehaviorRelay<Bool>(value: true)
-
-        let checkEmpty: () -> Void = { [weak self] in
-            guard let self = self else { return }
-            let isEmpty = self.realmManager.isEmpty(Card.self)
-            isEmptyRelay.accept(isEmpty)
-        }
+        let isEmpty = realmManager.observeIsEmpty(Card.self)
+            .share(replay: 1, scope: .whileConnected)
 
         input.addButtonTapped
             .bind(to: showPhotoPicker)
-            .disposed(by: disposeBag)
-
-        input.viewWillAppear
-            .withLatestFrom(currentMonth)
-            .bind(with: self) { owner, month in
-                owner.reloadCurrentMonthPhotos(month, photos: photos)
-                checkEmpty()
-            }
             .disposed(by: disposeBag)
         
         input.previousMonthTapped
@@ -96,14 +89,11 @@ final class GalleryViewModel: BaseViewModelProtocol {
         
         currentMonth
             .skip(1)
-            .do(onNext: { month in
+            .bind { month in
                 let calendar = Calendar.current
                 let year = calendar.component(.year, from: month)
                 let monthValue = calendar.component(.month, from: month)
                 AnalyticsManager.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
-            })
-            .bind(with: self) { owner, month in
-                owner.reloadCurrentMonthPhotos(month, photos: photos)
             }
             .disposed(by: disposeBag)
         
@@ -117,14 +107,8 @@ final class GalleryViewModel: BaseViewModelProtocol {
             currentMonthTitle: currentMonthTitle.asDriver(onErrorJustReturn: ""),
             selectedViewType: selectedViewType.asDriver(),
             showCalendar: showCalendar.asDriver(onErrorJustReturn: true),
-            isEmpty: isEmptyRelay.asDriver()
+            isEmpty: isEmpty.asDriver(onErrorJustReturn: true)
         )
-    }
-    
-    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[CardCalendarItemDTO]>) {
-        let cards = realmManager.fetchCards(for: .month(date))
-        let items = cards.map { CardCalendarItemDTO(from: $0) }
-        photos.accept(items)
     }
 
     private func generateCalendar(for month: Date, items: [CardCalendarItemDTO]) -> [DayItem] {
