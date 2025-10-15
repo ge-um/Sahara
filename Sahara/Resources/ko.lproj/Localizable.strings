@@ -124,9 +124,9 @@
 "biometric.permission_denied" = "Face ID 권한이 없어서 사용할 수 없어요";
 
 /* Search */
-"search.placeholder" = "메모를 검색해요";
+"search.placeholder" = "메모와 사진 속 텍스트를 검색해요";
 "search.no_results" = "검색결과가 없습니다";
-"search.initial_message" = "메모를 검색해보세요";
+"search.initial_message" = "메모와 사진 속 텍스트를 검색해보세요";
 
 /* Stats */
 "stats.title" = "통계";

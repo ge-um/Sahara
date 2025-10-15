@@ -261,29 +261,35 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
 
-        let card = Card(
-            createdDate: date,
-            editedImageData: imageData,
-            memo: memoText,
-            latitude: location?.coordinate.latitude,
-            longitude: location?.coordinate.longitude,
-            isLocked: isLocked
-        )
-        card.customFolder = folderText
+        return OCRManager.shared.recognizeText(from: editedImage)
+            .flatMap { [weak self] ocrText -> Observable<Void> in
+                guard let self = self else { return .empty() }
 
-        return realmManager.add(card)
-            .observe(on: MainScheduler.instance)
-            .do(onNext: {
-                NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-            })
-            .do(onNext: {
-                if isFirstCard {
-                    AnalyticsManager.shared.logFirstCardCreated()
-                }
-                if !hadLocationBefore && location != nil {
-                    AnalyticsManager.shared.logFirstLocationAdded()
-                }
-            })
+                let card = Card(
+                    createdDate: date,
+                    editedImageData: imageData,
+                    memo: memoText,
+                    latitude: location?.coordinate.latitude,
+                    longitude: location?.coordinate.longitude,
+                    isLocked: isLocked
+                )
+                card.customFolder = folderText
+                card.ocrText = ocrText
+
+                return self.realmManager.add(card)
+                    .observe(on: MainScheduler.instance)
+                    .do(onNext: {
+                        NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+                    })
+                    .do(onNext: {
+                        if isFirstCard {
+                            AnalyticsManager.shared.logFirstCardCreated()
+                        }
+                        if !hadLocationBefore && location != nil {
+                            AnalyticsManager.shared.logFirstLocationAdded()
+                        }
+                    })
+            }
     }
 
     private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
@@ -323,27 +329,35 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        return realmManager.update { realm in
-            card.createdDate = date
-            card.editedImageData = imageData
-            card.memo = memoText
-            card.customFolder = folderText
-            card.isLocked = isLocked
-            card.latitude = location?.coordinate.latitude
-            card.longitude = location?.coordinate.longitude
-        }
-        .observe(on: MainScheduler.instance)
-        .do(onNext: {
-            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-        })
-        .do(onNext: {
-            if !editTypes.isEmpty {
-                AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+
+        return ocrObservable
+            .flatMap { [weak self] ocrText -> Observable<Void> in
+                guard let self = self else { return .empty() }
+
+                return self.realmManager.update { realm in
+                    card.createdDate = date
+                    card.editedImageData = imageData
+                    card.memo = memoText
+                    card.customFolder = folderText
+                    card.isLocked = isLocked
+                    card.latitude = location?.coordinate.latitude
+                    card.longitude = location?.coordinate.longitude
+                    card.ocrText = ocrText
+                }
+                .observe(on: MainScheduler.instance)
+                .do(onNext: {
+                    NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+                })
+                .do(onNext: {
+                    if !editTypes.isEmpty {
+                        AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+                    }
+                    if !hadLocationBefore && location != nil {
+                        AnalyticsManager.shared.logFirstLocationAdded()
+                    }
+                })
             }
-            if !hadLocationBefore && location != nil {
-                AnalyticsManager.shared.logFirstLocationAdded()
-            }
-        })
     }
 
     private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
@@ -382,31 +396,39 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        let newCard = Card(
-            createdDate: date,
-            editedImageData: imageData,
-            memo: memoText,
-            latitude: location?.coordinate.latitude,
-            longitude: location?.coordinate.longitude,
-            isLocked: isLocked
-        )
-        newCard.customFolder = folderText
+        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(cardToDelete.ocrText)
 
-        return realmManager.update { realm in
-            realm.add(newCard)
-            realm.delete(cardToDelete)
-        }
-        .observe(on: MainScheduler.instance)
-        .do(onNext: {
-            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-        })
-        .do(onNext: {
-            if !editTypes.isEmpty {
-                AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        return ocrObservable
+            .flatMap { [weak self] ocrText -> Observable<Void> in
+                guard let self = self else { return .empty() }
+
+                let newCard = Card(
+                    createdDate: date,
+                    editedImageData: imageData,
+                    memo: memoText,
+                    latitude: location?.coordinate.latitude,
+                    longitude: location?.coordinate.longitude,
+                    isLocked: isLocked
+                )
+                newCard.customFolder = folderText
+                newCard.ocrText = ocrText
+
+                return self.realmManager.update { realm in
+                    realm.add(newCard)
+                    realm.delete(cardToDelete)
+                }
+                .observe(on: MainScheduler.instance)
+                .do(onNext: {
+                    NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+                })
+                .do(onNext: {
+                    if !editTypes.isEmpty {
+                        AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+                    }
+                    if !hadLocationBefore && location != nil {
+                        AnalyticsManager.shared.logFirstLocationAdded()
+                    }
+                })
             }
-            if !hadLocationBefore && location != nil {
-                AnalyticsManager.shared.logFirstLocationAdded()
-            }
-        })
     }
 }
