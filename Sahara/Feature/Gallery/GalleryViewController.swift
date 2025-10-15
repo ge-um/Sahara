@@ -302,22 +302,7 @@ final class GalleryViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let photoSavedNotification = NotificationCenter.default.rx
-            .notification(AppNotification.photoSaved.name)
-            .map { _ in () }
-
-        let photoDeletedNotification = NotificationCenter.default.rx
-            .notification(AppNotification.photoDeleted.name)
-            .map { _ in () }
-
-        let viewWillAppearObservable = Observable.merge(
-            rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in () },
-            photoSavedNotification,
-            photoDeletedNotification
-        )
-
         let input = GalleryViewModel.Input(
-            viewWillAppear: viewWillAppearObservable,
             addButtonTapped: Observable.never(),
             previousMonthTapped: Observable.never(),
             nextMonthTapped: Observable.never(),
@@ -352,20 +337,6 @@ final class GalleryViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
-
-        Observable.merge(
-            photoSavedNotification,
-            photoDeletedNotification
-        )
-        .withLatestFrom(output.selectedViewType.asObservable())
-        .bind(with: self) { owner, viewType in
-            if viewType == .location {
-                owner.loadMapAnnotations()
-            } else if viewType == .theme {
-                owner.themeVC.refreshData()
-            }
-        }
-        .disposed(by: disposeBag)
     }
 
     private func updateButtonStyles(selectedType: GalleryViewType) {
