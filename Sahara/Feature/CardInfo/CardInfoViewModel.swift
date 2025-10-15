@@ -178,8 +178,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
                     .do(onNext: { _ in
-                        NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
-
                         if owner.sourceType != nil {
                             shouldPopToListOnDeleteRelay.accept(true)
                         } else {
@@ -280,9 +278,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 return self.realmManager.add(card)
                     .observe(on: MainScheduler.instance)
                     .do(onNext: {
-                        NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-                    })
-                    .do(onNext: {
                         if isFirstCard {
                             AnalyticsManager.shared.logFirstCardCreated()
                         }
@@ -352,9 +347,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     card.ocrText = ocrText
                 }
                 .observe(on: MainScheduler.instance)
-                .do(onNext: {
-                    NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-                })
                 .do(onNext: {
                     if !editTypes.isEmpty {
                         AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
@@ -431,9 +423,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     }
                 }
                 .observe(on: MainScheduler.instance)
-                .do(onNext: {
-                    NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
-                })
                 .do(onNext: {
                     if !editTypes.isEmpty {
                         AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))

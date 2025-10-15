@@ -17,7 +17,6 @@ final class CardListViewModel: BaseViewModelProtocol {
     private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
     struct Input {
-        let viewDidLoad: Observable<Void>
         let itemSelected: Observable<IndexPath>
         let closeButtonTapped: Observable<Void>
     }
@@ -39,12 +38,7 @@ final class CardListViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        input.viewDidLoad
-            .withUnretained(self)
-            .bind { owner, _ in
-                owner.observeCards()
-            }
-            .disposed(by: disposeBag)
+        observeCards()
 
         let navigateToDetail = input.itemSelected
             .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in

@@ -31,7 +31,6 @@ final class CalendarViewController: UIViewController {
     private let disposeBag = DisposeBag()
     private let previousMonthRelay = PublishRelay<Void>()
     private let nextMonthRelay = PublishRelay<Void>()
-    private let viewWillAppearRelay = PublishRelay<Void>()
     private var currentHeaderView: CalendarHeaderView?
 
     init(viewModel: GalleryViewModel) {
@@ -54,11 +53,6 @@ final class CalendarViewController: UIViewController {
         if collectionView.collectionViewLayout is UICollectionViewFlowLayout {
             collectionView.collectionViewLayout = createLayout()
         }
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewWillAppearRelay.accept(())
     }
 
     private func configureUI() {
@@ -91,7 +85,6 @@ final class CalendarViewController: UIViewController {
 
     private func bind() {
         let input = GalleryViewModel.Input(
-            viewWillAppear: viewWillAppearRelay.asObservable(),
             addButtonTapped: Observable.never(),
             previousMonthTapped: previousMonthRelay.asObservable(),
             nextMonthTapped: nextMonthRelay.asObservable(),
