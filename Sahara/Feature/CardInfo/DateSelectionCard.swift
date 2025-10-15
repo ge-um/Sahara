@@ -25,7 +25,7 @@ final class DateSelectionCard: BaseCard {
         formatter.locale = Locale.current
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
-        label.font = FontSystem.galmuriMono(size: 16)
+        label.font = FontSystem.galmuriMono(size: 14)
         label.textColor = ColorSystem.darkGray
         return label
     }()
@@ -54,12 +54,14 @@ final class DateSelectionCard: BaseCard {
         container.addSubview(selectButton)
 
         iconImageView.snp.makeConstraints { make in
-            make.top.leading.bottom.equalToSuperview()
+            make.top.leading.equalToSuperview()
             make.width.height.equalTo(20)
         }
 
         valueLabel.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview()
             make.leading.equalTo(iconImageView.snp.trailing).offset(8)
+            make.trailing.lessThanOrEqualToSuperview()
             make.centerY.equalTo(iconImageView)
         }
 
@@ -67,10 +69,10 @@ final class DateSelectionCard: BaseCard {
             make.edges.equalToSuperview()
         }
 
-        addContentView(container, insets: UIEdgeInsets(top: 8, left: 16, bottom: 16, right: 16))
+        addContentView(container)
 
         cardView.snp.makeConstraints { make in
-            make.height.equalTo(80)
+            make.height.equalTo(90)
         }
     }
 
