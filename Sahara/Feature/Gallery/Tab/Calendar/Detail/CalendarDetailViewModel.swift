@@ -99,7 +99,8 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
                 var updatedMemos = memos
                 updatedMemos.remove(at: index)
                 memosRelay.accept(updatedMemos)
-
+            })
+            .do(onNext: { _ in
                 NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
             })
             .map { _ in () }

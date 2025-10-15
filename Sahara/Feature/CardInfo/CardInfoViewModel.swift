@@ -132,6 +132,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     input.isLocked
                 )
             )
+            .do(onNext: { [weak self] _, memo, _, location, isLocked in
+                guard let self = self else { return }
+                AnalyticsManager.shared.logCardSave(
+                    hasPhoto: self.editedImage != nil,
+                    hasMemo: !(memo?.isEmpty ?? true),
+                    hasLocation: location != nil,
+                    isLocked: isLocked
+                )
+            })
             .flatMap { [weak self] date, memo, customFolder, location, isLocked -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
 
@@ -139,13 +148,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
                     return .just(false)
                 }
-
-                AnalyticsManager.shared.logCardSave(
-                    hasPhoto: self.editedImage != nil,
-                    hasMemo: !(memo?.isEmpty ?? true),
-                    hasLocation: location != nil,
-                    isLocked: isLocked
-                )
 
                 if let cardId = self.cardToEditId {
                     let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
@@ -168,13 +170,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
+            .do(onNext: { owner, _ in
+                AnalyticsManager.shared.logCardDelete()
+            })
             .flatMap { owner, _ -> Observable<Void> in
                 guard let cardId = owner.cardToEditId else { return .just(()) }
 
                 return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
                     .do(onNext: { _ in
                         NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
-                        AnalyticsManager.shared.logCardDelete()
 
                         if owner.sourceType != nil {
                             shouldPopToListOnDeleteRelay.accept(true)
@@ -270,15 +274,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return realmManager.add(card)
             .observe(on: MainScheduler.instance)
             .do(onNext: {
+                NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+            })
+            .do(onNext: {
                 if isFirstCard {
                     AnalyticsManager.shared.logFirstCardCreated()
                 }
-
                 if !hadLocationBefore && location != nil {
                     AnalyticsManager.shared.logFirstLocationAdded()
                 }
-
-                NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
             })
     }
 
@@ -319,10 +323,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        if !editTypes.isEmpty {
-            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-        }
-
         return realmManager.update { realm in
             card.createdDate = date
             card.editedImageData = imageData
@@ -334,11 +334,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
         .observe(on: MainScheduler.instance)
         .do(onNext: {
+            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+        })
+        .do(onNext: {
+            if !editTypes.isEmpty {
+                AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+            }
             if !hadLocationBefore && location != nil {
                 AnalyticsManager.shared.logFirstLocationAdded()
             }
-
-            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
         })
     }
 
@@ -378,10 +382,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        if !editTypes.isEmpty {
-            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-        }
-
         let newCard = Card(
             createdDate: date,
             editedImageData: imageData,
@@ -398,11 +398,15 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
         .observe(on: MainScheduler.instance)
         .do(onNext: {
+            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
+        })
+        .do(onNext: {
+            if !editTypes.isEmpty {
+                AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+            }
             if !hadLocationBefore && location != nil {
                 AnalyticsManager.shared.logFirstLocationAdded()
             }
-
-            NotificationCenter.default.post(name: AppNotification.photoSaved.name, object: nil)
         })
     }
 }

@@ -283,8 +283,7 @@ final class GalleryViewController: UIViewController {
 
         viewTypeRelay
             .asObservable()
-            .bind(with: self) { owner, viewType in
-                owner.updateButtonStyles(selectedType: viewType)
+            .do(onNext: { viewType in
                 let viewTypeString: String
                 switch viewType {
                 case .date:
@@ -297,6 +296,9 @@ final class GalleryViewController: UIViewController {
                     viewTypeString = "folder"
                 }
                 AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
+            })
+            .bind(with: self) { owner, viewType in
+                owner.updateButtonStyles(selectedType: viewType)
             }
             .disposed(by: disposeBag)
 
@@ -477,9 +479,11 @@ extension GalleryViewController: MKMapViewDelegate {
 
     private func showGallery(for cards: [Card]) {
         let photoCount = cards.count
-        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
         let cardIds = cards.map { $0.id }
+
+        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
+
         let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }

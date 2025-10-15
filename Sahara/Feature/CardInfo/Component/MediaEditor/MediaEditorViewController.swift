@@ -322,62 +322,77 @@ final class MediaEditorViewController: UIViewController {
 
     private func bind() {
         stickerModeButton.rx.tap
+            .do(onNext: { [weak self] _ in
+                guard let self = self, self.currentMode.value != .sticker else { return }
+                self.usedTools.insert("sticker")
+                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "sticker")
+            })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .sticker {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.sticker)
                     owner.presentStickerModal()
-                    owner.usedTools.insert("sticker")
-                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "sticker")
                 }
             }
             .disposed(by: disposeBag)
 
         drawingModeButton.rx.tap
+            .do(onNext: { [weak self] _ in
+                guard let self = self, self.currentMode.value != .drawing else { return }
+                self.usedTools.insert("drawing")
+                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "drawing")
+            })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .drawing {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.drawing)
-                    owner.usedTools.insert("drawing")
-                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "drawing")
                 }
             }
             .disposed(by: disposeBag)
 
         filterModeButton.rx.tap
+            .do(onNext: { [weak self] _ in
+                guard let self = self, self.currentMode.value != .filter else { return }
+                self.usedTools.insert("filter")
+                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "filter")
+            })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .filter {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.filter)
-                    owner.usedTools.insert("filter")
-                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "filter")
                 }
             }
             .disposed(by: disposeBag)
 
         photoModeButton.rx.tap
+            .do(onNext: { [weak self] _ in
+                guard let self = self, self.currentMode.value != .photo else { return }
+                self.usedTools.insert("photo")
+                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "photo")
+            })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .photo {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.photo)
-                    owner.usedTools.insert("photo")
-                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "photo")
                 }
             }
             .disposed(by: disposeBag)
 
         cropModeButton.rx.tap
+            .do(onNext: { [weak self] _ in
+                guard let self = self, self.currentMode.value != .crop else { return }
+                self.usedTools.insert("crop")
+                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "crop")
+            })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .crop {
                     owner.currentMode.accept(nil)
                 } else {
                     owner.currentMode.accept(.crop)
-                    owner.usedTools.insert("crop")
-                    AnalyticsManager.shared.logPhotoEditToolUsed(tool: "crop")
                 }
             }
             .disposed(by: disposeBag)
@@ -447,9 +462,11 @@ final class MediaEditorViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.navigateToMetadata
+            .do(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
+            })
             .drive(with: self) { owner, editedImage in
-                AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: owner.usedTools.count)
-
                 if let callback = owner.onEditingComplete {
                     callback(editedImage)
                     owner.dismiss(animated: true)

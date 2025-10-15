@@ -52,16 +52,24 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
             .disposed(by: disposeBag)
 
         input.searchText
-            .bind(with: self) { owner, text in
-                owner.searchCompleter.queryFragment = text
+            .do(onNext: { text in
                 if !text.isEmpty {
                     AnalyticsManager.shared.logLocationSearchUsed()
                 }
+            })
+            .bind(with: self) { owner, text in
+                owner.searchCompleter.queryFragment = text
             }
             .disposed(by: disposeBag)
 
         input.currentLocationTapped
             .withUnretained(self)
+            .do(onNext: { owner, _ in
+                let authStatus = owner.locationManager.authorizationStatus
+                if authStatus == .denied || authStatus == .restricted {
+                    AnalyticsManager.shared.logLocationPermissionDenied()
+                }
+            })
             .bind { owner, _ in
                 let authStatus = owner.locationManager.authorizationStatus
 
@@ -76,7 +84,6 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
                         owner.locationManager.requestLocation()
                     }
                 case .denied, .restricted:
-                    AnalyticsManager.shared.logLocationPermissionDenied()
                     showPermissionAlertRelay.accept(())
                 @unknown default:
                     break
@@ -86,6 +93,9 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
 
         locationUpdateSubject
             .withUnretained(self)
+            .do(onNext: { _ in
+                AnalyticsManager.shared.logLocationSaved(source: "current_location")
+            })
             .bind { owner, location in
                 owner.handleLocation(location, selectedRelay: selectedLocationRelay, loadingRelay: isLoadingRelay)
             }
@@ -93,6 +103,9 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
 
         input.locationSelected
             .withUnretained(self)
+            .do(onNext: { _ in
+                AnalyticsManager.shared.logLocationSaved(source: "search")
+            })
             .flatMap { owner, completion -> Observable<(CLLocationCoordinate2D, String)> in
                 return owner.searchLocation(completion: completion)
             }
@@ -111,7 +124,6 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
         LocationUtility.reverseGeocode(location: location) { address in
             loadingRelay.accept(false)
             let finalAddress = address.isEmpty ? NSLocalizedString("location_search.current_location", comment: "") : address
-            AnalyticsManager.shared.logLocationSaved(source: "current_location")
             selectedRelay.accept((location.coordinate, finalAddress))
         }
     }
@@ -131,7 +143,6 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
                 let subtitle = completion.subtitle
                 let fullAddress = subtitle.isEmpty ? title : "\(title), \(subtitle)"
 
-                AnalyticsManager.shared.logLocationSaved(source: "search")
                 observer.onNext((coordinate, fullAddress))
                 observer.onCompleted()
             }
