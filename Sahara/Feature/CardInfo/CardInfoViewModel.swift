@@ -34,7 +34,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let selectedImage: Observable<UIImage?>
         let date: Observable<Date>
         let memo: Observable<String?>
-        let location: Observable<CLLocation>
+        let location: Observable<CLLocation?>
         let isLocked: Observable<Bool>
         let saveButtonTapped: Observable<Void>
         let cancelButtonTapped: Observable<Void>
@@ -102,7 +102,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         input.location
-            .map { $0 as CLLocation? }
             .bind(to: locationRelay)
             .disposed(by: disposeBag)
 
@@ -366,8 +365,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         do {
             try realm.write {
-                realm.delete(cardToDelete)
                 realm.add(newCard)
+                realm.delete(cardToDelete)
             }
         } catch {
         }

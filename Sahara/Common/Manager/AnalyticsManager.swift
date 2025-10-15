@@ -36,6 +36,8 @@ enum AnalyticsEvent: String {
     case photoLoadError = "photo_load_error"
     case locationPermissionDenied = "location_permission_denied"
     case biometricPermissionDenied = "biometric_permission_denied"
+
+    case tabSelected = "tab_selected"
 }
 
 enum AnalyticsParameter: String {
@@ -62,6 +64,8 @@ enum AnalyticsParameter: String {
     case count = "count"
 
     case errorType = "error_type"
+
+    case tabName = "tab_name"
 }
 
 final class AnalyticsManager {
@@ -168,5 +172,9 @@ final class AnalyticsManager {
 
     func logBiometricPermissionDenied() {
         logEvent(.biometricPermissionDenied)
+    }
+
+    func logTabSelected(tabName: String) {
+        logEvent(.tabSelected, parameters: [.tabName: tabName])
     }
 }

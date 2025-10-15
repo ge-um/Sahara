@@ -55,6 +55,17 @@ final class MainTabBarController: UITabBarController {
         return button
     }()
 
+    private lazy var settingsTabButton: TabButton = {
+        let button = TabButton(
+            icon: UIImage(systemName: "gearshape.fill"),
+            title: NSLocalizedString("tab.settings", comment: "")
+        )
+        button.onTap = { [weak self] in
+            self?.settingsTabTapped()
+        }
+        return button
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         tabBar.isHidden = true
@@ -69,6 +80,7 @@ final class MainTabBarController: UITabBarController {
         tabButtonStackView.addArrangedSubview(galleryTabButton)
         tabButtonStackView.addArrangedSubview(searchTabButton)
         tabButtonStackView.addArrangedSubview(statsTabButton)
+        tabButtonStackView.addArrangedSubview(settingsTabButton)
 
         customTabBar.applyGradient(.barBack)
 
@@ -84,8 +96,12 @@ final class MainTabBarController: UITabBarController {
             make.width.height.equalTo(44)
         }
 
+        settingsTabButton.snp.makeConstraints { make in
+            make.width.height.equalTo(44)
+        }
+
         tabButtonStackView.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview().inset(60)
+            make.horizontalEdges.equalToSuperview().inset(48)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
         }
 
@@ -112,7 +128,11 @@ final class MainTabBarController: UITabBarController {
         let statsVC = StatsViewController()
         let statsNav = UINavigationController(rootViewController: statsVC)
 
-        viewControllers = [galleryNav, searchNav, statsNav]
+        let settingsVM = SettingsViewModel()
+        let settingsVC = SettingsViewController(viewModel: settingsVM)
+        let settingsNav = UINavigationController(rootViewController: settingsVC)
+
+        viewControllers = [galleryNav, searchNav, statsNav, settingsNav]
 
         updateTabSelection()
     }
@@ -120,21 +140,31 @@ final class MainTabBarController: UITabBarController {
     @objc private func galleryTabTapped() {
         selectedIndex = 0
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "gallery")
     }
 
     @objc private func searchTabTapped() {
         selectedIndex = 1
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "search")
     }
 
     @objc private func statsTabTapped() {
         selectedIndex = 2
         updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "stats")
+    }
+
+    @objc private func settingsTabTapped() {
+        selectedIndex = 3
+        updateTabSelection()
+        AnalyticsManager.shared.logTabSelected(tabName: "settings")
     }
 
     private func updateTabSelection() {
         galleryTabButton.setSelected(selectedIndex == 0)
         searchTabButton.setSelected(selectedIndex == 1)
         statsTabButton.setSelected(selectedIndex == 2)
+        settingsTabButton.setSelected(selectedIndex == 3)
     }
 }

@@ -11,7 +11,7 @@ import UIKit
 final class StatCardView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = FontSystem.galmuriMono(size: 14)
         label.textColor = UIColor(hex: "#666666")
         label.textAlignment = .center
         return label
