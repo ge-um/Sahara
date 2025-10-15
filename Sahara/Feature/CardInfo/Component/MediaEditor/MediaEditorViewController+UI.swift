@@ -96,6 +96,8 @@ extension MediaEditorViewController {
         view.addSubview(cropOverlayView)
         view.addSubview(cropApplyButton)
         view.addSubview(cropCancelButton)
+        view.addSubview(undoButton)
+        view.addSubview(redoButton)
 
         toolBarContainer.addSubview(toolBarScrollView)
         toolBarScrollView.addSubview(modeButtonStackView)
@@ -167,6 +169,18 @@ extension MediaEditorViewController {
 
         cropDimOverlay.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        undoButton.snp.makeConstraints { make in
+            make.trailing.equalTo(view.snp.centerX).offset(-4)
+            make.bottom.equalTo(photoImageView.snp.top).offset(-8)
+            make.width.height.equalTo(36)
+        }
+
+        redoButton.snp.makeConstraints { make in
+            make.leading.equalTo(view.snp.centerX).offset(4)
+            make.bottom.equalTo(photoImageView.snp.top).offset(-8)
+            make.width.height.equalTo(36)
         }
     }
 

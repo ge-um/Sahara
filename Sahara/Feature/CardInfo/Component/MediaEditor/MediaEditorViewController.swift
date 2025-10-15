@@ -82,6 +82,40 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
+    lazy var undoButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(named: "cornerUpLeft")?.withRenderingMode(.alwaysTemplate)
+        config.baseForegroundColor = .black
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+
+        button.configuration = config
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        button.layer.cornerRadius = 18
+        button.clipsToBounds = true
+        button.isHidden = true
+        button.isEnabled = false
+        button.alpha = 0.5
+        return button
+    }()
+
+    lazy var redoButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(named: "cornerUpRight")?.withRenderingMode(.alwaysTemplate)
+        config.baseForegroundColor = .black
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+
+        button.configuration = config
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        button.layer.cornerRadius = 18
+        button.clipsToBounds = true
+        button.isHidden = true
+        button.isEnabled = false
+        button.alpha = 0.5
+        return button
+    }()
+
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
@@ -267,6 +301,7 @@ final class MediaEditorViewController: UIViewController {
 
     private func setupPencilKit() {
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
+        canvasView.delegate = self
 
         toolPicker.setVisible(false, forFirstResponder: canvasView)
         toolPicker.addObserver(canvasView)
@@ -371,6 +406,20 @@ final class MediaEditorViewController: UIViewController {
         cropCancelButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.currentMode.accept(nil)
+            }
+            .disposed(by: disposeBag)
+
+        undoButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.canvasView.undoManager?.undo()
+                owner.updateUndoRedoButtons()
+            }
+            .disposed(by: disposeBag)
+
+        redoButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.canvasView.undoManager?.redo()
+                owner.updateUndoRedoButtons()
             }
             .disposed(by: disposeBag)
 
@@ -556,6 +605,16 @@ final class MediaEditorViewController: UIViewController {
         toolBarContainer.isHidden = false
         return image
     }
+
+    func updateUndoRedoButtons() {
+        guard currentMode.value == .drawing else { return }
+
+        undoButton.isEnabled = canvasView.undoManager?.canUndo ?? false
+        redoButton.isEnabled = canvasView.undoManager?.canRedo ?? false
+
+        undoButton.alpha = undoButton.isEnabled ? 1.0 : 0.5
+        redoButton.alpha = redoButton.isEnabled ? 1.0 : 0.5
+    }
 }
 
 extension MediaEditorViewController: UICollectionViewDataSource {
@@ -581,5 +640,11 @@ extension MediaEditorViewController: UICollectionViewDataSource {
             return cell
         }
         return UICollectionViewCell()
+    }
+}
+
+extension MediaEditorViewController: PKCanvasViewDelegate {
+    func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
+        updateUndoRedoButtons()
     }
 }
