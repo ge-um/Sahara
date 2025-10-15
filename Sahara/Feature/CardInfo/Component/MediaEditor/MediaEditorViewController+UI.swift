@@ -83,6 +83,7 @@ extension MediaEditorViewController {
     func configureUI() {
         view.applyGradient(.mintToOrange)
 
+        view.addSubview(cropDimOverlay)
         view.addSubview(customNavigationBar)
         view.addSubview(photoImageView)
         view.addSubview(stickerContainerView)
@@ -92,7 +93,6 @@ extension MediaEditorViewController {
         view.addSubview(trashIconView)
         view.addSubview(leftStarImageView)
         view.addSubview(rightStarImageView)
-        view.addSubview(cropDimOverlay)
         view.addSubview(cropOverlayView)
         view.addSubview(cropApplyButton)
         view.addSubview(cropCancelButton)
