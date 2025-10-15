@@ -309,6 +309,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
+        let oldOcrText = card.ocrText
+        let oldLatitude = card.latitude
+        let oldLongitude = card.longitude
+
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
 
@@ -322,7 +326,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         if initialCustomFolder != folderText {
             editTypes.append("folder")
         }
-        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
+        let oldLocation = (oldLatitude != nil && oldLongitude != nil) ? CLLocation(latitude: oldLatitude!, longitude: oldLongitude!) : nil
         if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
             editTypes.append("location")
         }
@@ -330,13 +334,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
         return ocrObservable
             .flatMap { [weak self] ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
                 return self.realmManager.update { realm in
+                    guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
                     card.date = date
                     card.editedImageData = imageData
                     card.memo = memoText
@@ -376,6 +381,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         guard let cardToDelete = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
+        let oldOcrText = cardToDelete.ocrText
+        let oldLatitude = cardToDelete.latitude
+        let oldLongitude = cardToDelete.longitude
+
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
 
@@ -389,7 +398,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         if initialCustomFolder != folderText {
             editTypes.append("folder")
         }
-        let oldLocation = (cardToDelete.latitude != nil && cardToDelete.longitude != nil) ? CLLocation(latitude: cardToDelete.latitude!, longitude: cardToDelete.longitude!) : nil
+        let oldLocation = (oldLatitude != nil && oldLongitude != nil) ? CLLocation(latitude: oldLatitude!, longitude: oldLongitude!) : nil
         if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
             editTypes.append("location")
         }
@@ -397,7 +406,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(cardToDelete.ocrText)
+        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
         return ocrObservable
             .flatMap { [weak self] ocrText -> Observable<Void> in
@@ -417,7 +426,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 return self.realmManager.update { realm in
                     realm.add(newCard)
-                    realm.delete(cardToDelete)
+                    if let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) {
+                        realm.delete(cardToDelete)
+                    }
                 }
                 .observe(on: MainScheduler.instance)
                 .do(onNext: {

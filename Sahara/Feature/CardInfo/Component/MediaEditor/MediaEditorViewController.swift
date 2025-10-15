@@ -13,9 +13,8 @@ import SnapKit
 import UIKit
 
 final class MediaEditorViewController: UIViewController {
-    private let customNavigationBar = CustomNavigationBar()
-
-    private let photoImageView: UIImageView = {
+    let customNavigationBar = CustomNavigationBar()
+    let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = false
@@ -23,7 +22,7 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let canvasView: PKCanvasView = {
+    let canvasView: PKCanvasView = {
         let canvas = PKCanvasView()
         canvas.backgroundColor = .clear
         canvas.isOpaque = false
@@ -32,25 +31,25 @@ final class MediaEditorViewController: UIViewController {
         return canvas
     }()
 
-    private let stickerContainerView: UIView = {
+    let stickerContainerView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         view.isUserInteractionEnabled = true
         return view
     }()
 
-    private let toolBarContainer: UIView = {
+    let toolBarContainer: UIView = {
         let view = UIView()
         return view
     }()
 
-    private let toolBarScrollView: UIScrollView = {
+    let toolBarScrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.showsHorizontalScrollIndicator = false
         return scrollView
     }()
 
-    private let modeButtonStackView: UIStackView = {
+    let modeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .equalSpacing
@@ -58,32 +57,32 @@ final class MediaEditorViewController: UIViewController {
         return stackView
     }()
 
-    private lazy var stickerModeButton: UIButton = {
+    lazy var stickerModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
 
-    private lazy var drawingModeButton: UIButton = {
+    lazy var drawingModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
 
-    private lazy var filterModeButton: UIButton = {
+    lazy var filterModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
 
-    private lazy var photoModeButton: UIButton = {
+    lazy var photoModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
 
-    private lazy var cropModeButton: UIButton = {
+    lazy var cropModeButton: UIButton = {
         let button = UIButton()
         return button
     }()
 
-    private let cancelButton: UIButton = {
+    let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.image = UIImage(named: "xmark")
@@ -94,7 +93,7 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
-    private let doneButton: UIButton = {
+    let doneButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.title = NSLocalizedString("media_editor.done", comment: "")
@@ -113,14 +112,14 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
-    private let cropOverlayView: CropOverlayView = {
+    let cropOverlayView: CropOverlayView = {
         let view = CropOverlayView()
         view.isHidden = true
         view.backgroundColor = .clear
         return view
     }()
 
-    private let cropApplyButton: UIButton = {
+    let cropApplyButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.title = NSLocalizedString("media_editor.apply", comment: "")
@@ -140,7 +139,7 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
-    private let cropCancelButton: UIButton = {
+    let cropCancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.title = NSLocalizedString("media_editor.cancel", comment: "")
@@ -160,7 +159,7 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
-    private lazy var filterCollectionView: UICollectionView = {
+    lazy var filterCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         layout.itemSize = CGSize(width: 100, height: 120)
@@ -177,20 +176,7 @@ final class MediaEditorViewController: UIViewController {
         return collectionView
     }()
 
-    private lazy var filters: [(name: String, filter: CIFilter?)] = [
-        (NSLocalizedString("filter.original", comment: ""), nil),
-        (NSLocalizedString("filter.noir", comment: ""), CIFilter(name: "CIPhotoEffectNoir")),
-        (NSLocalizedString("filter.sepia", comment: ""), CIFilter(name: "CISepiaTone")),
-        (NSLocalizedString("filter.instant", comment: ""), CIFilter(name: "CIPhotoEffectInstant")),
-        (NSLocalizedString("filter.chrome", comment: ""), CIFilter(name: "CIPhotoEffectChrome")),
-        (NSLocalizedString("filter.fade", comment: ""), CIFilter(name: "CIPhotoEffectFade")),
-        (NSLocalizedString("filter.mono", comment: ""), CIFilter(name: "CIPhotoEffectMono")),
-        (NSLocalizedString("filter.process", comment: ""), CIFilter(name: "CIPhotoEffectProcess")),
-        (NSLocalizedString("filter.transfer", comment: ""), CIFilter(name: "CIPhotoEffectTransfer")),
-        (NSLocalizedString("filter.tonal", comment: ""), CIFilter(name: "CIPhotoEffectTonal"))
-    ]
-
-    private let trashIconView: UIImageView = {
+    let trashIconView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "trash")?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = .white
@@ -199,7 +185,7 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let cropDimOverlay: UIView = {
+    let cropDimOverlay: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         view.isHidden = true
@@ -207,7 +193,7 @@ final class MediaEditorViewController: UIViewController {
         return view
     }()
 
-    private let leftStarImageView: UIImageView = {
+    let leftStarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "star")?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = UIColor(hex: "FFFFBD")
@@ -215,7 +201,7 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let rightStarImageView: UIImageView = {
+    let rightStarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "star")?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = UIColor(hex: "A0BAFF")
@@ -223,23 +209,22 @@ final class MediaEditorViewController: UIViewController {
         return imageView
     }()
 
-    private let viewModel: MediaEditorViewModel
+    let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
     var onEditingComplete: ((UIImage) -> Void)?
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
     private var lastContainerSize: CGSize = .zero
-    private var currentMode = BehaviorRelay<EditMode?>(value: nil)
-    private let toolPicker = PKToolPicker()
-    private var originalImage: UIImage?
+    let currentMode = BehaviorRelay<EditMode?>(value: nil)
+    let toolPicker = PKToolPicker()
+    var originalImage: UIImage?
     private var croppedImage: UIImage?
-    private var uncropedOriginalImage: UIImage?
-    private var lastCropRect: CGRect?
-    private let context = CIContext()
+    var uncropedOriginalImage: UIImage?
+    var lastCropRect: CGRect?
+    private let filterHandler = MediaEditorFilterHandler()
     private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
-    private let cropAppliedRelay = PublishRelay<(UIImage, CGRect, CGRect)>()
-    private let photoSelectedRelay = PublishRelay<UIImage>()
+    let photoSelectedRelay = PublishRelay<UIImage>()
     private let viewWillAppearRelay = PublishRelay<Void>()
     private var usedTools: Set<String> = []
 
@@ -273,34 +258,6 @@ final class MediaEditorViewController: UIViewController {
         doneButton.applyGradient(.hotPink)
         cropApplyButton.applyGradient(.hotPink)
         updateStarPositions()
-    }
-
-    private func updateStarPositions() {
-        guard let image = photoImageView.image else { return }
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: image.size,
-            in: photoImageView.bounds.size
-        )
-
-        let imageFrameInView = CGRect(
-            x: photoImageView.frame.origin.x + imageRect.origin.x,
-            y: photoImageView.frame.origin.y + imageRect.origin.y,
-            width: imageRect.width,
-            height: imageRect.height
-        )
-
-        leftStarImageView.snp.remakeConstraints { make in
-            make.centerX.equalTo(view).offset(imageFrameInView.minX - view.bounds.width / 2)
-            make.centerY.equalTo(view).offset(imageFrameInView.minY - view.bounds.height / 2)
-            make.width.height.equalTo(32)
-        }
-
-        rightStarImageView.snp.remakeConstraints { make in
-            make.centerX.equalTo(view).offset(imageFrameInView.maxX - view.bounds.width / 2)
-            make.centerY.equalTo(view).offset(imageFrameInView.minY - view.bounds.height / 2)
-            make.width.height.equalTo(32)
-        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -423,7 +380,7 @@ final class MediaEditorViewController: UIViewController {
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
             filterSelected: filterSelectedRelay.asObservable(),
-            cropApplied: cropAppliedRelay.asObservable(),
+            cropApplied: Observable.just((UIImage(), CGRect.zero, CGRect.zero)),
             drawingChanged: Observable.just(()),
             photoSelected: photoSelectedRelay.asObservable(),
             doneButtonTapped: doneButton.rx.tap.asObservable().map { [weak self] in
@@ -498,7 +455,7 @@ final class MediaEditorViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func addStickerToPhoto(_ sticker: KlipySticker) {
+    func addStickerToPhoto(_ sticker: KlipySticker) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: sticker)
 
@@ -520,7 +477,7 @@ final class MediaEditorViewController: UIViewController {
         stickerViews.append(stickerView)
     }
 
-    private func addPhotoToCanvas(_ image: UIImage) {
+    func addPhotoToCanvas(_ image: UIImage) {
         let imageView = DraggableImageView(frame: .zero)
         imageView.configure(with: image)
 
@@ -542,7 +499,7 @@ final class MediaEditorViewController: UIViewController {
         photoViews.append(imageView)
     }
 
-    private func adjustStickerPositions() {
+    func adjustStickerPositions() {
         view.layoutIfNeeded()
 
         guard lastContainerSize.width > 0, lastContainerSize.height > 0,
@@ -589,478 +546,22 @@ final class MediaEditorViewController: UIViewController {
         canvasView.drawing = canvasView.drawing.transformed(using: scaleTransform)
     }
 
-
-    private func updateEditMode(mode: EditMode?) {
-        filterCollectionView.isHidden = true
-        canvasView.isUserInteractionEnabled = false
-        toolPicker.setVisible(false, forFirstResponder: canvasView)
-        photoImageView.isUserInteractionEnabled = false
-        stickerContainerView.isUserInteractionEnabled = true
-        cropOverlayView.isHidden = true
-        cropApplyButton.isHidden = true
-        cropCancelButton.isHidden = true
-        cropDimOverlay.isHidden = true
-        toolBarContainer.isHidden = false
-        doneButton.isHidden = false
-        leftStarImageView.isHidden = false
-        rightStarImageView.isHidden = false
-        cancelButton.isEnabled = true
-
-        photoImageView.snp.remakeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
-        }
-
-        stickerContainerView.snp.remakeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        canvasView.snp.remakeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        toolBarContainer.snp.remakeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
-            make.height.equalTo(88)
-        }
-
-        UIView.animate(withDuration: 0.3, animations: {
-            self.view.layoutIfNeeded()
-        }, completion: { _ in
-            self.adjustStickerPositions()
-        })
-
-        guard let mode = mode else {
-            doneButton.isHidden = false
-            doneButton.isEnabled = true
-            doneButton.alpha = 1.0
-            return
-        }
-
-        switch mode {
-        case .sticker:
-            break
-        case .drawing:
-            canvasView.isUserInteractionEnabled = true
-
-            toolBarContainer.snp.remakeConstraints { make in
-                make.leading.trailing.equalToSuperview()
-                make.height.equalTo(88)
-                make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-75)
-            }
-
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-            })
-
-            toolPicker.setVisible(true, forFirstResponder: canvasView)
-        case .filter:
-            photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
-                make.horizontalEdges.equalToSuperview().inset(40)
-                make.bottom.equalTo(filterCollectionView.snp.top).offset(-16)
-            }
-
-            filterCollectionView.isHidden = false
-
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-                self.filterCollectionView.reloadData()
-                self.filterCollectionView.layoutIfNeeded()
-            })
-        case .photo:
-            presentPhotoSelectionModal()
-        case .crop:
-            leftStarImageView.isHidden = true
-            rightStarImageView.isHidden = true
-            cropDimOverlay.isHidden = false
-            cancelButton.isEnabled = false
-            doneButton.alpha = 0.5
-            doneButton.isEnabled = false
-
-            cropApplyButton.snp.remakeConstraints { make in
-                make.trailing.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-                make.width.greaterThanOrEqualTo(80)
-                make.height.equalTo(44)
-            }
-
-            cropCancelButton.snp.remakeConstraints { make in
-                make.leading.equalToSuperview().inset(20)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-                make.width.greaterThanOrEqualTo(80)
-                make.height.equalTo(44)
-            }
-
-            photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
-                make.horizontalEdges.equalToSuperview().inset(20)
-                make.bottom.equalTo(cropApplyButton.snp.top).offset(-20)
-            }
-
-            cropOverlayView.isHidden = false
-            cropApplyButton.isHidden = false
-            cropCancelButton.isHidden = false
-            doneButton.isHidden = false
-
-            guard let uncropped = uncropedOriginalImage else { return }
-            photoImageView.image = uncropped
-
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-                self.setupCropOverlay()
-            })
-        }
-    }
-
-    private func updateModeButtons(currentMode: EditMode?) {
-        let buttons = [stickerModeButton, drawingModeButton, filterModeButton, photoModeButton, cropModeButton]
-        let modes: [EditMode?] = [.sticker, .drawing, .filter, .photo, .crop]
-
-        for (button, mode) in zip(buttons, modes) {
-            if mode == currentMode {
-                button.alpha = 1.0
-            } else {
-                button.alpha = 0.5
-            }
-        }
-    }
-
-    private func presentStickerModal() {
-        let stickerModalVC = StickerModalViewController(viewModel: viewModel)
-        stickerModalVC.onStickerSelected = { [weak self] sticker in
-            self?.addStickerToPhoto(sticker)
-        }
-
-        let navController = UINavigationController(rootViewController: stickerModalVC)
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
-        }
-        present(navController, animated: true)
-    }
-
-    private func presentPhotoSelectionModal() {
-        let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { [weak self] image, _, _ in
-            self?.addPhotoToCanvas(image)
-            self?.currentMode.accept(nil)
-        }
-        let navController = UINavigationController(rootViewController: mediaSelectionVC)
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
-        }
-        present(navController, animated: true)
-    }
-
     private func generateFinalImage() -> UIImage {
-        guard let baseImage = photoImageView.image else {
-            return UIImage()
-        }
-
         toolBarContainer.isHidden = true
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: baseImage.size,
-            in: photoImageView.bounds.size
+        let image = MediaEditorImageHandler.generateFinalImage(
+            photoImageView: photoImageView,
+            stickerContainerView: stickerContainerView,
+            canvasView: canvasView
         )
-
-        let renderer = UIGraphicsImageRenderer(size: imageRect.size)
-        let image = renderer.image { context in
-            context.cgContext.translateBy(x: -imageRect.origin.x, y: -imageRect.origin.y)
-            photoImageView.layer.render(in: context.cgContext)
-            stickerContainerView.layer.render(in: context.cgContext)
-
-            let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
-            drawingImage.draw(at: .zero)
-        }
-
         toolBarContainer.isHidden = false
-
         return image
-    }
-
-    private func presentPhotoPicker() {
-        var configuration = PHPickerConfiguration()
-        configuration.selectionLimit = 1
-        configuration.filter = .images
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
-        present(picker, animated: true)
-    }
-
-    private func setupCropOverlay() {
-        guard let uncropped = uncropedOriginalImage else { return }
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-                imageSize: uncropped.size,
-                in: self.photoImageView.bounds.size
-            )
-
-            let overlayFrame = self.photoImageView.convert(self.photoImageView.bounds, to: self.view)
-            self.cropOverlayView.frame = overlayFrame
-
-            let imageRectInOverlay = CGRect(
-                x: imageRect.origin.x,
-                y: imageRect.origin.y,
-                width: imageRect.width,
-                height: imageRect.height
-            )
-
-            self.cropOverlayView.imageRect = imageRectInOverlay
-
-            if let lastCrop = self.lastCropRect {
-                let scale = imageRect.width / uncropped.size.width
-
-                let scaledCropRect = CGRect(
-                    x: imageRect.origin.x + (lastCrop.origin.x * scale),
-                    y: imageRect.origin.y + (lastCrop.origin.y * scale),
-                    width: lastCrop.width * scale,
-                    height: lastCrop.height * scale
-                )
-
-                self.cropOverlayView.setCropRect(scaledCropRect)
-            } else {
-                self.cropOverlayView.setCropRect(imageRectInOverlay)
-            }
-        }
-    }
-
-    private func applyCrop() {
-        guard let uncropped = uncropedOriginalImage else { return }
-
-        let cropRectInOverlay = cropOverlayView.cropRect
-        let imageRectInOverlay = cropOverlayView.imageRect
-
-        let relativeX = cropRectInOverlay.origin.x - imageRectInOverlay.origin.x
-        let relativeY = cropRectInOverlay.origin.y - imageRectInOverlay.origin.y
-        let relativeWidth = cropRectInOverlay.width
-        let relativeHeight = cropRectInOverlay.height
-
-        let scale = uncropped.size.width / imageRectInOverlay.width
-
-        let cropRectInImage = CGRect(
-            x: relativeX * scale,
-            y: relativeY * scale,
-            width: relativeWidth * scale,
-            height: relativeHeight * scale
-        )
-
-        // orientation을 고려하여 이미지를 정규화
-        guard let _ = uncropped.cgImage else {
-            currentMode.accept(nil)
-            return
-        }
-
-        // orientation이 있으면 이미지를 다시 그려서 정규화
-        let normalizedImage: UIImage
-        if uncropped.imageOrientation != .up {
-            UIGraphicsBeginImageContextWithOptions(uncropped.size, false, uncropped.scale)
-            uncropped.draw(in: CGRect(origin: .zero, size: uncropped.size))
-            normalizedImage = UIGraphicsGetImageFromCurrentImageContext() ?? uncropped
-            UIGraphicsEndImageContext()
-        } else {
-            normalizedImage = uncropped
-        }
-
-        guard let normalizedCGImage = normalizedImage.cgImage,
-              let croppedCGImage = normalizedCGImage.cropping(to: cropRectInImage) else {
-            currentMode.accept(nil)
-            return
-        }
-
-        let croppedImage = UIImage(
-            cgImage: croppedCGImage,
-            scale: normalizedImage.scale,
-            orientation: .up
-        )
-
-        lastCropRect = cropRectInImage
-
-        photoImageView.image = croppedImage
-        originalImage = croppedImage
-
-        currentMode.accept(nil)
-    }
-
-    private func setupCustomNavigationBar() {
-        customNavigationBar.configure(title: NSLocalizedString("media_editor.title", comment: ""))
-        customNavigationBar.hideLeftButton()
-
-        view.addSubview(cancelButton)
-        view.addSubview(doneButton)
-
-        cancelButton.snp.makeConstraints { make in
-            make.leading.equalTo(customNavigationBar).offset(16)
-            make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
-        }
-
-        doneButton.snp.makeConstraints { make in
-            make.trailing.equalTo(customNavigationBar).inset(16)
-            make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
-        }
-    }
-
-    private func setupModeButtons() {
-        let buttonConfigs: [(button: UIButton, imageName: String, titleKey: String)] = [
-            (stickerModeButton, "sticker", "media_editor.sticker"),
-            (drawingModeButton, "pencil", "media_editor.drawing"),
-            (filterModeButton, "sliders", "media_editor.filter"),
-            (photoModeButton, "image", "media_editor.photo"),
-            (cropModeButton, "crop", "media_editor.crop")
-        ]
-
-        for config in buttonConfigs {
-            let stack = UIStackView()
-            stack.axis = .vertical
-            stack.alignment = .center
-            stack.spacing = 4
-            stack.isUserInteractionEnabled = false
-
-            let imageView = UIImageView()
-            if let originalImage = UIImage(named: config.imageName) {
-                imageView.image = originalImage.withRenderingMode(.alwaysTemplate)
-            }
-            imageView.contentMode = .scaleAspectFit
-            imageView.tintColor = .black
-
-            let label = UILabel()
-            let text = NSLocalizedString(config.titleKey, comment: "")
-            let attributedString = text.attributedString(
-                font: FontSystem.galmuriMono(size: 12),
-                letterSpacing: -6,
-                color: .black
-            )
-            label.attributedText = attributedString
-            label.textAlignment = .center
-
-            stack.addArrangedSubview(imageView)
-            stack.addArrangedSubview(label)
-
-            imageView.snp.makeConstraints { make in
-                make.width.height.equalTo(24)
-            }
-
-            config.button.addSubview(stack)
-            stack.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
-            }
-
-            modeButtonStackView.addArrangedSubview(config.button)
-        }
-    }
-
-    private func configureUI() {
-        view.applyGradient(.mintToOrange)
-
-        view.addSubview(customNavigationBar)
-        view.addSubview(photoImageView)
-        view.addSubview(stickerContainerView)
-        view.addSubview(canvasView)
-        view.addSubview(toolBarContainer)
-        view.addSubview(filterCollectionView)
-        view.addSubview(trashIconView)
-        view.addSubview(leftStarImageView)
-        view.addSubview(rightStarImageView)
-        view.addSubview(cropDimOverlay)
-        view.addSubview(cropOverlayView)
-        view.addSubview(cropApplyButton)
-        view.addSubview(cropCancelButton)
-
-        toolBarContainer.addSubview(toolBarScrollView)
-        toolBarScrollView.addSubview(modeButtonStackView)
-
-        toolBarContainer.applyGradient(.paleBlueToGray)
-
-        customNavigationBar.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(54)
-        }
-
-        toolBarContainer.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
-            make.height.equalTo(88)
-        }
-
-        toolBarScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        modeButtonStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 8, right: 20))
-            make.height.equalTo(54)
-        }
-
-        photoImageView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
-        }
-
-
-        stickerContainerView.snp.makeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        canvasView.snp.makeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        filterCollectionView.snp.makeConstraints { make in
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.height.equalTo(144)
-        }
-
-        trashIconView.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-            make.width.height.equalTo(40)
-        }
-
-
-        cropApplyButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
-            make.width.equalTo(100)
-            make.height.equalTo(50)
-        }
-
-        cropCancelButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
-            make.width.equalTo(100)
-            make.height.equalTo(50)
-        }
-
-        cropDimOverlay.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
     }
 }
 
 extension MediaEditorViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == filterCollectionView {
-            return filters.count
+            return MediaEditorFilterHandler.filters.count
         }
         return 0
     }
@@ -1074,27 +575,11 @@ extension MediaEditorViewController: UICollectionViewDataSource {
                 return UICollectionViewCell()
             }
 
-            let filterItem = filters[indexPath.item]
-            cell.configure(with: filterItem.name, image: originalImage, filter: filterItem.filter, context: context)
+            let filterItem = MediaEditorFilterHandler.filters[indexPath.item]
+            let filter = filterItem.filterName != nil ? CIFilter(name: filterItem.filterName!) : nil
+            cell.configure(with: filterItem.name, image: originalImage, filter: filter, context: filterHandler.context)
             return cell
         }
         return UICollectionViewCell()
-    }
-}
-
-extension MediaEditorViewController: PHPickerViewControllerDelegate {
-    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        picker.dismiss(animated: true)
-
-        guard let itemProvider = results.first?.itemProvider else { return }
-
-        if itemProvider.canLoadObject(ofClass: UIImage.self) {
-            itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
-                DispatchQueue.main.async {
-                    guard let image = image as? UIImage else { return }
-                    self?.photoSelectedRelay.accept(image)
-                }
-            }
-        }
     }
 }
