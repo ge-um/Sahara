@@ -62,6 +62,7 @@ enum Mood: String, PersistableEnum {
 
 final class Card: Object {
     @Persisted(primaryKey: true) var id: ObjectId
+    @Persisted var date: Date
     @Persisted var createdDate: Date
     @Persisted var editedImageData: Data
     @Persisted var memo: String?
@@ -82,6 +83,7 @@ final class Card: Object {
     @Persisted var ocrText: String?
 
     convenience init(
+        date: Date,
         createdDate: Date,
         editedImageData: Data,
         memo: String? = nil,
@@ -90,6 +92,7 @@ final class Card: Object {
         isLocked: Bool = false
     ) {
         self.init()
+        self.date = date
         self.createdDate = createdDate
         self.editedImageData = editedImageData
         self.memo = memo

@@ -152,7 +152,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
         for day in 1...daysInMonth {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
                 let cardsForDay = items.filter {
-                    calendar.isDate($0.createdDate, inSameDayAs: date)
+                    calendar.isDate($0.date, inSameDayAs: date)
                 }
                 dayItems.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
             }
