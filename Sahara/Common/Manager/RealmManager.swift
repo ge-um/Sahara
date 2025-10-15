@@ -23,6 +23,8 @@ protocol RealmManagerProtocol {
     func update(_ block: @escaping (Realm) -> Void) -> Observable<Void>
     func isEmpty<T: Object>(_ type: T.Type) -> Bool
     func fetchCards(for period: DatePeriod) -> [Card]
+    func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool>
+    func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]>
 }
 
 extension RealmManagerProtocol {
@@ -166,6 +168,90 @@ final class RealmManager: RealmManagerProtocol {
 
         return Array(results)
     }
+
+    func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool> {
+        return Observable.create { observer in
+            guard let realm = try? self.getRealm() else {
+                observer.onNext(true)
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let results = realm.objects(type)
+            observer.onNext(results.isEmpty)
+
+            let token = results.observe { change in
+                switch change {
+                case .initial(let collection):
+                    observer.onNext(collection.isEmpty)
+                case .update(let collection, _, _, _):
+                    observer.onNext(collection.isEmpty)
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
+    }
+
+    func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]> {
+        return Observable.create { observer in
+            guard let realm = try? self.getRealm() else {
+                observer.onNext([])
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let calendar = Calendar.current
+            let startDate: Date
+            let endDate: Date
+
+            switch period {
+            case .day(let date):
+                startDate = calendar.startOfDay(for: date)
+                guard let end = calendar.date(byAdding: .day, value: 1, to: startDate) else {
+                    observer.onNext([])
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                endDate = end
+
+            case .month(let date):
+                guard let start = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
+                      let end = calendar.date(byAdding: .month, value: 1, to: start) else {
+                    observer.onNext([])
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                startDate = start
+                endDate = end
+            }
+
+            let results = realm.objects(Card.self)
+                .filter("date >= %@ AND date < %@", startDate, endDate)
+                .sorted(byKeyPath: "date", ascending: true)
+
+            let token = results.observe { change in
+                switch change {
+                case .initial(let collection):
+                    let dtos = Array(collection).map { CardCalendarItemDTO(from: $0) }
+                    observer.onNext(dtos)
+                case .update(let collection, _, _, _):
+                    let dtos = Array(collection).map { CardCalendarItemDTO(from: $0) }
+                    observer.onNext(dtos)
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
+    }
 }
 
 enum RealmError: Error {
@@ -243,5 +329,15 @@ final class MockRealmManager: RealmManagerProtocol {
 
     func fetchCards(for period: DatePeriod) -> [Card] {
         return objects.compactMap { $0 as? Card }
+    }
+
+    func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool> {
+        return Observable.just(isEmpty(type))
+    }
+
+    func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]> {
+        let cards = fetchCards(for: period)
+        let dtos = cards.map { CardCalendarItemDTO(from: $0) }
+        return Observable.just(dtos)
     }
 }
