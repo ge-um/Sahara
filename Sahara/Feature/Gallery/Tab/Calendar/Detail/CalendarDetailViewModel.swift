@@ -12,11 +12,11 @@ import RxSwift
 
 final class CalendarDetailViewModel: BaseViewModelProtocol {
     private let date: Date
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
+    private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
     struct Input {
-        let viewDidLoad: Observable<Void>
-        let viewWillAppear: Observable<Void>
         let itemSelected: Observable<IndexPath>
         let itemDeleted: Observable<IndexPath>
     }
@@ -27,103 +27,56 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
         let shouldPopIfEmpty: Driver<Bool>
     }
 
-    init(date: Date) {
+    init(date: Date, realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.date = date
+        self.realmManager = realmManager
     }
 
     func getCard(by id: ObjectId) -> CardListItemDTO? {
-        let realm = try! Realm()
-        guard let card = realm.object(ofType: Card.self, forPrimaryKey: id) else { return nil }
-        return CardListItemDTO(from: card)
+        return cardsRelay.value.first { $0.id == id }
     }
 
     func transform(input: Input) -> Output {
-        let memosRelay = BehaviorRelay<[Card]>(value: [])
+        let cards = realmManager.observeCards(for: .day(date))
+            .map { $0.map { CardListItemDTO(from: $0) } }
+            .share(replay: 1, scope: .whileConnected)
 
-        let loadMemos: () -> Void = { [weak self] in
-            guard let self = self else { return }
-            let realm = try! Realm()
-            let calendar = Calendar.current
-            let startOfDay = calendar.startOfDay(for: self.date)
-            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
-                memosRelay.accept([])
-                return
-            }
-
-            let results = realm.objects(Card.self)
-                .filter("date >= %@ AND date < %@", startOfDay, endOfDay)
-                .sorted(byKeyPath: "date", ascending: true)
-
-            memosRelay.accept(Array(results))
-        }
-
-        let photoSaved = NotificationCenter.default.rx
-            .notification(AppNotification.photoSaved.name)
-            .map { _ in () }
-
-        let photoDeleted = NotificationCenter.default.rx
-            .notification(AppNotification.photoDeleted.name)
-            .map { _ in () }
-
-        Observable.merge(
-            input.viewDidLoad,
-            input.viewWillAppear,
-            photoSaved,
-            photoDeleted
-        )
-        .throttle(.milliseconds(100), scheduler: MainScheduler.instance)
-        .bind(with: self) { _, _ in
-            loadMemos()
-        }
-        .disposed(by: disposeBag)
+        cards
+            .bind(to: cardsRelay)
+            .disposed(by: disposeBag)
 
         let deleteCompleted = input.itemDeleted
-            .withLatestFrom(memosRelay) { indexPath, memos -> (Int, [Card]) in
-                (indexPath.row, memos)
+            .withLatestFrom(cardsRelay) { indexPath, cards in
+                (indexPath.row, cards)
             }
             .withUnretained(self)
-            .do(onNext: { owner, data in
-                let (index, memos) = data
-                guard index < memos.count else { return }
-                let memo = memos[index]
-
-                let realm = try! Realm()
-                guard let card = realm.object(ofType: Card.self, forPrimaryKey: memo.id) else { return }
-
-                do {
-                    try realm.write {
-                        realm.delete(card)
-                    }
-                } catch {}
-
-                var updatedMemos = memos
-                updatedMemos.remove(at: index)
-                memosRelay.accept(updatedMemos)
-            })
-            .do(onNext: { _ in
-                NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
-            })
-            .map { _ in () }
+            .flatMap { owner, data -> Observable<Void> in
+                let (index, cards) = data
+                guard index < cards.count else { return .empty() }
+                let cardId = cards[index].id
+                return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
+            }
+            .share()
 
         deleteCompleted
             .subscribe()
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(memosRelay) { indexPath, memos in
-                memos[indexPath.row].id
+            .withLatestFrom(cardsRelay) { indexPath, cards in
+                cards[indexPath.row].id
             }
             .asDriver(onErrorDriveWith: .empty())
 
         let shouldPopIfEmpty = deleteCompleted
-            .withLatestFrom(memosRelay)
+            .withLatestFrom(cardsRelay)
             .map { $0.isEmpty }
             .filter { $0 }
             .map { _ in true }
             .asDriver(onErrorJustReturn: false)
 
-        let cardIds = memosRelay
-            .map { memos in memos.map { $0.id } }
+        let cardIds = cardsRelay
+            .map { cards in cards.map { $0.id } }
             .asDriver(onErrorJustReturn: [])
 
         return Output(

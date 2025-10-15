@@ -39,10 +39,10 @@ struct MoodData {
 }
 
 final class StatsViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
-        let viewWillAppear: Observable<Void>
     }
 
     struct Output {
@@ -56,18 +56,21 @@ final class StatsViewModel: BaseViewModelProtocol {
         let thisMonthInsight: Driver<String>
     }
 
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
+
     func transform(input: Input) -> Output {
-        let realm = try! Realm()
+        let cards = realmManager.observeAllCards()
+            .share(replay: 1, scope: .whileConnected)
 
-        let basicStatsDriver = input.viewWillAppear
-            .map { _ -> BasicStats in
-                let cards = realm.objects(Card.self)
+        let basicStatsDriver = cards
+            .map { cards -> BasicStats in
                 let totalCards = cards.count
-
-                let daysSinceStart = self.calculateDaysSinceStart(cards: Array(cards))
-                let thisMonthCards = self.calculateThisMonthCards(cards: Array(cards))
-                let lastMonthDiff = self.calculateLastMonthDiff(cards: Array(cards))
-                let currentStreak = self.calculateCurrentStreak(cards: Array(cards))
+                let daysSinceStart = self.calculateDaysSinceStart(cards: cards)
+                let thisMonthCards = self.calculateThisMonthCards(cards: cards)
+                let lastMonthDiff = self.calculateLastMonthDiff(cards: cards)
+                let currentStreak = self.calculateCurrentStreak(cards: cards)
 
                 return BasicStats(
                     totalCards: totalCards,
@@ -79,37 +82,24 @@ final class StatsViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorDriveWith: .empty())
 
-        let monthlyDataDriver = input.viewWillAppear
-            .map { _ -> [MonthlyData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateMonthlyData(cards: Array(cards))
-            }
+        let monthlyDataDriver = cards
+            .map { self.calculateMonthlyData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let weekdayDataDriver = input.viewWillAppear
-            .map { _ -> [WeekdayData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateWeekdayData(cards: Array(cards))
-            }
+        let weekdayDataDriver = cards
+            .map { self.calculateWeekdayData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let timeDataDriver = input.viewWillAppear
-            .map { _ -> [TimeData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateTimeData(cards: Array(cards))
-            }
+        let timeDataDriver = cards
+            .map { self.calculateTimeData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let moodDataDriver = input.viewWillAppear
-            .map { _ -> [MoodData] in
-                let cards = realm.objects(Card.self)
-                return self.generateMockMoodData(cardCount: cards.count)
-            }
+        let moodDataDriver = cards
+            .map { self.generateMockMoodData(cardCount: $0.count) }
             .asDriver(onErrorJustReturn: [])
 
-        let weekdayInsightDriver = input.viewWillAppear
-            .map { _ -> String in
-                let cards = Array(realm.objects(Card.self))
+        let weekdayInsightDriver = cards
+            .map { cards -> String in
                 guard !cards.isEmpty else {
                     return NSLocalizedString("stats.no_data_weekday", comment: "")
                 }

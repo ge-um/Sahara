@@ -18,6 +18,12 @@ struct CardListItemDTO {
         self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
+
+    init(from dto: CardCalendarItemDTO) {
+        self.id = dto.id
+        self.editedImageData = dto.editedImageData
+        self.isLocked = dto.isLocked
+    }
 }
 
 struct CardDetailDTO {

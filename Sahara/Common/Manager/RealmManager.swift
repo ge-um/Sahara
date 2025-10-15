@@ -25,6 +25,7 @@ protocol RealmManagerProtocol {
     func fetchCards(for period: DatePeriod) -> [Card]
     func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool>
     func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]>
+    func observeAllCards() -> Observable<[Card]>
 }
 
 extension RealmManagerProtocol {
@@ -252,6 +253,33 @@ final class RealmManager: RealmManagerProtocol {
             }
         }
     }
+
+    func observeAllCards() -> Observable<[Card]> {
+        return Observable.create { observer in
+            guard let realm = try? self.getRealm() else {
+                observer.onNext([])
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let results = realm.objects(Card.self)
+
+            let token = results.observe { change in
+                switch change {
+                case .initial(let collection):
+                    observer.onNext(Array(collection))
+                case .update(let collection, _, _, _):
+                    observer.onNext(Array(collection))
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
+    }
 }
 
 enum RealmError: Error {
@@ -339,5 +367,9 @@ final class MockRealmManager: RealmManagerProtocol {
         let cards = fetchCards(for: period)
         let dtos = cards.map { CardCalendarItemDTO(from: $0) }
         return Observable.just(dtos)
+    }
+
+    func observeAllCards() -> Observable<[Card]> {
+        return Observable.just(objects.compactMap { $0 as? Card })
     }
 }

@@ -250,7 +250,6 @@ final class CardDetailViewController: UIViewController {
 
         output.deleteCompleted
             .drive(with: self) { owner, _ in
-                NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
                 if owner.navigationController != nil && owner.presentingViewController == nil {
                     owner.navigationController?.popViewController(animated: true)
                 } else {

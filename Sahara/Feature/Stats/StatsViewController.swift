@@ -13,7 +13,6 @@ import UIKit
 final class StatsViewController: UIViewController {
     private let viewModel = StatsViewModel()
     private let disposeBag = DisposeBag()
-    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private let customNavigationBar = CustomNavigationBar()
 
@@ -138,11 +137,6 @@ final class StatsViewController: UIViewController {
         customNavigationBar.hideLeftButton()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewWillAppearRelay.accept(())
-    }
-
     private func configureUI() {
         view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
@@ -211,7 +205,7 @@ final class StatsViewController: UIViewController {
     }
 
     private func bind() {
-        let input = StatsViewModel.Input(viewWillAppear: viewWillAppearRelay.asObservable())
+        let input = StatsViewModel.Input()
         let output = viewModel.transform(input: input)
 
         output.basicStats
