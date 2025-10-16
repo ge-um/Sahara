@@ -35,7 +35,7 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "034177BC2E9D53B8003B893D"
+               BlueprintIdentifier = "034694682EA127BF0003065C"
                BuildableName = "SaharaTests.xctest"
                BlueprintName = "SaharaTests"
                ReferencedContainer = "container:Sahara.xcodeproj">
