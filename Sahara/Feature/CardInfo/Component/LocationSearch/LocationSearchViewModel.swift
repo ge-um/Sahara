@@ -18,6 +18,8 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
 
     private let searchResultsSubject = BehaviorSubject<[MKLocalSearchCompletion]>(value: [])
     private let locationUpdateSubject = PublishSubject<CLLocation>()
+    private var isLoadingRelay: BehaviorRelay<Bool>?
+    private var selectedLocationRelay: PublishRelay<(CLLocationCoordinate2D, String)>?
 
     struct Input {
         let viewDidLoad: Observable<Void>
@@ -44,6 +46,9 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
         let selectedLocationRelay = PublishRelay<(CLLocationCoordinate2D, String)>()
         let showPermissionAlertRelay = PublishRelay<Void>()
         let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+
+        self.selectedLocationRelay = selectedLocationRelay
+        self.isLoadingRelay = isLoadingRelay
 
         input.viewDidLoad
             .bind(with: self) { owner, _ in
@@ -158,5 +163,20 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         locationUpdateSubject.onNext(location)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if status == .authorizedWhenInUse || status == .authorizedAlways {
+            isLoadingRelay?.accept(true)
+            if let cachedLocation = manager.location {
+                handleLocation(cachedLocation, selectedRelay: selectedLocationRelay!, loadingRelay: isLoadingRelay!)
+            } else {
+                manager.requestLocation()
+            }
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Location error: \(error.localizedDescription)")
     }
 }
