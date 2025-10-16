@@ -39,8 +39,27 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
+    static let currentSchemaVersion: UInt64 = 1
+
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
+    }
+
+    static func createConfiguration(schemaVersion: UInt64 = currentSchemaVersion, migrationBlock: MigrationBlock? = nil) -> Realm.Configuration {
+        var config = Realm.Configuration()
+        config.schemaVersion = schemaVersion
+        config.migrationBlock = migrationBlock ?? defaultMigrationBlock
+        return config
+    }
+
+    static let defaultMigrationBlock: MigrationBlock = { migration, oldSchemaVersion in
+        if oldSchemaVersion < 1 {
+            migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
+                if let createdDate = oldObject?["createdDate"] as? Date {
+                    newObject?["date"] = createdDate
+                }
+            }
+        }
     }
 
     private func getRealm() throws -> Realm {
