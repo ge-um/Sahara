@@ -18,7 +18,8 @@ final class CardBackgroundView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = ColorSystem.transparentCardBackground
+        backgroundColor = ColorSystem.lavender20
         layer.cornerRadius = 12
     }
 }
+
