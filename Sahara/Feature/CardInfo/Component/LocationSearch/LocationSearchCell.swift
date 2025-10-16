@@ -64,6 +64,7 @@ final class LocationSearchCell: UITableViewCell {
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
             make.leading.equalTo(titleLabel)
             make.trailing.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(12)
         }
     }
 
