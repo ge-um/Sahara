@@ -75,8 +75,33 @@ final class SimpleBarChartView: UIView {
     override func draw(_ rect: CGRect) {
         guard !values.isEmpty, !labels.isEmpty else { return }
 
+        let maxValue = max(values.max() ?? 1, 1)
+        let chartHeight = rect.height - 60
         let barWidth = (rect.width - 40) / CGFloat(values.count)
 
+        // Y축 라벨 표시 - 정수 단위로만
+        let maxInt = Int(ceil(maxValue))
+        let yAxisStep = max(1, maxInt / 5)
+        let adjustedMaxValue = CGFloat(((maxInt / yAxisStep) + (maxInt % yAxisStep == 0 ? 0 : 1)) * yAxisStep)
+
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: FontSystem.galmuriMono(size: 10),
+            .foregroundColor: UIColor.black.withAlphaComponent(0.6)
+        ]
+
+        var currentValue = 0
+        while currentValue <= Int(adjustedMaxValue) {
+            let normalizedY = CGFloat(currentValue) / adjustedMaxValue
+            let y = rect.height - 40 - (chartHeight * normalizedY)
+
+            let valueText = "\(currentValue)" as NSString
+            let textSize = valueText.size(withAttributes: labelAttributes)
+            valueText.draw(at: CGPoint(x: 8, y: y - textSize.height / 2), withAttributes: labelAttributes)
+
+            currentValue += yAxisStep
+        }
+
+        // X축 라벨 표시
         for (index, label) in labels.enumerated() {
             guard index < values.count else { break }
 
