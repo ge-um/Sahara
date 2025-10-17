@@ -10,26 +10,11 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class DateSelectionCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.date", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
-        return label
-    }()
-
+final class DateSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "calendar")
-        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.tintColor = ColorSystem.darkGray
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -40,8 +25,8 @@ final class DateSelectionCard: UIView {
         formatter.locale = Locale.current
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
-        label.font = FontSystem.galmuriMono(size: 16)
-        label.textColor = ColorSystem.labelPrimary
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 
@@ -53,45 +38,41 @@ final class DateSelectionCard: UIView {
 
     private let disposeBag = DisposeBag()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.date", comment: ""))
+        configureContent()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(valueLabel)
-        cardView.addSubview(iconImageView)
-        cardView.addSubview(selectButton)
-
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.height.equalTo(80)
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
+    private func configureContent() {
+        let container = UIView()
+        container.addSubview(iconImageView)
+        container.addSubview(valueLabel)
+        container.addSubview(selectButton)
 
         iconImageView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.leading.equalToSuperview().inset(16)
+            make.top.leading.equalToSuperview()
             make.width.height.equalTo(20)
-            make.bottom.equalToSuperview().inset(16)
         }
 
         valueLabel.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview()
             make.leading.equalTo(iconImageView.snp.trailing).offset(8)
+            make.trailing.lessThanOrEqualToSuperview()
             make.centerY.equalTo(iconImageView)
         }
 
         selectButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        addContentView(container)
+
+        cardView.snp.makeConstraints { make in
+            make.height.equalTo(90)
         }
     }
 

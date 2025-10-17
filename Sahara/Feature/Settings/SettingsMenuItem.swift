@@ -8,12 +8,18 @@
 import Foundation
 
 enum SettingsMenuItem: CaseIterable {
+    case language
+    case serviceNews
     case contactDeveloper
     case releaseNotes
     case versionInfo
 
     var title: String {
         switch self {
+        case .language:
+            return NSLocalizedString("settings.language", comment: "")
+        case .serviceNews:
+            return NSLocalizedString("settings.service_news", comment: "")
         case .contactDeveloper:
             return NSLocalizedString("settings.contact_developer", comment: "")
         case .releaseNotes:
@@ -25,6 +31,10 @@ enum SettingsMenuItem: CaseIterable {
 
     var subtitle: String? {
         switch self {
+        case .language:
+            return LanguageManager.shared.currentLanguageDescription
+        case .serviceNews:
+            return NSLocalizedString("settings.service_news_desc", comment: "")
         case .versionInfo:
             return appVersion
         default:
@@ -34,9 +44,18 @@ enum SettingsMenuItem: CaseIterable {
 
     var isSelectable: Bool {
         switch self {
-        case .contactDeveloper, .releaseNotes:
+        case .language, .contactDeveloper, .releaseNotes:
             return true
-        case .versionInfo:
+        case .serviceNews, .versionInfo:
+            return false
+        }
+    }
+
+    var hasToggle: Bool {
+        switch self {
+        case .serviceNews:
+            return true
+        default:
             return false
         }
     }

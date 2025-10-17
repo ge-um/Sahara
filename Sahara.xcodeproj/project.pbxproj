@@ -10,15 +10,28 @@
 		030F3A402E8B6E02000E04B5 /* RxDataSources in Frameworks */ = {isa = PBXBuildFile; productRef = 030F3A3F2E8B6E02000E04B5 /* RxDataSources */; };
 		035A09142E90D2B900221B3E /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 035A09132E90D2B900221B3E /* FirebaseAnalytics */; };
 		035A09162E90D2B900221B3E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 035A09152E90D2B900221B3E /* FirebaseCrashlytics */; };
+		0373CD572EA157EA001DD9A0 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 0373CD562EA157EA001DD9A0 /* FirebaseMessaging */; };
 		039745922E86DFD100BDA511 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 039745912E86DFD100BDA511 /* Alamofire */; };
 		039745952E86E08500BDA511 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 039745942E86E08500BDA511 /* RealmSwift */; };
 		039745962E86E24A00BDA511 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 039745942E86E08500BDA511 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		03BD998F2EA12A9E004F09FF /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 03BD998E2EA12A9E004F09FF /* RealmSwift */; };
+		03BD99902EA12A9E004F09FF /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 03BD998E2EA12A9E004F09FF /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		03E2B5CE2E8664E400A8C8DA /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 03E2B5CD2E8664E400A8C8DA /* .gitignore */; };
 		03E2B5D42E866F0B00A8C8DA /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5D32E866F0B00A8C8DA /* SnapKit */; };
 		03E2B5DA2E866F3C00A8C8DA /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5D92E866F3C00A8C8DA /* RxCocoa */; };
 		03E2B5DC2E866F3C00A8C8DA /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DB2E866F3C00A8C8DA /* RxSwift */; };
 		03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DE2E866F4B00A8C8DA /* Kingfisher */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0346946D2EA127BF0003065C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03E2B5AD2E8664AB00A8C8DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 03E2B5B42E8664AB00A8C8DA;
+			remoteInfo = Sahara;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		0397458C2E86DEDA00BDA511 /* Embed Frameworks */ = {
@@ -32,9 +45,21 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		03BD99912EA12A9E004F09FF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				03BD99902EA12A9E004F09FF /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		034694692EA127BF0003065C /* SaharaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SaharaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5B52E8664AB00A8C8DA /* Sahara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sahara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5CD2E8664E400A8C8DA /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -50,6 +75,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		0346946A2EA127BF0003065C /* SaharaTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SaharaTests;
+			sourceTree = "<group>";
+		};
 		03E2B5B72E8664AB00A8C8DA /* Sahara */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -61,12 +91,21 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		034694662EA127BF0003065C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				03BD998F2EA12A9E004F09FF /* RealmSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		03E2B5B22E8664AB00A8C8DA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				039745952E86E08500BDA511 /* RealmSwift in Frameworks */,
 				03E2B5DA2E866F3C00A8C8DA /* RxCocoa in Frameworks */,
+				0373CD572EA157EA001DD9A0 /* FirebaseMessaging in Frameworks */,
 				035A09142E90D2B900221B3E /* FirebaseAnalytics in Frameworks */,
 				03E2B5D42E866F0B00A8C8DA /* SnapKit in Frameworks */,
 				03E2B5DC2E866F3C00A8C8DA /* RxSwift in Frameworks */,
@@ -80,11 +119,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		032681792E9D5D6C00D44CC4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		03E2B5AC2E8664AB00A8C8DA = {
 			isa = PBXGroup;
 			children = (
 				03E2B5CD2E8664E400A8C8DA /* .gitignore */,
 				03E2B5B72E8664AB00A8C8DA /* Sahara */,
+				0346946A2EA127BF0003065C /* SaharaTests */,
+				032681792E9D5D6C00D44CC4 /* Frameworks */,
 				03E2B5B62E8664AB00A8C8DA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				03E2B5B52E8664AB00A8C8DA /* Sahara.app */,
+				034694692EA127BF0003065C /* SaharaTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,6 +149,31 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		034694682EA127BF0003065C /* SaharaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0346946F2EA127BF0003065C /* Build configuration list for PBXNativeTarget "SaharaTests" */;
+			buildPhases = (
+				034694652EA127BF0003065C /* Sources */,
+				034694662EA127BF0003065C /* Frameworks */,
+				034694672EA127BF0003065C /* Resources */,
+				03BD99912EA12A9E004F09FF /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0346946E2EA127BF0003065C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0346946A2EA127BF0003065C /* SaharaTests */,
+			);
+			name = SaharaTests;
+			packageProductDependencies = (
+				03BD998E2EA12A9E004F09FF /* RealmSwift */,
+			);
+			productName = SaharaTests;
+			productReference = 034694692EA127BF0003065C /* SaharaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		03E2B5B42E8664AB00A8C8DA /* Sahara */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 03E2B5C82E8664AD00A8C8DA /* Build configuration list for PBXNativeTarget "Sahara" */;
@@ -128,6 +202,7 @@
 				030F3A3F2E8B6E02000E04B5 /* RxDataSources */,
 				035A09132E90D2B900221B3E /* FirebaseAnalytics */,
 				035A09152E90D2B900221B3E /* FirebaseCrashlytics */,
+				0373CD562EA157EA001DD9A0 /* FirebaseMessaging */,
 			);
 			productName = Sahara;
 			productReference = 03E2B5B52E8664AB00A8C8DA /* Sahara.app */;
@@ -143,6 +218,10 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					034694682EA127BF0003065C = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 03E2B5B42E8664AB00A8C8DA;
+					};
 					03E2B5B42E8664AB00A8C8DA = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -153,9 +232,10 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 				ko,
 				ja,
+				"zh-Hans",
+				Base,
 			);
 			mainGroup = 03E2B5AC2E8664AB00A8C8DA;
 			minimizedProjectReferenceProxies = 1;
@@ -174,11 +254,19 @@
 			projectRoot = "";
 			targets = (
 				03E2B5B42E8664AB00A8C8DA /* Sahara */,
+				034694682EA127BF0003065C /* SaharaTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		034694672EA127BF0003065C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		03E2B5B32E8664AB00A8C8DA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -216,6 +304,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		034694652EA127BF0003065C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		03E2B5B12E8664AB00A8C8DA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -225,32 +320,93 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0346946E2EA127BF0003065C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 03E2B5B42E8664AB00A8C8DA /* Sahara */;
+			targetProxy = 0346946D2EA127BF0003065C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		034694702EA127BF0003065C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.SaharaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sahara.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Sahara";
+			};
+			name = Debug;
+		};
+		034694712EA127BF0003065C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.SaharaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Sahara.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Sahara";
+			};
+			name = Release;
+		};
 		03E2B5C92E8664AD00A8C8DA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Sahara/Sahara.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = RFZY2ACQ74;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Sahara/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Sahara;
+				INFOPLIST_KEY_CFBundleDisplayName = SaharaDev;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "카드를 만들기 위해 카메라 접근 권한을 허용해주세요.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "비밀 카드를 보기 위해 Face ID 인증이 필요해요";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치를 기록하기 위해 위치 접근 권한을 허용해주세요";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "카드 이미지를 앨범에 저장하기 위해 권한을 허용해주세요.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "카드를 만들기 위해 사진 라이브러리 접근 권한을 허용해주세요.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.miya.Sahara;
+				MARKETING_VERSION = 1.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.Sahara.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -267,6 +423,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Sahara/Sahara.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = RFZY2ACQ74;
@@ -274,17 +431,23 @@
 				INFOPLIST_FILE = Sahara/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Sahara;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_NSCameraUsageDescription = "카드를 만들기 위해 카메라 접근 권한을 허용해주세요.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "비밀 카드를 보기 위해 Face ID 인증이 필요해요";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치를 기록하기 위해 위치 접근 권한을 허용해주세요";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "카드 이미지를 앨범에 저장하기 위해 권한을 허용해주세요.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "카드를 만들기 위해 사진 라이브러리 접근 권한을 허용해주세요.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3.0;
+				MARKETING_VERSION = 1.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.miya.Sahara;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -423,6 +586,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0346946F2EA127BF0003065C /* Build configuration list for PBXNativeTarget "SaharaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				034694702EA127BF0003065C /* Debug */,
+				034694712EA127BF0003065C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		03E2B5B02E8664AB00A8C8DA /* Build configuration list for PBXProject "Sahara" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -518,12 +690,22 @@
 			package = 035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
 		};
+		0373CD562EA157EA001DD9A0 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
 		039745912E86DFD100BDA511 /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 039745902E86DFD100BDA511 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
 		};
 		039745942E86E08500BDA511 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 039745932E86E08500BDA511 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+		03BD998E2EA12A9E004F09FF /* RealmSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 039745932E86E08500BDA511 /* XCRemoteSwiftPackageReference "realm-swift" */;
 			productName = RealmSwift;

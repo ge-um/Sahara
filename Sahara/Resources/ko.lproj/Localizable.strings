@@ -17,6 +17,7 @@
 "gallery.date_view" = "날짜별";
 "gallery.location_view" = "장소별";
 "gallery.theme_view" = "주제별";
+"gallery.folder_view" = "폴더별";
 "gallery.month_format" = "yyyy년 MM월";
 "gallery.empty_message" = "추억을 카드로 남겨보세요!";
 "gallery.empty_button" = "카드 작성하기";
@@ -43,6 +44,7 @@
 "card_info.date" = "날짜";
 "card_info.memo" = "메모";
 "card_info.memo_placeholder" = "메모를 입력해요";
+"card_info.folder" = "폴더";
 "card_info.location" = "위치";
 "card_info.location_placeholder" = "위치를 선택해요";
 "card_info.search_location" = "위치 검색";
@@ -101,6 +103,8 @@
 "media_editor.apply" = "적용";
 "media_editor.sticker_search_placeholder" = "스티커 검색";
 "media_editor.sticker_modal_title" = "스티커";
+"media_editor.undo" = "실행 취소";
+"media_editor.redo" = "다시 실행";
 
 /* Filters */
 "filter.original" = "원본";
@@ -119,11 +123,18 @@
 "biometric.no_biometric" = "Face ID 또는 Touch ID를 사용할 수 없어요";
 "biometric.permission_required" = "생체 인증 권한 필요";
 "biometric.permission_message" = "비밀 카드를 사용하려면 설정에서 Face ID 또는 Touch ID를 활성화해주세요";
+"biometric.permission_denied" = "Face ID 권한이 없어서 사용할 수 없어요";
 
 /* Search */
-"search.placeholder" = "메모를 검색해요";
-"search.no_results" = "검색결과가 없습니다";
-"search.initial_message" = "메모를 검색해보세요";
+"search.placeholder" = "카드를 검색해보세요";
+"search.no_results" = "검색 결과를 찾을 수 없습니다";
+"search.initial_message" = "카드를 검색해주세요";
+"search.recent_searches" = "최근 검색어";
+"search.clear_all" = "전체 삭제";
+"search.clear_all_confirm_title" = "최근 검색어 삭제";
+"search.clear_all_confirm_message" = "모든 최근 검색어를 삭제하시겠어요?";
+"search.delete" = "삭제";
+"search.cancel" = "취소";
 
 /* Stats */
 "stats.title" = "통계";
@@ -148,16 +159,38 @@
 "stats.no_data" = "데이터가 없습니다";
 "stats.increase" = "+%d개";
 "stats.decrease" = "%d개";
+"stats.my_pattern_header" = "나의 카드 작성 패턴";
+"stats.weekday_insight" = "%@에 카드를 자주 만들어요";
+"stats.time_insight" = "%@에 카드를 자주 만들어요";
+"stats.thismonth_insight" = "이번 달 %d개의 카드를 만들었어요";
+"stats.no_data_weekday" = "아직 패턴을 찾을 수 없어요";
+"stats.no_data_time" = "아직 패턴을 찾을 수 없어요";
 
 /* Settings */
 "settings.title" = "설정";
+"settings.section_general" = "일반";
+"settings.section_notifications" = "알림";
+"settings.section_privacy" = "개인정보";
 "settings.section_support" = "지원";
 "settings.section_about" = "정보";
+"settings.language" = "언어";
+"settings.language_desc" = "한국어";
+"settings.service_news" = "서비스 소식";
+"settings.service_news_desc" = "새로운 기능과 업데이트 소식";
+"settings.monthly_report" = "월간 리포트";
+"settings.monthly_report_desc" = "매달 첫째 날 이번 달 요약";
+"settings.memory_reminder" = "추억 리마인더";
+"settings.memory_reminder_desc" = "1년 전 오늘의 추억 알림";
+"settings.milestone" = "마일스톤 축하";
+"settings.milestone_desc" = "10개, 50개, 100개 달성 시 축하";
+"settings.biometric_permission" = "Face ID / Touch ID 권한 설정";
 "settings.contact_developer" = "개발자에게 문의하기";
 "settings.release_notes" = "버전 기록";
 "settings.version_info" = "버전 정보";
 "settings.mail_error_title" = "메일 전송 불가";
 "settings.mail_error_message" = "메일 앱을 사용할 수 없어요";
+"settings.notification_denied_title" = "알림 설정이 필요해요";
+"settings.notification_denied_message" = "설정에서 알림을 허용해주세요";
 
 /* Release Notes */
 "release_notes.title" = "버전 기록";
@@ -165,3 +198,13 @@
 /* Date */
 "date.today" = "오늘";
 "date.days_ago" = "%d일 전";
+
+/* Folder */
+"folder.default" = "기본 폴더";
+
+/* Language */
+"language.title" = "언어 선택";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";

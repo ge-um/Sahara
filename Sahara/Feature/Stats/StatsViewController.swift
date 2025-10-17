@@ -13,7 +13,6 @@ import UIKit
 final class StatsViewController: UIViewController {
     private let viewModel = StatsViewModel()
     private let disposeBag = DisposeBag()
-    private let viewWillAppearRelay = PublishRelay<Void>()
 
     private let customNavigationBar = CustomNavigationBar()
 
@@ -26,7 +25,7 @@ final class StatsViewController: UIViewController {
     private let contentStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 24
+        stackView.spacing = 12
         stackView.alignment = .fill
         return stackView
     }()
@@ -43,7 +42,67 @@ final class StatsViewController: UIViewController {
     private let totalCardView = StatCardView()
     private let thisMonthView = StatCardView()
 
-    private let sectionTitleLabel: UILabel = {
+    private let patternHeaderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "📊 " + NSLocalizedString("stats.my_pattern_header", comment: "")
+        label.font = FontSystem.galmuriMono(size: 16)
+        label.textColor = .black
+        return label
+    }()
+
+    private lazy var weekdayInsightLabel: PaddedLabel = {
+        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = .black
+        label.numberOfLines = 0
+        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.layer.cornerRadius = 12
+        label.clipsToBounds = true
+        label.textAlignment = .left
+        return label
+    }()
+
+    private lazy var timeInsightLabel: PaddedLabel = {
+        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = .black
+        label.numberOfLines = 0
+        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.layer.cornerRadius = 12
+        label.clipsToBounds = true
+        label.textAlignment = .left
+        return label
+    }()
+
+    private lazy var thisMonthInsightLabel: PaddedLabel = {
+        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = .black
+        label.numberOfLines = 0
+        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.layer.cornerRadius = 12
+        label.clipsToBounds = true
+        label.textAlignment = .left
+        return label
+    }()
+
+    private let timeChartTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("stats.time_pattern", comment: "")
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = .black
+        return label
+    }()
+
+    private let weekdayChartTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = .black
+        return label
+    }()
+
+    private let monthlyChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.monthly_chart", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
@@ -52,25 +111,7 @@ final class StatsViewController: UIViewController {
     }()
 
     private let monthlyChartView = SimpleBarChartView()
-
-    private let weekdayTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
-        return label
-    }()
-
     private let weekdayChartView = SimpleBarChartView()
-
-    private let timeTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("stats.time_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
-        return label
-    }()
-
     private let timeChartView = SimpleBarChartView()
 
     private let moodTitleLabel: UILabel = {
@@ -96,28 +137,27 @@ final class StatsViewController: UIViewController {
         customNavigationBar.hideLeftButton()
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewWillAppearRelay.accept(())
-    }
-
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
-        timeChartView.setBarGradient(.saveShareButton)
-        weekdayChartView.setBarGradient(.saveShareButton)
-        monthlyChartView.setBarGradient(.saveShareButton)
+        timeChartView.setBarGradient(.yellowGreen)
+        weekdayChartView.setBarGradient(.yellowGreen)
+        monthlyChartView.setBarGradient(.yellowGreen)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
         scrollView.addSubview(contentStackView)
 
         contentStackView.addArrangedSubview(basicStatsStackView)
-        contentStackView.addArrangedSubview(timeTitleLabel)
+        contentStackView.addArrangedSubview(patternHeaderLabel)
+        contentStackView.addArrangedSubview(weekdayInsightLabel)
+        contentStackView.addArrangedSubview(timeInsightLabel)
+        contentStackView.addArrangedSubview(thisMonthInsightLabel)
+        contentStackView.addArrangedSubview(timeChartTitleLabel)
         contentStackView.addArrangedSubview(timeChartView)
-        contentStackView.addArrangedSubview(weekdayTitleLabel)
+        contentStackView.addArrangedSubview(weekdayChartTitleLabel)
         contentStackView.addArrangedSubview(weekdayChartView)
-        contentStackView.addArrangedSubview(sectionTitleLabel)
+        contentStackView.addArrangedSubview(monthlyChartTitleLabel)
         contentStackView.addArrangedSubview(monthlyChartView)
 //        contentStackView.addArrangedSubview(moodTitleLabel)
 //        contentStackView.addArrangedSubview(moodChartView)
@@ -165,7 +205,7 @@ final class StatsViewController: UIViewController {
     }
 
     private func bind() {
-        let input = StatsViewModel.Input(viewWillAppear: viewWillAppearRelay.asObservable())
+        let input = StatsViewModel.Input()
         let output = viewModel.transform(input: input)
 
         output.basicStats
@@ -214,6 +254,24 @@ final class StatsViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        output.weekdayInsight
+            .drive(with: self) { owner, insight in
+                owner.weekdayInsightLabel.text = "🗓️ " + insight
+            }
+            .disposed(by: disposeBag)
+
+        output.timeInsight
+            .drive(with: self) { owner, insight in
+                owner.timeInsightLabel.text = insight
+            }
+            .disposed(by: disposeBag)
+
+        output.thisMonthInsight
+            .drive(with: self) { owner, insight in
+                owner.thisMonthInsightLabel.text = "📈 " + insight
+            }
+            .disposed(by: disposeBag)
+
 //        output.moodData
 //            .drive(with: self) { owner, data in
 //                let labels = data.map { $0.mood.rawValue.capitalized }
@@ -221,5 +279,30 @@ final class StatsViewController: UIViewController {
 //                owner.moodChartView.configure(labels: labels, values: values)
 //            }
 //            .disposed(by: disposeBag)
+    }
+}
+
+final class PaddedLabel: UILabel {
+    private var padding: UIEdgeInsets
+
+    init(padding: UIEdgeInsets) {
+        self.padding = padding
+        super.init(frame: .zero)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: padding))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + padding.left + padding.right,
+            height: size.height + padding.top + padding.bottom
+        )
     }
 }

@@ -39,10 +39,10 @@ struct MoodData {
 }
 
 final class StatsViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
-        let viewWillAppear: Observable<Void>
     }
 
     struct Output {
@@ -51,20 +51,26 @@ final class StatsViewModel: BaseViewModelProtocol {
         let weekdayData: Driver<[WeekdayData]>
         let timeData: Driver<[TimeData]>
         let moodData: Driver<[MoodData]>
+        let weekdayInsight: Driver<String>
+        let timeInsight: Driver<String>
+        let thisMonthInsight: Driver<String>
+    }
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
     }
 
     func transform(input: Input) -> Output {
-        let realm = try! Realm()
+        let cards = realmManager.observeAllCards()
+            .share(replay: 1, scope: .whileConnected)
 
-        let basicStatsDriver = input.viewWillAppear
-            .map { _ -> BasicStats in
-                let cards = realm.objects(Card.self)
+        let basicStatsDriver = cards
+            .map { cards -> BasicStats in
                 let totalCards = cards.count
-
-                let daysSinceStart = self.calculateDaysSinceStart(cards: Array(cards))
-                let thisMonthCards = self.calculateThisMonthCards(cards: Array(cards))
-                let lastMonthDiff = self.calculateLastMonthDiff(cards: Array(cards))
-                let currentStreak = self.calculateCurrentStreak(cards: Array(cards))
+                let daysSinceStart = self.calculateDaysSinceStart(cards: cards)
+                let thisMonthCards = self.calculateThisMonthCards(cards: cards)
+                let lastMonthDiff = self.calculateLastMonthDiff(cards: cards)
+                let currentStreak = self.calculateCurrentStreak(cards: cards)
 
                 return BasicStats(
                     totalCards: totalCards,
@@ -76,40 +82,80 @@ final class StatsViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorDriveWith: .empty())
 
-        let monthlyDataDriver = input.viewWillAppear
-            .map { _ -> [MonthlyData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateMonthlyData(cards: Array(cards))
-            }
+        let monthlyDataDriver = cards
+            .map { self.calculateMonthlyData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let weekdayDataDriver = input.viewWillAppear
-            .map { _ -> [WeekdayData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateWeekdayData(cards: Array(cards))
-            }
+        let weekdayDataDriver = cards
+            .map { self.calculateWeekdayData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let timeDataDriver = input.viewWillAppear
-            .map { _ -> [TimeData] in
-                let cards = realm.objects(Card.self)
-                return self.calculateTimeData(cards: Array(cards))
-            }
+        let timeDataDriver = cards
+            .map { self.calculateTimeData(cards: $0) }
             .asDriver(onErrorJustReturn: [])
 
-        let moodDataDriver = input.viewWillAppear
-            .map { _ -> [MoodData] in
-                let cards = realm.objects(Card.self)
-                return self.generateMockMoodData(cardCount: cards.count)
-            }
+        let moodDataDriver = cards
+            .map { self.generateMockMoodData(cardCount: $0.count) }
             .asDriver(onErrorJustReturn: [])
+
+        let weekdayInsightDriver = cards
+            .map { cards -> String in
+                guard !cards.isEmpty else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let calendar = Calendar.current
+                var weekdayDict: [Int: Int] = [:]
+
+                for card in cards {
+                    let weekday = calendar.component(.weekday, from: card.createdDate)
+                    weekdayDict[weekday, default: 0] += 1
+                }
+
+                guard let mostFrequentWeekday = weekdayDict.max(by: { $0.value < $1.value }),
+                      mostFrequentWeekday.value > 0 else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let dateFormatter = DateFormatter()
+                dateFormatter.locale = Locale.current
+                dateFormatter.dateFormat = "EEEE"
+
+                var dateComponents = DateComponents()
+                dateComponents.weekday = mostFrequentWeekday.key
+                guard let sampleDate = calendar.nextDate(after: Date(), matching: dateComponents, matchingPolicy: .nextTime) else {
+                    return NSLocalizedString("stats.no_data_weekday", comment: "")
+                }
+
+                let weekdayName = dateFormatter.string(from: sampleDate)
+                return String(format: NSLocalizedString("stats.weekday_insight", comment: ""), weekdayName)
+            }
+            .asDriver(onErrorJustReturn: NSLocalizedString("stats.no_data_weekday", comment: ""))
+
+        let timeInsightDriver = timeDataDriver
+            .map { data -> String in
+                guard let mostFrequent = data.max(by: { $0.count < $1.count }),
+                      mostFrequent.count > 0 else {
+                    return "🌙 " + NSLocalizedString("stats.no_data_time", comment: "")
+                }
+                let emoji = self.getTimeEmoji(for: mostFrequent.timeOfDay)
+                return emoji + " " + String(format: NSLocalizedString("stats.time_insight", comment: ""), mostFrequent.timeOfDay)
+            }
+
+        let thisMonthInsightDriver = basicStatsDriver
+            .map { stats -> String in
+                return String(format: NSLocalizedString("stats.thismonth_insight", comment: ""), stats.thisMonthCards)
+            }
 
         return Output(
             basicStats: basicStatsDriver,
             monthlyData: monthlyDataDriver,
             weekdayData: weekdayDataDriver,
             timeData: timeDataDriver,
-            moodData: moodDataDriver
+            moodData: moodDataDriver,
+            weekdayInsight: weekdayInsightDriver,
+            timeInsight: timeInsightDriver,
+            thisMonthInsight: thisMonthInsightDriver
         )
     }
 
@@ -283,5 +329,25 @@ final class StatsViewModel: BaseViewModelProtocol {
         }
 
         return Array(moodData.prefix(5))
+    }
+
+    private func getTimeEmoji(for timeOfDay: String) -> String {
+        let morningKey = NSLocalizedString("stats.time_morning", comment: "")
+        let afternoonKey = NSLocalizedString("stats.time_afternoon", comment: "")
+        let eveningKey = NSLocalizedString("stats.time_evening", comment: "")
+        let nightKey = NSLocalizedString("stats.time_night", comment: "")
+
+        switch timeOfDay {
+        case morningKey:
+            return "🌅"
+        case afternoonKey:
+            return "☀️"
+        case eveningKey:
+            return "🌆"
+        case nightKey:
+            return "🌙"
+        default:
+            return "🌙"
+        }
     }
 }

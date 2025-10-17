@@ -44,6 +44,12 @@ final class GalleryViewController: UIViewController {
         button.tag = 2
         return button
     }()
+
+    private lazy var folderButton: GradientButton = {
+        let button = GradientButton(title: NSLocalizedString("gallery.folder_view", comment: ""))
+        button.tag = 3
+        return button
+    }()
     
     private lazy var calendarContainerView: UIView = {
         let view = UIView()
@@ -76,6 +82,17 @@ final class GalleryViewController: UIViewController {
         return vc
     }()
 
+    private lazy var folderContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private lazy var folderVC: FolderViewController = {
+        let vc = FolderViewController()
+        return vc
+    }()
+
     private let realm = try! Realm()
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
@@ -97,6 +114,7 @@ final class GalleryViewController: UIViewController {
         setupCalendarView()
         setupMapView()
         setupThemeView()
+        setupFolderView()
         setupCustomNavigationBar()
         bind()
     }
@@ -149,6 +167,15 @@ final class GalleryViewController: UIViewController {
         themeVC.didMove(toParent: self)
     }
 
+    private func setupFolderView() {
+        addChild(folderVC)
+        folderContainerView.addSubview(folderVC.view)
+        folderVC.view.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        folderVC.didMove(toParent: self)
+    }
+
     private func setupMapView() {
         mapView.register(MediaAnnotationView.self, forAnnotationViewWithReuseIdentifier: MediaAnnotation.identifier)
         mapView.register(MediaClusterAnnotationView.self, forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
@@ -176,7 +203,7 @@ final class GalleryViewController: UIViewController {
     }
     
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(emptyStateView)
@@ -184,10 +211,12 @@ final class GalleryViewController: UIViewController {
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
         viewTypeButtonStackView.addArrangedSubview(themeButton)
+        viewTypeButtonStackView.addArrangedSubview(folderButton)
 
         view.addSubview(calendarContainerView)
         view.addSubview(mapView)
         view.addSubview(themeContainerView)
+        view.addSubview(folderContainerView)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -223,6 +252,12 @@ final class GalleryViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().inset(112)
         }
+
+        folderContainerView.snp.makeConstraints { make in
+            make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(112)
+        }
     }
     
     private func bind() {
@@ -241,31 +276,33 @@ final class GalleryViewController: UIViewController {
             .bind(to: viewTypeRelay)
             .disposed(by: disposeBag)
 
+        folderButton.rx.tap
+            .map { GalleryViewType.folder }
+            .bind(to: viewTypeRelay)
+            .disposed(by: disposeBag)
+
         viewTypeRelay
             .asObservable()
+            .do(onNext: { viewType in
+                let viewTypeString: String
+                switch viewType {
+                case .date:
+                    viewTypeString = "calendar"
+                case .location:
+                    viewTypeString = "map"
+                case .theme:
+                    viewTypeString = "theme"
+                case .folder:
+                    viewTypeString = "folder"
+                }
+                AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
+            })
             .bind(with: self) { owner, viewType in
                 owner.updateButtonStyles(selectedType: viewType)
-                let viewTypeString = viewType == .date ? "calendar" : (viewType == .location ? "map" : "theme")
-                AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
             }
             .disposed(by: disposeBag)
 
-        let photoSavedNotification = NotificationCenter.default.rx
-            .notification(AppNotification.photoSaved.name)
-            .map { _ in () }
-
-        let photoDeletedNotification = NotificationCenter.default.rx
-            .notification(AppNotification.photoDeleted.name)
-            .map { _ in () }
-
-        let viewWillAppearObservable = Observable.merge(
-            rx.methodInvoked(#selector(viewWillAppear(_:))).map { _ in () },
-            photoSavedNotification,
-            photoDeletedNotification
-        )
-
         let input = GalleryViewModel.Input(
-            viewWillAppear: viewWillAppearObservable,
             addButtonTapped: Observable.never(),
             previousMonthTapped: Observable.never(),
             nextMonthTapped: Observable.never(),
@@ -285,10 +322,12 @@ final class GalleryViewController: UIViewController {
                     owner.calendarContainerView.isHidden = true
                     owner.mapView.isHidden = true
                     owner.themeContainerView.isHidden = true
+                    owner.folderContainerView.isHidden = true
                 } else {
                     owner.calendarContainerView.isHidden = viewType != .date
                     owner.mapView.isHidden = viewType != .location
                     owner.themeContainerView.isHidden = viewType != .theme
+                    owner.folderContainerView.isHidden = viewType != .folder
 
                     if viewType == .location {
                         owner.loadMapAnnotations()
@@ -298,31 +337,17 @@ final class GalleryViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
-
-        Observable.merge(
-            photoSavedNotification,
-            photoDeletedNotification
-        )
-        .withLatestFrom(output.selectedViewType.asObservable())
-        .bind(with: self) { owner, viewType in
-            if viewType == .location {
-                owner.loadMapAnnotations()
-            } else if viewType == .theme {
-                owner.themeVC.refreshData()
-            }
-        }
-        .disposed(by: disposeBag)
     }
 
     private func updateButtonStyles(selectedType: GalleryViewType) {
-        let buttons = [dateButton, locationButton, themeButton]
-        let types: [GalleryViewType] = [.date, .location, .theme]
+        let buttons = [dateButton, locationButton, themeButton, folderButton]
+        let types: [GalleryViewType] = [.date, .location, .theme, .folder]
 
         for (button, type) in zip(buttons, types) {
             if type == selectedType {
-                button.setGradient(.blueGradient, isSelected: true)
+                button.setGradient(.royalBlue, isSelected: true)
             } else {
-                button.setGradient(.grayGradient, isSelected: false)
+                button.setGradient(.whiteToGray, isSelected: false)
             }
         }
     }
@@ -425,9 +450,12 @@ extension GalleryViewController: MKMapViewDelegate {
 
     private func showGallery(for cards: [Card]) {
         let photoCount = cards.count
-        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
-        let galleryVC = MapViewController(cards: cards, themeCategory: .others, customTitle: title)
+        let cardIds = cards.map { $0.id }
+
+        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
+
+        let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }
 }

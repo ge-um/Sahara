@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import RealmSwift
 
 struct DayItem {
     let date: Date?
-    let cards: [Card]
+    let cards: [CardCalendarItemDTO]
     let isCurrentMonth: Bool
 
     var hasCards: Bool {

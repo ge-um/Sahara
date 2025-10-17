@@ -100,8 +100,8 @@ final class CardDetailViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.saveShareButton)
-        shareButton.applyGradient(.saveShareButton)
+        saveButton.applyGradient(.yellowGreen)
+        shareButton.applyGradient(.yellowGreen)
     }
 
     private func setupCustomNavigationBar() {
@@ -125,7 +125,7 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
@@ -186,8 +186,9 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func openEditView() {
-        guard let card = viewModel.getCard() else { return }
-        let editViewModel = CardInfoViewModel(cardToEdit: card, sourceType: sourceType)
+        let realm = try! Realm()
+        guard let card = realm.object(ofType: Card.self, forPrimaryKey: viewModel.cardId) else { return }
+        let editViewModel = CardInfoViewModel(cardToEdit: card.id, sourceType: sourceType)
         let editVC = CardInfoViewController(viewModel: editViewModel)
         editVC.modalPresentationStyle = .fullScreen
         present(editVC, animated: true)
@@ -249,7 +250,6 @@ final class CardDetailViewController: UIViewController {
 
         output.deleteCompleted
             .drive(with: self) { owner, _ in
-                NotificationCenter.default.post(name: AppNotification.photoDeleted.name, object: nil)
                 if owner.navigationController != nil && owner.presentingViewController == nil {
                     owner.navigationController?.popViewController(animated: true)
                 } else {

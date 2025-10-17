@@ -5,6 +5,7 @@
 "common.share" = "共有";
 "common.ok" = "確認";
 "common.photo_count" = "%d枚の写真";
+"common.app_name" = "サハラ";
 
 /* Tab */
 "tab.gallery" = "ギャラリー";
@@ -16,6 +17,7 @@
 "gallery.date_view" = "日付順";
 "gallery.location_view" = "場所順";
 "gallery.theme_view" = "テーマ順";
+"gallery.folder_view" = "フォルダ順";
 "gallery.month_format" = "yyyy年MM月";
 "gallery.empty_message" = "思い出をカードに残しましょう！";
 "gallery.empty_button" = "カード作成";
@@ -42,10 +44,11 @@
 "card_info.date" = "日付";
 "card_info.memo" = "メモ";
 "card_info.memo_placeholder" = "メモを入力してください";
+"card_info.folder" = "フォルダ";
 "card_info.location" = "位置";
 "card_info.location_placeholder" = "位置を選択してください";
 "card_info.search_location" = "位置検索";
-"card_info.image_required" = "画像は必須です。";
+"card_info.image_required" = "画像は必須です";
 "card_info.delete" = "削除";
 "card_info.delete_button" = "カードを削除";
 "card_info.secret" = "秘密にする";
@@ -59,11 +62,11 @@
 "card_detail.delete_cancel" = "キャンセル";
 
 /* Photo Detail */
-"photo_detail.no_memo" = "メモがありません。";
+"photo_detail.no_memo" = "メモがありません";
 "photo_detail.save_success" = "保存完了";
-"photo_detail.save_success_message" = "カードがアルバムに保存されました。";
+"photo_detail.save_success_message" = "カードがアルバムに保存されました";
 "photo_detail.save_failed" = "保存失敗";
-"photo_detail.image_load_error" = "画像を読み込めません。";
+"photo_detail.image_load_error" = "画像を読み込めません";
 "photo_detail.swipe_left_hint" = "スワイプしてメモを表示";
 "photo_detail.swipe_right_hint" = "スワイプして写真を表示";
 "photo_detail.date_format" = "yyyy年MM月dd日 EEEE";
@@ -73,9 +76,9 @@
 "location_search.placeholder" = "位置検索";
 "location_search.use_current_location" = "現在地を使用";
 "location_search.current_location" = "現在地";
-"location_search.location_error" = "現在地を取得できません。";
+"location_search.location_error" = "現在地を取得できません";
 "location_search.location_permission_title" = "位置情報アクセス権限が必要";
-"location_search.location_permission_message" = "現在地を使用するには設定で位置情報アクセス権限を許可してください。";
+"location_search.location_permission_message" = "設定で位置情報アクセス権限を許可してください";
 
 /* Media Selection */
 "media_selection.title" = "写真選択";
@@ -83,13 +86,13 @@
 "media_selection.library" = "アルバム";
 "media_selection.sticker" = "写真";
 "media_selection.camera_permission_title" = "カメラアクセス権限が必要";
-"media_selection.camera_permission_message" = "写真を撮影するには設定でカメラアクセス権限を許可してください。";
+"media_selection.camera_permission_message" = "設定でカメラアクセス権限を許可してください";
 "media_selection.photo_permission_title" = "写真アクセス権限が必要";
-"media_selection.photo_permission_message" = "写真を選択するには設定でフォトライブラリアクセス権限を許可してください。";
+"media_selection.photo_permission_message" = "設定でフォトライブラリアクセス権限を許可してください";
 "media_selection.go_to_settings" = "設定に移動";
 
 /* Media Editor */
-"media_editor.title" = "メディア編集";
+"media_editor.title" = "写真編集";
 "media_editor.done" = "完了";
 "media_editor.cancel" = "キャンセル";
 "media_editor.sticker" = "ステッカー";
@@ -100,12 +103,14 @@
 "media_editor.apply" = "適用";
 "media_editor.sticker_search_placeholder" = "ステッカーを検索";
 "media_editor.sticker_modal_title" = "ステッカー";
+"media_editor.undo" = "元に戻す";
+"media_editor.redo" = "やり直し";
 
 /* Filters */
 "filter.original" = "オリジナル";
 "filter.noir" = "ノワール";
 "filter.sepia" = "セピア";
-"filter.instant" = "インスタント";
+"filter.instant" = "ビンテージ";
 "filter.chrome" = "クローム";
 "filter.fade" = "フェード";
 "filter.mono" = "モノ";
@@ -117,12 +122,19 @@
 "biometric.reason" = "秘密カードを表示するには認証が必要です";
 "biometric.no_biometric" = "Face IDまたはTouch IDを使用できません";
 "biometric.permission_required" = "生体認証権限が必要";
-"biometric.permission_message" = "秘密カードを使用するには、設定でFace IDまたはTouch IDを有効にしてください";
+"biometric.permission_message" = "設定でFace IDまたはTouch IDを有効にしてください";
+"biometric.permission_denied" = "Face ID権限がないため使用できません";
 
 /* Search */
-"search.placeholder" = "メモを検索";
-"search.no_results" = "検索結果がありません";
-"search.initial_message" = "メモを検索してみてください";
+"search.placeholder" = "カードを検索してみてください";
+"search.no_results" = "検索結果が見つかりません";
+"search.initial_message" = "カードを検索してください";
+"search.recent_searches" = "最近の検索";
+"search.clear_all" = "すべて削除";
+"search.clear_all_confirm_title" = "最近の検索を削除";
+"search.clear_all_confirm_message" = "すべての最近の検索を削除しますか？";
+"search.delete" = "削除";
+"search.cancel" = "キャンセル";
 
 /* Stats */
 "stats.title" = "統計";
@@ -147,16 +159,38 @@
 "stats.no_data" = "データがありません";
 "stats.increase" = "+%d枚";
 "stats.decrease" = "%d枚";
+"stats.my_pattern_header" = "私のカード作成パターン";
+"stats.weekday_insight" = "主に%@にカードを作ります";
+"stats.time_insight" = "主に%@にカードを作ります";
+"stats.thismonth_insight" = "今月%d枚のカードを作りました";
+"stats.no_data_weekday" = "まだパターンが見つかりません";
+"stats.no_data_time" = "まだパターンが見つかりません";
 
 /* Settings */
 "settings.title" = "設定";
+"settings.section_general" = "一般";
+"settings.section_notifications" = "通知";
+"settings.section_privacy" = "プライバシー";
 "settings.section_support" = "サポート";
 "settings.section_about" = "情報";
+"settings.language" = "言語";
+"settings.language_desc" = "日本語";
+"settings.service_news" = "サービスニュース";
+"settings.service_news_desc" = "新機能とアップデート情報";
+"settings.monthly_report" = "月間レポート";
+"settings.monthly_report_desc" = "毎月1日に今月の要約";
+"settings.memory_reminder" = "思い出リマインダー";
+"settings.memory_reminder_desc" = "1年前の今日の思い出";
+"settings.milestone" = "マイルストーン";
+"settings.milestone_desc" = "10枚、50枚、100枚達成時に祝福";
+"settings.biometric_permission" = "Face ID / Touch ID設定";
 "settings.contact_developer" = "開発者に問い合わせ";
 "settings.release_notes" = "バージョン履歴";
 "settings.version_info" = "バージョン情報";
 "settings.mail_error_title" = "メール送信不可";
-"settings.mail_error_message" = "メールアプリを使用できません。";
+"settings.mail_error_message" = "メールアプリを使用できません";
+"settings.notification_denied_title" = "通知設定が必要です";
+"settings.notification_denied_message" = "設定で通知を許可してください";
 
 /* Release Notes */
 "release_notes.title" = "バージョン履歴";
@@ -164,3 +198,13 @@
 /* Date */
 "date.today" = "今日";
 "date.days_ago" = "%d日前";
+
+/* Folder */
+"folder.default" = "デフォルトフォルダ";
+
+/* Language */
+"language.title" = "言語";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";

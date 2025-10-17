@@ -38,6 +38,7 @@ final class CardInfoView: UIView {
 
     let dateCard = DateSelectionCard()
     let memoCard = MemoCard()
+    let folderCard = FolderSelectionCard()
     let locationCard = LocationSelectionCard()
     let biometricLockCard = BiometricLockCard()
     let deleteCard = DeleteCard()
@@ -61,6 +62,7 @@ final class CardInfoView: UIView {
         contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         contentView.addSubview(memoCard)
+        contentView.addSubview(folderCard)
         contentView.addSubview(locationCard)
         contentView.addSubview(biometricLockCard)
         contentView.addSubview(deleteCard)
@@ -96,8 +98,13 @@ final class CardInfoView: UIView {
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
-        locationCard.snp.makeConstraints { make in
+        folderCard.snp.makeConstraints { make in
             make.top.equalTo(memoCard.snp.bottom).offset(16)
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        locationCard.snp.makeConstraints { make in
+            make.top.equalTo(folderCard.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
@@ -136,7 +143,7 @@ final class CardInfoView: UIView {
     }
 
     func applyGradients() {
-        photoSelectButton.applyGradient(.barBack)
-        locationCard.searchButton.applyGradient(.searchLocationButton)
+        photoSelectButton.applyGradient(.paleBlueToGray)
+        locationCard.searchButton.applyGradient(.lemonToLime)
     }
 }

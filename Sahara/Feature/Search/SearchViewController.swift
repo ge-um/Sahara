@@ -17,12 +17,6 @@ final class SearchViewController: UIViewController {
 
     private let customNavigationBar = CustomNavigationBar()
 
-    private let searchBarBackgroundView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.transparentCardBackground
-        view.layer.cornerRadius = 12
-        return view
-    }()
 
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
@@ -61,6 +55,7 @@ final class SearchViewController: UIViewController {
         return label
     }()
 
+
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationController?.setNavigationBarHidden(true, animated: false)
@@ -86,10 +81,9 @@ final class SearchViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(searchBarBackgroundView)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
         view.addSubview(emptyStateLabel)
@@ -100,24 +94,21 @@ final class SearchViewController: UIViewController {
             make.height.equalTo(54)
         }
 
-        searchBarBackgroundView.snp.makeConstraints { make in
+        searchBar.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(8)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(48)
         }
 
-        searchBar.snp.makeConstraints { make in
-            make.edges.equalTo(searchBarBackgroundView)
-        }
-
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(10)
+            make.top.equalTo(searchBar.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(24)
             make.bottom.equalToSuperview().inset(90)
         }
 
         emptyStateLabel.snp.makeConstraints { make in
-            make.center.equalTo(collectionView)
+            make.centerX.equalTo(collectionView)
+            make.top.equalTo(collectionView).offset(100)
             make.horizontalEdges.equalToSuperview().inset(40)
         }
     }
@@ -136,24 +127,30 @@ final class SearchViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.cards
-            .map { !$0.isEmpty }
-            .drive(with: self) { owner, hasResults in
-                owner.collectionView.isHidden = !hasResults
-                owner.emptyStateLabel.isHidden = hasResults
-            }
-            .disposed(by: disposeBag)
+        Observable.combineLatest(
+            output.cards.asObservable(),
+            output.emptyState.asObservable()
+        )
+        .observe(on: MainScheduler.instance)
+        .bind(with: self) { owner, data in
+            let (cards, state) = data
+            let hasResults = !cards.isEmpty
 
-        output.emptyState
-            .drive(with: self) { owner, state in
+            owner.collectionView.isHidden = !hasResults
+
+            if hasResults {
+                owner.emptyStateLabel.isHidden = true
+            } else {
                 switch state {
                 case .initial:
-                    owner.emptyStateLabel.text = NSLocalizedString("search.initial_message", comment: "")
+                    owner.emptyStateLabel.isHidden = true
                 case .noResults:
+                    owner.emptyStateLabel.isHidden = false
                     owner.emptyStateLabel.text = NSLocalizedString("search.no_results", comment: "")
                 }
             }
-            .disposed(by: disposeBag)
+        }
+        .disposed(by: disposeBag)
 
         output.navigateToDetail
             .drive(with: self) { owner, cardId in
@@ -165,8 +162,12 @@ final class SearchViewController: UIViewController {
                             let detailVC = CardDetailViewController(cardId: cardId, sourceType: .searchView)
                             owner.navigationController?.pushViewController(detailVC, animated: true)
                         } else {
-                            if let error = error {
-                                owner.showToast(message: error.localizedDescription)
+                            if let error = error as NSError? {
+                                if error.domain == "BiometricPermissionError" {
+                                    owner.showBiometricPermissionAlert()
+                                } else {
+                                    owner.showToast(message: error.localizedDescription)
+                                }
                             }
                         }
                     }
@@ -203,14 +204,7 @@ final class SearchCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let blurEffectView: UIVisualEffectView = {
-        let blurEffect = UIBlurEffect(style: .extraLight)
-        let effectView = UIVisualEffectView(effect: blurEffect)
-        effectView.layer.cornerRadius = 8
-        effectView.clipsToBounds = true
-        effectView.isHidden = true
-        return effectView
-    }()
+    private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
 
     override init(frame: CGRect) {
         super.init(frame: frame)

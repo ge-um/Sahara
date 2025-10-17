@@ -1,0 +1,210 @@
+/* Common */
+"common.save" = "保存";
+"common.cancel" = "取消";
+"common.done" = "完成";
+"common.share" = "分享";
+"common.ok" = "确定";
+"common.photo_count" = "%d张照片";
+"common.app_name" = "撒哈拉";
+
+/* Tab */
+"tab.gallery" = "图库";
+"tab.search" = "搜索";
+"tab.stats" = "统计";
+"tab.settings" = "设置";
+
+/* Gallery */
+"gallery.date_view" = "按日期";
+"gallery.location_view" = "按地点";
+"gallery.theme_view" = "按主题";
+"gallery.folder_view" = "按文件夹";
+"gallery.month_format" = "yyyy年MM月";
+"gallery.empty_message" = "记录您的回忆吧！";
+"gallery.empty_button" = "创建卡片";
+
+/* Theme Categories */
+"theme.people" = "人物";
+"theme.food" = "食物";
+"theme.animals" = "动物";
+"theme.nature" = "自然";
+"theme.buildings" = "建筑";
+"theme.others" = "其他";
+
+/* Weekdays */
+"weekday.sunday" = "日";
+"weekday.monday" = "一";
+"weekday.tuesday" = "二";
+"weekday.wednesday" = "三";
+"weekday.thursday" = "四";
+"weekday.friday" = "五";
+"weekday.saturday" = "六";
+
+/* Card Info */
+"card_info.title" = "卡片信息";
+"card_info.date" = "日期";
+"card_info.memo" = "备忘录";
+"card_info.memo_placeholder" = "输入备忘录";
+"card_info.folder" = "文件夹";
+"card_info.location" = "位置";
+"card_info.location_placeholder" = "选择位置";
+"card_info.search_location" = "搜索位置";
+"card_info.image_required" = "图片是必需的";
+"card_info.delete" = "删除";
+"card_info.delete_button" = "删除卡片";
+"card_info.secret" = "设为私密";
+"card_info.secret_description" = "Face ID锁定";
+
+/* Card Detail */
+"card_detail.title" = "查看卡片";
+"card_detail.delete_title" = "删除卡片";
+"card_detail.delete_message" = "确定要删除此卡片吗？";
+"card_detail.delete_confirm" = "删除";
+"card_detail.delete_cancel" = "取消";
+
+/* Photo Detail */
+"photo_detail.no_memo" = "没有备忘录";
+"photo_detail.save_success" = "保存成功";
+"photo_detail.save_success_message" = "卡片已保存到相册";
+"photo_detail.save_failed" = "保存失败";
+"photo_detail.image_load_error" = "无法加载图片";
+"photo_detail.swipe_left_hint" = "滑动查看备忘录";
+"photo_detail.swipe_right_hint" = "滑动查看照片";
+"photo_detail.date_format" = "yyyy年MM月dd日 EEEE";
+
+/* Location Search */
+"location_search.title" = "搜索位置";
+"location_search.placeholder" = "搜索位置";
+"location_search.use_current_location" = "使用当前位置";
+"location_search.current_location" = "当前位置";
+"location_search.location_error" = "无法获取当前位置";
+"location_search.location_permission_title" = "需要位置权限";
+"location_search.location_permission_message" = "请在设置中允许位置权限";
+
+/* Media Selection */
+"media_selection.title" = "选择照片";
+"media_selection.camera" = "相机";
+"media_selection.library" = "相册";
+"media_selection.sticker" = "照片";
+"media_selection.camera_permission_title" = "需要相机权限";
+"media_selection.camera_permission_message" = "请在设置中允许相机权限";
+"media_selection.photo_permission_title" = "需要照片权限";
+"media_selection.photo_permission_message" = "请在设置中允许照片库权限";
+"media_selection.go_to_settings" = "前往设置";
+
+/* Media Editor */
+"media_editor.title" = "照片编辑";
+"media_editor.done" = "完成";
+"media_editor.cancel" = "取消";
+"media_editor.sticker" = "贴纸";
+"media_editor.drawing" = "绘画";
+"media_editor.filter" = "滤镜";
+"media_editor.photo" = "照片";
+"media_editor.crop" = "裁剪";
+"media_editor.apply" = "应用";
+"media_editor.sticker_search_placeholder" = "搜索贴纸";
+"media_editor.sticker_modal_title" = "贴纸";
+"media_editor.undo" = "撤销";
+"media_editor.redo" = "重做";
+
+/* Filters */
+"filter.original" = "原图";
+"filter.noir" = "黑白";
+"filter.sepia" = "复古";
+"filter.instant" = "怀旧";
+"filter.chrome" = "铬黄";
+"filter.fade" = "褪色";
+"filter.mono" = "单色";
+"filter.process" = "冲印";
+"filter.transfer" = "转印";
+"filter.tonal" = "色调";
+
+/* Biometric */
+"biometric.reason" = "查看私密卡片需要身份验证";
+"biometric.no_biometric" = "无法使用Face ID或Touch ID";
+"biometric.permission_required" = "需要生物识别权限";
+"biometric.permission_message" = "请在设置中启用Face ID或Touch ID";
+"biometric.permission_denied" = "没有Face ID权限，无法使用";
+
+/* Search */
+"search.placeholder" = "搜索卡片";
+"search.no_results" = "未找到结果";
+"search.initial_message" = "请搜索卡片";
+"search.recent_searches" = "最近搜索";
+"search.clear_all" = "全部清除";
+"search.clear_all_confirm_title" = "清除最近搜索";
+"search.clear_all_confirm_message" = "确定要删除所有最近搜索吗？";
+"search.delete" = "删除";
+"search.cancel" = "取消";
+
+/* Stats */
+"stats.title" = "统计";
+"stats.total_cards" = "总卡片数";
+"stats.days_since_start" = "记录天数";
+"stats.this_month" = "本月";
+"stats.vs_last_month" = "对比上月";
+"stats.current_streak" = "连续记录";
+"stats.monthly_chart" = "月度卡片";
+"stats.weekday_pattern" = "星期模式";
+"stats.time_pattern" = "时间模式";
+"stats.top_locations" = "常去地点";
+"stats.unique_locations" = "访问地点";
+"stats.mood_distribution" = "情绪分布";
+"stats.days_unit" = "天";
+"stats.cards_unit" = "张";
+"stats.locations_unit" = "个";
+"stats.time_morning" = "早晨";
+"stats.time_afternoon" = "下午";
+"stats.time_evening" = "傍晚";
+"stats.time_night" = "夜晚";
+"stats.no_data" = "暂无数据";
+"stats.increase" = "+%d张";
+"stats.decrease" = "%d张";
+"stats.my_pattern_header" = "我的卡片创建模式";
+"stats.weekday_insight" = "经常在%@创建卡片";
+"stats.time_insight" = "经常在%@创建卡片";
+"stats.thismonth_insight" = "本月创建了%d张卡片";
+"stats.no_data_weekday" = "数据不足";
+"stats.no_data_time" = "数据不足";
+
+/* Settings */
+"settings.title" = "设置";
+"settings.section_general" = "通用";
+"settings.section_notifications" = "通知";
+"settings.section_privacy" = "隐私";
+"settings.section_support" = "支持";
+"settings.section_about" = "关于";
+"settings.language" = "语言";
+"settings.language_desc" = "简体中文";
+"settings.service_news" = "服务动态";
+"settings.service_news_desc" = "新功能和更新消息";
+"settings.monthly_report" = "每月报告";
+"settings.monthly_report_desc" = "每月1日的本月摘要";
+"settings.memory_reminder" = "回忆提醒";
+"settings.memory_reminder_desc" = "一年前今天的回忆";
+"settings.milestone" = "里程碑";
+"settings.milestone_desc" = "达成10、50、100张时庆祝";
+"settings.biometric_permission" = "Face ID / Touch ID设置";
+"settings.contact_developer" = "联系开发者";
+"settings.release_notes" = "版本记录";
+"settings.version_info" = "版本信息";
+"settings.mail_error_title" = "无法发送邮件";
+"settings.mail_error_message" = "邮件应用不可用";
+"settings.notification_denied_title" = "需要通知设置";
+"settings.notification_denied_message" = "请在设置中启用通知";
+
+/* Release Notes */
+"release_notes.title" = "版本记录";
+
+/* Date */
+"date.today" = "今天";
+"date.days_ago" = "%d天前";
+
+/* Folder */
+"folder.default" = "默认文件夹";
+
+/* Language */
+"language.title" = "语言";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";

@@ -9,26 +9,51 @@ import SnapKit
 import UIKit
 
 final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
+    var onToggleChanged: ((Bool) -> Void)?
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelPrimary
+        label.textColor = ColorSystem.darkGray
+        return label
+    }()
+
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = FontSystem.galmuriMono(size: 10)
+        label.textColor = ColorSystem.charcoal
+        label.numberOfLines = 0
         return label
     }()
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelSecondary
+        label.textColor = ColorSystem.charcoal
         return label
     }()
 
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = ColorSystem.labelPrimary
+        imageView.tintColor = ColorSystem.darkGray
         imageView.contentMode = .scaleAspectFit
         return imageView
+    }()
+
+    private lazy var toggleSwitch: UISwitch = {
+        let toggle = UISwitch()
+        toggle.onTintColor = ColorSystem.skyBlue
+        toggle.addTarget(self, action: #selector(toggleChanged), for: .valueChanged)
+        return toggle
+    }()
+
+    private var labelStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 4
+        stack.alignment = .leading
+        return stack
     }()
 
     override init(frame: CGRect) {
@@ -43,13 +68,18 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private func configureUI() {
         backgroundColor = .clear
 
-        contentView.addSubview(titleLabel)
+        labelStackView.addArrangedSubview(titleLabel)
+        labelStackView.addArrangedSubview(descriptionLabel)
+
+        contentView.addSubview(labelStackView)
         contentView.addSubview(subtitleLabel)
         contentView.addSubview(chevronImageView)
+        contentView.addSubview(toggleSwitch)
 
-        titleLabel.snp.makeConstraints { make in
+        labelStackView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
             make.centerY.equalToSuperview()
+            make.trailing.lessThanOrEqualTo(toggleSwitch.snp.leading).offset(-12)
         }
 
         subtitleLabel.snp.makeConstraints { make in
@@ -62,18 +92,42 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             make.centerY.equalToSuperview()
             make.width.height.equalTo(20)
         }
+
+        toggleSwitch.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(20)
+            make.centerY.equalToSuperview()
+        }
+    }
+
+    @objc private func toggleChanged() {
+        onToggleChanged?(toggleSwitch.isOn)
     }
 
     func configure(with item: SettingsMenuItem) {
         titleLabel.text = item.title
 
-        if let subtitle = item.subtitle {
-            subtitleLabel.text = subtitle
-            subtitleLabel.isHidden = false
-            chevronImageView.isHidden = true
-        } else {
+        if item.hasToggle {
+            descriptionLabel.text = item.subtitle
+            descriptionLabel.isHidden = item.subtitle == nil
+            toggleSwitch.isHidden = false
             subtitleLabel.isHidden = true
-            chevronImageView.isHidden = false
+            chevronImageView.isHidden = true
+
+            if case .serviceNews = item {
+                toggleSwitch.setOn(NotificationSettings.shared.isServiceNewsEnabled, animated: false)
+            }
+        } else {
+            descriptionLabel.isHidden = true
+            toggleSwitch.isHidden = true
+
+            if let subtitle = item.subtitle {
+                subtitleLabel.text = subtitle
+                subtitleLabel.isHidden = false
+                chevronImageView.isHidden = true
+            } else {
+                subtitleLabel.isHidden = true
+                chevronImageView.isHidden = false
+            }
         }
     }
 }
