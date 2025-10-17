@@ -5,6 +5,7 @@
 "common.share" = "共有";
 "common.ok" = "確認";
 "common.photo_count" = "%d枚の写真";
+"common.app_name" = "サハラ";
 
 /* Tab */
 "tab.gallery" = "ギャラリー";
@@ -167,10 +168,13 @@
 
 /* Settings */
 "settings.title" = "設定";
+"settings.section_general" = "一般";
 "settings.section_notifications" = "通知";
 "settings.section_privacy" = "プライバシー";
 "settings.section_support" = "サポート";
 "settings.section_about" = "情報";
+"settings.language" = "言語";
+"settings.language_desc" = "日本語";
 "settings.weekly_report" = "週間レポート";
 "settings.weekly_report_desc" = "毎週日曜日の夜に記録要約";
 "settings.biometric_permission" = "Face ID / Touch ID設定";
@@ -191,3 +195,10 @@
 
 /* Folder */
 "folder.default" = "デフォルトフォルダ";
+
+/* Language */
+"language.title" = "言語";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";

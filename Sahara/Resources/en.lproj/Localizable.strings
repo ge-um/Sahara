@@ -168,10 +168,13 @@
 
 /* Settings */
 "settings.title" = "Settings";
+"settings.section_general" = "General";
 "settings.section_notifications" = "Notifications";
 "settings.section_privacy" = "Privacy";
 "settings.section_support" = "Support";
 "settings.section_about" = "About";
+"settings.language" = "Language";
+"settings.language_desc" = "English";
 "settings.weekly_report" = "Weekly Report";
 "settings.weekly_report_desc" = "Summary every Sunday evening";
 "settings.monthly_report" = "Monthly Report";
@@ -198,3 +201,10 @@
 
 /* Folder */
 "folder.default" = "Default Folder";
+
+/* Language */
+"language.title" = "Language";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";

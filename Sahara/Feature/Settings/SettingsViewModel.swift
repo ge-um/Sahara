@@ -19,12 +19,14 @@ final class SettingsViewModel: BaseViewModelProtocol {
 
     struct Output {
         let sections: Driver<[SettingsSection]>
+        let openLanguageSelection: Driver<Void>
         let openMailComposer: Driver<String>
         let openReleaseNotes: Driver<Void>
     }
 
     func transform(input: Input) -> Output {
         let defaultSections = [
+            SettingsSection(type: .general, items: [.language]),
             SettingsSection(type: .notifications, items: [.weeklyReport]),
             SettingsSection(type: .support, items: [.contactDeveloper]),
             SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])
@@ -33,6 +35,17 @@ final class SettingsViewModel: BaseViewModelProtocol {
         let sections = input.viewWillAppear
             .map { _ in defaultSections }
             .asDriver(onErrorJustReturn: defaultSections)
+
+        let openLanguageSelection = input.itemSelected
+            .compactMap { item in
+                switch item {
+                case .language:
+                    return ()
+                default:
+                    return nil
+                }
+            }
+            .asDriver(onErrorDriveWith: .empty())
 
         let openMailComposer = input.itemSelected
             .compactMap { item in
@@ -58,6 +71,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
 
         return Output(
             sections: sections,
+            openLanguageSelection: openLanguageSelection,
             openMailComposer: openMailComposer,
             openReleaseNotes: openReleaseNotes
         )
