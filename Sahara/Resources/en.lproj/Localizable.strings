@@ -48,7 +48,7 @@
 "card_info.location" = "Location";
 "card_info.location_placeholder" = "Select location";
 "card_info.search_location" = "Search Location";
-"card_info.image_required" = "Image is required.";
+"card_info.image_required" = "Image is required";
 "card_info.delete" = "Delete";
 "card_info.delete_button" = "Delete Card";
 "card_info.secret" = "Make Secret";
@@ -62,11 +62,11 @@
 "card_detail.delete_cancel" = "Cancel";
 
 /* Photo Detail */
-"photo_detail.no_memo" = "No memo available.";
+"photo_detail.no_memo" = "No memo";
 "photo_detail.save_success" = "Saved";
-"photo_detail.save_success_message" = "Card saved to album.";
+"photo_detail.save_success_message" = "Card saved to album";
 "photo_detail.save_failed" = "Save Failed";
-"photo_detail.image_load_error" = "Unable to load image.";
+"photo_detail.image_load_error" = "Unable to load image";
 "photo_detail.swipe_left_hint" = "Swipe to view memo";
 "photo_detail.swipe_right_hint" = "Swipe to view photo";
 "photo_detail.date_format" = "EEEE, MMMM d, yyyy";
@@ -76,9 +76,9 @@
 "location_search.placeholder" = "Search location";
 "location_search.use_current_location" = "Use Current Location";
 "location_search.current_location" = "Current Location";
-"location_search.location_error" = "Unable to get current location.";
+"location_search.location_error" = "Unable to get current location";
 "location_search.location_permission_title" = "Location Access Required";
-"location_search.location_permission_message" = "Please allow location access in Settings to use your current location.";
+"location_search.location_permission_message" = "Please allow location access in Settings";
 
 /* Media Selection */
 "media_selection.title" = "Select Photo";
@@ -86,13 +86,13 @@
 "media_selection.library" = "Library";
 "media_selection.sticker" = "Photo";
 "media_selection.camera_permission_title" = "Camera Access Required";
-"media_selection.camera_permission_message" = "Please allow camera access in Settings to take photos.";
+"media_selection.camera_permission_message" = "Please allow camera access in Settings";
 "media_selection.photo_permission_title" = "Photo Access Required";
-"media_selection.photo_permission_message" = "Please allow photo library access in Settings to select photos.";
+"media_selection.photo_permission_message" = "Please allow photo library access in Settings";
 "media_selection.go_to_settings" = "Go to Settings";
 
 /* Media Editor */
-"media_editor.title" = "Media Editor";
+"media_editor.title" = "Photo Editor";
 "media_editor.done" = "Done";
 "media_editor.cancel" = "Cancel";
 "media_editor.sticker" = "Sticker";
@@ -110,7 +110,7 @@
 "filter.original" = "Original";
 "filter.noir" = "Noir";
 "filter.sepia" = "Sepia";
-"filter.instant" = "Instant";
+"filter.instant" = "Vintage";
 "filter.chrome" = "Chrome";
 "filter.fade" = "Fade";
 "filter.mono" = "Mono";
@@ -122,27 +122,27 @@
 "biometric.reason" = "Authentication required to view secret card";
 "biometric.no_biometric" = "Face ID or Touch ID is not available";
 "biometric.permission_required" = "Biometric Permission Required";
-"biometric.permission_message" = "Please enable Face ID or Touch ID in Settings to use secret cards";
+"biometric.permission_message" = "Please enable Face ID or Touch ID in Settings";
 "biometric.permission_denied" = "Cannot use without Face ID permission";
 
 /* Search */
 "search.placeholder" = "Search your cards";
-"search.no_results" = "No search results found";
+"search.no_results" = "No results found";
 "search.initial_message" = "Please search your cards";
 "search.recent_searches" = "Recent Searches";
 "search.clear_all" = "Clear All";
 "search.clear_all_confirm_title" = "Clear Recent Searches";
-"search.clear_all_confirm_message" = "Are you sure you want to clear all recent searches?";
+"search.clear_all_confirm_message" = "Delete all recent searches?";
 "search.delete" = "Delete";
 "search.cancel" = "Cancel";
 
 /* Stats */
 "stats.title" = "Stats";
-"stats.total_cards" = "Total";
-"stats.days_since_start" = "Days";
+"stats.total_cards" = "Total Cards";
+"stats.days_since_start" = "Days Recorded";
 "stats.this_month" = "This Month";
 "stats.vs_last_month" = "vs Last Month";
-"stats.current_streak" = "Streak";
+"stats.current_streak" = "Current Streak";
 "stats.monthly_chart" = "Monthly Cards";
 "stats.weekday_pattern" = "Weekday Pattern";
 "stats.time_pattern" = "Time Pattern";
@@ -188,9 +188,9 @@
 "settings.release_notes" = "Release Notes";
 "settings.version_info" = "Version";
 "settings.mail_error_title" = "Mail Unavailable";
-"settings.mail_error_message" = "Mail app is not available.";
+"settings.mail_error_message" = "Mail app is not available";
 "settings.notification_denied_title" = "Notification Settings Required";
-"settings.notification_denied_message" = "Please enable notifications in Settings.";
+"settings.notification_denied_message" = "Please enable notifications in Settings";
 
 /* Release Notes */
 "release_notes.title" = "Release Notes";
