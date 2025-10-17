@@ -14,22 +14,13 @@ final class InitialLanguageSelectionViewController: UIViewController {
     private let disposeBag = DisposeBag()
     var onLanguageSelected: (() -> Void)?
 
+    private var selectedLanguage: Language
+
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "언어를 선택해주세요"
         label.font = FontSystem.galmuriMono(size: 24)
         label.textColor = ColorSystem.darkGray
         label.textAlignment = .center
-        return label
-    }()
-
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Please select your language"
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.charcoal
-        label.textAlignment = .center
-        label.numberOfLines = 0
         return label
     }()
 
@@ -43,73 +34,101 @@ final class InitialLanguageSelectionViewController: UIViewController {
         return tableView
     }()
 
+    private let confirmButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = ColorSystem.skyBlue
+        config.baseForegroundColor = ColorSystem.white
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 32, bottom: 16, trailing: 32)
+
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 16)
+        config.attributedTitle = AttributedString("", attributes: titleAttr)
+
+        button.configuration = config
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        return button
+    }()
+
+    init() {
+        self.selectedLanguage = LanguageManager.shared.systemLanguage
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         bind()
-        setupInitialLanguage()
+        updateLanguage(selectedLanguage)
     }
 
     private func configureUI() {
         view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
 
         view.addSubview(titleLabel)
-        view.addSubview(descriptionLabel)
         view.addSubview(tableView)
+        view.addSubview(confirmButton)
 
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(80)
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
-        descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
         tableView.snp.makeConstraints { make in
-            make.top.equalTo(descriptionLabel.snp.bottom).offset(40)
+            make.top.equalTo(titleLabel.snp.bottom).offset(40)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(240)
         }
+
+        confirmButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
+            make.centerX.equalToSuperview()
+        }
     }
 
-    private func setupInitialLanguage() {
-        let systemLanguage = LanguageManager.shared.systemLanguage
-
-        if !LanguageManager.shared.isSupportedSystemLanguage {
+    private func updateLanguage(_ language: Language) {
+        switch language {
+        case .korean:
+            titleLabel.text = "언어를 선택해주세요"
+            updateButtonTitle("확인")
+        case .english:
             titleLabel.text = "Please select your language"
-            descriptionLabel.text = ""
-        } else {
-            switch systemLanguage {
-            case .korean:
-                titleLabel.text = "언어를 선택해주세요"
-                descriptionLabel.text = ""
-            case .english:
-                titleLabel.text = "Please select your language"
-                descriptionLabel.text = ""
-            case .japanese:
-                titleLabel.text = "言語を選択してください"
-                descriptionLabel.text = ""
-            case .chinese:
-                titleLabel.text = "请选择语言"
-                descriptionLabel.text = ""
-            }
+            updateButtonTitle("Confirm")
+        case .japanese:
+            titleLabel.text = "言語を選択してください"
+            updateButtonTitle("確認")
+        case .chinese:
+            titleLabel.text = "请选择语言"
+            updateButtonTitle("确认")
         }
+    }
+
+    private func updateButtonTitle(_ title: String) {
+        var config = confirmButton.configuration
+        var titleAttr = AttributeContainer()
+        titleAttr.font = FontSystem.galmuriMono(size: 16)
+        config?.attributedTitle = AttributedString(title, attributes: titleAttr)
+        confirmButton.configuration = config
     }
 
     private func bind() {
         let languages = Observable.just(Language.allCases)
 
         languages
-            .bind(to: tableView.rx.items(cellIdentifier: "LanguageCell")) { _, language, cell in
+            .bind(to: tableView.rx.items(cellIdentifier: "LanguageCell")) { [weak self] _, language, cell in
+                guard let self = self else { return }
                 cell.textLabel?.text = language.localizedDescription
                 cell.textLabel?.font = FontSystem.galmuriMono(size: 16)
                 cell.backgroundColor = .clear
                 cell.selectionStyle = .none
 
-                let systemLanguage = LanguageManager.shared.systemLanguage
-                if language == systemLanguage {
+                if language == self.selectedLanguage {
                     cell.accessoryType = .checkmark
                     cell.tintColor = ColorSystem.systemBlue
                 } else {
@@ -121,7 +140,16 @@ final class InitialLanguageSelectionViewController: UIViewController {
         tableView.rx.modelSelected(Language.self)
             .withUnretained(self)
             .bind { owner, language in
-                LanguageManager.shared.setLanguage(language)
+                owner.selectedLanguage = language
+                owner.updateLanguage(language)
+                owner.tableView.reloadData()
+            }
+            .disposed(by: disposeBag)
+
+        confirmButton.rx.tap
+            .withUnretained(self)
+            .bind { owner, _ in
+                LanguageManager.shared.setLanguage(owner.selectedLanguage)
                 owner.onLanguageSelected?()
             }
             .disposed(by: disposeBag)
