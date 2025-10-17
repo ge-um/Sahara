@@ -1,8 +1,11 @@
 /* Settings */
 "settings.title" = "设置";
+"settings.section_general" = "通用";
 "settings.section_notifications" = "通知";
 "settings.section_support" = "支持";
 "settings.section_about" = "关于";
+"settings.language" = "语言";
+"settings.language_desc" = "简体中文";
 "settings.weekly_report" = "每周报告";
 "settings.weekly_report_desc" = "每周日晚上的记录摘要";
 "settings.contact_developer" = "联系开发者";
@@ -16,3 +19,10 @@
 /* Common */
 "common.ok" = "确定";
 "common.cancel" = "取消";
+
+/* Language */
+"language.title" = "语言";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";
