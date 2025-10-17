@@ -9,7 +9,7 @@ import Foundation
 
 enum SettingsMenuItem: CaseIterable {
     case language
-    case weeklyReport
+    case serviceNews
     case contactDeveloper
     case releaseNotes
     case versionInfo
@@ -18,8 +18,8 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return NSLocalizedString("settings.language", comment: "")
-        case .weeklyReport:
-            return NSLocalizedString("settings.weekly_report", comment: "")
+        case .serviceNews:
+            return NSLocalizedString("settings.service_news", comment: "")
         case .contactDeveloper:
             return NSLocalizedString("settings.contact_developer", comment: "")
         case .releaseNotes:
@@ -33,8 +33,8 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return LanguageManager.shared.currentLanguageDescription
-        case .weeklyReport:
-            return NSLocalizedString("settings.weekly_report_desc", comment: "")
+        case .serviceNews:
+            return NSLocalizedString("settings.service_news_desc", comment: "")
         case .versionInfo:
             return appVersion
         default:
@@ -46,14 +46,14 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language, .contactDeveloper, .releaseNotes:
             return true
-        case .weeklyReport, .versionInfo:
+        case .serviceNews, .versionInfo:
             return false
         }
     }
 
     var hasToggle: Bool {
         switch self {
-        case .weeklyReport:
+        case .serviceNews:
             return true
         default:
             return false

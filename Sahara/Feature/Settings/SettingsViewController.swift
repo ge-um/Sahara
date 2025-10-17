@@ -180,21 +180,21 @@ final class SettingsViewController: UIViewController {
     }
 
     private func handleToggleChanged(for item: SettingsMenuItem, isOn: Bool) {
-        if case .weeklyReport = item {
+        if case .serviceNews = item {
             if isOn {
                 NotificationSettings.shared.checkSystemNotificationPermission { [weak self] isAuthorized in
                     if isAuthorized {
-                        NotificationSettings.shared.isWeeklyReportEnabled = true
-                        AnalyticsManager.shared.logNotificationSettingChanged(type: "weekly_report", enabled: true)
+                        NotificationSettings.shared.isServiceNewsEnabled = true
+                        AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: true)
                     } else {
-                        NotificationSettings.shared.isWeeklyReportEnabled = false
+                        NotificationSettings.shared.isServiceNewsEnabled = false
                         self?.showSettingsAlert()
                         self?.viewWillAppearRelay.accept(())
                     }
                 }
             } else {
-                NotificationSettings.shared.isWeeklyReportEnabled = false
-                AnalyticsManager.shared.logNotificationSettingChanged(type: "weekly_report", enabled: false)
+                NotificationSettings.shared.isServiceNewsEnabled = false
+                AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
             }
         }
     }
