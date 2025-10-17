@@ -22,6 +22,7 @@ final class LanguageSelectionViewController: UIViewController {
         tableView.backgroundColor = .clear
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "LanguageCell")
         tableView.rowHeight = 56
+        tableView.separatorStyle = .none
         return tableView
     }()
 
@@ -100,7 +101,8 @@ final class LanguageSelectionViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.languageChanged
-            .drive(with: self) { owner, _ in
+            .drive(with: self) { owner, language in
+                LanguageManager.shared.setLanguage(language)
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
