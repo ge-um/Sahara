@@ -177,6 +177,5 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location error: \(error.localizedDescription)")
     }
 }

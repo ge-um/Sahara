@@ -50,17 +50,11 @@ final class NotificationSettings {
 
     func subscribeToServiceNews() {
         Messaging.messaging().subscribe(toTopic: "service_news") { error in
-            if let error = error {
-                print("Failed to subscribe to service_news topic: \(error)")
-            }
         }
     }
 
     func unsubscribeFromServiceNews() {
         Messaging.messaging().unsubscribe(fromTopic: "service_news") { error in
-            if let error = error {
-                print("Failed to unsubscribe from service_news topic: \(error)")
-            }
         }
     }
 }
