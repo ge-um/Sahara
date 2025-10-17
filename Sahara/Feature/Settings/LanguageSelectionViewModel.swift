@@ -19,7 +19,7 @@ final class LanguageSelectionViewModel: BaseViewModelProtocol {
 
     struct Output {
         let languages: Driver<[Language]>
-        let languageChanged: Driver<Void>
+        let languageChanged: Driver<Language>
     }
 
     func transform(input: Input) -> Output {
@@ -28,7 +28,6 @@ final class LanguageSelectionViewModel: BaseViewModelProtocol {
             .asDriver(onErrorJustReturn: [])
 
         let languageChanged = input.languageSelected
-            .map { _ in () }
             .asDriver(onErrorDriveWith: .empty())
 
         return Output(
