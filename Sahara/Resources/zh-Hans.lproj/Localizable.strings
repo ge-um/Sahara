@@ -175,8 +175,8 @@
 "settings.section_about" = "关于";
 "settings.language" = "语言";
 "settings.language_desc" = "简体中文";
-"settings.weekly_report" = "每周报告";
-"settings.weekly_report_desc" = "每周日晚上的记录摘要";
+"settings.service_news" = "服务动态";
+"settings.service_news_desc" = "新功能和更新消息";
 "settings.monthly_report" = "每月报告";
 "settings.monthly_report_desc" = "每月1日的本月摘要";
 "settings.memory_reminder" = "回忆提醒";

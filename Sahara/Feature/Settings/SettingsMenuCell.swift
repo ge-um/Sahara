@@ -113,8 +113,8 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             subtitleLabel.isHidden = true
             chevronImageView.isHidden = true
 
-            if case .weeklyReport = item {
-                toggleSwitch.setOn(NotificationSettings.shared.isWeeklyReportEnabled, animated: false)
+            if case .serviceNews = item {
+                toggleSwitch.setOn(NotificationSettings.shared.isServiceNewsEnabled, animated: false)
             }
         } else {
             descriptionLabel.isHidden = true

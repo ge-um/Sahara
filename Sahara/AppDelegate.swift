@@ -26,10 +26,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     if granted {
                         DispatchQueue.main.async {
                             application.registerForRemoteNotifications()
-                            NotificationSettings.shared.isWeeklyReportEnabled = true
+                            NotificationSettings.shared.setServiceNewsEnabledWithoutSubscription(true)
                         }
                     } else {
-                        NotificationSettings.shared.isWeeklyReportEnabled = false
+                        NotificationSettings.shared.setServiceNewsEnabledWithoutSubscription(false)
                     }
                 }
             } else if settings.authorizationStatus == .authorized {
@@ -81,5 +81,9 @@ extension AppDelegate: MessagingDelegate {
         object: nil,
         userInfo: dataDict
       )
+
+      if NotificationSettings.shared.isServiceNewsEnabled {
+          NotificationSettings.shared.subscribeToServiceNews()
+      }
     }
 }
