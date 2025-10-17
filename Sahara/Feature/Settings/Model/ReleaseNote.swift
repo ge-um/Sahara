@@ -18,6 +18,21 @@ struct ReleaseNote {
 
     static let allVersions: [ReleaseNote] = [
         ReleaseNote(
+            version: "1.4.0",
+            date: DateComponents(calendar: .current, year: 2025, month: 10, day: 17).date!,
+            changes: [
+                "그리기 모드에서 실행 취소/다시 실행 기능을 사용할 수 있어요",
+                "폴더별로 카드를 정리할 수 있어요",
+                "업데이트 소식 알림을 받을 수 있어요",
+                "사진 속 텍스트를 인식해서 검색할 수 있어요",
+                "카드 편집 시 사진과 스티커를 선택하지 않아도 확대할 수 있어요",
+                "통계에서 카드 작성 패턴을 확인할 수 있어요",
+                "통계 차트에 Y축이 추가되어 더 보기 쉬워졌어요",
+                "중국어를 지원해요",
+                "앱이 더욱 안정적으로 작동해요"
+            ]
+        ),
+        ReleaseNote(
             version: "1.3.0",
             date: DateComponents(calendar: .current, year: 2025, month: 10, day: 13).date!,
             changes: [
