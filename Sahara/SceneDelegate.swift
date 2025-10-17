@@ -18,6 +18,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: scene)
 
         if LanguageManager.shared.hasSelectedLanguage {
+            Bundle.setLanguage(LanguageManager.shared.currentLanguage)
             let mainTabBarController = MainTabBarController()
             window?.rootViewController = mainTabBarController
         } else {
