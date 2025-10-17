@@ -30,16 +30,7 @@ enum Language: String, CaseIterable {
 final class LanguageManager {
     static let shared = LanguageManager()
 
-    private let userDefaults = UserDefaults.standard
-    private enum Keys {
-        static let hasSelectedLanguage = "has_selected_language"
-    }
-
     private init() {}
-
-    var hasSelectedLanguage: Bool {
-        return userDefaults.bool(forKey: Keys.hasSelectedLanguage)
-    }
 
     var systemLanguage: Language {
         if let preferredLanguage = Locale.preferredLanguages.first {
@@ -62,33 +53,7 @@ final class LanguageManager {
         return .english
     }
 
-    var isSupportedSystemLanguage: Bool {
-        if let preferredLanguage = Locale.preferredLanguages.first {
-            let languageCode = preferredLanguage.components(separatedBy: "-").first ?? preferredLanguage
-            return ["ko", "en", "ja", "zh"].contains(languageCode)
-        }
-        return false
-    }
-
     var currentLanguage: Language {
-        if let languages = userDefaults.array(forKey: "AppleLanguages") as? [String],
-           let firstLanguage = languages.first {
-            let languageCode = firstLanguage.components(separatedBy: "-").first ?? firstLanguage
-
-            switch languageCode {
-            case "ko":
-                return .korean
-            case "en":
-                return .english
-            case "ja":
-                return .japanese
-            case "zh":
-                return .chinese
-            default:
-                break
-            }
-        }
-
         return systemLanguage
     }
 
@@ -96,10 +61,11 @@ final class LanguageManager {
         return currentLanguage.localizedDescription
     }
 
-    func setLanguage(_ language: Language) {
-        userDefaults.set([language.rawValue], forKey: "AppleLanguages")
-        userDefaults.set(true, forKey: Keys.hasSelectedLanguage)
-        userDefaults.synchronize()
-        Bundle.setLanguage(language)
+    var isSupportedSystemLanguage: Bool {
+        if let preferredLanguage = Locale.preferredLanguages.first {
+            let languageCode = preferredLanguage.components(separatedBy: "-").first ?? preferredLanguage
+            return ["ko", "en", "ja", "zh"].contains(languageCode)
+        }
+        return false
     }
 }
