@@ -9,12 +9,15 @@ import Foundation
 import RxDataSources
 
 enum SettingsSectionType {
+    case general
     case notifications
     case support
     case about
 
     var title: String {
         switch self {
+        case .general:
+            return NSLocalizedString("settings.section_general", comment: "")
         case .notifications:
             return NSLocalizedString("settings.section_notifications", comment: "")
         case .support:

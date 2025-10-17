@@ -168,10 +168,13 @@
 
 /* Settings */
 "settings.title" = "설정";
+"settings.section_general" = "일반";
 "settings.section_notifications" = "알림";
 "settings.section_privacy" = "개인정보";
 "settings.section_support" = "지원";
 "settings.section_about" = "정보";
+"settings.language" = "언어";
+"settings.language_desc" = "한국어";
 "settings.weekly_report" = "주간 리포트";
 "settings.weekly_report_desc" = "매주 일요일 저녁 기록 요약";
 "settings.monthly_report" = "월간 리포트";
@@ -198,3 +201,10 @@
 
 /* Folder */
 "folder.default" = "기본 폴더";
+
+/* Language */
+"language.title" = "언어 선택";
+"language.korean" = "한국어";
+"language.english" = "English";
+"language.japanese" = "日本語";
+"language.chinese" = "简体中文";
