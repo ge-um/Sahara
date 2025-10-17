@@ -139,6 +139,13 @@ final class SettingsViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        output.openLanguageSelection
+            .drive(with: self) { owner, _ in
+                let languageVC = LanguageSelectionViewController()
+                owner.navigationController?.pushViewController(languageVC, animated: true)
+            }
+            .disposed(by: disposeBag)
+
         output.openReleaseNotes
             .drive(with: self) { owner, _ in
                 let releaseNotesVC = ReleaseNotesViewController()
