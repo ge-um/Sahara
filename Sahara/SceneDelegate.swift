@@ -41,16 +41,28 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        // Called as the scene transitions from the background to the foreground.
-        // Use this method to undo the changes made on entering the background.
+        UIApplication.shared.applicationIconBadgeNumber = 0
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
-        // Called as the scene transitions from the foreground to the background.
-        // Use this method to save data, release shared resources, and store enough scene-specific state information
-        // to restore the scene back to its current state.
     }
 
+    func handleNotification(type: String, userInfo: [AnyHashable: Any]) {
+        guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
 
+        switch type {
+        case "weekly_report", "monthly_report":
+            tabBarController.selectedIndex = 2
+            AnalyticsManager.shared.logNotificationOpened(type: type)
+
+        case "memory_reminder", "milestone":
+            tabBarController.selectedIndex = 0
+            AnalyticsManager.shared.logNotificationOpened(type: type)
+
+        default:
+            break
+        }
+    }
 }
 

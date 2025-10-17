@@ -1,5 +1,5 @@
 ///* App Name */
-"CFBundleDisplayName" = "사하라Dev";
+"CFBundleDisplayName" = "사하라";
 "CFBundleName" = "사하라";
 
 /* Privacy - Photo Library */
@@ -14,3 +14,6 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "비밀 카드를 보기 위해 Face ID 인증이 필요해요";
+
+/* Privacy - Notifications */
+"NSUserNotificationsUsageDescription" = "주간 리포트를 보내기 위해 알림 권한을 허용해주세요.";
