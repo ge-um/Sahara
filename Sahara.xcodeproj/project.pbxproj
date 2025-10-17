@@ -232,10 +232,10 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 				ko,
 				ja,
 				"zh-Hans",
+				Base,
 			);
 			mainGroup = 03E2B5AC2E8664AB00A8C8DA;
 			minimizedProjectReferenceProxies = 1;
