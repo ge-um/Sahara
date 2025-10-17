@@ -85,7 +85,7 @@ final class SettingsViewController: UIViewController {
 
     private func bind() {
         let dataSource = RxCollectionViewSectionedReloadDataSource<SettingsSection>(
-            configureCell: { _, collectionView, indexPath, item in
+            configureCell: { [weak self] _, collectionView, indexPath, item in
                 guard let cell = collectionView.dequeueReusableCell(
                     withReuseIdentifier: SettingsMenuCell.identifier,
                     for: indexPath
@@ -93,6 +93,11 @@ final class SettingsViewController: UIViewController {
                     return UICollectionViewCell()
                 }
                 cell.configure(with: item)
+
+                cell.onToggleChanged = { [weak self] isOn in
+                    self?.handleToggleChanged(for: item, isOn: isOn)
+                }
+
                 return cell
             },
             configureSupplementaryView: { dataSource, collectionView, kind, indexPath in
@@ -164,6 +169,50 @@ final class SettingsViewController: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        present(alert, animated: true)
+    }
+
+    private func handleToggleChanged(for item: SettingsMenuItem, isOn: Bool) {
+        if case .weeklyReport = item {
+            if isOn {
+                NotificationSettings.shared.checkSystemNotificationPermission { [weak self] isAuthorized in
+                    if isAuthorized {
+                        NotificationSettings.shared.isWeeklyReportEnabled = true
+                        AnalyticsManager.shared.logNotificationSettingChanged(type: "weekly_report", enabled: true)
+                    } else {
+                        NotificationSettings.shared.isWeeklyReportEnabled = false
+                        self?.showSettingsAlert()
+                        self?.viewWillAppearRelay.accept(())
+                    }
+                }
+            } else {
+                NotificationSettings.shared.isWeeklyReportEnabled = false
+                AnalyticsManager.shared.logNotificationSettingChanged(type: "weekly_report", enabled: false)
+            }
+        }
+    }
+
+    private func showSettingsAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("settings.notification_denied_title", comment: ""),
+            message: NSLocalizedString("settings.notification_denied_message", comment: ""),
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("media_selection.go_to_settings", comment: ""),
+            style: .default
+        ) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ))
+
         present(alert, animated: true)
     }
 }

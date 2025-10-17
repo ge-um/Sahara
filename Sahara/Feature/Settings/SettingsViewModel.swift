@@ -25,6 +25,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let defaultSections = [
+            SettingsSection(type: .notifications, items: [.weeklyReport]),
             SettingsSection(type: .support, items: [.contactDeveloper]),
             SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])
         ]

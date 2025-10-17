@@ -1,0 +1,16 @@
+/* App Name */
+"CFBundleDisplayName" = "撒哈拉";
+"CFBundleName" = "撒哈拉";
+
+/* Privacy - Photo Library */
+"NSPhotoLibraryUsageDescription" = "需要访问相册以创建卡片。";
+"NSPhotoLibraryAddUsageDescription" = "需要权限将卡片图片保存到相册。";
+
+/* Privacy - Camera */
+"NSCameraUsageDescription" = "需要访问相机以创建卡片。";
+
+/* Privacy - Location When In Use */
+"NSLocationWhenInUseUsageDescription" = "需要访问位置以记录当前位置。";
+
+/* Privacy - Face ID */
+"NSFaceIDUsageDescription" = "需要Face ID认证以查看私密卡片。";

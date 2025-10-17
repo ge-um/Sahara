@@ -38,6 +38,10 @@ enum AnalyticsEvent: String {
     case biometricPermissionDenied = "biometric_permission_denied"
 
     case tabSelected = "tab_selected"
+
+    case notificationOpened = "notification_opened"
+    case notificationSettingChanged = "notification_setting_changed"
+    case fcmTokenRegistered = "fcm_token_registered"
 }
 
 enum AnalyticsParameter: String {
@@ -176,5 +180,20 @@ final class AnalyticsManager {
 
     func logTabSelected(tabName: String) {
         logEvent(.tabSelected, parameters: [.tabName: tabName])
+    }
+
+    func logNotificationOpened(type: String) {
+        logEvent(.notificationOpened, parameters: [.type: type])
+    }
+
+    func logNotificationSettingChanged(type: String, enabled: Bool) {
+        logEvent(.notificationSettingChanged, parameters: [
+            .type: type,
+            .success: enabled
+        ])
+    }
+
+    func logFCMTokenRegistered() {
+        logEvent(.fcmTokenRegistered)
     }
 }
