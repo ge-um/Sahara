@@ -32,19 +32,19 @@
 		<string>remote-notification</string>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>카드를 만들기 위해 사진 라이브러리 접근 권한을 허용해주세요.</string>
+	<string></string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>카드 이미지를 앨범에 저장하기 위해 권한을 허용해주세요.</string>
+	<string></string>
 	<key>NSCameraUsageDescription</key>
-	<string>카드를 만들기 위해 카메라 접근 권한을 허용해주세요.</string>
+	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>현재 위치를 기록하기 위해 위치 접근 권한을 허용해주세요</string>
+	<string></string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>비밀 카드를 보기 위해 Face ID 인증이 필요해요</string>
+	<string></string>
 	<key>NSUserNotificationsUsageDescription</key>
-	<string>서비스 소식과 새로운 기능 업데이트를 받으려면 알림을 허용해주세요</string>
+	<string></string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
