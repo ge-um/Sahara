@@ -100,5 +100,6 @@ final class LanguageManager {
         userDefaults.set([language.rawValue], forKey: "AppleLanguages")
         userDefaults.set(true, forKey: Keys.hasSelectedLanguage)
         userDefaults.synchronize()
+        Bundle.setLanguage(language)
     }
 }
