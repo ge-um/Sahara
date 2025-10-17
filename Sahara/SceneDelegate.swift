@@ -17,23 +17,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
 
-        if LanguageManager.shared.hasSelectedLanguage {
-            Bundle.setLanguage(LanguageManager.shared.currentLanguage)
+        Bundle.setLanguage(LanguageManager.shared.systemLanguage)
+
+        if LanguageManager.shared.isSupportedSystemLanguage {
             let mainTabBarController = MainTabBarController()
             window?.rootViewController = mainTabBarController
         } else {
-            if LanguageManager.shared.isSupportedSystemLanguage {
-                LanguageManager.shared.setLanguage(LanguageManager.shared.systemLanguage)
-                let mainTabBarController = MainTabBarController()
-                window?.rootViewController = mainTabBarController
-            } else {
-                let languageVC = InitialLanguageSelectionViewController()
-                languageVC.onLanguageSelected = { [weak self] in
-                    let mainTabBarController = MainTabBarController()
-                    self?.window?.rootViewController = mainTabBarController
-                }
-                window?.rootViewController = languageVC
-            }
+            let languageVC = InitialLanguageSelectionViewController()
+            window?.rootViewController = languageVC
         }
 
         window?.makeKeyAndVisible()
@@ -57,6 +48,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
+        Bundle.setLanguage(LanguageManager.shared.systemLanguage)
+
+        if window?.rootViewController is InitialLanguageSelectionViewController {
+            if LanguageManager.shared.isSupportedSystemLanguage {
+                let mainTabBarController = MainTabBarController()
+                window?.rootViewController = mainTabBarController
+            }
+        }
+
         UIApplication.shared.applicationIconBadgeNumber = 0
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }
