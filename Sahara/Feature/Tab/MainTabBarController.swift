@@ -82,7 +82,7 @@ final class MainTabBarController: UITabBarController {
         tabButtonStackView.addArrangedSubview(statsTabButton)
         tabButtonStackView.addArrangedSubview(settingsTabButton)
 
-        customTabBar.applyGradient(.barBack)
+        customTabBar.applyGradient(.paleBlueToGray)
 
         galleryTabButton.snp.makeConstraints { make in
             make.width.height.equalTo(44)

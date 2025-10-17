@@ -12,7 +12,7 @@ final class SettingsSectionHeader: UICollectionReusableView, IsIdentifiable {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelSecondary
+        label.textColor = ColorSystem.charcoal
         return label
     }()
 

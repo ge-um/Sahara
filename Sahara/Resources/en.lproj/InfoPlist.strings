@@ -14,3 +14,6 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "Face ID authentication is required to view secret cards.";
+
+/* Privacy - Notifications */
+"NSUserNotificationsUsageDescription" = "Allow notifications to receive service news and feature updates";

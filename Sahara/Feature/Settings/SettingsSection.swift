@@ -6,13 +6,20 @@
 //
 
 import Foundation
+import RxDataSources
 
 enum SettingsSectionType {
+    case general
+    case notifications
     case support
     case about
 
     var title: String {
         switch self {
+        case .general:
+            return NSLocalizedString("settings.section_general", comment: "")
+        case .notifications:
+            return NSLocalizedString("settings.section_notifications", comment: "")
         case .support:
             return NSLocalizedString("settings.section_support", comment: "")
         case .about:
@@ -27,5 +34,13 @@ struct SettingsSection {
 
     var title: String {
         return type.title
+    }
+}
+
+extension SettingsSection: SectionModelType {
+    typealias Item = SettingsMenuItem
+
+    init(original: SettingsSection, items: [SettingsMenuItem]) {
+        self = SettingsSection(type: original.type, items: items)
     }
 }

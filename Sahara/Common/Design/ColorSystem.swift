@@ -8,20 +8,19 @@
 import UIKit
 
 enum ColorSystem {
-    static let gradientBlue = UIColor(hex: "#6CA9FF")
-    static let gradientWhite = UIColor(hex: "#F9FFFF")
-    static let gradientPink = UIColor(hex: "#FFBDFF")
+    static let skyBlue = UIColor(hex: "#6CA9FF")
+    static let paleWhite = UIColor(hex: "#F9FFFF")
+    static let lightPink = UIColor(hex: "#FFBDFF")
 
-    static let buttonYellow = UIColor(hex: "#D9F266")
-    static let cardBackground = UIColor(hex: "#2C2A37").withAlphaComponent(0.2)
-    static let calendarBackground = UIColor.white.withAlphaComponent(0.3)
-    static let transparentCardBackground = UIColor(hex: "#D2D1E4").withAlphaComponent(0.2)
-    static let labelPrimary = UIColor(hex: "#4A4A4A")
-    static let labelSecondary = UIColor(hex: "#1A1A1A")
-    static let labelTitle = UIColor.black
-    static let labelInactive = UIColor(hex: "#494949")
-    static let labelNotCurrentMonth = UIColor(hex: "#A2A2A2")
-    static let todayIndicator = UIColor(hex: "#555555")
+    static let limeGreen = UIColor(hex: "#D9F266")
+    static let purpleGray20 = UIColor(hex: "#2C2A37").withAlphaComponent(0.2)
+    static let white30 = UIColor.white.withAlphaComponent(0.3)
+    static let lavender20 = UIColor(hex: "#D2D1E4").withAlphaComponent(0.2)
+    static let darkGray = UIColor(hex: "#4A4A4A")
+    static let charcoal = UIColor(hex: "#1A1A1A")
+    static let mediumGray = UIColor(hex: "#494949")
+    static let lightGray = UIColor(hex: "#A2A2A2")
+    static let darkestGray = UIColor(hex: "#555555")
 
     static let white = UIColor.white
     static let black = UIColor.black
@@ -34,55 +33,55 @@ enum ColorSystem {
     static let systemBackground = UIColor.systemBackground
 
     enum Gradient {
-        case pinkBlue
-        case barBack
-        case buttonPink
-        case blueGradient
-        case grayGradient
-        case cardInfoBackground
-        case searchLocationButton
-        case saveShareButton
+        case pinkToBlue
+        case paleBlueToGray
+        case hotPink
+        case royalBlue
+        case whiteToGray
+        case mintToOrange
+        case lemonToLime
+        case yellowGreen
 
         var colors: [CGColor] {
             switch self {
-            case .pinkBlue:
+            case .pinkToBlue:
                 return [
-                    ColorSystem.gradientPink.cgColor,
-                    ColorSystem.gradientWhite.cgColor,
-                    ColorSystem.gradientBlue.cgColor
+                    ColorSystem.lightPink.cgColor,
+                    ColorSystem.paleWhite.cgColor,
+                    ColorSystem.skyBlue.cgColor
                 ]
-            case .barBack:
+            case .paleBlueToGray:
                 return [
                     UIColor(hex: "E8EAFF").cgColor,
                     UIColor(hex: "BDBCBD").cgColor
                 ]
-            case .buttonPink:
+            case .hotPink:
                 return [
                     UIColor(hex: "FF009F").cgColor,
                     UIColor(hex: "DB0E8C").cgColor
                 ]
-            case .blueGradient:
+            case .royalBlue:
                 return [
                     UIColor(hex: "4F7BFE").cgColor,
                     UIColor(hex: "0213CC").cgColor
                 ]
-            case .grayGradient:
+            case .whiteToGray:
                 return [
                     UIColor.white.cgColor,
                     UIColor(hex: "A6A3B4").cgColor
                 ]
-            case .cardInfoBackground:
+            case .mintToOrange:
                 return [
                     UIColor(hex: "A6FDAB").cgColor,
                     UIColor(hex: "EFFFE4").cgColor,
                     UIColor(hex: "963F28").cgColor
                 ]
-            case .searchLocationButton:
+            case .lemonToLime:
                 return [
                     UIColor(hex: "FFFFC5").cgColor,
                     UIColor(hex: "9BDA2A").cgColor
                 ]
-            case .saveShareButton:
+            case .yellowGreen:
                 return [
                     UIColor(hex: "FFFFC5").cgColor,
                     UIColor(hex: "9BDA2A").cgColor
@@ -92,29 +91,29 @@ enum ColorSystem {
 
         var locations: [NSNumber] {
             switch self {
-            case .pinkBlue, .cardInfoBackground:
+            case .pinkToBlue, .mintToOrange:
                 return [0.0, 0.5, 1.0]
-            case .barBack:
+            case .paleBlueToGray:
                 return [0.22, 1.0]
-            case .buttonPink, .blueGradient, .grayGradient, .searchLocationButton, .saveShareButton:
+            case .hotPink, .royalBlue, .whiteToGray, .lemonToLime, .yellowGreen:
                 return [0.0, 1.0]
             }
         }
 
         var startPoint: CGPoint {
             switch self {
-            case .pinkBlue, .cardInfoBackground, .searchLocationButton, .saveShareButton:
+            case .pinkToBlue, .mintToOrange, .lemonToLime, .yellowGreen:
                 return CGPoint(x: 0.5, y: 0.0)
-            case .barBack, .buttonPink, .blueGradient, .grayGradient:
+            case .paleBlueToGray, .hotPink, .royalBlue, .whiteToGray:
                 return CGPoint(x: 0.5, y: 0)
             }
         }
 
         var endPoint: CGPoint {
             switch self {
-            case .pinkBlue, .cardInfoBackground, .searchLocationButton, .saveShareButton:
+            case .pinkToBlue, .mintToOrange, .lemonToLime, .yellowGreen:
                 return CGPoint(x: 0.5, y: 1.0)
-            case .barBack, .buttonPink, .blueGradient, .grayGradient:
+            case .paleBlueToGray, .hotPink, .royalBlue, .whiteToGray:
                 return CGPoint(x: 0.5, y: 1)
             }
         }

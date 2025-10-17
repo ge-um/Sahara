@@ -69,10 +69,10 @@ final class EmptyStateView: UIView {
         }
 
         // 버튼 그라디언트 설정
-        buttonGradientLayer.colors = ColorSystem.Gradient.buttonPink.colors
-        buttonGradientLayer.locations = ColorSystem.Gradient.buttonPink.locations
-        buttonGradientLayer.startPoint = ColorSystem.Gradient.buttonPink.startPoint
-        buttonGradientLayer.endPoint = ColorSystem.Gradient.buttonPink.endPoint
+        buttonGradientLayer.colors = ColorSystem.Gradient.hotPink.colors
+        buttonGradientLayer.locations = ColorSystem.Gradient.hotPink.locations
+        buttonGradientLayer.startPoint = ColorSystem.Gradient.hotPink.startPoint
+        buttonGradientLayer.endPoint = ColorSystem.Gradient.hotPink.endPoint
         actionButton.layer.insertSublayer(buttonGradientLayer, at: 0)
 
         actionButton.addTarget(self, action: #selector(actionButtonTapped), for: .touchUpInside)

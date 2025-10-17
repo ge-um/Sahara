@@ -14,3 +14,6 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "秘密カードを表示するにはFace ID認証が必要です。";
+
+/* Privacy - Notifications */
+"NSUserNotificationsUsageDescription" = "サービスニュースと新機能の更新情報を受け取るには通知を許可してください";

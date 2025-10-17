@@ -12,9 +12,13 @@ import RxSwift
 
 final class GalleryViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
+    private let realmManager: RealmManagerProtocol
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
 
     struct Input {
-        let viewWillAppear: Observable<Void>
         let addButtonTapped: Observable<Void>
         let previousMonthTapped: Observable<Void>
         let nextMonthTapped: Observable<Void>
@@ -33,15 +37,21 @@ final class GalleryViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let showPhotoPicker = PublishRelay<Void>()
         let currentMonth = BehaviorRelay(value: Date())
-        let photos = BehaviorRelay<[Card]>(value: [])
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
-        
+
+        let photos = currentMonth
+            .flatMapLatest { [weak self] month -> Observable<[CardCalendarItemDTO]> in
+                guard let self = self else { return .just([]) }
+                return self.realmManager.observeCards(for: .month(month))
+            }
+            .share(replay: 1, scope: .whileConnected)
+
         let calendarItems = Observable
             .combineLatest(currentMonth, photos)
-            .map { month, cards in
-                self.generateCalendar(for: month, cards: cards)
+            .map { month, items in
+                self.generateCalendar(for: month, items: items)
             }
-        
+
         let currentMonthTitle = currentMonth
             .map { date -> String in
                 let formatter = DateFormatter()
@@ -49,28 +59,15 @@ final class GalleryViewModel: BaseViewModelProtocol {
                 formatter.dateFormat = NSLocalizedString("gallery.month_format", comment: "")
                 return formatter.string(from: date)
             }
-        
+
         let showCalendar = selectedViewType
             .map { $0 == .date }
 
-        let isEmptyRelay = BehaviorRelay<Bool>(value: true)
-
-        let checkEmpty: () -> Void = {
-            let realm = try! Realm()
-            let isEmpty = realm.objects(Card.self).isEmpty
-            isEmptyRelay.accept(isEmpty)
-        }
+        let isEmpty = realmManager.observeIsEmpty(Card.self)
+            .share(replay: 1, scope: .whileConnected)
 
         input.addButtonTapped
             .bind(to: showPhotoPicker)
-            .disposed(by: disposeBag)
-
-        input.viewWillAppear
-            .withLatestFrom(currentMonth)
-            .bind(with: self) { owner, month in
-                owner.reloadCurrentMonthPhotos(month, photos: photos)
-                checkEmpty()
-            }
             .disposed(by: disposeBag)
         
         input.previousMonthTapped
@@ -91,8 +88,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
         
         currentMonth
             .skip(1)
-            .bind(with: self) { owner, month in
-                owner.reloadCurrentMonthPhotos(month, photos: photos)
+            .bind { month in
                 let calendar = Calendar.current
                 let year = calendar.component(.year, from: month)
                 let monthValue = calendar.component(.month, from: month)
@@ -110,27 +106,11 @@ final class GalleryViewModel: BaseViewModelProtocol {
             currentMonthTitle: currentMonthTitle.asDriver(onErrorJustReturn: ""),
             selectedViewType: selectedViewType.asDriver(),
             showCalendar: showCalendar.asDriver(onErrorJustReturn: true),
-            isEmpty: isEmptyRelay.asDriver()
+            isEmpty: isEmpty.asDriver(onErrorJustReturn: true)
         )
     }
-    
-    private func reloadCurrentMonthPhotos(_ date: Date, photos: BehaviorRelay<[Card]>) {
-        let realm = try! Realm()
-        let calendar = Calendar.current
-        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date)),
-              let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
-            photos.accept([])
-            return
-        }
 
-        let results = realm.objects(Card.self)
-            .filter("createdDate >= %@ AND createdDate < %@", startOfMonth, nextMonth)
-            .sorted(byKeyPath: "createdDate", ascending: true)
-
-        photos.accept(Array(results))
-    }
-    
-    private func generateCalendar(for month: Date, cards: [Card]) -> [DayItem] {
+    private func generateCalendar(for month: Date, items: [CardCalendarItemDTO]) -> [DayItem] {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ko_KR")
 
@@ -142,35 +122,35 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let firstWeekday = calendar.component(.weekday, from: firstDay)
         let daysInMonth = range.count
 
-        var items: [DayItem] = []
+        var dayItems: [DayItem] = []
 
         // 이전 달의 날짜들
         for i in (1..<firstWeekday).reversed() {
             if let date = calendar.date(byAdding: .day, value: -i, to: firstDay) {
-                items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+                dayItems.append(DayItem(date: date, cards: [], isCurrentMonth: false))
             }
         }
 
         // 현재 달의 날짜들
         for day in 1...daysInMonth {
             if let date = calendar.date(byAdding: .day, value: day-1, to: firstDay) {
-                let cardsForDay = cards.filter {
-                    calendar.isDate($0.createdDate, inSameDayAs: date)
+                let cardsForDay = items.filter {
+                    calendar.isDate($0.date, inSameDayAs: date)
                 }
-                items.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
+                dayItems.append(DayItem(date: date, cards: cardsForDay, isCurrentMonth: true))
             }
         }
 
         // 다음 달의 날짜들 (항상 42칸이 되도록)
-        let remainingCells = 42 - items.count
+        let remainingCells = 42 - dayItems.count
         if let lastDay = calendar.date(byAdding: .day, value: daysInMonth - 1, to: firstDay) {
             for i in 1...remainingCells {
                 if let date = calendar.date(byAdding: .day, value: i, to: lastDay) {
-                    items.append(DayItem(date: date, cards: [], isCurrentMonth: false))
+                    dayItems.append(DayItem(date: date, cards: [], isCurrentMonth: false))
                 }
             }
         }
 
-        return items
+        return dayItems
     }
 }

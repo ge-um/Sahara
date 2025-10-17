@@ -31,7 +31,7 @@ final class MediaSelectionViewController: UIViewController {
     private let cameraButtonTappedRelay = PublishRelay<Void>()
     private let libraryButtonTappedRelay = PublishRelay<Void>()
     private let photoSelectedRelay = PublishRelay<PHAsset>()
-    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?)>()
+    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?, MediaSource)>()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -46,7 +46,7 @@ final class MediaSelectionViewController: UIViewController {
         cv.backgroundColor = .clear
         cv.showsVerticalScrollIndicator = false
         cv.showsHorizontalScrollIndicator = false
-        cv.register(PhotoSelectionCell.self, forCellWithReuseIdentifier: "PhotoSelectionCell")
+        cv.register(MediaSelectionCell.self, forCellWithReuseIdentifier: "PhotoSelectionCell")
         cv.register(ActionCell.self, forCellWithReuseIdentifier: "ActionCell")
         return cv
     }()
@@ -101,7 +101,7 @@ final class MediaSelectionViewController: UIViewController {
                     cell.configure(icon: icon, title: title)
                     return cell
                 case .photo(let asset):
-                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoSelectionCell", for: indexPath) as! PhotoSelectionCell
+                    let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoSelectionCell", for: indexPath) as! MediaSelectionCell
                     cell.configure(with: asset, imageManager: self.imageManager)
                     return cell
                 }
@@ -241,7 +241,7 @@ final class MediaSelectionViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.grayGradient)
+        view.applyGradient(.whiteToGray)
 
         let titleLabel = UILabel()
         titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
@@ -274,8 +274,7 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            AnalyticsManager.shared.logPhotoSourceSelected(source: "camera")
-            imagePickerResultRelay.accept((image, nil, nil))
+            imagePickerResultRelay.accept((image, nil, nil, .camera))
         }
     }
 
@@ -294,8 +293,7 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        AnalyticsManager.shared.logPhotoSourceSelected(source: "library")
-                        self?.imagePickerResultRelay.accept((image, nil, nil))
+                        self?.imagePickerResultRelay.accept((image, nil, nil, .library))
                     }
                 }
             }
@@ -315,7 +313,7 @@ final class ActionCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ColorSystem.gradientBlue
+        iv.tintColor = ColorSystem.skyBlue
         return iv
     }()
 
@@ -359,39 +357,3 @@ final class ActionCell: UICollectionViewCell {
     }
 }
 
-final class PhotoSelectionCell: UICollectionViewCell {
-    private let imageView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFill
-        iv.clipsToBounds = true
-        return iv
-    }()
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    private func setupUI() {
-        contentView.addSubview(imageView)
-        imageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-    }
-
-    func configure(with asset: PHAsset, imageManager: PHCachingImageManager) {
-        let size = CGSize(width: 200, height: 200)
-        imageManager.requestImage(
-            for: asset,
-            targetSize: size,
-            contentMode: .aspectFill,
-            options: nil
-        ) { [weak self] image, _ in
-            self?.imageView.image = image
-        }
-    }
-}

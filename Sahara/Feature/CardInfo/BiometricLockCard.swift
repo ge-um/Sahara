@@ -10,27 +10,12 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class BiometricLockCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.secret", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
-        return label
-    }()
-
+final class BiometricLockCard: BaseCard {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.secret_description", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.labelPrimary
+        label.font = FontSystem.galmuriMono(size: 14)
+        label.textColor = ColorSystem.darkGray
         return label
     }()
 
@@ -39,44 +24,40 @@ final class BiometricLockCard: UIView {
         return switchControl
     }()
 
+    private var viewModel: BiometricLockCardViewModel?
     private let disposeBag = DisposeBag()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.secret", comment: ""))
+        configureContent()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(descriptionLabel)
-        cardView.addSubview(lockSwitch)
-
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
+    private func configureContent() {
+        let container = UIView()
+        container.addSubview(descriptionLabel)
+        container.addSubview(lockSwitch)
 
         descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.leading.equalToSuperview().inset(16)
-            make.bottom.equalToSuperview().inset(16)
+            make.top.leading.bottom.equalToSuperview()
+            make.trailing.equalTo(lockSwitch.snp.leading).offset(-12)
         }
 
         lockSwitch.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview()
         }
+
+        addContentView(container)
     }
 
-    func bind(viewModel: BiometricLockCardViewModel) -> BiometricLockCardViewModel.Output {
+    func bind(initialIsLocked: Bool) -> BiometricLockCardViewModel.Output {
+        let viewModel = BiometricLockCardViewModel(initialIsLocked: initialIsLocked)
+        self.viewModel = viewModel
+
         let input = BiometricLockCardViewModel.Input(
             switchToggled: lockSwitch.rx.isOn.asObservable()
         )

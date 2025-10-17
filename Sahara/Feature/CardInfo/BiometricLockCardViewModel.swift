@@ -39,8 +39,15 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
             .filter { $0 == true }
             .withUnretained(self)
             .flatMap { owner, _ -> Observable<AuthResult> in
-                return owner.authenticateBiometric()
+                return owner.checkBiometricPermission()
             }
+            .do(onNext: { result in
+                if case .success = result {
+                    let biometricType = BiometricAuthManager.shared.biometricType
+                    let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
+                    AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
+                }
+            })
             .bind(with: self) { owner, result in
                 switch result {
                 case .success:
@@ -72,7 +79,7 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
         case cancelled
     }
 
-    private func authenticateBiometric() -> Observable<AuthResult> {
+    private func checkBiometricPermission() -> Observable<AuthResult> {
         return Observable.create { observer in
             let biometricType = BiometricAuthManager.shared.biometricType
 
@@ -82,24 +89,8 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
                 return Disposables.create()
             }
 
-            BiometricAuthManager.shared.authenticate(feature: "card_lock") { success, error in
-                if success {
-                    let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
-                    AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
-                    observer.onNext(.success)
-                } else {
-                    if let error = error as NSError? {
-                        if error.code == LAError.userCancel.rawValue || error.code == LAError.systemCancel.rawValue {
-                            observer.onNext(.cancelled)
-                        } else {
-                            observer.onNext(.permissionDenied)
-                        }
-                    } else {
-                        observer.onNext(.cancelled)
-                    }
-                }
-                observer.onCompleted()
-            }
+            observer.onNext(.success)
+            observer.onCompleted()
 
             return Disposables.create()
         }

@@ -75,7 +75,7 @@ final class CardInfoViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.buttonPink)
+        saveButton.applyGradient(.hotPink)
         contentView.applyGradients()
     }
 
@@ -111,7 +111,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.cardInfoBackground)
+        view.applyGradient(.mintToOrange)
 
         view.addSubview(customNavigationBar)
         view.addSubview(contentView)
@@ -134,27 +134,34 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func bind() {
-        let initialLocationRelay = PublishSubject<CLLocation?>()
-        let selectedLocationRelay = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
+        let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
+        let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
-        let locationCardViewModel = LocationSelectionCardViewModel()
         let locationOutput = contentView.locationCard.bind(
-            viewModel: locationCardViewModel,
             initialLocation: initialLocationRelay.asObservable(),
-            selectedLocation: selectedLocationRelay.asObservable()
+            selectedLocation: selectedLocationSubject.asObservable()
         )
+
+        selectedLocationSubject
+            .bind(with: self) { owner, result in
+                let (coordinate, address) = result
+                owner.contentView.locationCard.locationLabel.text = address
+                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
+                owner.contentView.locationCard.removeButton.isHidden = false
+                owner.contentView.locationCard.updateMapView(with: coordinate)
+            }
+            .disposed(by: disposeBag)
 
         locationOutput.presentLocationSearch
             .drive(with: self) { owner, _ in
                 owner.coordinator.presentLocationSearch { coordinate, address in
-                    selectedLocationRelay.onNext((coordinate, address))
+                    selectedLocationSubject.onNext((coordinate, address))
                 }
             }
             .disposed(by: disposeBag)
 
-        let biometricCardViewModel = BiometricLockCardViewModel(initialIsLocked: false)
-        let biometricOutput = contentView.biometricLockCard.bind(viewModel: biometricCardViewModel)
+        let biometricOutput = contentView.biometricLockCard.bind(initialIsLocked: false)
 
         biometricOutput.presentPermissionAlert
             .drive(with: self) { owner, _ in
@@ -220,12 +227,13 @@ final class CardInfoViewController: UIViewController {
             memo: contentView.memoCard.textView.rx.text
                 .map { [weak self] text in
                     guard let self = self else { return nil }
-                    if self.contentView.memoCard.textView.textColor == ColorSystem.labelPrimary {
+                    if self.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
                         return nil
                     }
                     return text
                 }
                 .asObservable(),
+            customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
             location: locationOutput.location.asObservable(),
             isLocked: biometricOutput.isLocked.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
@@ -257,6 +265,7 @@ final class CardInfoViewController: UIViewController {
             if let location = output.initialLocation {
                 initialLocationRelay.onNext(location)
             }
+            contentView.folderCard.setFolder(output.initialCustomFolder)
         } else {
             contentView.memoCard.showPlaceholder()
         }
@@ -283,6 +292,7 @@ final class CardInfoViewController: UIViewController {
         .bind(with: self) { owner, result in
             let (success, shouldPopToList) = result
             if success {
+                owner.contentView.folderCard.refreshFolderTags()
                 if shouldPopToList {
                     owner.coordinator.popToList(isEditMode: output.isEditMode)
                 } else {
@@ -330,7 +340,7 @@ final class CardInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: PublishSubject<CLLocation?>) {
+    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
         if let date = date {
             selectedDateRelay.accept(date)
         }

@@ -10,22 +10,7 @@ import RxSwift
 import SnapKit
 import UIKit
 
-final class DeleteCard: UIView {
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = ColorSystem.cardBackground
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("card_info.delete", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.labelTitle
-        return label
-    }()
-
+final class DeleteCard: BaseCard {
     let deleteButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
@@ -45,34 +30,20 @@ final class DeleteCard: UIView {
         return button
     }()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
+    init() {
+        super.init(title: NSLocalizedString("card_info.delete", comment: ""))
         isHidden = true
+        configureContent()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
-        addSubview(cardView)
-        cardView.addSubview(titleLabel)
-        cardView.addSubview(deleteButton)
-
-        cardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
-        }
-
+    private func configureContent() {
         deleteButton.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview().inset(16)
             make.height.equalTo(44)
-            make.bottom.equalToSuperview().inset(16)
         }
+        addContentView(deleteButton)
     }
 }

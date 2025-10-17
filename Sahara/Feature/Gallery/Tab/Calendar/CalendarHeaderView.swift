@@ -1,0 +1,141 @@
+//
+//  CalendarHeaderView.swift
+//  Sahara
+//
+//  Created by 금가경 on 10/2/25.
+//
+
+import UIKit
+import SnapKit
+
+final class CalendarHeaderView: UICollectionReusableView {
+    static let identifier = "CalendarHeaderView"
+
+    private let monthLabel: UILabel = {
+        let label = UILabel()
+        label.font = FontSystem.galmuri14(size: 14)
+        label.textColor = .black
+        label.textAlignment = .left
+        return label
+    }()
+
+    private let previousMonthButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
+        button.setTitle("<", for: .normal)
+        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
+        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        return button
+    }()
+
+    private let nextMonthButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
+        button.setTitle(">", for: .normal)
+        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
+        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        return button
+    }()
+
+    private let weekdayStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        return stack
+    }()
+
+    var onPreviousMonthTapped: (() -> Void)?
+    var onNextMonthTapped: (() -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupView()
+        setupActions()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupView() {
+        backgroundColor = .clear
+
+        addSubview(monthLabel)
+        addSubview(previousMonthButton)
+        addSubview(nextMonthButton)
+        addSubview(weekdayStackView)
+
+        monthLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(20)
+            make.height.equalTo(20)
+        }
+
+        previousMonthButton.snp.makeConstraints { make in
+            make.centerY.equalTo(monthLabel)
+            make.trailing.equalTo(nextMonthButton.snp.leading).offset(-8)
+            make.width.equalTo(40)
+            make.height.equalTo(28)
+        }
+
+        nextMonthButton.snp.makeConstraints { make in
+            make.centerY.equalTo(monthLabel)
+            make.trailing.equalToSuperview().offset(-20)
+            make.width.equalTo(40)
+            make.height.equalTo(28)
+        }
+
+        weekdayStackView.snp.makeConstraints { make in
+            make.top.equalTo(monthLabel.snp.bottom).offset(12)
+            make.horizontalEdges.equalToSuperview()
+            make.bottom.equalToSuperview()
+        }
+
+        setupWeekdayLabels()
+    }
+
+    private func setupWeekdayLabels() {
+        let weekdayKeys = ["weekday.sunday", "weekday.monday", "weekday.tuesday", "weekday.wednesday", "weekday.thursday", "weekday.friday", "weekday.saturday"]
+        weekdayKeys.enumerated().forEach { index, key in
+            let label = UILabel()
+            let weekdayText = NSLocalizedString(key, comment: "")
+
+            // Galmuri14, font size 10, letter spacing -6%
+            let attributedString = weekdayText.attributedString(
+                font: FontSystem.galmuri14(size: 10),
+                letterSpacing: -6,
+                color: index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
+            )
+            label.attributedText = attributedString
+            label.textAlignment = .center
+            weekdayStackView.addArrangedSubview(label)
+        }
+    }
+
+    private func setupActions() {
+        previousMonthButton.addTarget(self, action: #selector(previousMonthButtonTapped), for: .touchUpInside)
+        nextMonthButton.addTarget(self, action: #selector(nextMonthButtonTapped), for: .touchUpInside)
+    }
+
+    @objc private func previousMonthButtonTapped() {
+        onPreviousMonthTapped?()
+    }
+
+    @objc private func nextMonthButtonTapped() {
+        onNextMonthTapped?()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previousMonthButton.applyGradient(.whiteToGray, removeExisting: true)
+        nextMonthButton.applyGradient(.whiteToGray, removeExisting: true)
+    }
+
+    func configure(monthTitle: String) {
+        monthLabel.text = monthTitle
+    }
+}

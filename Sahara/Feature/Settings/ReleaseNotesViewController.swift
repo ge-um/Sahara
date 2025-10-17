@@ -66,7 +66,7 @@ final class ReleaseNotesViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
 
         view.addSubview(customNavigationBar)
         view.addSubview(tableView)

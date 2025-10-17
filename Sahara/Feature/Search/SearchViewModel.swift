@@ -62,10 +62,11 @@ final class SearchViewModel: BaseViewModelProtocol {
         } else {
             let results = realm.objects(Card.self)
                 .filter { card in
-                    guard let memo = card.memo else { return false }
-                    return memo.localizedCaseInsensitiveContains(query)
+                    let memoMatches = card.memo?.localizedCaseInsensitiveContains(query) ?? false
+                    let ocrTextMatches = card.ocrText?.localizedCaseInsensitiveContains(query) ?? false
+                    return memoMatches || ocrTextMatches
                 }
-                .sorted(by: { $0.createdDate > $1.createdDate })
+                .sorted(by: { $0.date > $1.date })
 
             let cards = Array(results)
             cardsRelay.accept(cards)

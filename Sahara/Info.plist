@@ -2,20 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>카드를 만들기 위해 카메라 접근 권한을 허용해주세요.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>현재 위치를 기록하기 위해 위치 접근 권한을 허용해주세요</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>카드 이미지를 앨범에 저장하기 위해 권한을 허용해주세요.</string>
-	<key>NSFaceIDUsageDescription</key>
-	<string>비밀 카드를 보기 위해 Face ID 인증이 필요해요</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>카드를 만들기 위해 사진 라이브러리 접근 권한을 허용해주세요.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>GalmuriMono11.ttf</string>
@@ -39,5 +27,30 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string></string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string></string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string></string>
+	<key>NSFaceIDUsageDescription</key>
+	<string></string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string></string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ko</string>
+		<string>ja</string>
+		<string>zh-Hans</string>
+	</array>
 </dict>
 </plist>
