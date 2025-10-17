@@ -17,9 +17,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
 
-        let mainTabBarController = MainTabBarController()
+        if LanguageManager.shared.hasSelectedLanguage {
+            let mainTabBarController = MainTabBarController()
+            window?.rootViewController = mainTabBarController
+        } else {
+            if LanguageManager.shared.isSupportedSystemLanguage {
+                LanguageManager.shared.setLanguage(LanguageManager.shared.systemLanguage)
+                let mainTabBarController = MainTabBarController()
+                window?.rootViewController = mainTabBarController
+            } else {
+                let languageVC = InitialLanguageSelectionViewController()
+                languageVC.onLanguageSelected = { [weak self] in
+                    let mainTabBarController = MainTabBarController()
+                    self?.window?.rootViewController = mainTabBarController
+                }
+                window?.rootViewController = languageVC
+            }
+        }
 
-        window?.rootViewController = mainTabBarController
         window?.makeKeyAndVisible()
     }
 

@@ -31,8 +31,44 @@ final class LanguageManager {
     static let shared = LanguageManager()
 
     private let userDefaults = UserDefaults.standard
+    private enum Keys {
+        static let hasSelectedLanguage = "has_selected_language"
+    }
 
     private init() {}
+
+    var hasSelectedLanguage: Bool {
+        return userDefaults.bool(forKey: Keys.hasSelectedLanguage)
+    }
+
+    var systemLanguage: Language {
+        if let preferredLanguage = Locale.preferredLanguages.first {
+            let languageCode = preferredLanguage.components(separatedBy: "-").first ?? preferredLanguage
+
+            switch languageCode {
+            case "ko":
+                return .korean
+            case "en":
+                return .english
+            case "ja":
+                return .japanese
+            case "zh":
+                return .chinese
+            default:
+                return .english
+            }
+        }
+
+        return .english
+    }
+
+    var isSupportedSystemLanguage: Bool {
+        if let preferredLanguage = Locale.preferredLanguages.first {
+            let languageCode = preferredLanguage.components(separatedBy: "-").first ?? preferredLanguage
+            return ["ko", "en", "ja", "zh"].contains(languageCode)
+        }
+        return false
+    }
 
     var currentLanguage: Language {
         if let languages = userDefaults.array(forKey: "AppleLanguages") as? [String],
@@ -53,10 +89,16 @@ final class LanguageManager {
             }
         }
 
-        return .korean
+        return systemLanguage
     }
 
     var currentLanguageDescription: String {
         return currentLanguage.localizedDescription
+    }
+
+    func setLanguage(_ language: Language) {
+        userDefaults.set([language.rawValue], forKey: "AppleLanguages")
+        userDefaults.set(true, forKey: Keys.hasSelectedLanguage)
+        userDefaults.synchronize()
     }
 }
