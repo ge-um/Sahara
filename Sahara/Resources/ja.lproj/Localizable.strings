@@ -175,8 +175,8 @@
 "settings.section_about" = "情報";
 "settings.language" = "言語";
 "settings.language_desc" = "日本語";
-"settings.weekly_report" = "週間レポート";
-"settings.weekly_report_desc" = "毎週日曜日の夜に記録要約";
+"settings.service_news" = "サービスニュース";
+"settings.service_news_desc" = "新機能とアップデート情報";
 "settings.monthly_report" = "月間レポート";
 "settings.monthly_report_desc" = "毎月1日に今月の要約";
 "settings.memory_reminder" = "思い出リマインダー";
