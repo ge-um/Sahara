@@ -17,15 +17,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
 
-        Bundle.setLanguage(LanguageManager.shared.systemLanguage)
-
-        if LanguageManager.shared.isSupportedSystemLanguage {
-            let mainTabBarController = MainTabBarController()
-            window?.rootViewController = mainTabBarController
-        } else {
-            let languageVC = InitialLanguageSelectionViewController()
-            window?.rootViewController = languageVC
-        }
+        let mainTabBarController = MainTabBarController()
+        window?.rootViewController = mainTabBarController
 
         window?.makeKeyAndVisible()
     }
@@ -48,15 +41,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        Bundle.setLanguage(LanguageManager.shared.systemLanguage)
-
-        if window?.rootViewController is InitialLanguageSelectionViewController {
-            if LanguageManager.shared.isSupportedSystemLanguage {
-                let mainTabBarController = MainTabBarController()
-                window?.rootViewController = mainTabBarController
-            }
-        }
-
         UIApplication.shared.applicationIconBadgeNumber = 0
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
     }

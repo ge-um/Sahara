@@ -60,12 +60,4 @@ final class LanguageManager {
     var currentLanguageDescription: String {
         return currentLanguage.localizedDescription
     }
-
-    var isSupportedSystemLanguage: Bool {
-        if let preferredLanguage = Locale.preferredLanguages.first {
-            let languageCode = preferredLanguage.components(separatedBy: "-").first ?? preferredLanguage
-            return ["ko", "en", "ja", "zh"].contains(languageCode)
-        }
-        return false
-    }
 }
