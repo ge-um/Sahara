@@ -5,6 +5,7 @@
 
 import Foundation
 import UserNotifications
+import FirebaseMessaging
 
 final class NotificationSettings {
     static let shared = NotificationSettings()
@@ -12,7 +13,7 @@ final class NotificationSettings {
     private let userDefaults = UserDefaults.standard
 
     private enum Keys {
-        static let weeklyReportEnabled = "notification_weekly_report_enabled"
+        static let serviceNewsEnabled = "notification_service_news_enabled"
     }
 
     private init() {}
@@ -25,13 +26,41 @@ final class NotificationSettings {
         }
     }
 
-
-    var isWeeklyReportEnabled: Bool {
+    var isServiceNewsEnabled: Bool {
         get {
-            return userDefaults.bool(forKey: Keys.weeklyReportEnabled)
+            return userDefaults.bool(forKey: Keys.serviceNewsEnabled)
         }
         set {
-            userDefaults.set(newValue, forKey: Keys.weeklyReportEnabled)
+            let oldValue = userDefaults.bool(forKey: Keys.serviceNewsEnabled)
+            userDefaults.set(newValue, forKey: Keys.serviceNewsEnabled)
+
+            if oldValue != newValue {
+                if newValue {
+                    subscribeToServiceNews()
+                } else {
+                    unsubscribeFromServiceNews()
+                }
+            }
+        }
+    }
+
+    func setServiceNewsEnabledWithoutSubscription(_ enabled: Bool) {
+        userDefaults.set(enabled, forKey: Keys.serviceNewsEnabled)
+    }
+
+    func subscribeToServiceNews() {
+        Messaging.messaging().subscribe(toTopic: "service_news") { error in
+            if let error = error {
+                print("Failed to subscribe to service_news topic: \(error)")
+            }
+        }
+    }
+
+    func unsubscribeFromServiceNews() {
+        Messaging.messaging().unsubscribe(fromTopic: "service_news") { error in
+            if let error = error {
+                print("Failed to unsubscribe from service_news topic: \(error)")
+            }
         }
     }
 }

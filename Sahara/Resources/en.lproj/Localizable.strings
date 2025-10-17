@@ -175,8 +175,8 @@
 "settings.section_about" = "About";
 "settings.language" = "Language";
 "settings.language_desc" = "English";
-"settings.weekly_report" = "Weekly Report";
-"settings.weekly_report_desc" = "Summary every Sunday evening";
+"settings.service_news" = "Service News";
+"settings.service_news_desc" = "New features and updates";
 "settings.monthly_report" = "Monthly Report";
 "settings.monthly_report_desc" = "Summary on the 1st of each month";
 "settings.memory_reminder" = "Memory Reminder";
