@@ -101,8 +101,7 @@ final class LanguageSelectionViewController: UIViewController {
             .disposed(by: disposeBag)
 
         output.languageChanged
-            .drive(with: self) { owner, language in
-                LanguageManager.shared.setLanguage(language)
+            .drive(with: self) { owner, _ in
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
