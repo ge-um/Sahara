@@ -1,5 +1,5 @@
 /* App Name */
-"CFBundleDisplayName" = "サハラDev";
+"CFBundleDisplayName" = "サハラ";
 "CFBundleName" = "サハラ";
 
 /* Privacy - Photo Library */
@@ -14,3 +14,6 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "秘密カードを表示するにはFace ID認証が必要です。";
+
+/* Privacy - Notifications */
+"NSUserNotificationsUsageDescription" = "週次レポートを送信するために通知権限を許可してください。";
