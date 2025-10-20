@@ -12,7 +12,7 @@ protocol MediaEditorCoordinatorDelegate: AnyObject {
     func didCancelEditing()
 }
 
-final class MediaEditorCoordinator: Coordinator {
+final class MediaEditorCoordinator: Coordinator, MediaEditorCoordinatorProtocol {
     var navigationController: UINavigationController?
     weak var delegate: MediaEditorCoordinatorDelegate?
 

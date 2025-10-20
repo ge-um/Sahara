@@ -244,7 +244,7 @@ final class MediaEditorViewController: UIViewController {
     }()
 
     let viewModel: MediaEditorViewModel
-    weak var coordinator: MediaEditorCoordinator?
+    weak var coordinator: MediaEditorCoordinatorProtocol?
     private let disposeBag = DisposeBag()
 
     let currentMode = BehaviorRelay<EditMode?>(value: nil)

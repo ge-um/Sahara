@@ -35,7 +35,7 @@ final class CardInfoViewController: UIViewController {
         return button
     }()
 
-    private let cancelButton: UIButton = {
+    let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.image = UIImage(named: "xmark")
@@ -47,17 +47,16 @@ final class CardInfoViewController: UIViewController {
     }()
 
     let contentView = CardInfoView()
-    let coordinator: CardInfoCoordinator
+    let coordinator: CardInfoCoordinatorProtocol
     let viewModel: CardInfoViewModel
     let disposeBag = DisposeBag()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
 
-    init(viewModel: CardInfoViewModel) {
+    init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
-        self.coordinator = CardInfoCoordinator(parentViewController: UIViewController())
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
-        self.coordinator.parentViewController = self
     }
 
     required init?(coder: NSCoder) {

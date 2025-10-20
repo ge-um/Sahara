@@ -22,6 +22,7 @@ enum EditSourceType {
 final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let realmManager: RealmManagerProtocol
+    private let ocrManager: OCRManagerProtocol
     private var editedImage: UIImage?
     private var cardToEditId: ObjectId?
     private var originalDate: Date?
@@ -62,23 +63,26 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let shouldPopToListOnDelete: Driver<Bool>
     }
 
-    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
         self.realmManager = realmManager
+        self.ocrManager = ocrManager
         self.editedImage = editedImage
         self.cardToEditId = nil
         self.sourceType = nil
     }
 
-    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
         self.realmManager = realmManager
+        self.ocrManager = ocrManager
         self.editedImage = nil
         self.cardToEditId = nil
         self.originalDate = initialDate
         self.sourceType = sourceType
     }
 
-    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
         self.realmManager = realmManager
+        self.ocrManager = ocrManager
         self.cardToEditId = cardId
         self.sourceType = sourceType
 
@@ -259,7 +263,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
 
-        return OCRManager.shared.recognizeText(from: editedImage)
+        return ocrManager.recognizeText(from: editedImage)
             .flatMap { [weak self] ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
@@ -329,7 +333,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(oldOcrText)
+        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
         return ocrObservable
             .flatMap { [weak self] ocrText -> Observable<Void> in
@@ -398,7 +402,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? OCRManager.shared.recognizeText(from: editedImage) : Observable.just(oldOcrText)
+        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
         return ocrObservable
             .flatMap { [weak self] ocrText -> Observable<Void> in

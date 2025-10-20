@@ -14,7 +14,7 @@ protocol CardInfoCoordinatorDelegate: AnyObject {
     func didCancel()
 }
 
-final class CardInfoCoordinator: Coordinator {
+final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     var navigationController: UINavigationController?
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?

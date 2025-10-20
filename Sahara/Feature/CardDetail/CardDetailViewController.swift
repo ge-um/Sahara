@@ -189,7 +189,7 @@ final class CardDetailViewController: UIViewController {
         let realm = try! Realm()
         guard let card = realm.object(ofType: Card.self, forPrimaryKey: viewModel.cardId) else { return }
         let editViewModel = CardInfoViewModel(cardToEdit: card.id, sourceType: sourceType)
-        let editVC = CardInfoViewController(viewModel: editViewModel)
+        let editVC = CardInfoViewController(viewModel: editViewModel, coordinator: CardInfoCoordinator(parentViewController: self))
         editVC.modalPresentationStyle = .fullScreen
         present(editVC, animated: true)
     }

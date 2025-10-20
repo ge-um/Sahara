@@ -149,10 +149,12 @@ final class CalendarViewController: UIViewController {
                     }
                 } else {
                     let viewModel = CardInfoViewModel(initialDate: date, sourceType: .dateView)
-                    let cardInfoVC = CardInfoViewController(viewModel: viewModel)
-                    let navController = UINavigationController(rootViewController: cardInfoVC)
-                    navController.modalPresentationStyle = .fullScreen
                     if let galleryVC = owner.parent as? GalleryViewController {
+                        let coordinator = CardInfoCoordinator(parentViewController: galleryVC)
+                        let cardInfoVC = CardInfoViewController(viewModel: viewModel, coordinator: coordinator)
+                        coordinator.parentViewController = cardInfoVC
+                        let navController = UINavigationController(rootViewController: cardInfoVC)
+                        navController.modalPresentationStyle = .fullScreen
                         galleryVC.present(navController, animated: true)
                     }
                 }
