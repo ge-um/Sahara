@@ -54,7 +54,13 @@ final class StickerCell: UICollectionViewCell, IsIdentifiable {
         }
 
         if let urlString = urlString, let url = URL(string: urlString) {
-            imageView.kf.setImage(with: url)
+            let options: KingfisherOptionsInfo = [
+                .processor(DownsamplingImageProcessor(size: CGSize(width: 200, height: 200))),
+                .scaleFactor(UIScreen.main.scale),
+                .memoryCacheExpiration(.seconds(600)),
+                .diskCacheExpiration(.days(7))
+            ]
+            imageView.kf.setImage(with: url, options: options)
         }
     }
 }

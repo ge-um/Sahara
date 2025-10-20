@@ -9,6 +9,7 @@ import FirebaseCore
 import UIKit
 import FirebaseMessaging
 import RealmSwift
+import Kingfisher
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,6 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
         configureRealm()
+        configureKingfisher()
 
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
@@ -45,6 +47,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private func configureRealm() {
         let config = RealmManager.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
+    }
+
+    private func configureKingfisher() {
+        let cache = ImageCache.default
+        cache.memoryStorage.config.totalCostLimit = 100 * 1024 * 1024
+        cache.memoryStorage.config.countLimit = 100
+        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024
     }
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
