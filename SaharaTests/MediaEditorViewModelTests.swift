@@ -1,0 +1,255 @@
+//
+//  MediaEditorViewModelTests.swift
+//  SaharaTests
+//
+//  Created by 금가경 on 10/21/25.
+//
+
+import XCTest
+import RxSwift
+import RxCocoa
+@testable import Sahara
+
+final class MediaEditorViewModelTests: XCTestCase {
+    private var sut: MediaEditorViewModel!
+    private var mockNetworkManager: MockNetworkManager!
+    private var disposeBag: DisposeBag!
+    private var testImage: UIImage!
+
+    override func setUp() {
+        super.setUp()
+        mockNetworkManager = MockNetworkManager()
+        testImage = UIImage(systemName: "photo")!
+        sut = MediaEditorViewModel(originalImage: testImage, networkManager: mockNetworkManager)
+        disposeBag = DisposeBag()
+    }
+
+    override func tearDown() {
+        sut = nil
+        mockNetworkManager = nil
+        disposeBag = nil
+        testImage = nil
+        super.tearDown()
+    }
+
+    func test_viewWillAppear_shouldLoadTrendingStickers() {
+        let mockStickers = createMockStickers(count: 3)
+        let mockResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: mockStickers,
+                currentPage: 1,
+                perPage: 20,
+                hasNext: true
+            )
+        )
+        mockNetworkManager.mockResponse = mockResponse
+
+        let viewWillAppear = PublishSubject<Void>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: viewWillAppear.asObservable(),
+            searchQuery: .empty(),
+            loadMoreTrigger: .empty(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        let expectation = XCTestExpectation(description: "Load trending stickers")
+
+        output.stickers
+            .skip(1)
+            .drive(onNext: { stickers in
+                XCTAssertEqual(stickers.count, 3)
+                XCTAssertEqual(self.mockNetworkManager.callCount, 1)
+                expectation.fulfill()
+            })
+            .disposed(by: disposeBag)
+
+        viewWillAppear.onNext(())
+
+        wait(for: [expectation], timeout: 2.0)
+    }
+
+    func test_searchQuery_shouldCallSearchAPI() {
+        let mockStickers = createMockStickers(count: 2)
+        let mockResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: mockStickers,
+                currentPage: 1,
+                perPage: 20,
+                hasNext: false
+            )
+        )
+        mockNetworkManager.mockResponse = mockResponse
+
+        let searchQuery = PublishSubject<String>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: .empty(),
+            searchQuery: searchQuery.asObservable(),
+            loadMoreTrigger: .empty(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        let expectation = XCTestExpectation(description: "Search stickers")
+
+        output.stickers
+            .skip(1)
+            .drive(onNext: { stickers in
+                XCTAssertEqual(stickers.count, 2)
+                XCTAssertEqual(self.mockNetworkManager.callCount, 1)
+                expectation.fulfill()
+            })
+            .disposed(by: disposeBag)
+
+        searchQuery.onNext("")
+        searchQuery.onNext("cat")
+
+        wait(for: [expectation], timeout: 2.0)
+    }
+
+    func test_emptySearchQuery_shouldLoadTrendingStickers() {
+        let mockStickers = createMockStickers(count: 5)
+        let mockResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: mockStickers,
+                currentPage: 1,
+                perPage: 20,
+                hasNext: true
+            )
+        )
+        mockNetworkManager.mockResponse = mockResponse
+
+        let searchQuery = PublishSubject<String>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: .empty(),
+            searchQuery: searchQuery.asObservable(),
+            loadMoreTrigger: .empty(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        let expectation = XCTestExpectation(description: "Load trending on empty query")
+
+        output.stickers
+            .skip(1)
+            .drive(onNext: { stickers in
+                XCTAssertEqual(stickers.count, 5)
+                expectation.fulfill()
+            })
+            .disposed(by: disposeBag)
+
+        searchQuery.onNext("cat")
+        searchQuery.onNext("")
+
+        wait(for: [expectation], timeout: 2.0)
+    }
+
+    func test_loadMore_shouldAppendStickers() {
+        let firstPageStickers = createMockStickers(count: 3)
+        let secondPageStickers = createMockStickers(count: 2, startId: 4)
+
+        let firstResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: firstPageStickers,
+                currentPage: 1,
+                perPage: 20,
+                hasNext: true
+            )
+        )
+
+        let secondResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: secondPageStickers,
+                currentPage: 2,
+                perPage: 20,
+                hasNext: false
+            )
+        )
+
+        let viewWillAppear = PublishSubject<Void>()
+        let loadMore = PublishSubject<Void>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: viewWillAppear.asObservable(),
+            searchQuery: .empty(),
+            loadMoreTrigger: loadMore.asObservable(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        var resultCount = 0
+        let expectation = XCTestExpectation(description: "Load more stickers")
+
+        output.stickers
+            .skip(1)
+            .drive(onNext: { stickers in
+                resultCount += 1
+                if resultCount == 1 {
+                    XCTAssertEqual(stickers.count, 3)
+                    self.mockNetworkManager.mockResponse = secondResponse
+                    loadMore.onNext(())
+                } else if resultCount == 2 {
+                    XCTAssertEqual(stickers.count, 5)
+                    XCTAssertEqual(self.mockNetworkManager.callCount, 2)
+                    expectation.fulfill()
+                }
+            })
+            .disposed(by: disposeBag)
+
+        mockNetworkManager.mockResponse = firstResponse
+        viewWillAppear.onNext(())
+
+        wait(for: [expectation], timeout: 3.0)
+    }
+
+    private func createMockStickers(count: Int, startId: Int = 1) -> [KlipySticker] {
+        return (startId..<startId + count).map { id in
+            KlipySticker(
+                id: id,
+                slug: "sticker-\(id)",
+                title: "Sticker \(id)",
+                blurPreview: nil,
+                file: StickerFile(
+                    hd: StickerQuality(
+                        gif: StickerImageInfo(url: "https://example.com/sticker-\(id).gif", width: 500, height: 500, size: 1024),
+                        webp: nil,
+                        mp4: nil
+                    ),
+                    md: nil,
+                    sm: nil,
+                    xs: nil
+                ),
+                tags: ["tag1", "tag2"],
+                type: "sticker"
+            )
+        }
+    }
+}
