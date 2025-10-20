@@ -208,3 +208,26 @@
 "language.english" = "English";
 "language.japanese" = "日本語";
 "language.chinese" = "简体中文";
+
+/* Release Note Details */
+"release_note.1.4.0.1" = "Undo/Redo feature available in drawing mode";
+"release_note.1.4.0.2" = "Organize cards by folders";
+"release_note.1.4.0.3" = "Receive service news notifications";
+"release_note.1.4.0.4" = "Search for text recognized in photos";
+"release_note.1.4.0.5" = "Zoom photos and stickers without selection";
+"release_note.1.4.0.6" = "View card creation patterns in statistics";
+"release_note.1.4.0.7" = "Charts now include Y-axis for better readability";
+"release_note.1.4.0.8" = "Chinese language support added";
+"release_note.1.4.0.9" = "Improved app stability";
+"release_note.1.3.0.1" = "Settings tab added for easier app management";
+"release_note.1.3.0.2" = "Contact developer feature for easy feedback";
+"release_note.1.3.0.3" = "View update history in release notes";
+"release_note.1.3.0.4" = "Fixed long image scrolling issue in card view";
+"release_note.1.3.0.5" = "Improved app stability";
+"release_note.1.2.0.1" = "Search feature to quickly find cards";
+"release_note.1.2.0.2" = "Statistics to view your recording habits";
+"release_note.1.2.0.3" = "Fixed memo deletion issue when editing cards";
+"release_note.1.2.0.4" = "Improved app stability";
+"release_note.1.1.0.1" = "Card lock feature added";
+"release_note.1.1.0.2" = "Easier location editing";
+"release_note.1.1.0.3" = "Improved app stability";

@@ -208,3 +208,26 @@
 "language.english" = "English";
 "language.japanese" = "日本語";
 "language.chinese" = "简体中文";
+
+/* Release Note Details */
+"release_note.1.4.0.1" = "绘画模式中可以使用撤销/重做功能";
+"release_note.1.4.0.2" = "可以按文件夹整理卡片";
+"release_note.1.4.0.3" = "可以接收服务动态通知";
+"release_note.1.4.0.4" = "可以识别照片中的文字并搜索";
+"release_note.1.4.0.5" = "编辑卡片时无需选择照片和贴纸即可放大";
+"release_note.1.4.0.6" = "可以在统计中查看卡片创建模式";
+"release_note.1.4.0.7" = "统计图表添加了Y轴，更易阅读";
+"release_note.1.4.0.8" = "支持中文";
+"release_note.1.4.0.9" = "应用更加稳定";
+"release_note.1.3.0.1" = "添加了设置标签，更方便管理应用";
+"release_note.1.3.0.2" = "联系开发者功能可轻松反馈意见";
+"release_note.1.3.0.3" = "可以在版本记录中查看更新内容";
+"release_note.1.3.0.4" = "修复了卡片查看界面长图无法滚动的问题";
+"release_note.1.3.0.5" = "应用更加稳定";
+"release_note.1.2.0.1" = "搜索功能可快速找到卡片";
+"release_note.1.2.0.2" = "统计功能可一目了然查看记录习惯";
+"release_note.1.2.0.3" = "修复了编辑卡片时备忘录消失的问题";
+"release_note.1.2.0.4" = "应用更加稳定";
+"release_note.1.1.0.1" = "添加了卡片锁定功能";
+"release_note.1.1.0.2" = "位置编辑更加简便";
+"release_note.1.1.0.3" = "应用更加稳定";
