@@ -89,6 +89,7 @@ final class StickerModalViewController: UIViewController {
 
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
+            stickerButtonTapped: .empty(),
             searchQuery: searchQuery,
             loadMoreTrigger: loadMoreRelay.asObservable(),
             stickerSelected: stickerCollectionView.rx.modelSelected(KlipySticker.self).asObservable(),
