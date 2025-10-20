@@ -152,7 +152,9 @@ final class GalleryViewController: UIViewController {
 
     @objc private func addButtonTapped() {
         let viewModel = CardInfoViewModel(editedImage: nil)
-        let cardInfoVC = CardInfoViewController(viewModel: viewModel)
+        let coordinator = CardInfoCoordinator(parentViewController: self)
+        let cardInfoVC = CardInfoViewController(viewModel: viewModel, coordinator: coordinator)
+        coordinator.parentViewController = cardInfoVC
         let navController = UINavigationController(rootViewController: cardInfoVC)
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)

@@ -9,7 +9,11 @@ import UIKit
 import Vision
 import RxSwift
 
-final class OCRManager {
+protocol OCRManagerProtocol {
+    func recognizeText(from image: UIImage) -> Observable<String?>
+}
+
+final class OCRManager: OCRManagerProtocol {
     static let shared = OCRManager()
 
     private init() {}
