@@ -9,7 +9,7 @@ import Alamofire
 import Foundation
 import RxSwift
 
-final class NetworkManager {
+final class NetworkManager: NetworkManagerProtocol {
     static let shared = NetworkManager()
 
     private init() {}

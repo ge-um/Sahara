@@ -13,6 +13,7 @@ import UIKit
 final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let imageStateHandler: MediaEditorImageStateHandler
+    private let networkManager: NetworkManagerProtocol
     private let context = CIContext()
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
@@ -45,8 +46,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let dismiss: Driver<Void>
     }
 
-    init(originalImage: UIImage) {
+    init(originalImage: UIImage, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
         self.imageStateHandler = MediaEditorImageStateHandler(originalImage: originalImage)
+        self.networkManager = networkManager
     }
 
     func transform(input: Input) -> Output {
@@ -70,7 +72,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 owner.hasNextRelay.accept(true)
             })
             .flatMapLatest { owner, _ in
-                NetworkManager.shared.callRequest(
+                owner.networkManager.callRequest(
                     api: .trendingStickers(
                         page: 1,
                         perPage: 20,
@@ -94,7 +96,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .flatMapLatest { owner, query -> Observable<StickerResponse> in
                 if query.isEmpty {
-                    return NetworkManager.shared.callRequest(
+                    return owner.networkManager.callRequest(
                         api: .trendingStickers(
                             page: 1,
                             perPage: 20,
@@ -104,7 +106,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         type: StickerResponse.self
                     )
                 } else {
-                    return NetworkManager.shared.callRequest(
+                    return owner.networkManager.callRequest(
                         api: .searchStickers(
                             query: query,
                             page: 1,
@@ -136,7 +138,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 let page = owner.currentPageRelay.value
 
                 if query.isEmpty {
-                    return NetworkManager.shared.callRequest(
+                    return owner.networkManager.callRequest(
                         api: .trendingStickers(
                             page: page,
                             perPage: 20,
@@ -146,7 +148,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         type: StickerResponse.self
                     )
                 } else {
-                    return NetworkManager.shared.callRequest(
+                    return owner.networkManager.callRequest(
                         api: .searchStickers(
                             query: query,
                             page: page,
