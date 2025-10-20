@@ -44,7 +44,13 @@ final class DraggableStickerView: BaseGestureView {
         }
 
         if let urlString = urlString, let url = URL(string: urlString) {
-            imageView.kf.setImage(with: url)
+            let options: KingfisherOptionsInfo = [
+                .processor(DownsamplingImageProcessor(size: bounds.size)),
+                .scaleFactor(UIScreen.main.scale),
+                .memoryCacheExpiration(.seconds(600)),
+                .diskCacheExpiration(.days(7))
+            ]
+            imageView.kf.setImage(with: url, options: options)
         }
     }
 }
