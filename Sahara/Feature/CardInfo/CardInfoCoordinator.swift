@@ -18,6 +18,8 @@ final class CardInfoCoordinator: Coordinator {
     var navigationController: UINavigationController?
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?
+    private var onMediaEditingComplete: ((UIImage) -> Void)?
+    private var mediaEditorCoordinator: MediaEditorCoordinator?
 
     init(parentViewController: UIViewController) {
         self.parentViewController = parentViewController
@@ -44,14 +46,22 @@ final class CardInfoCoordinator: Coordinator {
         selectedImageSubject: BehaviorSubject<UIImage?>,
         onEditingComplete: @escaping (UIImage) -> Void
     ) {
-        parentViewController?.dismiss(animated: true) { [weak self] in
-            let viewModel = MediaEditorViewModel(originalImage: image)
-            let editorVC = MediaEditorViewController(viewModel: viewModel)
-            editorVC.onEditingComplete = onEditingComplete
+        self.onMediaEditingComplete = onEditingComplete
 
-            let navController = UINavigationController(rootViewController: editorVC)
+        parentViewController?.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+
+            let navController = UINavigationController()
             navController.modalPresentationStyle = .fullScreen
-            self?.parentViewController?.present(navController, animated: true)
+
+            self.mediaEditorCoordinator = MediaEditorCoordinator(
+                navigationController: navController,
+                originalImage: image
+            )
+            self.mediaEditorCoordinator?.delegate = self
+            self.mediaEditorCoordinator?.start()
+
+            self.parentViewController?.present(navController, animated: true)
         }
     }
 
@@ -99,5 +109,20 @@ final class CardInfoCoordinator: Coordinator {
         parentVC.dismiss(animated: true) {
             nav.popViewController(animated: true)
         }
+    }
+}
+
+extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
+    func didFinishEditing(with image: UIImage) {
+        parentViewController?.dismiss(animated: true) { [weak self] in
+            self?.onMediaEditingComplete?(image)
+            self?.onMediaEditingComplete = nil
+            self?.mediaEditorCoordinator = nil
+        }
+    }
+
+    func didCancelEditing() {
+        onMediaEditingComplete = nil
+        mediaEditorCoordinator = nil
     }
 }

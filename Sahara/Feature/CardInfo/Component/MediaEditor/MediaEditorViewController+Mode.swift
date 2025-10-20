@@ -166,31 +166,16 @@ extension MediaEditorViewController {
     }
 
     func presentStickerModal() {
-        let stickerModalVC = StickerModalViewController(viewModel: viewModel)
-        stickerModalVC.onStickerSelected = { [weak self] sticker in
+        coordinator?.presentStickerModal(viewModel: viewModel) { [weak self] sticker in
             self?.addStickerToPhoto(sticker)
         }
-
-        let navController = UINavigationController(rootViewController: stickerModalVC)
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
-        }
-        present(navController, animated: true)
     }
 
     func presentPhotoSelectionModal() {
-        let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { [weak self] image, _, _ in
+        coordinator?.presentPhotoSelection { [weak self] image in
             self?.addPhotoToCanvas(image)
             self?.currentMode.accept(nil)
         }
-        let navController = UINavigationController(rootViewController: mediaSelectionVC)
-        if let sheet = navController.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
-        }
-        present(navController, animated: true)
     }
 }
 

@@ -245,7 +245,7 @@ final class MediaEditorViewController: UIViewController {
 
     let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
-    var onEditingComplete: ((UIImage) -> Void)?
+    weak var coordinator: MediaEditorCoordinator?
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
@@ -528,24 +528,13 @@ final class MediaEditorViewController: UIViewController {
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, editedImage in
-                if let callback = owner.onEditingComplete {
-                    callback(editedImage)
-                    owner.dismiss(animated: true)
-                } else {
-                    let metadataViewModel = CardInfoViewModel(editedImage: editedImage)
-                    let metadataVC = CardInfoViewController(viewModel: metadataViewModel)
-                    owner.navigationController?.pushViewController(metadataVC, animated: true)
-                }
+                owner.coordinator?.finishEditing(with: editedImage)
             }
             .disposed(by: disposeBag)
 
         output.dismiss
             .drive(with: self) { owner, _ in
-                if let navController = owner.navigationController {
-                    navController.dismiss(animated: true)
-                } else {
-                    owner.dismiss(animated: true)
-                }
+                owner.coordinator?.cancelEditing()
             }
             .disposed(by: disposeBag)
 
