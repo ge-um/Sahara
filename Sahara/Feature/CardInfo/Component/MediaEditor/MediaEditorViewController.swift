@@ -244,29 +244,32 @@ final class MediaEditorViewController: UIViewController {
     }()
 
     let viewModel: MediaEditorViewModel
-    private let disposeBag = DisposeBag()
     weak var coordinator: MediaEditorCoordinator?
+    private let disposeBag = DisposeBag()
+
+    let currentMode = BehaviorRelay<EditMode?>(value: nil)
+    let toolPicker = PKToolPicker()
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
-    private var lastContainerSize: CGSize = .zero
-    let currentMode = BehaviorRelay<EditMode?>(value: nil)
     private var selectedView: BaseGestureView?
-    let toolPicker = PKToolPicker()
-    var originalImage: UIImage?
-    private var croppedImage: UIImage?
-    var uncropedOriginalImage: UIImage?
-    var lastCropRect: CGRect?
-    private let filterHandler = MediaEditorFilterHandler()
-    private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
-    let photoSelectedRelay = PublishRelay<UIImage>()
-    private let viewWillAppearRelay = PublishRelay<Void>()
-    private var usedTools: Set<String> = []
+    private var lastContainerSize: CGSize = .zero
 
+    var cachedUncroppedOriginalImage: UIImage?
+    var lastCropRect: CGRect?
+    private var cachedOriginalImageForFilter: UIImage?
+
+    private let filterHandler = MediaEditorFilterHandler()
     private lazy var dragHandler = MediaEditorDragHandler(
         trashIconView: trashIconView,
         parentView: view
     )
+
+    private let viewWillAppearRelay = PublishRelay<Void>()
+    private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
+    let photoSelectedRelay = PublishRelay<UIImage>()
+
+    private var usedTools: Set<String> = []
 
     init(viewModel: MediaEditorViewModel) {
         self.viewModel = viewModel
@@ -499,20 +502,19 @@ final class MediaEditorViewController: UIViewController {
         output.originalImage
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
-                owner.originalImage = image
-                owner.uncropedOriginalImage = image
+                owner.cachedOriginalImageForFilter = image
+            }
+            .disposed(by: disposeBag)
+
+        output.uncroppedOriginalImage
+            .drive(with: self) { owner, image in
+                owner.cachedUncroppedOriginalImage = image
             }
             .disposed(by: disposeBag)
 
         output.currentEditingImage
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
-            }
-            .disposed(by: disposeBag)
-
-        output.croppedImage
-            .drive(with: self) { owner, image in
-                owner.croppedImage = image
             }
             .disposed(by: disposeBag)
 
@@ -540,9 +542,11 @@ final class MediaEditorViewController: UIViewController {
 
         filterCollectionView.rx.itemSelected
             .withUnretained(self)
-            .map { owner, indexPath -> (Int, UIImage?) in
-                let baseImage = owner.croppedImage ?? owner.originalImage
-                return (indexPath.item, baseImage)
+            .withLatestFrom(output.croppedImage) { ($0.0, $0.1, $1) }
+            .withLatestFrom(output.originalImage) { (owner: $0.0, indexPath: $0.1, croppedImage: $0.2, originalImage: $1) }
+            .map { data -> (Int, UIImage?) in
+                let baseImage = data.croppedImage ?? data.originalImage
+                return (data.indexPath.item, baseImage)
             }
             .bind(to: filterSelectedRelay)
             .disposed(by: disposeBag)
@@ -701,7 +705,7 @@ extension MediaEditorViewController: UICollectionViewDataSource {
 
             let filterItem = MediaEditorFilterHandler.filters[indexPath.item]
             let filter = filterItem.filterName != nil ? CIFilter(name: filterItem.filterName!) : nil
-            cell.configure(with: filterItem.name, image: originalImage, filter: filter, context: filterHandler.context)
+            cell.configure(with: filterItem.name, image: cachedOriginalImageForFilter, filter: filter, context: filterHandler.context)
             return cell
         }
         return UICollectionViewCell()

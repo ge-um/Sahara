@@ -12,7 +12,7 @@ import UIKit
 
 final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let originalImage: UIImage
+    private let imageStateHandler: MediaEditorImageStateHandler
     private let context = CIContext()
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
@@ -35,6 +35,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let originalImage: Driver<UIImage>
         let currentEditingImage: Driver<UIImage>
         let croppedImage: Driver<UIImage?>
+        let uncroppedOriginalImage: Driver<UIImage>
         let filteredImage: Driver<UIImage?>
         let stickers: Driver<[KlipySticker]>
         let isLoadingMore: Driver<Bool>
@@ -45,13 +46,11 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     }
 
     init(originalImage: UIImage) {
-        self.originalImage = originalImage
+        self.imageStateHandler = MediaEditorImageStateHandler(originalImage: originalImage)
     }
 
     func transform(input: Input) -> Output {
         let stickersRelay = BehaviorRelay<[KlipySticker]>(value: [])
-        let currentEditingImageRelay = BehaviorRelay<UIImage>(value: originalImage)
-        let croppedImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let isLoadingMoreRelay = BehaviorRelay<Bool>(value: false)
 
@@ -186,8 +185,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 guard let filter = owner.createFilter(at: index) else { return nil }
                 return owner.applyFilter(filter, to: baseImage)
             }
-            .bind { image in
-                currentEditingImageRelay.accept(image)
+            .bind(with: self) { owner, image in
+                owner.imageStateHandler.applyFilter(image)
                 filteredImageRelay.accept(image)
             }
             .disposed(by: disposeBag)
@@ -202,9 +201,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 )
                 return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
             }
-            .bind { croppedImage in
-                croppedImageRelay.accept(croppedImage)
-                currentEditingImageRelay.accept(croppedImage)
+            .bind(with: self) { owner, croppedImage in
+                owner.imageStateHandler.applyCrop(croppedImage)
             }
             .disposed(by: disposeBag)
 
@@ -221,9 +219,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .asDriver(onErrorJustReturn: ())
 
         return Output(
-            originalImage: Driver.just(originalImage),
-            currentEditingImage: currentEditingImageRelay.asDriver(),
-            croppedImage: croppedImageRelay.asDriver(),
+            originalImage: imageStateHandler.originalImage,
+            currentEditingImage: imageStateHandler.currentEditingImage,
+            croppedImage: imageStateHandler.croppedImage,
+            uncroppedOriginalImage: imageStateHandler.uncroppedOriginalImage,
             filteredImage: filteredImageRelay.asDriver(),
             stickers: stickersRelay.asDriver(),
             isLoadingMore: isLoadingMoreRelay.asDriver(),
