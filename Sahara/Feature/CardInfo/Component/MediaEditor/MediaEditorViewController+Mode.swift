@@ -140,7 +140,7 @@ extension MediaEditorViewController {
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
 
-            guard let uncropped = uncropedOriginalImage else { return }
+            guard let uncropped = cachedUncroppedOriginalImage else { return }
             photoImageView.image = uncropped
 
             UIView.animate(withDuration: 0.3, animations: {

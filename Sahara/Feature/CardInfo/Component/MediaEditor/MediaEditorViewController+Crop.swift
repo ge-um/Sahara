@@ -9,7 +9,7 @@ import UIKit
 
 extension MediaEditorViewController {
     func setupCropOverlay() {
-        guard let uncropped = uncropedOriginalImage else { return }
+        guard let uncropped = cachedUncroppedOriginalImage else { return }
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -49,7 +49,7 @@ extension MediaEditorViewController {
     }
 
     func applyCrop() {
-        guard let uncropped = uncropedOriginalImage else { return }
+        guard let uncropped = cachedUncroppedOriginalImage else { return }
 
         let cropRectInOverlay = cropOverlayView.cropRect
         let imageRectInOverlay = cropOverlayView.imageRect
@@ -79,7 +79,6 @@ extension MediaEditorViewController {
 
         lastCropRect = cropRectInImage
         photoImageView.image = croppedImage
-        originalImage = croppedImage
 
         currentMode.accept(nil)
     }
