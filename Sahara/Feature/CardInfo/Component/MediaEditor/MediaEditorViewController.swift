@@ -268,6 +268,7 @@ final class MediaEditorViewController: UIViewController {
     private let viewWillAppearRelay = PublishRelay<Void>()
     private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
     let photoSelectedRelay = PublishRelay<UIImage>()
+    private let stickerButtonTappedRelay = PublishRelay<Void>()
 
     private var usedTools: Set<String> = []
 
@@ -381,8 +382,7 @@ final class MediaEditorViewController: UIViewController {
                 if owner.currentMode.value == .sticker {
                     owner.currentMode.accept(nil)
                 } else {
-                    owner.currentMode.accept(.sticker)
-                    owner.presentStickerModal()
+                    owner.stickerButtonTappedRelay.accept(())
                 }
             }
             .disposed(by: disposeBag)
@@ -483,6 +483,7 @@ final class MediaEditorViewController: UIViewController {
 
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
+            stickerButtonTapped: stickerButtonTappedRelay.asObservable(),
             searchQuery: .empty(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
@@ -537,6 +538,29 @@ final class MediaEditorViewController: UIViewController {
         output.dismiss
             .drive(with: self) { owner, _ in
                 owner.coordinator?.cancelEditing()
+            }
+            .disposed(by: disposeBag)
+
+        output.errorMessage
+            .drive(with: self) { owner, message in
+                if !message.isEmpty {
+                    owner.showToast(message: message)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.networkErrorMessage
+            .drive(with: self) { owner, message in
+                if !message.isEmpty {
+                    owner.showToast(message: message)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.shouldShowStickerModal
+            .drive(with: self) { owner, _ in
+                owner.currentMode.accept(.sticker)
+                owner.presentStickerModal()
             }
             .disposed(by: disposeBag)
 

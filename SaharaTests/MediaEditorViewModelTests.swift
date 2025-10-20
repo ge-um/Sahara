@@ -48,6 +48,7 @@ final class MediaEditorViewModelTests: XCTestCase {
         let viewWillAppear = PublishSubject<Void>()
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppear.asObservable(),
+            stickerButtonTapped: .empty(),
             searchQuery: .empty(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
@@ -92,6 +93,7 @@ final class MediaEditorViewModelTests: XCTestCase {
         let searchQuery = PublishSubject<String>()
         let input = MediaEditorViewModel.Input(
             viewWillAppear: .empty(),
+            stickerButtonTapped: .empty(),
             searchQuery: searchQuery.asObservable(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
@@ -137,6 +139,7 @@ final class MediaEditorViewModelTests: XCTestCase {
         let searchQuery = PublishSubject<String>()
         let input = MediaEditorViewModel.Input(
             viewWillAppear: .empty(),
+            stickerButtonTapped: .empty(),
             searchQuery: searchQuery.asObservable(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
@@ -193,6 +196,7 @@ final class MediaEditorViewModelTests: XCTestCase {
         let loadMore = PublishSubject<Void>()
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppear.asObservable(),
+            stickerButtonTapped: .empty(),
             searchQuery: .empty(),
             loadMoreTrigger: loadMore.asObservable(),
             stickerSelected: .empty(),
@@ -228,6 +232,89 @@ final class MediaEditorViewModelTests: XCTestCase {
         viewWillAppear.onNext(())
 
         wait(for: [expectation], timeout: 3.0)
+    }
+
+    func test_networkError_shouldEmitErrorMessage() {
+        mockNetworkManager.shouldReturnError = true
+        mockNetworkManager.errorToReturn = NetworkError.notConnectedToInternet
+
+        let viewWillAppear = PublishSubject<Void>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: viewWillAppear.asObservable(),
+            stickerButtonTapped: .empty(),
+            searchQuery: .empty(),
+            loadMoreTrigger: .empty(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        let expectation = XCTestExpectation(description: "Error message emitted")
+
+        output.errorMessage
+            .drive(onNext: { errorMessage in
+                XCTAssertFalse(errorMessage.isEmpty)
+                XCTAssertEqual(errorMessage, NetworkError.notConnectedToInternet.errorDescription)
+                expectation.fulfill()
+            })
+            .disposed(by: disposeBag)
+
+        viewWillAppear.onNext(())
+
+        wait(for: [expectation], timeout: 2.0)
+    }
+
+    func test_searchError_shouldEmitErrorMessage() {
+        let mockStickers = createMockStickers(count: 1)
+        let mockResponse = StickerResponse(
+            result: true,
+            data: StickerData(
+                data: mockStickers,
+                currentPage: 1,
+                perPage: 20,
+                hasNext: false
+            )
+        )
+        mockNetworkManager.mockResponse = mockResponse
+
+        let searchQuery = PublishSubject<String>()
+        let input = MediaEditorViewModel.Input(
+            viewWillAppear: .empty(),
+            stickerButtonTapped: .empty(),
+            searchQuery: searchQuery.asObservable(),
+            loadMoreTrigger: .empty(),
+            stickerSelected: .empty(),
+            filterSelected: .empty(),
+            cropApplied: .empty(),
+            drawingChanged: .empty(),
+            photoSelected: .empty(),
+            doneButtonTapped: .empty(),
+            cancelButtonTapped: .empty()
+        )
+
+        let output = sut.transform(input: input)
+        let expectation = XCTestExpectation(description: "Search error")
+
+        output.errorMessage
+            .drive(onNext: { errorMessage in
+                if !errorMessage.isEmpty {
+                    XCTAssertEqual(errorMessage, NetworkError.invalidURL.errorDescription)
+                    expectation.fulfill()
+                }
+            })
+            .disposed(by: disposeBag)
+
+        searchQuery.onNext("")
+        mockNetworkManager.shouldReturnError = true
+        mockNetworkManager.errorToReturn = NetworkError.invalidURL
+        searchQuery.onNext("test")
+
+        wait(for: [expectation], timeout: 2.0)
     }
 
     private func createMockStickers(count: Int, startId: Int = 1) -> [KlipySticker] {

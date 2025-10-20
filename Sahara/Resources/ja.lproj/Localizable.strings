@@ -105,6 +105,7 @@
 "media_editor.sticker_modal_title" = "ステッカー";
 "media_editor.undo" = "元に戻す";
 "media_editor.redo" = "やり直し";
+"media_editor.network_error" = "ネットワークに接続できません";
 
 /* Filters */
 "filter.original" = "オリジナル";

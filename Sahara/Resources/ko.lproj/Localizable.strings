@@ -105,6 +105,7 @@
 "media_editor.sticker_modal_title" = "스티커";
 "media_editor.undo" = "실행 취소";
 "media_editor.redo" = "다시 실행";
+"media_editor.network_error" = "네트워크에 연결할 수 없어요";
 
 /* Filters */
 "filter.original" = "원본";

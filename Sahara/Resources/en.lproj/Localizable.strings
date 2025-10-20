@@ -105,6 +105,7 @@
 "media_editor.sticker_modal_title" = "Stickers";
 "media_editor.undo" = "Undo";
 "media_editor.redo" = "Redo";
+"media_editor.network_error" = "Unable to connect to network";
 
 /* Filters */
 "filter.original" = "Original";

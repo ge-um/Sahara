@@ -5,6 +5,7 @@
 //  Created by 금가경 on 9/26/25.
 //
 
+import Alamofire
 import Foundation
 import RxCocoa
 import RxSwift
@@ -21,6 +22,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
 
     struct Input {
         let viewWillAppear: Observable<Void>
+        let stickerButtonTapped: Observable<Void>
         let searchQuery: Observable<String>
         let loadMoreTrigger: Observable<Void>
         let stickerSelected: Observable<KlipySticker>
@@ -44,6 +46,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let selectedPhoto: Driver<UIImage>
         let navigateToMetadata: Driver<UIImage>
         let dismiss: Driver<Void>
+        let errorMessage: Driver<String>
+        let networkErrorMessage: Driver<String>
+        let shouldShowStickerModal: Driver<Void>
     }
 
     init(originalImage: UIImage, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
@@ -55,6 +60,21 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let stickersRelay = BehaviorRelay<[KlipySticker]>(value: [])
         let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let isLoadingMoreRelay = BehaviorRelay<Bool>(value: false)
+        let errorRelay = PublishRelay<String>()
+        let networkErrorRelay = PublishRelay<String>()
+        let shouldShowStickerModalRelay = PublishRelay<Void>()
+
+        input.stickerButtonTapped
+            .withUnretained(self)
+            .bind { owner, _ in
+                let isConnected = NetworkReachabilityManager()?.isReachable ?? false
+                if isConnected {
+                    shouldShowStickerModalRelay.accept(())
+                } else {
+                    networkErrorRelay.accept(NSLocalizedString("media_editor.network_error", comment: ""))
+                }
+            }
+            .disposed(by: disposeBag)
 
         input.searchQuery
             .withUnretained(self)
@@ -81,6 +101,14 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                     ),
                     type: StickerResponse.self
                 )
+                .catch { error in
+                    if let networkError = error as? NetworkError {
+                        errorRelay.accept(networkError.errorDescription)
+                    } else {
+                        errorRelay.accept(error.localizedDescription)
+                    }
+                    return Observable.empty()
+                }
             }
             .withUnretained(self)
             .do(onNext: { owner, response in
@@ -95,8 +123,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .distinctUntilChanged()
             .withUnretained(self)
             .flatMapLatest { owner, query -> Observable<StickerResponse> in
+                let request: Observable<StickerResponse>
                 if query.isEmpty {
-                    return owner.networkManager.callRequest(
+                    request = owner.networkManager.callRequest(
                         api: .trendingStickers(
                             page: 1,
                             perPage: 20,
@@ -106,7 +135,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         type: StickerResponse.self
                     )
                 } else {
-                    return owner.networkManager.callRequest(
+                    request = owner.networkManager.callRequest(
                         api: .searchStickers(
                             query: query,
                             page: 1,
@@ -116,6 +145,14 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         ),
                         type: StickerResponse.self
                     )
+                }
+                return request.catch { error in
+                    if let networkError = error as? NetworkError {
+                        errorRelay.accept(networkError.errorDescription)
+                    } else {
+                        errorRelay.accept(error.localizedDescription)
+                    }
+                    return Observable.empty()
                 }
             }
             .withUnretained(self)
@@ -137,8 +174,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 let query = owner.currentQueryRelay.value
                 let page = owner.currentPageRelay.value
 
+                let request: Observable<StickerResponse>
                 if query.isEmpty {
-                    return owner.networkManager.callRequest(
+                    request = owner.networkManager.callRequest(
                         api: .trendingStickers(
                             page: page,
                             perPage: 20,
@@ -148,7 +186,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         type: StickerResponse.self
                     )
                 } else {
-                    return owner.networkManager.callRequest(
+                    request = owner.networkManager.callRequest(
                         api: .searchStickers(
                             query: query,
                             page: page,
@@ -158,6 +196,15 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                         ),
                         type: StickerResponse.self
                     )
+                }
+                return request.catch { error in
+                    isLoadingMoreRelay.accept(false)
+                    if let networkError = error as? NetworkError {
+                        errorRelay.accept(networkError.errorDescription)
+                    } else {
+                        errorRelay.accept(error.localizedDescription)
+                    }
+                    return Observable.empty()
                 }
             }
             .withUnretained(self)
@@ -231,7 +278,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             selectedSticker: selectedSticker,
             selectedPhoto: selectedPhoto,
             navigateToMetadata: navigateToMetadata,
-            dismiss: dismiss
+            dismiss: dismiss,
+            errorMessage: errorRelay.asDriver(onErrorJustReturn: ""),
+            networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
+            shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty())
         )
     }
 
