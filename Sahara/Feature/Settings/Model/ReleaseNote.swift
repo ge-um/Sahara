@@ -21,45 +21,45 @@ struct ReleaseNote {
             version: "1.4.0",
             date: DateComponents(calendar: .current, year: 2025, month: 10, day: 17).date!,
             changes: [
-                "그리기 모드에서 실행 취소/다시 실행 기능을 사용할 수 있어요",
-                "폴더별로 카드를 정리할 수 있어요",
-                "업데이트 소식 알림을 받을 수 있어요",
-                "사진 속 텍스트를 인식해서 검색할 수 있어요",
-                "카드 편집 시 사진과 스티커를 선택하지 않아도 확대할 수 있어요",
-                "통계에서 카드 작성 패턴을 확인할 수 있어요",
-                "통계 차트에 Y축이 추가되어 더 보기 쉬워졌어요",
-                "중국어를 지원해요",
-                "앱이 더욱 안정적으로 작동해요"
+                NSLocalizedString("release_note.1.4.0.1", comment: ""),
+                NSLocalizedString("release_note.1.4.0.2", comment: ""),
+                NSLocalizedString("release_note.1.4.0.3", comment: ""),
+                NSLocalizedString("release_note.1.4.0.4", comment: ""),
+                NSLocalizedString("release_note.1.4.0.5", comment: ""),
+                NSLocalizedString("release_note.1.4.0.6", comment: ""),
+                NSLocalizedString("release_note.1.4.0.7", comment: ""),
+                NSLocalizedString("release_note.1.4.0.8", comment: ""),
+                NSLocalizedString("release_note.1.4.0.9", comment: "")
             ]
         ),
         ReleaseNote(
             version: "1.3.0",
             date: DateComponents(calendar: .current, year: 2025, month: 10, day: 13).date!,
             changes: [
-                "설정 탭이 추가되어 앱을 더 편리하게 관리할 수 있어요",
-                "개발자에게 문의하기 기능으로 의견을 쉽게 전달할 수 있어요",
-                "버전 기록에서 업데이트 내용을 확인할 수 있어요",
-                "카드 보기 화면에서 긴 이미지가 스크롤되지 않던 문제를 해결했어요",
-                "앱이 더욱 안정적으로 작동해요"
+                NSLocalizedString("release_note.1.3.0.1", comment: ""),
+                NSLocalizedString("release_note.1.3.0.2", comment: ""),
+                NSLocalizedString("release_note.1.3.0.3", comment: ""),
+                NSLocalizedString("release_note.1.3.0.4", comment: ""),
+                NSLocalizedString("release_note.1.3.0.5", comment: "")
             ]
         ),
         ReleaseNote(
             version: "1.2.0",
             date: DateComponents(calendar: .current, year: 2025, month: 10, day: 10).date!,
             changes: [
-                "검색 기능으로 원하는 카드를 빠르게 찾을 수 있어요",
-                "통계 기능으로 나의 기록 습관을 한눈에 확인할 수 있어요",
-                "카드 수정 시 메모가 사라지던 문제를 해결했어요",
-                "앱이 더욱 안정적으로 작동해요"
+                NSLocalizedString("release_note.1.2.0.1", comment: ""),
+                NSLocalizedString("release_note.1.2.0.2", comment: ""),
+                NSLocalizedString("release_note.1.2.0.3", comment: ""),
+                NSLocalizedString("release_note.1.2.0.4", comment: "")
             ]
         ),
         ReleaseNote(
             version: "1.1.0",
             date: DateComponents(calendar: .current, year: 2025, month: 10, day: 6).date!,
             changes: [
-                "카드 잠금 기능이 추가되었어요",
-                "위치 정보 수정이 더 쉬워졌어요",
-                "앱이 더 안정적으로 작동해요"
+                NSLocalizedString("release_note.1.1.0.1", comment: ""),
+                NSLocalizedString("release_note.1.1.0.2", comment: ""),
+                NSLocalizedString("release_note.1.1.0.3", comment: "")
             ]
         ),
         ReleaseNote(
