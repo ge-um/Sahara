@@ -94,7 +94,7 @@ enum WeatherCondition: String, PersistableEnum {
 
 final class Card: Object {
     @Persisted(primaryKey: true) var id: ObjectId
-    @Persisted var date: Date
+    @Persisted(indexed: true) var date: Date
     @Persisted var createdDate: Date
     @Persisted var modifiedDate: Date?
     
