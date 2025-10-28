@@ -162,10 +162,64 @@ final class SettingsViewController: UIViewController {
         let mailComposer = MFMailComposeViewController()
         mailComposer.mailComposeDelegate = self
         mailComposer.setToRecipients([email])
-        mailComposer.setSubject("")
-        mailComposer.setMessageBody("", isHTML: false)
+        mailComposer.setSubject(NSLocalizedString("settings.inquiry_subject", comment: ""))
+        mailComposer.setMessageBody(generateEmailBody(), isHTML: false)
 
         present(mailComposer, animated: true)
+    }
+
+    private func generateEmailBody() -> String {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        let iosVersion = UIDevice.current.systemVersion
+        let deviceModel = getDeviceModel()
+
+        return """
+        \(NSLocalizedString("settings.inquiry_message_placeholder", comment: ""))
+
+        ---
+        \(NSLocalizedString("settings.device_info_title", comment: ""))
+        - \(NSLocalizedString("settings.app_version", comment: "")): \(appVersion)
+        - \(NSLocalizedString("settings.ios_version", comment: "")): \(iosVersion)
+        - \(NSLocalizedString("settings.device_model", comment: "")): \(deviceModel)
+        """
+    }
+
+    private func getDeviceModel() -> String {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let modelCode = withUnsafePointer(to: &systemInfo.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 1) {
+                String(validatingUTF8: $0)
+            }
+        }
+
+        guard let code = modelCode else {
+            return UIDevice.current.model
+        }
+
+        let deviceModelMap: [String: String] = [
+            "iPhone14,2": "iPhone 13 Pro",
+            "iPhone14,3": "iPhone 13 Pro Max",
+            "iPhone14,4": "iPhone 13 mini",
+            "iPhone14,5": "iPhone 13",
+            "iPhone14,6": "iPhone SE (3rd generation)",
+            "iPhone14,7": "iPhone 14",
+            "iPhone14,8": "iPhone 14 Plus",
+            "iPhone15,2": "iPhone 14 Pro",
+            "iPhone15,3": "iPhone 14 Pro Max",
+            "iPhone15,4": "iPhone 15",
+            "iPhone15,5": "iPhone 15 Plus",
+            "iPhone16,1": "iPhone 15 Pro",
+            "iPhone16,2": "iPhone 15 Pro Max",
+            "iPhone17,1": "iPhone 16 Pro",
+            "iPhone17,2": "iPhone 16 Pro Max",
+            "iPhone17,3": "iPhone 16",
+            "iPhone17,4": "iPhone 16 Plus",
+            "arm64": "Simulator",
+            "x86_64": "Simulator"
+        ]
+
+        return deviceModelMap[code] ?? code
     }
 
     private func showMailError() {

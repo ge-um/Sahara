@@ -192,6 +192,12 @@
 "settings.mail_error_message" = "메일 앱을 사용할 수 없어요";
 "settings.notification_denied_title" = "알림 설정이 필요해요";
 "settings.notification_denied_message" = "설정에서 알림을 허용해주세요";
+"settings.inquiry_subject" = "[사하라] 문의";
+"settings.inquiry_message_placeholder" = "문의 내용을 입력해주세요.";
+"settings.device_info_title" = "기기 정보";
+"settings.app_version" = "앱 버전";
+"settings.ios_version" = "iOS 버전";
+"settings.device_model" = "기기 모델";
 
 /* Release Notes */
 "release_notes.title" = "버전 기록";

@@ -192,6 +192,12 @@
 "settings.mail_error_message" = "Mail app is not available";
 "settings.notification_denied_title" = "Notification Settings Required";
 "settings.notification_denied_message" = "Please enable notifications in Settings";
+"settings.inquiry_subject" = "[Sahara] Inquiry";
+"settings.inquiry_message_placeholder" = "Please enter your inquiry here.";
+"settings.device_info_title" = "Device Information";
+"settings.app_version" = "App Version";
+"settings.ios_version" = "iOS Version";
+"settings.device_model" = "Device Model";
 
 /* Release Notes */
 "release_notes.title" = "Release Notes";
