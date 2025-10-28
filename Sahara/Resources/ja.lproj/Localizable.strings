@@ -192,6 +192,12 @@
 "settings.mail_error_message" = "メールアプリを使用できません";
 "settings.notification_denied_title" = "通知設定が必要です";
 "settings.notification_denied_message" = "設定で通知を許可してください";
+"settings.inquiry_subject" = "[サハラ] お問い合わせ";
+"settings.inquiry_message_placeholder" = "お問い合わせ内容を入力してください。";
+"settings.device_info_title" = "デバイス情報";
+"settings.app_version" = "アプリバージョン";
+"settings.ios_version" = "iOSバージョン";
+"settings.device_model" = "デバイスモデル";
 
 /* Release Notes */
 "release_notes.title" = "バージョン履歴";
