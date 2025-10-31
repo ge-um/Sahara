@@ -217,6 +217,8 @@
 "language.chinese" = "简体中文";
 
 /* Release Note Details */
+"release_note.1.4.1.1" = "Device information is now automatically included when contacting support for more accurate assistance";
+"release_note.1.4.1.2" = "The app now works more stably";
 "release_note.1.4.0.1" = "Undo/Redo feature available in drawing mode";
 "release_note.1.4.0.2" = "Organize cards by folders";
 "release_note.1.4.0.3" = "Receive service news notifications";
