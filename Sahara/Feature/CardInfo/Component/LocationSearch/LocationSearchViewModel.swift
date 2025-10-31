@@ -20,6 +20,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
     private let locationUpdateSubject = PublishSubject<CLLocation>()
     private var isLoadingRelay: BehaviorRelay<Bool>?
     private var selectedLocationRelay: PublishRelay<(CLLocationCoordinate2D, String)>?
+    private var isWaitingForLocationPermission = false
 
     struct Input {
         let viewDidLoad: Observable<Void>
@@ -80,6 +81,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
 
                 switch authStatus {
                 case .notDetermined:
+                    owner.isWaitingForLocationPermission = true
                     owner.locationManager.requestWhenInUseAuthorization()
                 case .authorizedWhenInUse, .authorizedAlways:
                     isLoadingRelay.accept(true)
@@ -166,7 +168,10 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        guard isWaitingForLocationPermission else { return }
+
         if status == .authorizedWhenInUse || status == .authorizedAlways {
+            isWaitingForLocationPermission = false
             isLoadingRelay?.accept(true)
             if let cachedLocation = manager.location {
                 handleLocation(cachedLocation, selectedRelay: selectedLocationRelay!, loadingRelay: isLoadingRelay!)
