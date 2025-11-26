@@ -27,7 +27,6 @@ final class MediaEditorImageHandler {
         let image = renderer.image { context in
             context.cgContext.translateBy(x: -imageRect.origin.x, y: -imageRect.origin.y)
             photoImageView.layer.render(in: context.cgContext)
-            stickerContainerView.layer.render(in: context.cgContext)
 
             let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
             drawingImage.draw(at: .zero)

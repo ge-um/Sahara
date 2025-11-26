@@ -18,14 +18,21 @@ final class CardInfoView: UIView {
 
     private let contentView = UIView()
 
+    private let photoContainer: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 16
+        view.clipsToBounds = true
+        return view
+    }()
+
     let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 16
-        imageView.clipsToBounds = true
         imageView.isUserInteractionEnabled = true
         return imageView
     }()
+
+    private var stickerViews: [AnimatedStickerView] = []
 
     lazy var photoSelectButton: UIButton = {
         let button = UIButton()
@@ -58,7 +65,8 @@ final class CardInfoView: UIView {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        contentView.addSubview(photoImageView)
+        contentView.addSubview(photoContainer)
+        photoContainer.addSubview(photoImageView)
         contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         contentView.addSubview(memoCard)
@@ -76,10 +84,14 @@ final class CardInfoView: UIView {
             make.width.equalTo(scrollView)
         }
 
-        photoImageView.snp.makeConstraints { make in
+        photoContainer.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
             photoImageHeightConstraint = make.height.equalTo(300).constraint
+        }
+
+        photoImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         photoSelectButton.snp.makeConstraints { make in
@@ -89,7 +101,7 @@ final class CardInfoView: UIView {
         }
 
         dateCard.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(20)
+            make.top.equalTo(photoContainer.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
@@ -123,23 +135,49 @@ final class CardInfoView: UIView {
     func updatePhotoImageHeight(for image: UIImage) {
         let aspectRatio = image.size.height / image.size.width
 
-        photoImageView.snp.remakeConstraints { make in
+        photoContainer.snp.remakeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(photoImageView.snp.width).multipliedBy(aspectRatio)
+            make.height.equalTo(photoContainer.snp.width).multipliedBy(aspectRatio)
         }
 
         layoutIfNeeded()
     }
 
     func resetPhotoImageHeight() {
-        photoImageView.snp.remakeConstraints { make in
+        photoContainer.snp.remakeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(300)
         }
 
         layoutIfNeeded()
+    }
+
+    func renderStickers(_ stickers: [StickerDTO]) {
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
+
+        guard let image = photoImageView.image else { return }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: photoContainer.bounds.size
+        )
+
+        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
+
+        for sticker in sortedStickers {
+            let stickerView = AnimatedStickerView()
+            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
+            photoContainer.addSubview(stickerView)
+            stickerViews.append(stickerView)
+        }
+    }
+
+    func clearStickers() {
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
     }
 
     func applyGradients() {

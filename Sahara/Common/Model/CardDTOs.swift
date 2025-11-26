@@ -85,6 +85,18 @@ struct StickerDTO {
     let localFilePath: String?
     let photoAssetId: String?
 
+    init(x: Double, y: Double, scale: Double, rotation: Double, zIndex: Int, sourceType: StickerSourceType, resourceUrl: String?, localFilePath: String?, photoAssetId: String?) {
+        self.x = x
+        self.y = y
+        self.scale = scale
+        self.rotation = rotation
+        self.zIndex = zIndex
+        self.sourceType = sourceType
+        self.resourceUrl = resourceUrl
+        self.localFilePath = localFilePath
+        self.photoAssetId = photoAssetId
+    }
+
     init(from sticker: Sticker) {
         self.x = sticker.x
         self.y = sticker.y

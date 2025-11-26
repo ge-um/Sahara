@@ -62,6 +62,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialCustomFolder: String?
         let initialLocation: CLLocation?
         let initialIsLocked: Bool
+        let initialStickers: [StickerDTO]
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
         let shouldPopToListOnDelete: Driver<Bool>
@@ -101,6 +102,23 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.initialCustomFolder = card.customFolder
         if let lat = card.latitude, let lon = card.longitude {
             self.originalLocation = CLLocation(latitude: lat, longitude: lon)
+        }
+
+        let stickers = Array(card.stickers.map { StickerDTO(from: $0) })
+        let format: ImageSourceData.ImageFormat? = {
+            if let formatString = card.imageFormat {
+                return ImageSourceData.ImageFormat(rawValue: formatString)
+            }
+            return nil
+        }()
+
+        if let editedImage = self.editedImage {
+            self.imageSourceData = ImageSourceData(
+                image: editedImage,
+                originalData: card.originalImageData,
+                format: format,
+                stickers: stickers
+            )
         }
     }
 
@@ -212,6 +230,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let hasImage = imageRelay.map { $0 != nil }.asDriver(onErrorJustReturn: false)
 
+        let initialStickers = imageSourceData?.stickers ?? []
+
         return Output(
             editedImage: imageRelay.asDriver(),
             hasImage: hasImage,
@@ -225,6 +245,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             initialCustomFolder: initialCustomFolder,
             initialLocation: initialLocation,
             initialIsLocked: initialIsLocked,
+            initialStickers: initialStickers,
             deleted: deleted,
             shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false),
             shouldPopToListOnDelete: shouldPopToListOnDeleteRelay.asDriver(onErrorJustReturn: false)

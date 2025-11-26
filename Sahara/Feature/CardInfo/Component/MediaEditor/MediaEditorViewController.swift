@@ -535,7 +535,8 @@ final class MediaEditorViewController: UIViewController {
             })
             .drive(with: self) { owner, result in
                 let (editedImage, wasEdited) = result
-                owner.coordinator?.finishEditing(with: editedImage, wasEdited: wasEdited)
+                let stickerDTOs = owner.convertStickersToDTO()
+                owner.coordinator?.finishEditing(with: editedImage, stickers: stickerDTOs, wasEdited: wasEdited)
             }
             .disposed(by: disposeBag)
 
@@ -715,6 +716,43 @@ final class MediaEditorViewController: UIViewController {
     private func deselectAll() {
         selectedView?.isSelected = false
         selectedView = nil
+    }
+
+    private func convertStickersToDTO() -> [StickerDTO] {
+        guard let image = photoImageView.image else {
+            return []
+        }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: photoImageView.bounds.size
+        )
+
+        guard imageRect.width > 0, imageRect.height > 0 else {
+            return []
+        }
+
+        return stickerViews.enumerated().map { index, stickerView in
+            let relativeCenterX = stickerView.center.x - imageRect.origin.x
+            let relativeCenterY = stickerView.center.y - imageRect.origin.y
+
+            let normalizedX = relativeCenterX / imageRect.width
+            let normalizedY = relativeCenterY / imageRect.height
+            let scale = sqrt(stickerView.transform.a * stickerView.transform.a + stickerView.transform.c * stickerView.transform.c)
+            let rotation = atan2(stickerView.transform.b, stickerView.transform.a)
+
+            return StickerDTO(
+                x: normalizedX,
+                y: normalizedY,
+                scale: Double(scale),
+                rotation: Double(rotation),
+                zIndex: index,
+                sourceType: .kilpy,
+                resourceUrl: stickerView.stickerURL?.absoluteString,
+                localFilePath: nil,
+                photoAssetId: nil
+            )
+        }
     }
 }
 

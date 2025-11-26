@@ -59,11 +59,18 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         stickerViews.forEach { $0.removeFromSuperview() }
         stickerViews.removeAll()
 
+        guard let image = imageView.image else { return }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: contentView.bounds.size
+        )
+
         let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
 
         for sticker in sortedStickers {
             let stickerView = AnimatedStickerView()
-            stickerView.configure(with: sticker, containerSize: contentView.bounds.size)
+            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
             contentView.addSubview(stickerView)
             stickerViews.append(stickerView)
         }

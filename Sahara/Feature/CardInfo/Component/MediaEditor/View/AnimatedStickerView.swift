@@ -30,9 +30,9 @@ final class AnimatedStickerView: UIView {
         imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
     }
 
-    func configure(with sticker: StickerDTO, containerSize: CGSize) {
+    func configure(with sticker: StickerDTO, containerSize: CGSize, imageOrigin: CGPoint = .zero) {
         guard let resourceUrl = sticker.resourceUrl, let url = URL(string: resourceUrl) else {
-            configureLocalSticker(sticker)
+            configureLocalSticker(sticker, containerSize: containerSize, imageOrigin: imageOrigin)
             return
         }
 
@@ -45,19 +45,30 @@ final class AnimatedStickerView: UIView {
 
         imageView.kf.setImage(with: url, options: options)
 
-        frame = CGRect(
-            x: sticker.x * containerSize.width,
-            y: sticker.y * containerSize.height,
-            width: 100 * sticker.scale,
-            height: 100 * sticker.scale
-        )
-        transform = CGAffineTransform(rotationAngle: sticker.rotation)
+        applyTransform(sticker: sticker, containerSize: containerSize, imageOrigin: imageOrigin)
     }
 
-    private func configureLocalSticker(_ sticker: StickerDTO) {
+    private func configureLocalSticker(_ sticker: StickerDTO, containerSize: CGSize, imageOrigin: CGPoint) {
         if let localPath = sticker.localFilePath {
             let fileURL = URL(fileURLWithPath: localPath)
             imageView.kf.setImage(with: fileURL)
         }
+
+        applyTransform(sticker: sticker, containerSize: containerSize, imageOrigin: imageOrigin)
+    }
+
+    private func applyTransform(sticker: StickerDTO, containerSize: CGSize, imageOrigin: CGPoint) {
+        let width = 100 * sticker.scale
+        let height = 100 * sticker.scale
+        let centerX = imageOrigin.x + (sticker.x * containerSize.width)
+        let centerY = imageOrigin.y + (sticker.y * containerSize.height)
+
+        frame = CGRect(
+            x: centerX - width / 2,
+            y: centerY - height / 2,
+            width: width,
+            height: height
+        )
+        transform = CGAffineTransform(rotationAngle: sticker.rotation)
     }
 }

@@ -149,11 +149,21 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     }
 
     private func renderStickers(_ stickers: [StickerDTO], in containerView: UIView) {
+        guard let imageView = containerView as? UIImageView,
+              let image = imageView.image else {
+            return
+        }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: containerView.bounds.size
+        )
+
         let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
 
         for sticker in sortedStickers {
             let stickerView = AnimatedStickerView()
-            stickerView.configure(with: sticker, containerSize: containerView.bounds.size)
+            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
             containerView.addSubview(stickerView)
             stickerViews.append(stickerView)
         }

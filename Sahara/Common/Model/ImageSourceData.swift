@@ -11,6 +11,7 @@ struct ImageSourceData {
     let image: UIImage
     let originalData: Data?
     let format: ImageFormat?
+    let stickers: [StickerDTO]
 
     enum ImageFormat: String {
         case heic
@@ -33,9 +34,10 @@ struct ImageSourceData {
         }
     }
 
-    init(image: UIImage, originalData: Data? = nil, format: ImageFormat? = nil) {
+    init(image: UIImage, originalData: Data? = nil, format: ImageFormat? = nil, stickers: [StickerDTO] = []) {
         self.image = image
         self.originalData = originalData
         self.format = format
+        self.stickers = stickers
     }
 }

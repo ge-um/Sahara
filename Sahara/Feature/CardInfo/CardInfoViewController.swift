@@ -281,6 +281,12 @@ final class CardInfoViewController: UIViewController {
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)
                     }
+
+                    if output.isEditMode && !output.initialStickers.isEmpty {
+                        DispatchQueue.main.async {
+                            owner.contentView.renderStickers(output.initialStickers)
+                        }
+                    }
                 } else {
                     owner.contentView.resetPhotoImageHeight()
                 }
@@ -355,12 +361,19 @@ final class CardInfoViewController: UIViewController {
         }
 
         coordinator.presentMediaEditor(imageSource: imageSource, selectedImageSubject: selectedImageSubject) { [weak self] editedImage, imageSourceData, wasEdited in
-            self?.contentView.photoImageView.image = editedImage
-            self?.contentView.photoImageView.isHidden = false
-            self?.contentView.photoSelectButton.isHidden = true
+            guard let self = self else { return }
+            self.contentView.photoImageView.image = editedImage
+            self.contentView.photoImageView.isHidden = false
+            self.contentView.photoSelectButton.isHidden = true
+            self.contentView.updatePhotoImageHeight(for: editedImage)
+
+            self.view.layoutIfNeeded()
+
+            self.contentView.renderStickers(imageSourceData.stickers)
+
             selectedImageSubject.onNext(editedImage)
-            self?.imageSourceDataRelay.accept(imageSourceData)
-            self?.wasEditedRelay.accept(wasEdited)
+            self.imageSourceDataRelay.accept(imageSourceData)
+            self.wasEditedRelay.accept(wasEdited)
         }
     }
 

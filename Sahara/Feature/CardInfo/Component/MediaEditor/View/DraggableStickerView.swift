@@ -15,6 +15,8 @@ final class DraggableStickerView: BaseGestureView {
         return imageView
     }()
 
+    var stickerURL: URL?
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureUI()
@@ -44,6 +46,7 @@ final class DraggableStickerView: BaseGestureView {
         }
 
         if let urlString = urlString, let url = URL(string: urlString) {
+            self.stickerURL = url
             let options: KingfisherOptionsInfo = [
                 .scaleFactor(UIScreen.main.scale),
                 .memoryCacheExpiration(.seconds(600)),

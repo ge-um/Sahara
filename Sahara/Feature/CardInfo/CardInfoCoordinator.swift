@@ -115,10 +115,18 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with image: UIImage, wasEdited: Bool) {
+    func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool) {
         parentViewController?.dismiss(animated: true) { [weak self] in
-            guard let self = self, let imageSource = self.currentImageSource else { return }
-            self.onMediaEditingComplete?(image, imageSource, wasEdited)
+            guard let self = self, let originalImageSource = self.currentImageSource else { return }
+
+            let updatedImageSource = ImageSourceData(
+                image: image,
+                originalData: originalImageSource.originalData,
+                format: originalImageSource.format,
+                stickers: stickers
+            )
+
+            self.onMediaEditingComplete?(image, updatedImageSource, wasEdited)
             self.onMediaEditingComplete = nil
             self.mediaEditorCoordinator = nil
             self.currentImageSource = nil
