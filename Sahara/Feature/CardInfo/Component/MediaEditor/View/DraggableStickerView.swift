@@ -9,8 +9,8 @@ import Kingfisher
 import UIKit
 
 final class DraggableStickerView: BaseGestureView {
-    private let imageView: UIImageView = {
-        let imageView = UIImageView()
+    private let imageView: AnimatedImageView = {
+        let imageView = AnimatedImageView()
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -34,21 +34,21 @@ final class DraggableStickerView: BaseGestureView {
         var urlString: String?
 
         if let hd = sticker.file.hd {
-            urlString = hd.webp?.url ?? hd.gif?.url
+            urlString = hd.gif?.url ?? hd.webp?.url
         } else if let md = sticker.file.md {
-            urlString = md.webp?.url ?? md.gif?.url
+            urlString = md.gif?.url ?? md.webp?.url
         } else if let sm = sticker.file.sm {
-            urlString = sm.webp?.url ?? sm.gif?.url
+            urlString = sm.gif?.url ?? sm.webp?.url
         } else if let xs = sticker.file.xs {
-            urlString = xs.webp?.url ?? xs.gif?.url
+            urlString = xs.gif?.url ?? xs.webp?.url
         }
 
         if let urlString = urlString, let url = URL(string: urlString) {
             let options: KingfisherOptionsInfo = [
-                .processor(DownsamplingImageProcessor(size: bounds.size)),
                 .scaleFactor(UIScreen.main.scale),
                 .memoryCacheExpiration(.seconds(600)),
-                .diskCacheExpiration(.days(7))
+                .diskCacheExpiration(.days(7)),
+                .cacheOriginalImage
             ]
             imageView.kf.setImage(with: url, options: options)
         }

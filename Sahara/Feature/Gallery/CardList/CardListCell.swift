@@ -17,6 +17,8 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         return imageView
     }()
 
+    private var stickerViews: [AnimatedStickerView] = []
+
     private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
 
     override init(frame: CGRect) {
@@ -49,11 +51,29 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
             imageView.image = image
         }
         blurEffectView.isHidden = !item.isLocked
+
+        renderStickers(item.stickers)
+    }
+
+    private func renderStickers(_ stickers: [StickerDTO]) {
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
+
+        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
+
+        for sticker in sortedStickers {
+            let stickerView = AnimatedStickerView()
+            stickerView.configure(with: sticker, containerSize: contentView.bounds.size)
+            contentView.addSubview(stickerView)
+            stickerViews.append(stickerView)
+        }
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
         blurEffectView.isHidden = true
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
     }
 }

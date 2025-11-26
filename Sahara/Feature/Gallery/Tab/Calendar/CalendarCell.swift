@@ -29,6 +29,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var imageViews: [UIImageView] = []
     private var blurViews: [UIVisualEffectView] = []
+    private var stickerViews: [AnimatedStickerView] = []
     private var isToday = false
 
     override init(frame: CGRect) {
@@ -66,6 +67,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.removeAll()
         blurViews.forEach { $0.removeFromSuperview() }
         blurViews.removeAll()
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
 
         isToday = false
         contentView.layer.borderWidth = 0
@@ -132,6 +135,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             make.edges.equalToSuperview()
         }
 
+        renderStickers(card.stickers, in: imageView)
+
         if card.isLocked {
             let blurView = createBlurView()
             blurView.layer.cornerRadius = 8
@@ -140,6 +145,17 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             blurView.snp.makeConstraints { make in
                 make.edges.equalTo(imageView)
             }
+        }
+    }
+
+    private func renderStickers(_ stickers: [StickerDTO], in containerView: UIView) {
+        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
+
+        for sticker in sortedStickers {
+            let stickerView = AnimatedStickerView()
+            stickerView.configure(with: sticker, containerSize: containerView.bounds.size)
+            containerView.addSubview(stickerView)
+            stickerViews.append(stickerView)
         }
     }
 
@@ -292,6 +308,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.removeAll()
         blurViews.forEach { $0.removeFromSuperview() }
         blurViews.removeAll()
+        stickerViews.forEach { $0.removeFromSuperview() }
+        stickerViews.removeAll()
         dayLabel.text = ""
         contentView.layer.borderWidth = 0
         isToday = false

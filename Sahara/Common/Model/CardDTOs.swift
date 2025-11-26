@@ -13,12 +13,14 @@ struct CardListItemDTO {
     let editedImageData: Data
     let originalImageData: Data?
     let isLocked: Bool
+    let stickers: [StickerDTO]
 
     init(from card: Card) {
         self.id = card.id
         self.editedImageData = card.editedImageData
         self.originalImageData = card.originalImageData
         self.isLocked = card.isLocked
+        self.stickers = card.stickers.map { StickerDTO(from: $0) }
     }
 
     init(from dto: CardCalendarItemDTO) {
@@ -26,6 +28,7 @@ struct CardListItemDTO {
         self.editedImageData = dto.editedImageData
         self.originalImageData = dto.originalImageData
         self.isLocked = dto.isLocked
+        self.stickers = dto.stickers
     }
 }
 
@@ -59,6 +62,7 @@ struct CardCalendarItemDTO {
     let editedImageData: Data
     let originalImageData: Data?
     let isLocked: Bool
+    let stickers: [StickerDTO]
 
     init(from card: Card) {
         self.id = card.id
@@ -66,5 +70,30 @@ struct CardCalendarItemDTO {
         self.editedImageData = card.editedImageData
         self.originalImageData = card.originalImageData
         self.isLocked = card.isLocked
+        self.stickers = card.stickers.map { StickerDTO(from: $0) }
+    }
+}
+
+struct StickerDTO {
+    let x: Double
+    let y: Double
+    let scale: Double
+    let rotation: Double
+    let zIndex: Int
+    let sourceType: StickerSourceType
+    let resourceUrl: String?
+    let localFilePath: String?
+    let photoAssetId: String?
+
+    init(from sticker: Sticker) {
+        self.x = sticker.x
+        self.y = sticker.y
+        self.scale = sticker.scale
+        self.rotation = sticker.rotation
+        self.zIndex = sticker.zIndex
+        self.sourceType = sticker.sourceType
+        self.resourceUrl = sticker.resourceUrl
+        self.localFilePath = sticker.localFilePath
+        self.photoAssetId = sticker.photoAssetId
     }
 }
