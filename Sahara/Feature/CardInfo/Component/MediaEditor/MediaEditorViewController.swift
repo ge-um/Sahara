@@ -269,6 +269,8 @@ final class MediaEditorViewController: UIViewController {
     private let filterSelectedRelay = PublishRelay<(Int, UIImage?)>()
     let photoSelectedRelay = PublishRelay<UIImage>()
     private let stickerButtonTappedRelay = PublishRelay<Void>()
+    private let stickerAddedRelay = PublishRelay<(sticker: KlipySticker, position: CGPoint, scale: CGFloat)>()
+    private let drawingChangedRelay = PublishRelay<Void>()
 
     private var usedTools: Set<String> = []
 
@@ -487,9 +489,10 @@ final class MediaEditorViewController: UIViewController {
             searchQuery: .empty(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: stickerAddedRelay.asObservable(),
             filterSelected: filterSelectedRelay.asObservable(),
             cropApplied: Observable.just((UIImage(), CGRect.zero, CGRect.zero)),
-            drawingChanged: Observable.just(()),
+            drawingChanged: drawingChangedRelay.asObservable(),
             photoSelected: photoSelectedRelay.asObservable(),
             doneButtonTapped: doneButton.rx.tap.asObservable().map { [weak self] in
                 guard let self = self else { return UIImage() }
@@ -601,6 +604,10 @@ final class MediaEditorViewController: UIViewController {
 
         stickerViews.append(stickerView)
         selectView(stickerView)
+
+        let position = CGPoint(x: centerX, y: centerY)
+        let scale: CGFloat = 1.0
+        stickerAddedRelay.accept((sticker: sticker, position: position, scale: scale))
     }
 
     func addPhotoToCanvas(_ image: UIImage) {
@@ -739,6 +746,7 @@ extension MediaEditorViewController: UICollectionViewDataSource {
 extension MediaEditorViewController: PKCanvasViewDelegate {
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         updateUndoRedoButtons()
+        drawingChangedRelay.accept(())
     }
 }
 

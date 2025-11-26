@@ -19,6 +19,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
     private let currentQueryRelay = BehaviorRelay<String>(value: "")
+    private let wasEditedRelay = BehaviorRelay<Bool>(value: false)
+    private let addedStickersRelay = BehaviorRelay<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>(value: [])
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -26,6 +28,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let searchQuery: Observable<String>
         let loadMoreTrigger: Observable<Void>
         let stickerSelected: Observable<KlipySticker>
+        let stickerAdded: Observable<(sticker: KlipySticker, position: CGPoint, scale: CGFloat)>
         let filterSelected: Observable<(Int, UIImage?)>
         let cropApplied: Observable<(UIImage, CGRect, CGRect)>
         let drawingChanged: Observable<Void>
@@ -49,6 +52,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let errorMessage: Driver<String>
         let networkErrorMessage: Driver<String>
         let shouldShowStickerModal: Driver<Void>
+        let wasEdited: Driver<Bool>
+        let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
     }
 
     private let originalImageSource: ImageSourceData
@@ -240,6 +245,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .bind(with: self) { owner, image in
                 owner.imageStateHandler.applyFilter(image)
                 filteredImageRelay.accept(image)
+                owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
@@ -255,6 +261,26 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             }
             .bind(with: self) { owner, croppedImage in
                 owner.imageStateHandler.applyCrop(croppedImage)
+                owner.wasEditedRelay.accept(true)
+            }
+            .disposed(by: disposeBag)
+
+        // 스티커 추가 추적
+        input.stickerAdded
+            .withUnretained(self)
+            .bind { owner, stickerData in
+                var currentStickers = owner.addedStickersRelay.value
+                currentStickers.append(stickerData)
+                owner.addedStickersRelay.accept(currentStickers)
+                owner.wasEditedRelay.accept(true)
+            }
+            .disposed(by: disposeBag)
+
+        // 드로잉 변경 추적
+        input.drawingChanged
+            .withUnretained(self)
+            .bind { owner, _ in
+                owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
@@ -284,7 +310,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             dismiss: dismiss,
             errorMessage: errorRelay.asDriver(onErrorJustReturn: ""),
             networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
-            shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty())
+            shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
+            wasEdited: wasEditedRelay.asDriver(),
+            addedStickers: addedStickersRelay.asDriver()
         )
     }
 
