@@ -368,7 +368,8 @@ extension GalleryViewController: PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     guard let image = image as? UIImage else { return }
 
-                    let stickerViewModel = MediaEditorViewModel(originalImage: image)
+                    let imageSource = ImageSourceData(image: image)
+                    let stickerViewModel = MediaEditorViewModel(imageSource: imageSource)
                     let stickerVC = MediaEditorViewController(viewModel: stickerViewModel)
                     let nav = UINavigationController(rootViewController: stickerVC)
                     nav.modalPresentationStyle = .fullScreen

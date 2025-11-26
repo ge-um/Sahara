@@ -190,16 +190,16 @@ final class CardInfoViewController: UIViewController {
 
         photoImageTapGesture.rx.event
             .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                    owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
                 }
             }
             .disposed(by: disposeBag)
 
         contentView.photoSelectButton.rx.tap
             .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                    owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
                 }
             }
             .disposed(by: disposeBag)
@@ -339,7 +339,7 @@ final class CardInfoViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
+    private func openPhotoEditor(with imageSource: ImageSourceData, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
         if let date = date {
             selectedDateRelay.accept(date)
         }
@@ -350,7 +350,7 @@ final class CardInfoViewController: UIViewController {
             initialLocationRelay.onNext(nil)
         }
 
-        coordinator.presentMediaEditor(image: image, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
+        coordinator.presentMediaEditor(imageSource: imageSource, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
             self?.contentView.photoImageView.image = editedImage
             self?.contentView.photoImageView.isHidden = false
             self?.contentView.photoSelectButton.isHidden = true

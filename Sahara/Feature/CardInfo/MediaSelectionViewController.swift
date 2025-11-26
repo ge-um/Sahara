@@ -31,7 +31,7 @@ final class MediaSelectionViewController: UIViewController {
     private let cameraButtonTappedRelay = PublishRelay<Void>()
     private let libraryButtonTappedRelay = PublishRelay<Void>()
     private let photoSelectedRelay = PublishRelay<PHAsset>()
-    private let imagePickerResultRelay = PublishRelay<(UIImage, CLLocation?, Date?, MediaSource)>()
+    private let imagePickerResultRelay = PublishRelay<(ImageSourceData, CLLocation?, Date?, MediaSource)>()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -51,7 +51,7 @@ final class MediaSelectionViewController: UIViewController {
         return cv
     }()
 
-    var onMediaSelected: ((UIImage, CLLocation?, Date?) -> Void)?
+    var onMediaSelected: ((ImageSourceData, CLLocation?, Date?) -> Void)?
     private let imageManager = PHCachingImageManager()
     private var isObserverRegistered = false
 
@@ -274,7 +274,8 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
-            imagePickerResultRelay.accept((image, nil, nil, .camera))
+            let imageSource = ImageSourceData(image: image)
+            imagePickerResultRelay.accept((imageSource, nil, nil, .camera))
         }
     }
 
@@ -289,11 +290,46 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
 
         guard let itemProvider = results.first?.itemProvider else { return }
 
+        let typeIdentifiers = itemProvider.registeredTypeIdentifiers
+        let preferredType = typeIdentifiers.first ?? "public.image"
+
+        itemProvider.loadFileRepresentation(forTypeIdentifier: preferredType) { [weak self] url, error in
+            guard let url = url, error == nil else {
+                self?.loadImageFallback(from: itemProvider)
+                return
+            }
+
+            do {
+                let data = try Data(contentsOf: url)
+                guard let image = UIImage(data: data) else {
+                    self?.loadImageFallback(from: itemProvider)
+                    return
+                }
+
+                let format = ImageFormatDetector.detectFromUTI(preferredType)
+                    ?? ImageFormatDetector.detect(from: data)
+
+                DispatchQueue.main.async {
+                    let imageSource = ImageSourceData(
+                        image: image,
+                        originalData: data,
+                        format: format
+                    )
+                    self?.imagePickerResultRelay.accept((imageSource, nil, nil, .library))
+                }
+            } catch {
+                self?.loadImageFallback(from: itemProvider)
+            }
+        }
+    }
+
+    private func loadImageFallback(from itemProvider: NSItemProvider) {
         if itemProvider.canLoadObject(ofClass: UIImage.self) {
             itemProvider.loadObject(ofClass: UIImage.self) { [weak self] image, _ in
                 DispatchQueue.main.async {
                     if let image = image as? UIImage {
-                        self?.imagePickerResultRelay.accept((image, nil, nil, .library))
+                        let imageSource = ImageSourceData(image: image)
+                        self?.imagePickerResultRelay.accept((imageSource, nil, nil, .library))
                     }
                 }
             }

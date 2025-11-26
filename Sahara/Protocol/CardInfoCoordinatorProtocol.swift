@@ -12,11 +12,11 @@ import UIKit
 protocol CardInfoCoordinatorProtocol: AnyObject {
     func presentMediaSelection(
         selectedImageSubject: BehaviorSubject<UIImage?>,
-        completion: @escaping (UIImage, CLLocation?, Date?) -> Void
+        completion: @escaping (ImageSourceData, CLLocation?, Date?) -> Void
     )
 
     func presentMediaEditor(
-        image: UIImage,
+        imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
         onEditingComplete: @escaping (UIImage) -> Void
     )

@@ -51,8 +51,11 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let shouldShowStickerModal: Driver<Void>
     }
 
-    init(originalImage: UIImage, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
-        self.imageStateHandler = MediaEditorImageStateHandler(originalImage: originalImage)
+    private let originalImageSource: ImageSourceData
+
+    init(imageSource: ImageSourceData, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
+        self.originalImageSource = imageSource
+        self.imageStateHandler = MediaEditorImageStateHandler(originalImage: imageSource.image)
         self.networkManager = networkManager
     }
 

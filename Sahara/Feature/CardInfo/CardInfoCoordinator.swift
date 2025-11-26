@@ -27,10 +27,10 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
     func start() {}
 
-    func presentMediaSelection(selectedImageSubject: BehaviorSubject<UIImage?>, completion: @escaping (UIImage, CLLocation?, Date?) -> Void) {
+    func presentMediaSelection(selectedImageSubject: BehaviorSubject<UIImage?>, completion: @escaping (ImageSourceData, CLLocation?, Date?) -> Void) {
         let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { image, location, date in
-            completion(image, location, date)
+        mediaSelectionVC.onMediaSelected = { imageSource, location, date in
+            completion(imageSource, location, date)
         }
 
         let navController = UINavigationController(rootViewController: mediaSelectionVC)
@@ -42,7 +42,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     }
 
     func presentMediaEditor(
-        image: UIImage,
+        imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
         onEditingComplete: @escaping (UIImage) -> Void
     ) {
@@ -56,7 +56,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
             self.mediaEditorCoordinator = MediaEditorCoordinator(
                 navigationController: navController,
-                originalImage: image
+                imageSource: imageSource
             )
             self.mediaEditorCoordinator?.delegate = self
             self.mediaEditorCoordinator?.start()
