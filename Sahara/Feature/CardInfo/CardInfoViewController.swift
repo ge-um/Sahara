@@ -52,6 +52,8 @@ final class CardInfoViewController: UIViewController {
     let disposeBag = DisposeBag()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
+    let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
+    let wasEditedRelay = BehaviorRelay<Bool>(value: false)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -222,6 +224,8 @@ final class CardInfoViewController: UIViewController {
 
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
+            imageSourceData: imageSourceDataRelay.asObservable(),
+            wasEdited: wasEditedRelay.asObservable(),
             date: selectedDateRelay.asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .map { [weak self] text in

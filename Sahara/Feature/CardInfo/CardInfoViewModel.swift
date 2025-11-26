@@ -24,6 +24,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private let realmManager: RealmManagerProtocol
     private let ocrManager: OCRManagerProtocol
     private var editedImage: UIImage?
+    private var imageSourceData: ImageSourceData?
+    private var wasImageEdited: Bool = false
     private var cardToEditId: ObjectId?
     private var originalDate: Date?
     private var originalLocation: CLLocation?
@@ -35,6 +37,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
     struct Input {
         let selectedImage: Observable<UIImage?>
+        let imageSourceData: Observable<ImageSourceData?>
+        let wasEdited: Observable<Bool>
         let date: Observable<Date>
         let memo: Observable<String?>
         let customFolder: Observable<String?>
@@ -115,6 +119,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 if owner.cardToEditId != nil {
                     owner.imageChanged = true
                 }
+            }
+            .disposed(by: disposeBag)
+
+        input.imageSourceData
+            .bind(with: self) { owner, imageSource in
+                owner.imageSourceData = imageSource
+            }
+            .disposed(by: disposeBag)
+
+        input.wasEdited
+            .bind(with: self) { owner, wasEdited in
+                owner.wasImageEdited = wasEdited
             }
             .disposed(by: disposeBag)
 
@@ -246,8 +262,29 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+        guard let editedImage = editedImage else { return .empty() }
+
+        let editedImageData: Data
+        var originalImageData: Data?
+        var imageFormat: String?
+
+        if wasImageEdited {
+            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+            editedImageData = jpegData
+            originalImageData = nil
+            imageFormat = nil
+        } else {
+            if let imageSource = imageSourceData,
+               let original = imageSource.originalData,
+               let format = imageSource.format {
+                editedImageData = original
+                originalImageData = original
+                imageFormat = format.rawValue
+            } else {
+                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+                editedImageData = jpegData
+            }
+        }
 
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
@@ -270,7 +307,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 let card = Card(
                     date: date,
                     createdDate: Date(),
-                    editedImageData: imageData,
+                    editedImageData: editedImageData,
                     memo: memoText,
                     latitude: location?.coordinate.latitude,
                     longitude: location?.coordinate.longitude,
@@ -278,6 +315,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
                 card.customFolder = folderText
                 card.ocrText = ocrText
+                card.originalImageData = originalImageData
+                card.imageFormat = imageFormat
+                card.wasEdited = self.wasImageEdited
 
                 return self.realmManager.add(card)
                     .observe(on: MainScheduler.instance)
@@ -293,8 +333,29 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+        guard let editedImage = editedImage else { return .empty() }
+
+        let editedImageData: Data
+        var originalImageData: Data?
+        var imageFormat: String?
+
+        if wasImageEdited {
+            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+            editedImageData = jpegData
+            originalImageData = nil
+            imageFormat = nil
+        } else {
+            if let imageSource = imageSourceData,
+               let original = imageSource.originalData,
+               let format = imageSource.format {
+                editedImageData = original
+                originalImageData = original
+                imageFormat = format.rawValue
+            } else {
+                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+                editedImageData = jpegData
+            }
+        }
 
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
@@ -342,7 +403,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 return self.realmManager.update { realm in
                     guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
                     card.date = date
-                    card.editedImageData = imageData
+                    card.editedImageData = editedImageData
+                    card.originalImageData = originalImageData
+                    card.imageFormat = imageFormat
+                    card.wasEdited = self.wasImageEdited
                     card.memo = memoText
                     card.customFolder = folderText
                     card.isLocked = isLocked
@@ -363,8 +427,29 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+        guard let editedImage = editedImage else { return .empty() }
+
+        let editedImageData: Data
+        var originalImageData: Data?
+        var imageFormat: String?
+
+        if wasImageEdited {
+            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+            editedImageData = jpegData
+            originalImageData = nil
+            imageFormat = nil
+        } else {
+            if let imageSource = imageSourceData,
+               let original = imageSource.originalData,
+               let format = imageSource.format {
+                editedImageData = original
+                originalImageData = original
+                imageFormat = format.rawValue
+            } else {
+                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+                editedImageData = jpegData
+            }
+        }
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
@@ -411,7 +496,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 let newCard = Card(
                     date: date,
                     createdDate: Date(),
-                    editedImageData: imageData,
+                    editedImageData: editedImageData,
                     memo: memoText,
                     latitude: location?.coordinate.latitude,
                     longitude: location?.coordinate.longitude,
@@ -419,6 +504,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
                 newCard.customFolder = folderText
                 newCard.ocrText = ocrText
+                newCard.originalImageData = originalImageData
+                newCard.imageFormat = imageFormat
+                newCard.wasEdited = self.wasImageEdited
 
                 return self.realmManager.update { realm in
                     realm.add(newCard)
