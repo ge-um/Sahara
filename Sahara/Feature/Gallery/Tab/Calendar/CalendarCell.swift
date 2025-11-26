@@ -123,7 +123,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        imageView.image = UIImage(data: card.editedImageData)
+        let imageData = card.originalImageData ?? card.editedImageData
+        imageView.image = UIImage(data: imageData)
         imageView.layer.cornerRadius = 8
         imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
@@ -150,8 +151,10 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        imageView1.image = UIImage(data: photo1.editedImageData)
-        imageView2.image = UIImage(data: photo2.editedImageData)
+        let imageData1 = photo1.originalImageData ?? photo1.editedImageData
+        let imageData2 = photo2.originalImageData ?? photo2.editedImageData
+        imageView1.image = UIImage(data: imageData1)
+        imageView2.image = UIImage(data: imageData2)
 
         imageView1.layer.cornerRadius = 8
         imageView1.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -204,9 +207,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(bottomLeftImageView)
         containerView.addSubview(bottomRightImageView)
 
-        topImageView.image = UIImage(data: cards[0].editedImageData)
-        bottomLeftImageView.image = UIImage(data: cards[1].editedImageData)
-        bottomRightImageView.image = UIImage(data: cards[2].editedImageData)
+        let imageData0 = cards[0].originalImageData ?? cards[0].editedImageData
+        let imageData1 = cards[1].originalImageData ?? cards[1].editedImageData
+        let imageData2 = cards[2].originalImageData ?? cards[2].editedImageData
+        topImageView.image = UIImage(data: imageData0)
+        bottomLeftImageView.image = UIImage(data: imageData1)
+        bottomRightImageView.image = UIImage(data: imageData2)
 
         topImageView.layer.cornerRadius = 8
         topImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]

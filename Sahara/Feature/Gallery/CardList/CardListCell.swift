@@ -44,7 +44,8 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
     }
 
     func configure(with item: CardListItemDTO) {
-        if let image = UIImage(data: item.editedImageData) {
+        let imageData = item.originalImageData ?? item.editedImageData
+        if let image = UIImage(data: imageData) {
             imageView.image = image
         }
         blurEffectView.isHidden = !item.isLocked
