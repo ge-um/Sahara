@@ -99,6 +99,10 @@ final class Card: Object {
     @Persisted var modifiedDate: Date?
     
     @Persisted var editedImageData: Data
+    @Persisted var originalImageData: Data?
+    @Persisted var imageFormat: String?
+    @Persisted var wasEdited: Bool = false
+    @Persisted var drawingData: Data?
     @Persisted var memo: String?
     @Persisted var latitude: Double?
     @Persisted var longitude: Double?
@@ -143,6 +147,7 @@ final class Sticker: Object {
     @Persisted var zIndex: Int
     @Persisted var sourceType: StickerSourceType
     @Persisted var resourceUrl: String?
+    @Persisted var localFilePath: String?
     @Persisted var photoAssetId: String?
 
     convenience init(
@@ -153,6 +158,7 @@ final class Sticker: Object {
         zIndex: Int,
         sourceType: StickerSourceType,
         resourceUrl: String? = nil,
+        localFilePath: String? = nil,
         photoAssetId: String? = nil
     ) {
         self.init()
@@ -163,6 +169,7 @@ final class Sticker: Object {
         self.zIndex = zIndex
         self.sourceType = sourceType
         self.resourceUrl = resourceUrl
+        self.localFilePath = localFilePath
         self.photoAssetId = photoAssetId
     }
 }

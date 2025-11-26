@@ -39,7 +39,7 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
-    static let currentSchemaVersion: UInt64 = 1
+    static let currentSchemaVersion: UInt64 = 2
 
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
@@ -58,6 +58,19 @@ final class RealmManager: RealmManagerProtocol {
                 if let createdDate = oldObject?["createdDate"] as? Date {
                     newObject?["date"] = createdDate
                 }
+            }
+        }
+
+        if oldSchemaVersion < 2 {
+            migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
+                newObject?["originalImageData"] = nil
+                newObject?["imageFormat"] = nil
+                newObject?["wasEdited"] = false
+                newObject?["drawingData"] = nil
+            }
+
+            migration.enumerateObjects(ofType: "Sticker") { oldObject, newObject in
+                newObject?["localFilePath"] = nil
             }
         }
     }
