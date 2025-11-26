@@ -528,13 +528,14 @@ final class MediaEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        output.navigateToMetadata
+        Driver.combineLatest(output.navigateToMetadata, output.wasEdited)
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
-            .drive(with: self) { owner, editedImage in
-                owner.coordinator?.finishEditing(with: editedImage)
+            .drive(with: self) { owner, result in
+                let (editedImage, wasEdited) = result
+                owner.coordinator?.finishEditing(with: editedImage, wasEdited: wasEdited)
             }
             .disposed(by: disposeBag)
 

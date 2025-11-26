@@ -354,11 +354,13 @@ final class CardInfoViewController: UIViewController {
             initialLocationRelay.onNext(nil)
         }
 
-        coordinator.presentMediaEditor(imageSource: imageSource, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
+        coordinator.presentMediaEditor(imageSource: imageSource, selectedImageSubject: selectedImageSubject) { [weak self] editedImage, imageSourceData, wasEdited in
             self?.contentView.photoImageView.image = editedImage
             self?.contentView.photoImageView.isHidden = false
             self?.contentView.photoSelectButton.isHidden = true
             selectedImageSubject.onNext(editedImage)
+            self?.imageSourceDataRelay.accept(imageSourceData)
+            self?.wasEditedRelay.accept(wasEdited)
         }
     }
 

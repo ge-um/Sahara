@@ -18,8 +18,9 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     var navigationController: UINavigationController?
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?
-    private var onMediaEditingComplete: ((UIImage) -> Void)?
+    private var onMediaEditingComplete: ((UIImage, ImageSourceData, Bool) -> Void)?
     private var mediaEditorCoordinator: MediaEditorCoordinator?
+    private var currentImageSource: ImageSourceData?
 
     init(parentViewController: UIViewController) {
         self.parentViewController = parentViewController
@@ -44,9 +45,10 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     func presentMediaEditor(
         imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
-        onEditingComplete: @escaping (UIImage) -> Void
+        onEditingComplete: @escaping (UIImage, ImageSourceData, Bool) -> Void
     ) {
         self.onMediaEditingComplete = onEditingComplete
+        self.currentImageSource = imageSource
 
         parentViewController?.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
@@ -113,16 +115,19 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with image: UIImage) {
+    func didFinishEditing(with image: UIImage, wasEdited: Bool) {
         parentViewController?.dismiss(animated: true) { [weak self] in
-            self?.onMediaEditingComplete?(image)
-            self?.onMediaEditingComplete = nil
-            self?.mediaEditorCoordinator = nil
+            guard let self = self, let imageSource = self.currentImageSource else { return }
+            self.onMediaEditingComplete?(image, imageSource, wasEdited)
+            self.onMediaEditingComplete = nil
+            self.mediaEditorCoordinator = nil
+            self.currentImageSource = nil
         }
     }
 
     func didCancelEditing() {
         onMediaEditingComplete = nil
         mediaEditorCoordinator = nil
+        currentImageSource = nil
     }
 }
