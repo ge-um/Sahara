@@ -7,7 +7,7 @@
 
 [AppStore Link](https://apps.apple.com)
 
-<img width="200" height="433" alt="image 6" src="https://github.com/user-attachments/assets/ebc49572-fe97-41d9-bd7d-23a52e8fab55" /> | <img width="200" height="433" alt="image 7" src="https://github.com/user-attachments/assets/14d88123-b9a7-4829-9a07-ecb9c3b9c255" /> | <img width="200" height="433" alt="IMG_2300" src="https://github.com/user-attachments/assets/1f3094b0-e73f-4d6d-bf92-2d3faab62147" /> | <img width="200" height="433" alt="IMG_2492" src="https://github.com/user-attachments/assets/42668ebd-35b2-408c-85d8-8048bac24382" /> |
+<img width="200" height="432" alt="image 6" src="https://github.com/user-attachments/assets/ebc49572-fe97-41d9-bd7d-23a52e8fab55" /> | <img width="200" height="432" alt="image 7" src="https://github.com/user-attachments/assets/14d88123-b9a7-4829-9a07-ecb9c3b9c255" /> | <img width="200" height="432" alt="IMG_2300" src="https://github.com/user-attachments/assets/1f3094b0-e73f-4d6d-bf92-2d3faab62147" /> | <img width="200" height="432" alt="IMG_2492" src="https://github.com/user-attachments/assets/42668ebd-35b2-408c-85d8-8048bac24382" /> |
 |:--:|:--:|:--:|:--:|
 
 |구분|내용|
@@ -70,7 +70,7 @@
 
 ### 갤러리
 
-<img width="300" height="650" alt="1" src="https://github.com/user-attachments/assets/882bd3a4-acc5-4733-88f9-f53329e5ec7a" />| <img width="300" height="650" alt="2" src="https://github.com/user-attachments/assets/cfe56732-1b8d-4fdf-b0d8-af7d13dc30dd" /> | <img width="300" height="650" alt="3" src="https://github.com/user-attachments/assets/378b1819-cbb2-4769-b606-c3e49088df82" /> | <img width="300" height="650" alt="4" src="https://github.com/user-attachments/assets/f5dcd35f-f981-4105-ab9e-fbc20759204f" />
+<img width="200" height="432" alt="1" src="https://github.com/user-attachments/assets/882bd3a4-acc5-4733-88f9-f53329e5ec7a" />| <img width="200" height="432" alt="2" src="https://github.com/user-attachments/assets/cfe56732-1b8d-4fdf-b0d8-af7d13dc30dd" /> | <img width="200" height="432" alt="3" src="https://github.com/user-attachments/assets/378b1819-cbb2-4769-b606-c3e49088df82" /> | <img width="200" height="432" alt="4" src="https://github.com/user-attachments/assets/f5dcd35f-f981-4105-ab9e-fbc20759204f" />
 |:--:|:--:|:--:|:--:|
 
 #### 날짜별 보기
@@ -101,9 +101,9 @@
 
 ### 편집
 
-| <img width="300" height="650" alt="5" src="https://github.com/user-attachments/assets/8208dfbc-949f-4ca3-a305-0f884c32ef51" /> | <img width="300" height="650" alt="6" src="https://github.com/user-attachments/assets/5a6f5c51-575a-45b0-b046-be94d8f8cdf6" /> | <img width="300" height="650" alt="7" src="https://github.com/user-attachments/assets/700802f3-1300-4751-abe7-029cc8b0b1e2" /> |
+| <img width="200" height="432" alt="5" src="https://github.com/user-attachments/assets/8208dfbc-949f-4ca3-a305-0f884c32ef51" /> | <img width="200" height="432" alt="6" src="https://github.com/user-attachments/assets/5a6f5c51-575a-45b0-b046-be94d8f8cdf6" /> | <img width="200" height="432" alt="7" src="https://github.com/user-attachments/assets/700802f3-1300-4751-abe7-029cc8b0b1e2" /> |
 |:--:|:--:|:--:|
-| <img width="300" height="650" alt="8" src="https://github.com/user-attachments/assets/1e8ccdc0-26c2-4280-bfe1-fa5f10846789" /> | <img width="300" height="650" alt="9" src="https://github.com/user-attachments/assets/9dcd86ce-df34-4d9c-b9d7-fd23978063ab" /> | <img width="300" height="650" alt="10" src="https://github.com/user-attachments/assets/81ff99dd-0baa-415e-9b9c-2cd20002db5d" /> |
+| <img width="200" height="432" alt="8" src="https://github.com/user-attachments/assets/1e8ccdc0-26c2-4280-bfe1-fa5f10846789" /> | <img width="200" height="432" alt="9" src="https://github.com/user-attachments/assets/9dcd86ce-df34-4d9c-b9d7-fd23978063ab" /> | <img width="200" height="432" alt="10" src="https://github.com/user-attachments/assets/81ff99dd-0baa-415e-9b9c-2cd20002db5d" /> |
 
 
 #### 스티커
@@ -134,9 +134,9 @@
 
 
 ### 카드작성
-| <img width="300" height="650" alt="11" src="https://github.com/user-attachments/assets/f566fd4b-bc78-4416-88fe-072b4ccf1844" /> | <img width="300" height="650" alt="12" src="https://github.com/user-attachments/assets/cfaec52e-9a9a-4100-af58-a68119a91355" /> | <img width="300" height="650" alt="13" src="https://github.com/user-attachments/assets/d1d299d5-b553-4677-89f6-c965766d77ba" /> | 
+| <img width="200" height="432" alt="11" src="https://github.com/user-attachments/assets/f566fd4b-bc78-4416-88fe-072b4ccf1844" /> | <img width="200" height="432" alt="12" src="https://github.com/user-attachments/assets/cfaec52e-9a9a-4100-af58-a68119a91355" /> | <img width="200" height="432" alt="13" src="https://github.com/user-attachments/assets/d1d299d5-b553-4677-89f6-c965766d77ba" /> | 
 |:--:|:--:|:--:|
-| <img width="300" height="650" alt="14" src="https://github.com/user-attachments/assets/0da397c0-489c-4831-893f-41119f64d6a0" /> | <img width="300" height="650" alt="15" src="https://github.com/user-attachments/assets/3e315a7c-f4a3-47fe-9d17-03ce45c0ef81" /> |
+| <img width="200" height="432" alt="14" src="https://github.com/user-attachments/assets/0da397c0-489c-4831-893f-41119f64d6a0" /> | <img width="200" height="432" alt="15" src="https://github.com/user-attachments/assets/3e315a7c-f4a3-47fe-9d17-03ce45c0ef81" /> |
 
 
 #### 미디어 선택
@@ -158,7 +158,7 @@
 
 ### 검색 / 통계 / 설정
 
-| <img width="300" height="650" alt="16" src="https://github.com/user-attachments/assets/1f361e67-a8a5-483a-be8f-f91d2417beda" /> | <img width="300" height="650" alt="17" src="https://github.com/user-attachments/assets/6c95ee8a-a3e6-42f7-8a39-c5ed2e69eecf" /> | <img width="300" height="650" alt="18" src="https://github.com/user-attachments/assets/5722358d-ec7c-401c-bdd2-35512934c38e" /> | <img width="300" height="650" alt="19" src="https://github.com/user-attachments/assets/55ae5a9a-cb0a-4a4a-aad4-7747268aff70" /> |
+| <img width="200" height="432" alt="16" src="https://github.com/user-attachments/assets/1f361e67-a8a5-483a-be8f-f91d2417beda" /> | <img width="200" height="432" alt="17" src="https://github.com/user-attachments/assets/6c95ee8a-a3e6-42f7-8a39-c5ed2e69eecf" /> | <img width="20 0" height="432" alt="18" src="https://github.com/user-attachments/assets/5722358d-ec7c-401c-bdd2-35512934c38e" /> | <img width="200" height="432" alt="19" src="https://github.com/user-attachments/assets/55ae5a9a-cb0a-4a4a-aad4-7747268aff70" /> |
 |:--:|:--:|:--:|:--:|
 
 ### 실시간 검색
