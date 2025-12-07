@@ -96,6 +96,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
 
         self.editedImage = UIImage(data: card.editedImageData)
+
+        let stickers = Array(card.stickers.map { StickerDTO(from: $0) })
         self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked
@@ -104,7 +106,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             self.originalLocation = CLLocation(latitude: lat, longitude: lon)
         }
 
-        let stickers = Array(card.stickers.map { StickerDTO(from: $0) })
         let format: ImageSourceData.ImageFormat? = {
             if let formatString = card.imageFormat {
                 return ImageSourceData.ImageFormat(rawValue: formatString)
@@ -285,15 +286,31 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
 
+        let stickers = imageSourceData?.stickers ?? []
         let editedImageData: Data
         var originalImageData: Data?
         var imageFormat: String?
 
         if wasImageEdited {
-            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-            editedImageData = jpegData
+            let resizedImage = editedImage.resized()
+
+            if let imageSource = imageSourceData, let format = imageSource.format {
+                switch format {
+                case .heic:
+                    editedImageData = resizedImage.heicData(compressionQuality: 0.8) ?? resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "heic"
+                case .png:
+                    editedImageData = resizedImage.pngData()!
+                    imageFormat = "png"
+                case .jpeg:
+                    editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "jpeg"
+                }
+            } else {
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                imageFormat = nil
+            }
             originalImageData = nil
-            imageFormat = nil
         } else {
             if let imageSource = imageSourceData,
                let original = imageSource.originalData,
@@ -302,8 +319,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 originalImageData = original
                 imageFormat = format.rawValue
             } else {
-                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-                editedImageData = jpegData
+                let resizedImage = editedImage.resized()
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
             }
         }
 
@@ -340,6 +357,21 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 card.imageFormat = imageFormat
                 card.wasEdited = self.wasImageEdited
 
+                for stickerDTO in stickers {
+                    let stickerObject = Sticker(
+                        x: stickerDTO.x,
+                        y: stickerDTO.y,
+                        scale: stickerDTO.scale,
+                        rotation: stickerDTO.rotation,
+                        zIndex: stickerDTO.zIndex,
+                        sourceType: stickerDTO.sourceType,
+                        resourceUrl: stickerDTO.resourceUrl,
+                        localFilePath: stickerDTO.localFilePath,
+                        photoAssetId: stickerDTO.photoAssetId
+                    )
+                    card.stickers.append(stickerObject)
+                }
+
                 return self.realmManager.add(card)
                     .observe(on: MainScheduler.instance)
                     .do(onNext: {
@@ -361,10 +393,25 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         var imageFormat: String?
 
         if wasImageEdited {
-            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-            editedImageData = jpegData
+            let resizedImage = editedImage.resized()
+
+            if let imageSource = imageSourceData, let format = imageSource.format {
+                switch format {
+                case .heic:
+                    editedImageData = resizedImage.heicData(compressionQuality: 0.8) ?? resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "heic"
+                case .png:
+                    editedImageData = resizedImage.pngData()!
+                    imageFormat = "png"
+                case .jpeg:
+                    editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "jpeg"
+                }
+            } else {
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                imageFormat = nil
+            }
             originalImageData = nil
-            imageFormat = nil
         } else {
             if let imageSource = imageSourceData,
                let original = imageSource.originalData,
@@ -373,8 +420,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 originalImageData = original
                 imageFormat = format.rawValue
             } else {
-                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-                editedImageData = jpegData
+                let resizedImage = editedImage.resized()
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
             }
         }
 
@@ -455,10 +502,25 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         var imageFormat: String?
 
         if wasImageEdited {
-            guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-            editedImageData = jpegData
+            let resizedImage = editedImage.resized()
+
+            if let imageSource = imageSourceData, let format = imageSource.format {
+                switch format {
+                case .heic:
+                    editedImageData = resizedImage.heicData(compressionQuality: 0.8) ?? resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "heic"
+                case .png:
+                    editedImageData = resizedImage.pngData()!
+                    imageFormat = "png"
+                case .jpeg:
+                    editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                    imageFormat = "jpeg"
+                }
+            } else {
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
+                imageFormat = nil
+            }
             originalImageData = nil
-            imageFormat = nil
         } else {
             if let imageSource = imageSourceData,
                let original = imageSource.originalData,
@@ -467,8 +529,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 originalImageData = original
                 imageFormat = format.rawValue
             } else {
-                guard let jpegData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-                editedImageData = jpegData
+                let resizedImage = editedImage.resized()
+                editedImageData = resizedImage.jpegData(compressionQuality: 0.8)!
             }
         }
         let memoText: String? = {
