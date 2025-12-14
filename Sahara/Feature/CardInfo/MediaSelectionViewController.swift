@@ -215,8 +215,9 @@ final class MediaSelectionViewController: UIViewController {
 
         output.selectedMedia
             .drive(with: self) { owner, media in
-                owner.onMediaSelected?(media.0, media.1, media.2)
-                owner.dismiss(animated: true)
+                owner.dismiss(animated: true) {
+                    owner.onMediaSelected?(media.0, media.1, media.2)
+                }
             }
             .disposed(by: disposeBag)
     }

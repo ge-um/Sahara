@@ -43,6 +43,20 @@ final class CardInfoView: UIView {
         return button
     }()
 
+    lazy var photoEditButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(named: "editBox")?.withRenderingMode(.alwaysTemplate)
+        config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.9)
+        config.baseForegroundColor = ColorSystem.black
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+        button.configuration = config
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.isHidden = true
+        return button
+    }()
+
     let dateCard = DateSelectionCard()
     let memoCard = MemoCard()
     let folderCard = FolderSelectionCard()
@@ -67,6 +81,7 @@ final class CardInfoView: UIView {
 
         contentView.addSubview(photoContainer)
         photoContainer.addSubview(photoImageView)
+        photoContainer.addSubview(photoEditButton)
         contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         contentView.addSubview(memoCard)
@@ -92,6 +107,11 @@ final class CardInfoView: UIView {
 
         photoImageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        photoEditButton.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview().inset(12)
+            make.width.height.equalTo(40)
         }
 
         photoSelectButton.snp.makeConstraints { make in

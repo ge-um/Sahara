@@ -29,6 +29,13 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
     func start() {}
 
+    private func getPresentingViewController() -> UIViewController? {
+        if let cardInfoVC = cardInfoViewController {
+            return cardInfoVC.navigationController ?? cardInfoVC
+        }
+        return parentViewController
+    }
+
     func presentMediaSelection(selectedImageSubject: BehaviorSubject<UIImage?>, completion: @escaping (ImageSourceData, CLLocation?, Date?) -> Void) {
         let mediaSelectionVC = MediaSelectionViewController()
         mediaSelectionVC.onMediaSelected = { imageSource, location, date in
@@ -40,8 +47,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
         }
-        let presentingVC = cardInfoViewController ?? parentViewController
-        presentingVC?.present(navController, animated: true)
+        getPresentingViewController()?.present(navController, animated: true)
     }
 
     func presentMediaEditor(
@@ -60,11 +66,9 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             imageSource: imageSource
         )
         self.mediaEditorCoordinator?.delegate = self
+        self.mediaEditorCoordinator?.start()
 
-        let presentingVC = cardInfoViewController ?? parentViewController
-        presentingVC?.present(navController, animated: true) { [weak self] in
-            self?.mediaEditorCoordinator?.start()
-        }
+        getPresentingViewController()?.present(navController, animated: true)
     }
 
     func presentDatePicker(initialDate: Date, onDateSelected: @escaping (Date) -> Void) {
@@ -75,8 +79,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
-        let presentingVC = cardInfoViewController ?? parentViewController
-        presentingVC?.present(datePickerVC, animated: true)
+        getPresentingViewController()?.present(datePickerVC, animated: true)
     }
 
     func presentLocationSearch(onLocationSelected: @escaping (CLLocationCoordinate2D, String) -> Void) {
@@ -84,8 +87,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
         locationSearchVC.onLocationSelected = onLocationSelected
 
         let nav = UINavigationController(rootViewController: locationSearchVC)
-        let presentingVC = cardInfoViewController ?? parentViewController
-        presentingVC?.present(nav, animated: true)
+        getPresentingViewController()?.present(nav, animated: true)
     }
 
     func dismiss() {
@@ -123,8 +125,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
     func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool) {
-        let presentingVC = cardInfoViewController ?? parentViewController
-        presentingVC?.dismiss(animated: true) { [weak self] in
+        getPresentingViewController()?.dismiss(animated: true) { [weak self] in
             guard let self = self, let originalImageSource = self.currentImageSource else { return }
 
             let updatedImageSource = ImageSourceData(

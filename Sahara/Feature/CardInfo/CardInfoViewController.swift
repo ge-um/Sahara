@@ -187,13 +187,19 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        let photoImageTapGesture = UITapGestureRecognizer()
-        contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
-
         contentView.photoSelectButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
-                    owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
+                    selectedImageSubject.onNext(imageSource.image)
+                    owner.imageSourceDataRelay.accept(imageSource)
+
+                    if let date = date {
+                        owner.selectedDateRelay.accept(date)
+                    }
+
+                    if let location = location {
+                        initialLocationRelay.onNext(location)
+                    }
                 }
             }
             .disposed(by: disposeBag)
@@ -214,15 +220,38 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        contentView.photoEditButton.rx.tap
+            .bind(with: self) { owner, _ in
+                guard let currentImage = owner.contentView.photoImageView.image,
+                      let currentImageSourceData = owner.imageSourceDataRelay.value else { return }
+
+                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
+                    guard let owner = owner else { return }
+                    owner.contentView.photoImageView.image = editedImage
+                    owner.contentView.photoImageView.isHidden = false
+                    owner.contentView.photoSelectButton.isHidden = true
+                    owner.contentView.updatePhotoImageHeight(for: editedImage)
+
+                    owner.view.layoutIfNeeded()
+
+                    owner.contentView.renderStickers(imageSourceData.stickers)
+
+                    selectedImageSubject.onNext(editedImage)
+                    owner.imageSourceDataRelay.accept(imageSourceData)
+                    owner.wasEditedRelay.accept(wasEdited)
+                }
+            }
+            .disposed(by: disposeBag)
+
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             imageSourceData: imageSourceDataRelay.asObservable(),
             wasEdited: wasEditedRelay.asObservable(),
             date: selectedDateRelay.asObservable(),
             memo: contentView.memoCard.textView.rx.text
-                .map { [weak self] text in
-                    guard let self = self else { return nil }
-                    if self.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
+                .withUnretained(self)
+                .map { owner, text in
+                    if owner.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
                         return nil
                     }
                     return text
@@ -237,34 +266,6 @@ final class CardInfoViewController: UIViewController {
         )
 
         let output = viewModel.transform(input: input)
-
-        photoImageTapGesture.rx.event
-            .bind(with: self) { owner, _ in
-                if output.isEditMode,
-                   let currentImage = owner.contentView.photoImageView.image,
-                   let currentImageSourceData = owner.imageSourceDataRelay.value {
-                    owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
-                        guard let owner = owner else { return }
-                        owner.contentView.photoImageView.image = editedImage
-                        owner.contentView.photoImageView.isHidden = false
-                        owner.contentView.photoSelectButton.isHidden = true
-                        owner.contentView.updatePhotoImageHeight(for: editedImage)
-
-                        owner.view.layoutIfNeeded()
-
-                        owner.contentView.renderStickers(imageSourceData.stickers)
-
-                        selectedImageSubject.onNext(editedImage)
-                        owner.imageSourceDataRelay.accept(imageSourceData)
-                        owner.wasEditedRelay.accept(wasEdited)
-                    }
-                } else {
-                    owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
-                        owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
-                    }
-                }
-            }
-            .disposed(by: disposeBag)
 
         output.editedImage
             .drive(with: self) { owner, image in
@@ -297,6 +298,7 @@ final class CardInfoViewController: UIViewController {
             .drive(with: self) { owner, hasImage in
                 owner.contentView.photoImageView.isHidden = !hasImage
                 owner.contentView.photoSelectButton.isHidden = hasImage
+                owner.contentView.photoEditButton.isHidden = !hasImage
                 if hasImage {
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)
@@ -361,34 +363,6 @@ final class CardInfoViewController: UIViewController {
                 owner.view.endEditing(true)
             }
             .disposed(by: disposeBag)
-    }
-
-    private func openPhotoEditor(with imageSource: ImageSourceData, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
-        if let date = date {
-            selectedDateRelay.accept(date)
-        }
-
-        if let location = location {
-            initialLocationRelay.onNext(location)
-        } else {
-            initialLocationRelay.onNext(nil)
-        }
-
-        coordinator.presentMediaEditor(imageSource: imageSource, selectedImageSubject: selectedImageSubject) { [weak self] editedImage, imageSourceData, wasEdited in
-            guard let self = self else { return }
-            self.contentView.photoImageView.image = editedImage
-            self.contentView.photoImageView.isHidden = false
-            self.contentView.photoSelectButton.isHidden = true
-            self.contentView.updatePhotoImageHeight(for: editedImage)
-
-            self.view.layoutIfNeeded()
-
-            self.contentView.renderStickers(imageSourceData.stickers)
-
-            selectedImageSubject.onNext(editedImage)
-            self.imageSourceDataRelay.accept(imageSourceData)
-            self.wasEditedRelay.accept(wasEdited)
-        }
     }
 
     private func setupKeyboardHandling() {
