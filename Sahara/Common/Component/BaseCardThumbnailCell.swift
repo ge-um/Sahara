@@ -1,24 +1,23 @@
 //
-//  CardListCell.swift
+//  BaseCardThumbnailCell.swift
 //  Sahara
 //
-//  Created by 금가경 on 10/13/25.
+//  Created by 금가경 on 12/14/25.
 //
 
+import SnapKit
 import UIKit
 
-final class CardListCell: UICollectionViewCell, IsIdentifiable {
+class BaseCardThumbnailCell: UICollectionViewCell, IsIdentifiable {
 
-    private let imageView: UIImageView = {
+    let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         return imageView
     }()
 
-    private var stickerViews: [UIImageView] = []
-
-    private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
+    lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -29,7 +28,7 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private func configureUI() {
+    func configureUI() {
         contentView.addSubview(imageView)
         contentView.addSubview(blurEffectView)
         contentView.layer.cornerRadius = 8
@@ -44,11 +43,12 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    func configure(with item: CardListItemDTO) {
-        if let image = UIImage(data: item.editedImageData) {
-            imageView.image = image
-        }
-        blurEffectView.isHidden = !item.isLocked
+    func setImage(_ imageData: Data) {
+        imageView.image = UIImage(data: imageData)
+    }
+
+    func setBlur(isHidden: Bool) {
+        blurEffectView.isHidden = isHidden
     }
 
     override func prepareForReuse() {

@@ -43,7 +43,7 @@ final class CardListViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(CardListCell.self, forCellWithReuseIdentifier: CardListCell.identifier)
+        collectionView.register(CardThumbnailCell.self, forCellWithReuseIdentifier: CardThumbnailCell.identifier)
         return collectionView
     }()
 
@@ -52,9 +52,9 @@ final class CardListViewController: UIViewController {
         return UICollectionViewDiffableDataSource<Int, ObjectId>(collectionView: collectionView) { [weak self] collectionView, indexPath, cardId in
             guard let self = self,
                   let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: CardListCell.identifier,
+                withReuseIdentifier: CardThumbnailCell.identifier,
                 for: indexPath
-            ) as? CardListCell,
+            ) as? CardThumbnailCell,
                   let card = self.getCard(by: cardId) else {
                 return UICollectionViewCell()
             }
@@ -164,7 +164,7 @@ final class CardListViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.cards
-            .drive(collectionView.rx.items(cellIdentifier: CardListCell.identifier, cellType: CardListCell.self)) { _, item, cell in
+            .drive(collectionView.rx.items(cellIdentifier: CardThumbnailCell.identifier, cellType: CardThumbnailCell.self)) { _, item, cell in
                 cell.configure(with: item)
             }
             .disposed(by: disposeBag)
