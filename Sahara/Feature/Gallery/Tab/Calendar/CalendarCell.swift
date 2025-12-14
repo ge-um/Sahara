@@ -70,8 +70,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
         isToday = false
         addButton.isHidden = true
-        contentView.layer.borderWidth = 0
-        contentView.layer.borderColor = nil
         contentView.layer.cornerRadius = 8
 
         if let date = item.date {
@@ -99,6 +97,9 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             let shouldShowBorder = isTodayDate && photoCount == 0
 
+            contentView.layer.borderColor = shouldShowBorder ? ColorSystem.darkestGray.cgColor : nil
+            contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
+
             if photoCount == 0 {
                 containerView.backgroundColor = ColorSystem.clear
                 addButton.isHidden = !isTodayDate
@@ -112,9 +113,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
                     layoutMultipleImages(cards: Array(sortedCards.prefix(3)))
                 }
             }
-
-            contentView.layer.borderColor = shouldShowBorder ? ColorSystem.darkestGray.cgColor : nil
-            contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
         } else {
             dayLabel.text = ""
             dayLabel.textColor = ColorSystem.label

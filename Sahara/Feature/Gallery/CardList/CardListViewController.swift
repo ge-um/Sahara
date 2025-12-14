@@ -204,9 +204,8 @@ final class CardListViewController: UIViewController {
                 var snapshot = NSDiffableDataSourceSnapshot<Int, ObjectId>()
                 snapshot.appendSections([0])
                 snapshot.appendItems(cardIds)
-                dataSource.apply(snapshot, animatingDifferences: false) {
+                dataSource.apply(snapshot, animatingDifferences: true) {
                     owner.pinterestLayout.invalidateLayout()
-                    owner.collectionView.reloadData()
                 }
             }
             .disposed(by: disposeBag)
