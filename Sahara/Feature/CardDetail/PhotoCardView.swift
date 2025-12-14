@@ -5,6 +5,7 @@
 //  Created by 금가경 on 1/11/25.
 //
 
+import Kingfisher
 import RxCocoa
 import RxSwift
 import SnapKit
@@ -28,7 +29,6 @@ final class PhotoCardView: UIView {
 
     private let frontCardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 20
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -51,12 +51,18 @@ final class PhotoCardView: UIView {
         return view
     }()
 
-    private let photoImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
+    private let photoImageView: AnimatedImageView = {
+        let imageView = AnimatedImageView()
+        imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 20
         return imageView
+    }()
+
+    private let stickerContainerView: UIView = {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let deleteButton: UIButton = {
@@ -157,6 +163,7 @@ final class PhotoCardView: UIView {
         cardContainerView.addSubview(backCardView)
 
         frontCardView.addSubview(photoImageView)
+        frontCardView.addSubview(stickerContainerView)
         frontCardView.addSubview(overlayView)
         frontCardView.addSubview(deleteButton)
         overlayView.addSubview(dateLabel)
@@ -182,6 +189,10 @@ final class PhotoCardView: UIView {
 
         photoImageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        stickerContainerView.snp.makeConstraints { make in
+            make.edges.equalTo(photoImageView)
         }
 
         overlayView.snp.makeConstraints { make in
@@ -259,16 +270,27 @@ final class PhotoCardView: UIView {
         locationText: Driver<String>,
         memoText: Driver<String>,
         shouldFlipToBack: Observable<Void>,
-        shouldFlipToFront: Observable<Void>
+        shouldFlipToFront: Observable<Void>,
+        animatedStickers: Driver<[PhotoCardViewModel.AnimatedStickerInfo]>
     ) {
-        photoImage
-            .drive(with: self) { owner, image in
+        let imageAndStickers = Driver.combineLatest(photoImage, animatedStickers)
+
+        imageAndStickers
+            .drive(with: self) { owner, result in
+                let (image, stickers) = result
+
                 owner.photoImageView.image = image
                 if let image = image {
                     let imageHeight = image.heightForWidth(owner.cardWidth)
                     let minimumHeight: CGFloat = 200
                     let finalHeight = max(imageHeight, minimumHeight)
                     owner.photoImageHeightConstraint?.update(offset: finalHeight)
+
+                    owner.layoutIfNeeded()
+
+                    if !stickers.isEmpty {
+                        owner.renderAnimatedStickers(stickers)
+                    }
                 }
             }
             .disposed(by: disposeBag)
@@ -296,6 +318,47 @@ final class PhotoCardView: UIView {
                 owner.flipToFront()
             }
             .disposed(by: disposeBag)
+    }
+
+    private func renderAnimatedStickers(_ stickers: [PhotoCardViewModel.AnimatedStickerInfo]) {
+        stickerContainerView.subviews.forEach { $0.removeFromSuperview() }
+
+        guard let baseImage = photoImageView.image else { return }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: baseImage.size,
+            in: photoImageView.bounds.size
+        )
+
+        guard imageRect.width > 0 && imageRect.height > 0 else { return }
+
+        for sticker in stickers.sorted(by: { $0.zIndex < $1.zIndex }) {
+            let stickerImageView = AnimatedImageView()
+            stickerImageView.contentMode = .scaleAspectFit
+
+            let layout = MediaEditorCropHandler.calculateStickerDisplayLayout(
+                normalizedX: sticker.x,
+                normalizedY: sticker.y,
+                scale: sticker.scale,
+                rotation: sticker.rotation,
+                baseImageSize: baseImage.size,
+                displayRect: imageRect
+            )
+
+            stickerImageView.frame = layout.frame
+            stickerImageView.transform = CGAffineTransform(rotationAngle: layout.rotation)
+
+            let options: KingfisherOptionsInfo = [
+                .scaleFactor(UIScreen.main.scale),
+                .memoryCacheExpiration(.seconds(600)),
+                .diskCacheExpiration(.days(7)),
+                .cacheOriginalImage,
+                .onFailureImage(nil)
+            ]
+
+            stickerImageView.kf.setImage(with: sticker.url, options: options)
+            stickerContainerView.addSubview(stickerImageView)
+        }
     }
 
     private func flipToBack() {

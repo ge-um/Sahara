@@ -13,11 +13,10 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray6
         return imageView
     }()
 
-    private var stickerViews: [AnimatedStickerView] = []
+    private var stickerViews: [UIImageView] = []
 
     private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
 
@@ -46,41 +45,15 @@ final class CardListCell: UICollectionViewCell, IsIdentifiable {
     }
 
     func configure(with item: CardListItemDTO) {
-        let imageData = item.originalImageData ?? item.editedImageData
-        if let image = UIImage(data: imageData) {
+        if let image = UIImage(data: item.editedImageData) {
             imageView.image = image
         }
         blurEffectView.isHidden = !item.isLocked
-
-        renderStickers(item.stickers)
-    }
-
-    private func renderStickers(_ stickers: [StickerDTO]) {
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
-
-        guard let image = imageView.image else { return }
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: image.size,
-            in: contentView.bounds.size
-        )
-
-        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
-
-        for sticker in sortedStickers {
-            let stickerView = AnimatedStickerView()
-            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
-            contentView.addSubview(stickerView)
-            stickerViews.append(stickerView)
-        }
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
         blurEffectView.isHidden = true
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
     }
 }

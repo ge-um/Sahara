@@ -200,7 +200,6 @@ final class SearchCell: UICollectionViewCell {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray6
         return imageView
     }()
 

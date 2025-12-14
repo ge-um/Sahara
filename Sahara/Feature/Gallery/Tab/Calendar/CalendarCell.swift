@@ -5,6 +5,7 @@
 //  Created by 금가경 on 9/29/25.
 //
 
+import Kingfisher
 import SnapKit
 import UIKit
 
@@ -29,7 +30,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var imageViews: [UIImageView] = []
     private var blurViews: [UIVisualEffectView] = []
-    private var stickerViews: [AnimatedStickerView] = []
     private var isToday = false
 
     override init(frame: CGRect) {
@@ -67,11 +67,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.removeAll()
         blurViews.forEach { $0.removeFromSuperview() }
         blurViews.removeAll()
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
 
         isToday = false
+        addButton.isHidden = true
         contentView.layer.borderWidth = 0
+        contentView.layer.borderColor = nil
+        contentView.layer.cornerRadius = 8
 
         if let date = item.date {
             let day = Calendar.current.component(.day, from: date)
@@ -80,12 +81,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let weekday = Calendar.current.component(.weekday, from: date)
 
             let calendar = Calendar.current
-            if calendar.isDateInToday(date) && item.isCurrentMonth {
-                isToday = true
-                contentView.layer.borderColor = ColorSystem.darkestGray.cgColor
-                contentView.layer.borderWidth = 2
-                contentView.layer.cornerRadius = 8
-            }
+            let isTodayDate = calendar.isDateInToday(date) && item.isCurrentMonth
+            isToday = isTodayDate
 
             if !item.isCurrentMonth {
                 dayLabel.textColor = ColorSystem.lightGray
@@ -100,9 +97,11 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             let sortedCards = item.cards.sorted { !$0.isLocked && $1.isLocked }
             let photoCount = sortedCards.count
 
+            let shouldShowBorder = isTodayDate && photoCount == 0
+
             if photoCount == 0 {
                 containerView.backgroundColor = ColorSystem.clear
-                addButton.isHidden = !(isToday && item.isCurrentMonth)
+                addButton.isHidden = !isTodayDate
             } else {
                 addButton.isHidden = true
                 if photoCount == 1 {
@@ -113,11 +112,16 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
                     layoutMultipleImages(cards: Array(sortedCards.prefix(3)))
                 }
             }
+
+            contentView.layer.borderColor = shouldShowBorder ? ColorSystem.darkestGray.cgColor : nil
+            contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
         } else {
             dayLabel.text = ""
             dayLabel.textColor = ColorSystem.label
             containerView.backgroundColor = ColorSystem.clear
             addButton.isHidden = true
+            contentView.layer.borderColor = nil
+            contentView.layer.borderWidth = 0
         }
     }
 
@@ -126,16 +130,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        let imageData = card.originalImageData ?? card.editedImageData
-        imageView.image = UIImage(data: imageData)
+        imageView.image = UIImage(data: card.editedImageData)
         imageView.layer.cornerRadius = 8
         imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        renderStickers(card.stickers, in: imageView)
 
         if card.isLocked {
             let blurView = createBlurView()
@@ -148,27 +149,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    private func renderStickers(_ stickers: [StickerDTO], in containerView: UIView) {
-        guard let imageView = containerView as? UIImageView,
-              let image = imageView.image else {
-            return
-        }
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: image.size,
-            in: containerView.bounds.size
-        )
-
-        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
-
-        for sticker in sortedStickers {
-            let stickerView = AnimatedStickerView()
-            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
-            containerView.addSubview(stickerView)
-            stickerViews.append(stickerView)
-        }
-    }
-
     private func layoutTwoImages(_ photo1: CardCalendarItemDTO, _ photo2: CardCalendarItemDTO) {
         let imageView1 = createImageView()
         let imageView2 = createImageView()
@@ -177,10 +157,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        let imageData1 = photo1.originalImageData ?? photo1.editedImageData
-        let imageData2 = photo2.originalImageData ?? photo2.editedImageData
-        imageView1.image = UIImage(data: imageData1)
-        imageView2.image = UIImage(data: imageData2)
+        imageView1.image = UIImage(data: photo1.editedImageData)
+        imageView2.image = UIImage(data: photo2.editedImageData)
 
         imageView1.layer.cornerRadius = 8
         imageView1.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -233,12 +211,9 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(bottomLeftImageView)
         containerView.addSubview(bottomRightImageView)
 
-        let imageData0 = cards[0].originalImageData ?? cards[0].editedImageData
-        let imageData1 = cards[1].originalImageData ?? cards[1].editedImageData
-        let imageData2 = cards[2].originalImageData ?? cards[2].editedImageData
-        topImageView.image = UIImage(data: imageData0)
-        bottomLeftImageView.image = UIImage(data: imageData1)
-        bottomRightImageView.image = UIImage(data: imageData2)
+        topImageView.image = UIImage(data: cards[0].editedImageData)
+        bottomLeftImageView.image = UIImage(data: cards[1].editedImageData)
+        bottomRightImageView.image = UIImage(data: cards[2].editedImageData)
 
         topImageView.layer.cornerRadius = 8
         topImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -304,7 +279,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
-        imageView.backgroundColor = ColorSystem.systemGray6
         return imageView
     }
 
@@ -318,8 +292,6 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.removeAll()
         blurViews.forEach { $0.removeFromSuperview() }
         blurViews.removeAll()
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
         dayLabel.text = ""
         contentView.layer.borderWidth = 0
         isToday = false

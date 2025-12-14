@@ -215,7 +215,8 @@ final class CardDetailViewController: UIViewController {
             locationText: photoCardOutput.locationText,
             memoText: photoCardOutput.memoText,
             shouldFlipToBack: photoCardOutput.shouldFlipToBack.asObservable(),
-            shouldFlipToFront: photoCardOutput.shouldFlipToFront.asObservable()
+            shouldFlipToFront: photoCardOutput.shouldFlipToFront.asObservable(),
+            animatedStickers: photoCardOutput.animatedStickers
         )
 
         let input = CardDetailViewModel.Input(

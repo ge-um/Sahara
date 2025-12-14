@@ -5,6 +5,7 @@
 //  Created by 금가경 on 10/15/25.
 //
 
+import Kingfisher
 import PencilKit
 import UIKit
 
@@ -23,8 +24,22 @@ final class MediaEditorImageHandler {
             in: photoImageView.bounds.size
         )
 
-        let renderer = UIGraphicsImageRenderer(size: imageRect.size)
+        let hasAlpha: Bool
+        if let alphaInfo = baseImage.cgImage?.alphaInfo {
+            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+        } else {
+            hasAlpha = false
+        }
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = UIScreen.main.scale
+        format.opaque = !hasAlpha
+
+        let renderer = UIGraphicsImageRenderer(size: imageRect.size, format: format)
         let image = renderer.image { context in
+            if hasAlpha {
+                context.cgContext.clear(CGRect(origin: .zero, size: imageRect.size))
+            }
             context.cgContext.translateBy(x: -imageRect.origin.x, y: -imageRect.origin.y)
             photoImageView.layer.render(in: context.cgContext)
 
@@ -33,6 +48,124 @@ final class MediaEditorImageHandler {
         }
 
         return image
+    }
+
+    static func compositeStickersOnImage(_ baseImage: UIImage, stickers: [StickerDTO], completion: @escaping (UIImage, [Bool]) -> Void) {
+        let imageSize = baseImage.size
+        let group = DispatchGroup()
+        let syncQueue = DispatchQueue(label: "com.sahara.stickerSync")
+        var stickerImages: [(image: UIImage, sticker: StickerDTO, isAnimated: Bool)] = []
+
+        for sticker in stickers.sorted(by: { $0.zIndex < $1.zIndex }) {
+            group.enter()
+
+            if let resourceUrl = sticker.resourceUrl, let url = URL(string: resourceUrl) {
+                let isAnimatedGif = url.pathExtension.lowercased() == "gif"
+
+                if let cached = ImageCache.default.retrieveImageInMemoryCache(forKey: url.absoluteString) {
+                    syncQueue.async {
+                        stickerImages.append((cached, sticker, isAnimatedGif))
+                        group.leave()
+                    }
+                } else {
+                    KingfisherManager.shared.retrieveImage(with: url) { result in
+                        syncQueue.async {
+                            switch result {
+                            case .success(let imageResult):
+                                stickerImages.append((imageResult.image, sticker, isAnimatedGif))
+                            case .failure:
+                                break
+                            }
+                            group.leave()
+                        }
+                    }
+                }
+            } else if let localPath = sticker.localFilePath {
+                let fileURL = URL(fileURLWithPath: localPath)
+                let isAnimatedGif = fileURL.pathExtension.lowercased() == "gif"
+
+                if let cached = ImageCache.default.retrieveImageInMemoryCache(forKey: fileURL.absoluteString) {
+                    syncQueue.async {
+                        stickerImages.append((cached, sticker, isAnimatedGif))
+                        group.leave()
+                    }
+                } else {
+                    KingfisherManager.shared.retrieveImage(with: fileURL) { result in
+                        syncQueue.async {
+                            switch result {
+                            case .success(let imageResult):
+                                stickerImages.append((imageResult.image, sticker, isAnimatedGif))
+                            case .failure:
+                                break
+                            }
+                            group.leave()
+                        }
+                    }
+                }
+            } else {
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .global(qos: .userInitiated)) {
+            let standardCardWidth = min(UIScreen.main.bounds.width - 64, 400)
+            let viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
+            let displayRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+                imageSize: imageSize,
+                in: viewSize
+            )
+            let displayToImageScale = imageSize.width / displayRect.width
+            let baseStickerSize: CGFloat = 100
+
+            let hasAlpha: Bool
+            if let alphaInfo = baseImage.cgImage?.alphaInfo {
+                hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+            } else {
+                hasAlpha = false
+            }
+
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1.0
+            format.opaque = !hasAlpha
+
+            let renderer = UIGraphicsImageRenderer(size: imageSize, format: format)
+            let compositedImage = renderer.image { context in
+                if hasAlpha {
+                    context.cgContext.clear(CGRect(origin: .zero, size: imageSize))
+                }
+                baseImage.draw(at: .zero)
+
+                for item in stickerImages.sorted(by: { $0.sticker.zIndex < $1.sticker.zIndex }) {
+                    let sticker = item.sticker
+                    let image = item.image
+
+                    let imageStickerSize = baseStickerSize * sticker.scale * displayToImageScale
+                    let width = imageStickerSize
+                    let height = imageStickerSize
+                    let centerX = sticker.x * imageSize.width
+                    let centerY = sticker.y * imageSize.height
+
+                    let rect = CGRect(
+                        x: centerX - width / 2,
+                        y: centerY - height / 2,
+                        width: width,
+                        height: height
+                    )
+
+                    context.cgContext.saveGState()
+                    context.cgContext.translateBy(x: centerX, y: centerY)
+                    context.cgContext.rotate(by: sticker.rotation)
+                    context.cgContext.translateBy(x: -centerX, y: -centerY)
+                    image.draw(in: rect)
+                    context.cgContext.restoreGState()
+                }
+            }
+
+            let isAnimatedFlags = stickerImages.map { $0.isAnimated }
+            DispatchQueue.main.async {
+                completion(compositedImage, isAnimatedFlags)
+            }
+        }
     }
 
     static func applyCropToImage(_ uncropped: UIImage, cropRect: CGRect, imageRect: CGRect) -> UIImage? {

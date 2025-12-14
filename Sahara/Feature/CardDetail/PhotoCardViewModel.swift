@@ -29,6 +29,16 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
         let memoText: Driver<String>
         let shouldFlipToBack: Driver<Void>
         let shouldFlipToFront: Driver<Void>
+        let animatedStickers: Driver<[AnimatedStickerInfo]>
+    }
+
+    struct AnimatedStickerInfo {
+        let url: URL
+        let x: Double
+        let y: Double
+        let scale: Double
+        let rotation: Double
+        let zIndex: Int
     }
 
     init(cardId: ObjectId) {
@@ -36,7 +46,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
     }
 
     func transform(input: Input) -> Output {
-        let cardDataRelay = BehaviorRelay<(image: Data, date: Date, latitude: Double?, longitude: Double?, memo: String?)?>(value: nil)
+        let cardDataRelay = BehaviorRelay<(image: Data, originalImage: Data?, date: Date, latitude: Double?, longitude: Double?, memo: String?, stickers: [Sticker])?>(value: nil)
 
         input.viewDidLoad
             .withUnretained(self)
@@ -47,10 +57,12 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
                 let data = (
                     image: card.editedImageData,
+                    originalImage: card.originalImageData,
                     date: card.date,
                     latitude: card.latitude,
                     longitude: card.longitude,
-                    memo: card.memo
+                    memo: card.memo,
+                    stickers: Array(card.stickers)
                 )
                 cardDataRelay.accept(data)
             }
@@ -58,11 +70,41 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
         let cardData = cardDataRelay.compactMap { $0 }.asObservable()
 
-        let photoImage = cardData
-            .map { data -> UIImage? in
-                UIImage(data: data.image)
+        let hasAnimatedStickers = cardData
+            .map { data -> Bool in
+                data.stickers.contains(where: { $0.isAnimated })
+            }
+            .share(replay: 1)
+
+        let photoImage = Observable.combineLatest(cardData, hasAnimatedStickers)
+            .map { data, hasAnimated -> UIImage? in
+                if hasAnimated, let originalImageData = data.originalImage {
+                    return UIImage(data: originalImageData)
+                } else {
+                    return UIImage(data: data.image)
+                }
             }
             .asDriver(onErrorJustReturn: nil)
+
+        let animatedStickers = Observable.combineLatest(cardData, hasAnimatedStickers)
+            .map { data, hasAnimated -> [AnimatedStickerInfo] in
+                guard hasAnimated, data.originalImage != nil else { return [] }
+                return data.stickers
+                    .filter { $0.isAnimated && $0.resourceUrl != nil }
+                    .compactMap { sticker -> AnimatedStickerInfo? in
+                        guard let urlString = sticker.resourceUrl,
+                              let url = URL(string: urlString) else { return nil }
+                        return AnimatedStickerInfo(
+                            url: url,
+                            x: sticker.x,
+                            y: sticker.y,
+                            scale: sticker.scale,
+                            rotation: sticker.rotation,
+                            zIndex: sticker.zIndex
+                        )
+                    }
+            }
+            .asDriver(onErrorJustReturn: [])
 
         let dateText = cardData
             .map { data -> String in
@@ -110,7 +152,8 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
             locationText: locationText,
             memoText: memoText,
             shouldFlipToBack: shouldFlipToBack,
-            shouldFlipToFront: shouldFlipToFront
+            shouldFlipToFront: shouldFlipToFront,
+            animatedStickers: animatedStickers
         )
     }
 }

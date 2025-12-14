@@ -176,7 +176,6 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 4
-        imageView.backgroundColor = ColorSystem.systemGray6
         return imageView
     }
 

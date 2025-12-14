@@ -149,6 +149,7 @@ final class Sticker: Object {
     @Persisted var resourceUrl: String?
     @Persisted var localFilePath: String?
     @Persisted var photoAssetId: String?
+    @Persisted var isAnimated: Bool = false
 
     convenience init(
         x: Double,
@@ -159,7 +160,8 @@ final class Sticker: Object {
         sourceType: StickerSourceType,
         resourceUrl: String? = nil,
         localFilePath: String? = nil,
-        photoAssetId: String? = nil
+        photoAssetId: String? = nil,
+        isAnimated: Bool = false
     ) {
         self.init()
         self.x = x
@@ -171,5 +173,6 @@ final class Sticker: Object {
         self.resourceUrl = resourceUrl
         self.localFilePath = localFilePath
         self.photoAssetId = photoAssetId
+        self.isAnimated = isAnimated
     }
 }

@@ -733,24 +733,31 @@ final class MediaEditorViewController: UIViewController {
         }
 
         return stickerViews.enumerated().map { index, stickerView in
-            let relativeCenterX = stickerView.center.x - imageRect.origin.x
-            let relativeCenterY = stickerView.center.y - imageRect.origin.y
-
-            let normalizedX = relativeCenterX / imageRect.width
-            let normalizedY = relativeCenterY / imageRect.height
             let scale = sqrt(stickerView.transform.a * stickerView.transform.a + stickerView.transform.c * stickerView.transform.c)
             let rotation = atan2(stickerView.transform.b, stickerView.transform.a)
 
+            let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
+                centerX: stickerView.center.x,
+                centerY: stickerView.center.y,
+                scale: scale,
+                rotation: rotation,
+                baseImageSize: image.size,
+                displayRect: imageRect
+            )
+
+            let isAnimated = stickerView.stickerURL != nil
+
             return StickerDTO(
-                x: normalizedX,
-                y: normalizedY,
-                scale: Double(scale),
-                rotation: Double(rotation),
+                x: normalized.x,
+                y: normalized.y,
+                scale: normalized.scale,
+                rotation: normalized.rotation,
                 zIndex: index,
                 sourceType: .kilpy,
                 resourceUrl: stickerView.stickerURL?.absoluteString,
                 localFilePath: nil,
-                photoAssetId: nil
+                photoAssetId: nil,
+                isAnimated: isAnimated
             )
         }
     }

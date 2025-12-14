@@ -13,7 +13,6 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
-        imageView.backgroundColor = .systemGray6
         return imageView
     }()
 

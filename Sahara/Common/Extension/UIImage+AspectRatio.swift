@@ -28,8 +28,22 @@ extension UIImage {
             newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
         }
 
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+
+        let hasAlpha: Bool
+        if let alphaInfo = cgImage?.alphaInfo {
+            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+        } else {
+            hasAlpha = false
+        }
+        format.opaque = !hasAlpha
+
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
         return renderer.image { context in
+            if hasAlpha {
+                context.cgContext.clear(CGRect(origin: .zero, size: newSize))
+            }
             self.draw(in: CGRect(origin: .zero, size: newSize))
         }
     }

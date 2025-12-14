@@ -84,8 +84,9 @@ struct StickerDTO {
     let resourceUrl: String?
     let localFilePath: String?
     let photoAssetId: String?
+    let isAnimated: Bool
 
-    init(x: Double, y: Double, scale: Double, rotation: Double, zIndex: Int, sourceType: StickerSourceType, resourceUrl: String?, localFilePath: String?, photoAssetId: String?) {
+    init(x: Double, y: Double, scale: Double, rotation: Double, zIndex: Int, sourceType: StickerSourceType, resourceUrl: String?, localFilePath: String?, photoAssetId: String?, isAnimated: Bool = false) {
         self.x = x
         self.y = y
         self.scale = scale
@@ -95,6 +96,7 @@ struct StickerDTO {
         self.resourceUrl = resourceUrl
         self.localFilePath = localFilePath
         self.photoAssetId = photoAssetId
+        self.isAnimated = isAnimated
     }
 
     init(from sticker: Sticker) {
@@ -107,5 +109,6 @@ struct StickerDTO {
         self.resourceUrl = sticker.resourceUrl
         self.localFilePath = sticker.localFilePath
         self.photoAssetId = sticker.photoAssetId
+        self.isAnimated = sticker.isAnimated
     }
 }
