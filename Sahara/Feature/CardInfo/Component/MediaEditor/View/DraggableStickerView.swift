@@ -56,4 +56,24 @@ final class DraggableStickerView: BaseGestureView {
             imageView.kf.setImage(with: url, options: options)
         }
     }
+
+    func configure(with stickerDTO: StickerDTO) {
+        if let urlString = stickerDTO.resourceUrl, let url = URL(string: urlString) {
+            self.stickerURL = url
+            let options: KingfisherOptionsInfo = [
+                .scaleFactor(UIScreen.main.scale),
+                .memoryCacheExpiration(.seconds(600)),
+                .diskCacheExpiration(.days(7)),
+                .cacheOriginalImage
+            ]
+            imageView.kf.setImage(with: url, options: options)
+        } else if let localPath = stickerDTO.localFilePath {
+            let fileURL = URL(fileURLWithPath: localPath)
+            if let data = try? Data(contentsOf: fileURL), let image = UIImage(data: data) {
+                imageView.image = image
+            }
+        } else if let _ = stickerDTO.photoAssetId {
+
+        }
+    }
 }

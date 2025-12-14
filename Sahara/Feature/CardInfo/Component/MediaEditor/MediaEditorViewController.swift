@@ -761,6 +761,7 @@ final class MediaEditorViewController: UIViewController {
             )
         }
     }
+
 }
 
 extension MediaEditorViewController: UICollectionViewDataSource {

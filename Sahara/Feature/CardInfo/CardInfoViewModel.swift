@@ -62,7 +62,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialCustomFolder: String?
         let initialLocation: CLLocation?
         let initialIsLocked: Bool
-        let initialStickers: [StickerDTO]
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
         let shouldPopToListOnDelete: Driver<Bool>
@@ -231,8 +230,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let hasImage = imageRelay.map { $0 != nil }.asDriver(onErrorJustReturn: false)
 
-        let initialStickers = imageSourceData?.stickers ?? []
-
         return Output(
             editedImage: imageRelay.asDriver(),
             hasImage: hasImage,
@@ -246,7 +243,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             initialCustomFolder: initialCustomFolder,
             initialLocation: initialLocation,
             initialIsLocked: initialIsLocked,
-            initialStickers: initialStickers,
             deleted: deleted,
             shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false),
             shouldPopToListOnDelete: shouldPopToListOnDeleteRelay.asDriver(onErrorJustReturn: false)

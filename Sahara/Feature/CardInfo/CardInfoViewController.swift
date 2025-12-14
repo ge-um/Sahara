@@ -190,14 +190,6 @@ final class CardInfoViewController: UIViewController {
         let photoImageTapGesture = UITapGestureRecognizer()
         contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
 
-        photoImageTapGesture.rx.event
-            .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
-                    owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
-                }
-            }
-            .disposed(by: disposeBag)
-
         contentView.photoSelectButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
@@ -246,6 +238,34 @@ final class CardInfoViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
+        photoImageTapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                if output.isEditMode,
+                   let currentImage = owner.contentView.photoImageView.image,
+                   let currentImageSourceData = owner.imageSourceDataRelay.value {
+                    owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
+                        guard let owner = owner else { return }
+                        owner.contentView.photoImageView.image = editedImage
+                        owner.contentView.photoImageView.isHidden = false
+                        owner.contentView.photoSelectButton.isHidden = true
+                        owner.contentView.updatePhotoImageHeight(for: editedImage)
+
+                        owner.view.layoutIfNeeded()
+
+                        owner.contentView.renderStickers(imageSourceData.stickers)
+
+                        selectedImageSubject.onNext(editedImage)
+                        owner.imageSourceDataRelay.accept(imageSourceData)
+                        owner.wasEditedRelay.accept(wasEdited)
+                    }
+                } else {
+                    owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                        owner.openPhotoEditor(with: imageSource, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+
         output.editedImage
             .drive(with: self) { owner, image in
                 owner.contentView.photoImageView.image = image
@@ -280,12 +300,6 @@ final class CardInfoViewController: UIViewController {
                 if hasImage {
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)
-                    }
-
-                    if output.isEditMode && !output.initialStickers.isEmpty {
-                        DispatchQueue.main.async {
-                            owner.contentView.renderStickers(output.initialStickers)
-                        }
                     }
                 } else {
                     owner.contentView.resetPhotoImageHeight()

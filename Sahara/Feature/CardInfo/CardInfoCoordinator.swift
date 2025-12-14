@@ -18,6 +18,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     var navigationController: UINavigationController?
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?
+    weak var cardInfoViewController: UIViewController?
     private var onMediaEditingComplete: ((UIImage, ImageSourceData, Bool) -> Void)?
     private var mediaEditorCoordinator: MediaEditorCoordinator?
     private var currentImageSource: ImageSourceData?
@@ -39,7 +40,8 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
         }
-        parentViewController?.present(navController, animated: true)
+        let presentingVC = cardInfoViewController ?? parentViewController
+        presentingVC?.present(navController, animated: true)
     }
 
     func presentMediaEditor(
@@ -50,20 +52,18 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
         self.onMediaEditingComplete = onEditingComplete
         self.currentImageSource = imageSource
 
-        parentViewController?.dismiss(animated: true) { [weak self] in
-            guard let self = self else { return }
+        let navController = UINavigationController()
+        navController.modalPresentationStyle = .fullScreen
 
-            let navController = UINavigationController()
-            navController.modalPresentationStyle = .fullScreen
+        self.mediaEditorCoordinator = MediaEditorCoordinator(
+            navigationController: navController,
+            imageSource: imageSource
+        )
+        self.mediaEditorCoordinator?.delegate = self
 
-            self.mediaEditorCoordinator = MediaEditorCoordinator(
-                navigationController: navController,
-                imageSource: imageSource
-            )
-            self.mediaEditorCoordinator?.delegate = self
-            self.mediaEditorCoordinator?.start()
-
-            self.parentViewController?.present(navController, animated: true)
+        let presentingVC = cardInfoViewController ?? parentViewController
+        presentingVC?.present(navController, animated: true) { [weak self] in
+            self?.mediaEditorCoordinator?.start()
         }
     }
 
@@ -75,7 +75,8 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
-        parentViewController?.present(datePickerVC, animated: true)
+        let presentingVC = cardInfoViewController ?? parentViewController
+        presentingVC?.present(datePickerVC, animated: true)
     }
 
     func presentLocationSearch(onLocationSelected: @escaping (CLLocationCoordinate2D, String) -> Void) {
@@ -83,16 +84,22 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
         locationSearchVC.onLocationSelected = onLocationSelected
 
         let nav = UINavigationController(rootViewController: locationSearchVC)
-        parentViewController?.present(nav, animated: true)
+        let presentingVC = cardInfoViewController ?? parentViewController
+        presentingVC?.present(nav, animated: true)
     }
 
     func dismiss() {
-        parentViewController?.dismiss(animated: true)
+        if let cardInfoVC = cardInfoViewController {
+            cardInfoVC.navigationController?.dismiss(animated: true)
+        } else {
+            parentViewController?.dismiss(animated: true)
+        }
     }
 
     func popToList(isEditMode: Bool) {
-        guard let parentVC = parentViewController,
-              let presentingVC = parentVC.presentingViewController else {
+        guard let cardInfoVC = cardInfoViewController,
+              let cardInfoNavController = cardInfoVC.navigationController,
+              let presentingVC = cardInfoNavController.presentingViewController else {
             return
         }
 
@@ -108,7 +115,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
         guard let nav = navController else { return }
 
-        parentVC.dismiss(animated: true) {
+        cardInfoNavController.dismiss(animated: true) {
             nav.popViewController(animated: true)
         }
     }
@@ -116,7 +123,8 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
     func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool) {
-        parentViewController?.dismiss(animated: true) { [weak self] in
+        let presentingVC = cardInfoViewController ?? parentViewController
+        presentingVC?.dismiss(animated: true) { [weak self] in
             guard let self = self, let originalImageSource = self.currentImageSource else { return }
 
             let updatedImageSource = ImageSourceData(

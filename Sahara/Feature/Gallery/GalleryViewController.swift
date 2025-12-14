@@ -154,7 +154,7 @@ final class GalleryViewController: UIViewController {
         let viewModel = CardInfoViewModel(editedImage: nil)
         let coordinator = CardInfoCoordinator(parentViewController: self)
         let cardInfoVC = CardInfoViewController(viewModel: viewModel, coordinator: coordinator)
-        coordinator.parentViewController = cardInfoVC
+        coordinator.cardInfoViewController = cardInfoVC
         let navController = UINavigationController(rootViewController: cardInfoVC)
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)
