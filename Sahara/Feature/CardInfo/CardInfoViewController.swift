@@ -162,6 +162,9 @@ final class CardInfoViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        let photoImageTapGesture = UITapGestureRecognizer()
+        contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
+
         let biometricOutput = contentView.biometricLockCard.bind(initialIsLocked: false)
 
         biometricOutput.presentPermissionAlert
@@ -267,6 +270,24 @@ final class CardInfoViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
+        photoImageTapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                guard output.isEditMode else { return }
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                    selectedImageSubject.onNext(imageSource.image)
+                    owner.imageSourceDataRelay.accept(imageSource)
+
+                    if let date = date {
+                        owner.selectedDateRelay.accept(date)
+                    }
+
+                    if let location = location {
+                        initialLocationRelay.onNext(location)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+
         output.editedImage
             .drive(with: self) { owner, image in
                 owner.contentView.photoImageView.image = image
@@ -298,7 +319,7 @@ final class CardInfoViewController: UIViewController {
             .drive(with: self) { owner, hasImage in
                 owner.contentView.photoImageView.isHidden = !hasImage
                 owner.contentView.photoSelectButton.isHidden = hasImage
-                owner.contentView.photoEditButton.isHidden = !hasImage
+                owner.contentView.photoEditButton.isHidden = !hasImage || output.isEditMode
                 if hasImage {
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)
