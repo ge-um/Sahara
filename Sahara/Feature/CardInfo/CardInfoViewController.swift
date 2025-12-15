@@ -225,7 +225,7 @@ final class CardInfoViewController: UIViewController {
 
         contentView.photoEditButton.rx.tap
             .bind(with: self) { owner, _ in
-                guard let currentImage = owner.contentView.photoImageView.image,
+                guard let _ = owner.contentView.photoImageView.image,
                       let currentImageSourceData = owner.imageSourceDataRelay.value else { return }
 
                 owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
