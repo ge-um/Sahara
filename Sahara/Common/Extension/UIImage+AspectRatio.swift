@@ -14,18 +14,23 @@ extension UIImage {
         return width * aspectRatio
     }
 
-    func resized(maxDimension: CGFloat = 2796) -> UIImage {
-        let maxCurrentDimension = max(size.width, size.height)
-        guard maxCurrentDimension > maxDimension else {
+    func resized(maxDimension: CGFloat? = nil) -> UIImage {
+        let screenBounds = UIScreen.main.bounds
+        let screenScale = UIScreen.main.scale
+        let maxScreenDimension = max(screenBounds.width, screenBounds.height)
+        let targetMaxDimension = maxDimension ?? (maxScreenDimension * screenScale * 2)
+
+        let maxCurrentDimension = max(size.width * scale, size.height * scale)
+        guard maxCurrentDimension > targetMaxDimension else {
             return self
         }
 
         let aspectRatio = size.width / size.height
         let newSize: CGSize
         if size.width > size.height {
-            newSize = CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+            newSize = CGSize(width: targetMaxDimension, height: targetMaxDimension / aspectRatio)
         } else {
-            newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+            newSize = CGSize(width: targetMaxDimension * aspectRatio, height: targetMaxDimension)
         }
 
         let format = UIGraphicsImageRendererFormat()
