@@ -307,8 +307,8 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                     return
                 }
 
-                let format = ImageFormatDetector.detectFromUTI(preferredType)
-                    ?? ImageFormatDetector.detect(from: data)
+                let format = ImageFormatHelper.detectFromUTI(preferredType)
+                    ?? ImageFormatHelper.detect(from: data)
 
                 DispatchQueue.main.async {
                     let imageSource = ImageSourceData(

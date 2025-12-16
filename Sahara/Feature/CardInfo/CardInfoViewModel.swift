@@ -304,43 +304,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let editedImageData: Data
-                    let originalImageData: Data?
-                    let imageFormat: String?
-
-                    if let format = imageSource.format {
-                        switch format {
-                        case .heic:
-                            editedImageData = compositedImage.heicData(compressionQuality: 1.0) ?? compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "heic"
-                        case .png:
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        case .jpeg:
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    } else {
-                        let hasAlpha: Bool
-                        if let alphaInfo = compositedImage.cgImage?.alphaInfo {
-                            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                        } else {
-                            hasAlpha = false
-                        }
-
-                        if hasAlpha {
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        } else {
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    }
+                    let conversionResult = ImageFormatHelper.convertImages(
+                        editedImage: compositedImage,
+                        originalImage: resizedImage,
+                        sourceFormat: imageSource.format
+                    )
+                    let editedImageData = conversionResult.editedImageData
+                    let originalImageData: Data? = conversionResult.originalImageData
+                    let imageFormat: String? = conversionResult.imageFormat
 
                     self.ocrManager.recognizeText(from: editedImage)
                         .subscribe(
@@ -567,43 +538,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let editedImageData: Data
-                    let originalImageData: Data?
-                    let imageFormat: String?
-
-                    if let format = imageSource.format {
-                        switch format {
-                        case .heic:
-                            editedImageData = compositedImage.heicData(compressionQuality: 1.0) ?? compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "heic"
-                        case .png:
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        case .jpeg:
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    } else {
-                        let hasAlpha: Bool
-                        if let alphaInfo = compositedImage.cgImage?.alphaInfo {
-                            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                        } else {
-                            hasAlpha = false
-                        }
-
-                        if hasAlpha {
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        } else {
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    }
+                    let conversionResult = ImageFormatHelper.convertImages(
+                        editedImage: compositedImage,
+                        originalImage: resizedImage,
+                        sourceFormat: imageSource.format
+                    )
+                    let editedImageData = conversionResult.editedImageData
+                    let originalImageData: Data? = conversionResult.originalImageData
+                    let imageFormat: String? = conversionResult.imageFormat
 
                     ocrObservable
                         .subscribe(
@@ -811,43 +753,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let editedImageData: Data
-                    let originalImageData: Data?
-                    let imageFormat: String?
-
-                    if let format = imageSource.format {
-                        switch format {
-                        case .heic:
-                            editedImageData = compositedImage.heicData(compressionQuality: 1.0) ?? compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "heic"
-                        case .png:
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        case .jpeg:
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    } else {
-                        let hasAlpha: Bool
-                        if let alphaInfo = compositedImage.cgImage?.alphaInfo {
-                            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                        } else {
-                            hasAlpha = false
-                        }
-
-                        if hasAlpha {
-                            editedImageData = compositedImage.pngData()!
-                            originalImageData = resizedImage.pngData()!
-                            imageFormat = "png"
-                        } else {
-                            editedImageData = compositedImage.jpegData(compressionQuality: 1.0)!
-                            originalImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                            imageFormat = "jpeg"
-                        }
-                    }
+                    let conversionResult = ImageFormatHelper.convertImages(
+                        editedImage: compositedImage,
+                        originalImage: resizedImage,
+                        sourceFormat: imageSource.format
+                    )
+                    let editedImageData = conversionResult.editedImageData
+                    let originalImageData: Data? = conversionResult.originalImageData
+                    let imageFormat: String? = conversionResult.imageFormat
 
                     ocrObservable
                         .subscribe(
