@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import OSLog
 import RealmSwift
 import RxCocoa
 import RxSwift
@@ -33,7 +34,8 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
     }
 
     struct AnimatedStickerInfo {
-        let url: URL
+        let url: URL?
+        let localFilePath: String?
         let x: Double
         let y: Double
         let scale: Double
@@ -70,15 +72,15 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
         let cardData = cardDataRelay.compactMap { $0 }.asObservable()
 
-        let hasAnimatedStickers = cardData
+        let hasStickers = cardData
             .map { data -> Bool in
-                data.stickers.contains(where: { $0.isAnimated })
+                !data.stickers.isEmpty
             }
             .share(replay: 1)
 
-        let photoImage = Observable.combineLatest(cardData, hasAnimatedStickers)
-            .map { data, hasAnimated -> UIImage? in
-                if hasAnimated, let originalImageData = data.originalImage {
+        let photoImage = Observable.combineLatest(cardData, hasStickers)
+            .map { data, hasStickers -> UIImage? in
+                if hasStickers, let originalImageData = data.originalImage {
                     return UIImage(data: originalImageData)
                 } else {
                     return UIImage(data: data.image)
@@ -86,16 +88,23 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorJustReturn: nil)
 
-        let animatedStickers = Observable.combineLatest(cardData, hasAnimatedStickers)
-            .map { data, hasAnimated -> [AnimatedStickerInfo] in
-                guard hasAnimated, data.originalImage != nil else { return [] }
-                return data.stickers
-                    .filter { $0.isAnimated && $0.resourceUrl != nil }
+        let animatedStickers = Observable.combineLatest(cardData, hasStickers)
+            .map { data, hasStickers -> [AnimatedStickerInfo] in
+                guard hasStickers, data.originalImage != nil else { return [] }
+                let stickers = data.stickers
                     .compactMap { sticker -> AnimatedStickerInfo? in
-                        guard let urlString = sticker.resourceUrl,
-                              let url = URL(string: urlString) else { return nil }
+                        let url: URL? = {
+                            if let urlString = sticker.resourceUrl {
+                                return URL(string: urlString)
+                            }
+                            return nil
+                        }()
+
+                        guard url != nil || sticker.localFilePath != nil else { return nil }
+
                         return AnimatedStickerInfo(
                             url: url,
+                            localFilePath: sticker.localFilePath,
                             x: sticker.x,
                             y: sticker.y,
                             scale: sticker.scale,
@@ -103,6 +112,12 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
                             zIndex: sticker.zIndex
                         )
                     }
+
+                let klipyCount = stickers.filter { $0.url != nil }.count
+                let photoCount = stickers.filter { $0.localFilePath != nil }.count
+                Logger.cardInfo.info("Loaded stickers for detail view: klipy=\(klipyCount), photo=\(photoCount), total=\(stickers.count)")
+
+                return stickers
             }
             .asDriver(onErrorJustReturn: [])
 

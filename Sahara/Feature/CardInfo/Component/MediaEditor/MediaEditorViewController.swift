@@ -5,6 +5,7 @@
 //  Created by 금가경 on 9/26/25.
 //
 
+import OSLog
 import PencilKit
 import PhotosUI
 import RxCocoa
@@ -541,6 +542,7 @@ final class MediaEditorViewController: UIViewController {
             .drive(with: self) { owner, result in
                 let (editedImage, wasEdited, filterIndex, cropMetadata) = result
                 let stickerDTOs = owner.convertStickersToDTO()
+                Logger.mediaEditor.info("Finishing edit: filter=\(filterIndex.orNil), crop=\(cropMetadata.presenceLog), stickers=\(stickerDTOs.count)")
                 owner.coordinator?.finishEditing(with: editedImage, stickers: stickerDTOs, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata)
             }
             .disposed(by: disposeBag)

@@ -6,6 +6,7 @@
 //
 
 import Kingfisher
+import OSLog
 import RxCocoa
 import RxSwift
 import SnapKit
@@ -356,7 +357,13 @@ final class PhotoCardView: UIView {
                 .onFailureImage(nil)
             ]
 
-            stickerImageView.kf.setImage(with: sticker.url, options: options)
+            if let url = sticker.url {
+                stickerImageView.kf.setImage(with: url, options: options)
+            } else if let localPath = sticker.localFilePath {
+                let fileURL = URL(fileURLWithPath: localPath)
+                stickerImageView.kf.setImage(with: fileURL, options: options)
+            }
+
             stickerContainerView.addSubview(stickerImageView)
         }
     }
