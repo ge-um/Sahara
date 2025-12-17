@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import OSLog
 import RealmSwift
 import RxCocoa
 import RxSwift
@@ -34,11 +35,17 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private var initialMemo: String?
     private var initialIsLocked: Bool = false
     private var initialCustomFolder: String?
+    private var currentFilterIndex: Int?
+    private var currentCropMetadata: CropMetadata?
+    private var currentRotationAngle: Double = 0.0
 
     struct Input {
         let selectedImage: Observable<UIImage?>
         let imageSourceData: Observable<ImageSourceData?>
         let wasEdited: Observable<Bool>
+        let selectedFilterIndex: Observable<Int?>
+        let cropMetadata: Observable<CropMetadata?>
+        let rotationAngle: Observable<Double>
         let date: Observable<Date>
         let memo: Observable<String?>
         let customFolder: Observable<String?>
@@ -149,6 +156,24 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         input.wasEdited
             .bind(with: self) { owner, wasEdited in
                 owner.wasImageEdited = wasEdited
+            }
+            .disposed(by: disposeBag)
+
+        input.selectedFilterIndex
+            .bind(with: self) { owner, index in
+                owner.currentFilterIndex = index
+            }
+            .disposed(by: disposeBag)
+
+        input.cropMetadata
+            .bind(with: self) { owner, metadata in
+                owner.currentCropMetadata = metadata
+            }
+            .disposed(by: disposeBag)
+
+        input.rotationAngle
+            .bind(with: self) { owner, angle in
+                owner.currentRotationAngle = angle
             }
             .disposed(by: disposeBag)
 
@@ -331,6 +356,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                 card.imageFormat = imageFormat
                                 card.wasEdited = self.wasImageEdited
 
+                                Logger.database.notice("Saved card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+
+                                card.appliedFilterIndex = self.currentFilterIndex
+                                card.cropMetadata = self.currentCropMetadata
+                                card.rotationAngle = self.currentRotationAngle
+
                                 for (index, stickerDTO) in stickers.enumerated() {
                                     let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : false
                                     let stickerObject = Sticker(
@@ -458,6 +489,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     card.imageFormat = imageFormat
                     card.wasEdited = self.wasImageEdited
 
+                    Logger.database.notice("Saved card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+
+                    card.appliedFilterIndex = self.currentFilterIndex
+                    card.cropMetadata = self.currentCropMetadata
+                    card.rotationAngle = self.currentRotationAngle
+
                     for stickerDTO in stickers {
                         let stickerObject = Sticker(
                             x: stickerDTO.x,
@@ -557,6 +594,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                     card.originalImageData = originalImageData
                                     card.imageFormat = imageFormat
                                     card.wasEdited = self.wasImageEdited
+
+                                    Logger.database.notice("Updated card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+
+                                    card.appliedFilterIndex = self.currentFilterIndex
+                                    card.cropMetadata = self.currentCropMetadata
+                                    card.rotationAngle = self.currentRotationAngle
+
                                     card.memo = memoText
                                     card.customFolder = folderText
                                     card.isLocked = isLocked
@@ -683,6 +727,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                         card.originalImageData = originalImageData
                         card.imageFormat = imageFormat
                         card.wasEdited = self.wasImageEdited
+
+                        Logger.database.notice("Replaced card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+
+                        card.appliedFilterIndex = self.currentFilterIndex
+                        card.cropMetadata = self.currentCropMetadata
+                        card.rotationAngle = self.currentRotationAngle
+
                         card.memo = memoText
                         card.customFolder = folderText
                         card.isLocked = isLocked

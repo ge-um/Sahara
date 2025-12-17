@@ -528,15 +528,21 @@ final class MediaEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        Driver.combineLatest(output.navigateToMetadata, output.wasEdited)
+        Driver.combineLatest(
+            output.navigateToMetadata,
+            output.wasEdited,
+            output.selectedFilterIndex,
+            output.cropMetadata,
+            output.rotationAngle
+        )
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, result in
-                let (editedImage, wasEdited) = result
+                let (editedImage, wasEdited, filterIndex, cropMetadata, rotationAngle) = result
                 let stickerDTOs = owner.convertStickersToDTO()
-                owner.coordinator?.finishEditing(with: editedImage, stickers: stickerDTOs, wasEdited: wasEdited)
+                owner.coordinator?.finishEditing(with: editedImage, stickers: stickerDTOs, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata, rotationAngle: rotationAngle)
             }
             .disposed(by: disposeBag)
 

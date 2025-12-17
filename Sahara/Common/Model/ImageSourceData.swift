@@ -12,32 +12,31 @@ struct ImageSourceData {
     let originalData: Data?
     let format: ImageFormat?
     let stickers: [StickerDTO]
+    let appliedFilterIndex: Int?
+    let cropMetadata: CropMetadata?
+    let rotationAngle: Double
 
     enum ImageFormat: String {
         case heic
         case jpeg
         case png
-
-        var mimeType: String {
-            switch self {
-            case .heic:
-                return "image/heic"
-            case .jpeg:
-                return "image/jpeg"
-            case .png:
-                return "image/png"
-            }
-        }
-
-        var fileExtension: String {
-            return rawValue
-        }
     }
 
-    init(image: UIImage, originalData: Data? = nil, format: ImageFormat? = nil, stickers: [StickerDTO] = []) {
+    init(
+        image: UIImage,
+        originalData: Data? = nil,
+        format: ImageFormat? = nil,
+        stickers: [StickerDTO] = [],
+        appliedFilterIndex: Int? = nil,
+        cropMetadata: CropMetadata? = nil,
+        rotationAngle: Double = 0.0
+    ) {
         self.image = image
         self.originalData = originalData
         self.format = format
         self.stickers = stickers
+        self.appliedFilterIndex = appliedFilterIndex
+        self.cropMetadata = cropMetadata
+        self.rotationAngle = rotationAngle
     }
 }

@@ -7,6 +7,7 @@
 
 import Alamofire
 import Foundation
+import OSLog
 import RxCocoa
 import RxSwift
 import UIKit
@@ -21,6 +22,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let currentQueryRelay = BehaviorRelay<String>(value: "")
     private let wasEditedRelay = BehaviorRelay<Bool>(value: false)
     private let addedStickersRelay = BehaviorRelay<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>(value: [])
+    private let selectedFilterIndexRelay = BehaviorRelay<Int?>(value: nil)
+    private let cropMetadataRelay = BehaviorRelay<CropMetadata?>(value: nil)
+    private let rotationAngleRelay = BehaviorRelay<Double>(value: 0.0)
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -54,6 +58,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let shouldShowStickerModal: Driver<Void>
         let wasEdited: Driver<Bool>
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
+        let selectedFilterIndex: Driver<Int?>
+        let cropMetadata: Driver<CropMetadata?>
+        let rotationAngle: Driver<Double>
     }
 
     private let originalImageSource: ImageSourceData
@@ -228,44 +235,74 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             }
             .disposed(by: disposeBag)
 
-        // 필터 적용 로직
         input.filterSelected
+            .do(onNext: { data in
+                let (index, _) = data
+                Logger.imageMetadata.info("Applied filter: \(index)")
+            })
             .withUnretained(self)
-            .compactMap { owner, data -> UIImage? in
+            .bind { owner, data in
                 let (index, baseImage) = data
-                guard let baseImage = baseImage else { return nil }
+                guard let baseImage = baseImage else { return }
+
+                owner.selectedFilterIndexRelay.accept(index == 0 ? nil : index)
 
                 if index == 0 {
-                    return baseImage
+                    owner.imageStateHandler.applyFilter(baseImage)
+                    filteredImageRelay.accept(baseImage)
+                    owner.wasEditedRelay.accept(true)
+                    return
                 }
 
-                guard let filter = owner.createFilter(at: index) else { return nil }
-                return owner.applyFilter(filter, to: baseImage)
-            }
-            .bind(with: self) { owner, image in
-                owner.imageStateHandler.applyFilter(image)
-                filteredImageRelay.accept(image)
+                guard let filter = owner.createFilter(at: index),
+                      let filteredImage = owner.applyFilter(filter, to: baseImage) else { return }
+
+                owner.imageStateHandler.applyFilter(filteredImage)
+                filteredImageRelay.accept(filteredImage)
                 owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
-        // 자르기 적용 로직
         input.cropApplied
-            .compactMap { image, cropRect, displayedRect -> UIImage? in
+            .withUnretained(self)
+            .compactMap { owner, data -> (UIImage, CropMetadata)? in
+                let (image, cropRect, displayedRect) = data
                 let scaledCropRect = MediaEditorCropHandler.convertCropRectToImageCoordinates(
                     cropRect: cropRect,
                     imageSize: image.size,
                     displayedImageRect: displayedRect
                 )
-                return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
+
+                let normalizedX = scaledCropRect.origin.x / image.size.width
+                let normalizedY = scaledCropRect.origin.y / image.size.height
+                let normalizedWidth = scaledCropRect.size.width / image.size.width
+                let normalizedHeight = scaledCropRect.size.height / image.size.height
+
+                let cropMetadata = CropMetadata(
+                    x: normalizedX,
+                    y: normalizedY,
+                    width: normalizedWidth,
+                    height: normalizedHeight
+                )
+
+                guard let croppedImage = MediaEditorCropHandler.cropImage(image, to: scaledCropRect) else {
+                    return nil
+                }
+
+                return (croppedImage, cropMetadata)
             }
-            .bind(with: self) { owner, croppedImage in
+            .do(onNext: { result in
+                let (_, cropMetadata) = result
+                Logger.imageMetadata.info("Cropped image: \(cropMetadata.formattedCoordinates())")
+            })
+            .bind(with: self) { owner, result in
+                let (croppedImage, cropMetadata) = result
                 owner.imageStateHandler.applyCrop(croppedImage)
+                owner.cropMetadataRelay.accept(cropMetadata)
                 owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
-        // 스티커 추가 추적
         input.stickerAdded
             .withUnretained(self)
             .bind { owner, stickerData in
@@ -276,7 +313,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             }
             .disposed(by: disposeBag)
 
-        // 드로잉 변경 추적
         input.drawingChanged
             .withUnretained(self)
             .bind { owner, _ in
@@ -312,7 +348,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
             shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
             wasEdited: wasEditedRelay.asDriver(),
-            addedStickers: addedStickersRelay.asDriver()
+            addedStickers: addedStickersRelay.asDriver(),
+            selectedFilterIndex: selectedFilterIndexRelay.asDriver(),
+            cropMetadata: cropMetadataRelay.asDriver(),
+            rotationAngle: rotationAngleRelay.asDriver()
         )
     }
 

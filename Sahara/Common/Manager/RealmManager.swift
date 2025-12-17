@@ -73,7 +73,8 @@ final class RealmManager: RealmManagerProtocol {
                 newObject?["localFilePath"] = nil
             }
         }
-
+        
+        // TODO: - 테스트를 위해 임시로 Migration, 차후에 출시할 때는 버전 2로 진행
         if oldSchemaVersion < 3 {
             migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
                 newObject?["appliedFilterIndex"] = nil
