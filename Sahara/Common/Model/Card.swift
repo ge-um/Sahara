@@ -63,6 +63,10 @@ final class Card: Object {
     @Persisted var ocrText: String?
     @Persisted var weatherCondition: WeatherCondition?
 
+    @Persisted var appliedFilterIndex: Int?
+    @Persisted var cropMetadata: CropMetadata?
+    @Persisted var rotationAngle: Double = 0.0
+
     convenience init(
         date: Date,
         createdDate: Date,

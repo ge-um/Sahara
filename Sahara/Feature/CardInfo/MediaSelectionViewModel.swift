@@ -170,9 +170,9 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
                 let format: ImageSourceData.ImageFormat?
                 if let uti = uti {
-                    format = ImageFormatDetector.detectFromUTI(uti as String)
+                    format = ImageFormatHelper.detectFromUTI(uti as String)
                 } else {
-                    format = ImageFormatDetector.detect(from: data)
+                    format = ImageFormatHelper.detect(from: data)
                 }
 
                 let imageSource = ImageSourceData(
