@@ -127,13 +127,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    func transform(input: Input) -> Output {
-        let isEditMode = cardToEditId != nil
-        let initialLocation: CLLocation? = originalLocation
-
-        let locationRelay = BehaviorRelay<CLLocation?>(value: initialLocation)
-        let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
-
+    private func bindInputs(
+        input: Input,
+        imageRelay: BehaviorRelay<UIImage?>,
+        locationRelay: BehaviorRelay<CLLocation?>
+    ) {
         input.selectedImage
             .compactMap { $0 }
             .bind(with: self) { owner, image in
@@ -172,10 +170,70 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         input.location
             .bind(to: locationRelay)
             .disposed(by: disposeBag)
+    }
 
+    private func logCardSaveAnalytics(memo: String?, location: CLLocation?, isLocked: Bool) {
+        AnalyticsManager.shared.logCardSave(
+            hasPhoto: editedImage != nil,
+            hasMemo: !(memo?.isEmpty ?? true),
+            hasLocation: location != nil,
+            isLocked: isLocked
+        )
+    }
+
+    private func handleSaveAction(
+        date: Date,
+        memo: String?,
+        customFolder: String?,
+        location: CLLocation?,
+        isLocked: Bool,
+        saveErrorRelay: PublishRelay<String>,
+        shouldPopToListRelay: PublishRelay<Bool>
+    ) -> Observable<Bool> {
+        if editedImage == nil {
+            saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
+            return .just(false)
+        }
+
+        if let cardId = cardToEditId {
+            let shouldPop = shouldPopToList(newDate: date, newLocation: location)
+            shouldPopToListRelay.accept(shouldPop)
+
+            if shouldPop {
+                return replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                    .map { true }
+            } else {
+                return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                    .map { true }
+            }
+        } else {
+            shouldPopToListRelay.accept(false)
+            return saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                .map { true }
+        }
+    }
+
+    private func handleDeleteAction(shouldPopToListOnDeleteRelay: PublishRelay<Bool>) -> Observable<Void> {
+        guard let cardId = cardToEditId else { return .just(()) }
+
+        return realmManager.delete(Card.self, forPrimaryKey: cardId)
+            .do(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
+            })
+    }
+
+    func transform(input: Input) -> Output {
+        let isEditMode = cardToEditId != nil
+        let initialLocation: CLLocation? = originalLocation
+
+        let locationRelay = BehaviorRelay<CLLocation?>(value: initialLocation)
+        let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
         let saveErrorRelay = PublishRelay<String>()
         let shouldPopToListRelay = PublishRelay<Bool>()
         let shouldPopToListOnDeleteRelay = PublishRelay<Bool>()
+
+        bindInputs(input: input, imageRelay: imageRelay, locationRelay: locationRelay)
 
         let saved = input.saveButtonTapped
             .withLatestFrom(
@@ -188,57 +246,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
             )
             .do(onNext: { [weak self] _, memo, _, location, isLocked in
-                guard let self = self else { return }
-                AnalyticsManager.shared.logCardSave(
-                    hasPhoto: self.editedImage != nil,
-                    hasMemo: !(memo?.isEmpty ?? true),
-                    hasLocation: location != nil,
-                    isLocked: isLocked
-                )
+                self?.logCardSaveAnalytics(memo: memo, location: location, isLocked: isLocked)
             })
             .flatMap { [weak self] date, memo, customFolder, location, isLocked -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
-
-                if self.editedImage == nil {
-                    saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
-                    return .just(false)
-                }
-
-                if let cardId = self.cardToEditId {
-                    let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
-                    shouldPopToListRelay.accept(shouldPop)
-
-                    if shouldPop {
-                        return self.replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                            .map { true }
-                    } else {
-                        return self.updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                            .map { true }
-                    }
-                } else {
-                    shouldPopToListRelay.accept(false)
-                    return self.saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                        .map { true }
-                }
+                return self.handleSaveAction(
+                    date: date,
+                    memo: memo,
+                    customFolder: customFolder,
+                    location: location,
+                    isLocked: isLocked,
+                    saveErrorRelay: saveErrorRelay,
+                    shouldPopToListRelay: shouldPopToListRelay
+                )
             }
             .asDriver(onErrorJustReturn: false)
 
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
-            .do(onNext: { owner, _ in
+            .do(onNext: { _, _ in
                 AnalyticsManager.shared.logCardDelete()
             })
-            .flatMap { owner, _ -> Observable<Void> in
-                guard let cardId = owner.cardToEditId else { return .just(()) }
-
-                return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
-                    .do(onNext: { _ in
-                        if owner.sourceType != nil {
-                            shouldPopToListOnDeleteRelay.accept(true)
-                        } else {
-                            shouldPopToListOnDeleteRelay.accept(false)
-                        }
-                    })
+            .flatMap { [weak self] _, _ -> Observable<Void> in
+                guard let self = self else { return .just(()) }
+                return self.handleDeleteAction(shouldPopToListOnDeleteRelay: shouldPopToListOnDeleteRelay)
             }
             .asDriver(onErrorJustReturn: ())
 
