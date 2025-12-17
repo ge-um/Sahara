@@ -14,7 +14,6 @@ struct ImageSourceData {
     let stickers: [StickerDTO]
     let appliedFilterIndex: Int?
     let cropMetadata: CropMetadata?
-    let rotationAngle: Double
 
     enum ImageFormat: String {
         case heic
@@ -28,8 +27,7 @@ struct ImageSourceData {
         format: ImageFormat? = nil,
         stickers: [StickerDTO] = [],
         appliedFilterIndex: Int? = nil,
-        cropMetadata: CropMetadata? = nil,
-        rotationAngle: Double = 0.0
+        cropMetadata: CropMetadata? = nil
     ) {
         self.image = image
         self.originalData = originalData
@@ -37,6 +35,5 @@ struct ImageSourceData {
         self.stickers = stickers
         self.appliedFilterIndex = appliedFilterIndex
         self.cropMetadata = cropMetadata
-        self.rotationAngle = rotationAngle
     }
 }

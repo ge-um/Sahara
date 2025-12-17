@@ -124,7 +124,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?, rotationAngle: Double) {
+    func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?) {
         getPresentingViewController()?.dismiss(animated: true) { [weak self] in
             guard let self = self, let originalImageSource = self.currentImageSource else { return }
 
@@ -134,8 +134,7 @@ extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
                 format: originalImageSource.format,
                 stickers: stickers,
                 appliedFilterIndex: filterIndex,
-                cropMetadata: cropMetadata,
-                rotationAngle: rotationAngle
+                cropMetadata: cropMetadata
             )
 
             self.onMediaEditingComplete?(image, updatedImageSource, wasEdited)

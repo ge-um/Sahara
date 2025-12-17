@@ -39,7 +39,7 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
-    static let currentSchemaVersion: UInt64 = 3
+    static let currentSchemaVersion: UInt64 = 4
 
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
@@ -74,13 +74,15 @@ final class RealmManager: RealmManagerProtocol {
             }
         }
         
-        // TODO: - 테스트를 위해 임시로 Migration, 차후에 출시할 때는 버전 2로 진행
         if oldSchemaVersion < 3 {
             migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
                 newObject?["appliedFilterIndex"] = nil
                 newObject?["cropMetadata"] = nil
-                newObject?["rotationAngle"] = 0.0
             }
+        }
+
+        // TODO: - 테스트를 위해 임시로 Migration, 차후에 출시할 때는 버전 2로 진행
+        if oldSchemaVersion < 4 {
         }
     }
 

@@ -57,7 +57,6 @@ final class CardInfoViewController: UIViewController {
     let wasEditedRelay = BehaviorRelay<Bool>(value: false)
     let selectedFilterIndexRelay = BehaviorRelay<Int?>(value: nil)
     let cropMetadataRelay = BehaviorRelay<CropMetadata?>(value: nil)
-    let rotationAngleRelay = BehaviorRelay<Double>(value: 0.0)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -235,7 +234,7 @@ final class CardInfoViewController: UIViewController {
                 owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
                     guard let owner = owner else { return }
 
-                    Logger.cardInfo.info("Received editor metadata: filter=\(imageSourceData.appliedFilterIndex.orNil), crop=\(imageSourceData.cropMetadata.presenceLog), rotation=\(imageSourceData.rotationAngle)")
+                    Logger.cardInfo.info("Received editor metadata: filter=\(imageSourceData.appliedFilterIndex.orNil), crop=\(imageSourceData.cropMetadata.presenceLog), stickers=\(imageSourceData.stickers.count)")
 
                     owner.contentView.photoImageView.image = editedImage
                     owner.contentView.photoImageView.isHidden = false
@@ -251,7 +250,6 @@ final class CardInfoViewController: UIViewController {
                     owner.wasEditedRelay.accept(wasEdited)
                     owner.selectedFilterIndexRelay.accept(imageSourceData.appliedFilterIndex)
                     owner.cropMetadataRelay.accept(imageSourceData.cropMetadata)
-                    owner.rotationAngleRelay.accept(imageSourceData.rotationAngle)
                 }
             }
             .disposed(by: disposeBag)
@@ -262,7 +260,6 @@ final class CardInfoViewController: UIViewController {
             wasEdited: wasEditedRelay.asObservable(),
             selectedFilterIndex: selectedFilterIndexRelay.asObservable(),
             cropMetadata: cropMetadataRelay.asObservable(),
-            rotationAngle: rotationAngleRelay.asObservable(),
             date: selectedDateRelay.asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)

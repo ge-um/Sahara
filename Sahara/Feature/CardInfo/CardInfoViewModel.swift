@@ -37,7 +37,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private var initialCustomFolder: String?
     private var currentFilterIndex: Int?
     private var currentCropMetadata: CropMetadata?
-    private var currentRotationAngle: Double = 0.0
 
     struct Input {
         let selectedImage: Observable<UIImage?>
@@ -45,7 +44,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let wasEdited: Observable<Bool>
         let selectedFilterIndex: Observable<Int?>
         let cropMetadata: Observable<CropMetadata?>
-        let rotationAngle: Observable<Double>
         let date: Observable<Date>
         let memo: Observable<String?>
         let customFolder: Observable<String?>
@@ -168,12 +166,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         input.cropMetadata
             .bind(with: self) { owner, metadata in
                 owner.currentCropMetadata = metadata
-            }
-            .disposed(by: disposeBag)
-
-        input.rotationAngle
-            .bind(with: self) { owner, angle in
-                owner.currentRotationAngle = angle
             }
             .disposed(by: disposeBag)
 
@@ -356,11 +348,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                 card.imageFormat = imageFormat
                                 card.wasEdited = self.wasImageEdited
 
-                                Logger.database.notice("Saved card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+                                Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
                                 card.appliedFilterIndex = self.currentFilterIndex
                                 card.cropMetadata = self.currentCropMetadata
-                                card.rotationAngle = self.currentRotationAngle
 
                                 for (index, stickerDTO) in stickers.enumerated() {
                                     let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : false
@@ -489,11 +480,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     card.imageFormat = imageFormat
                     card.wasEdited = self.wasImageEdited
 
-                    Logger.database.notice("Saved card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+                    Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
                     card.appliedFilterIndex = self.currentFilterIndex
                     card.cropMetadata = self.currentCropMetadata
-                    card.rotationAngle = self.currentRotationAngle
 
                     for stickerDTO in stickers {
                         let stickerObject = Sticker(
@@ -595,11 +585,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                     card.imageFormat = imageFormat
                                     card.wasEdited = self.wasImageEdited
 
-                                    Logger.database.notice("Updated card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+                                    Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
                                     card.appliedFilterIndex = self.currentFilterIndex
                                     card.cropMetadata = self.currentCropMetadata
-                                    card.rotationAngle = self.currentRotationAngle
 
                                     card.memo = memoText
                                     card.customFolder = folderText
@@ -728,11 +717,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                         card.imageFormat = imageFormat
                         card.wasEdited = self.wasImageEdited
 
-                        Logger.database.notice("Replaced card metadata: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog)")
+                        Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
                         card.appliedFilterIndex = self.currentFilterIndex
                         card.cropMetadata = self.currentCropMetadata
-                        card.rotationAngle = self.currentRotationAngle
 
                         card.memo = memoText
                         card.customFolder = folderText
@@ -830,6 +818,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                 newCard.originalImageData = originalImageData
                                 newCard.imageFormat = imageFormat
                                 newCard.wasEdited = self.wasImageEdited
+
+                                Logger.database.notice("Replaced card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
+
+                                newCard.appliedFilterIndex = self.currentFilterIndex
+                                newCard.cropMetadata = self.currentCropMetadata
 
                                 for (index, stickerDTO) in stickers.enumerated() {
                                     let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : false
@@ -962,6 +955,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     newCard.originalImageData = originalImageData
                     newCard.imageFormat = imageFormat
                     newCard.wasEdited = self.wasImageEdited
+
+                    Logger.database.notice("Replaced card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
+
+                    newCard.appliedFilterIndex = self.currentFilterIndex
+                    newCard.cropMetadata = self.currentCropMetadata
 
                     for stickerDTO in stickers {
                         let stickerObject = Sticker(

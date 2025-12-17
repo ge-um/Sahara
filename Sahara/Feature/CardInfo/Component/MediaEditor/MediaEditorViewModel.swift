@@ -24,7 +24,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let addedStickersRelay = BehaviorRelay<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>(value: [])
     private let selectedFilterIndexRelay = BehaviorRelay<Int?>(value: nil)
     private let cropMetadataRelay = BehaviorRelay<CropMetadata?>(value: nil)
-    private let rotationAngleRelay = BehaviorRelay<Double>(value: 0.0)
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -60,7 +59,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
         let selectedFilterIndex: Driver<Int?>
         let cropMetadata: Driver<CropMetadata?>
-        let rotationAngle: Driver<Double>
     }
 
     private let originalImageSource: ImageSourceData
@@ -236,10 +234,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         input.filterSelected
-            .do(onNext: { data in
-                let (index, _) = data
-                Logger.imageMetadata.info("Applied filter: \(index)")
-            })
             .withUnretained(self)
             .bind { owner, data in
                 let (index, baseImage) = data
@@ -350,8 +344,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             wasEdited: wasEditedRelay.asDriver(),
             addedStickers: addedStickersRelay.asDriver(),
             selectedFilterIndex: selectedFilterIndexRelay.asDriver(),
-            cropMetadata: cropMetadataRelay.asDriver(),
-            rotationAngle: rotationAngleRelay.asDriver()
+            cropMetadata: cropMetadataRelay.asDriver()
         )
     }
 
