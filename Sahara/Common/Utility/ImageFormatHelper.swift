@@ -5,6 +5,7 @@
 //  Created by 금가경 on 12/17/25.
 //
 
+import OSLog
 import UIKit
 
 final class ImageFormatHelper {
@@ -44,57 +45,85 @@ final class ImageFormatHelper {
 
     struct ConversionResult {
         let editedImageData: Data
-        let originalImageData: Data
+        let originalImageData: Data?
         let imageFormat: String
     }
 
-    static func convertImages(
+    static func convertToFormat(
         editedImage: UIImage,
-        originalImage: UIImage,
-        sourceFormat: ImageSourceData.ImageFormat?
+        originalData: Data?,
+        targetFormat: ImageSourceData.ImageFormat?
     ) -> ConversionResult {
-        if let format = sourceFormat {
-            switch format {
-            case .heic:
-                return ConversionResult(
-                    editedImageData: editedImage.heicData(compressionQuality: 1.0) ?? editedImage.jpegData(compressionQuality: 1.0)!,
-                    originalImageData: originalImage.heicData(compressionQuality: 1.0) ?? originalImage.jpegData(compressionQuality: 1.0)!,
-                    imageFormat: "heic"
-                )
-            case .png:
-                return ConversionResult(
-                    editedImageData: editedImage.pngData()!,
-                    originalImageData: originalImage.pngData()!,
-                    imageFormat: "png"
-                )
-            case .jpeg:
-                return ConversionResult(
-                    editedImageData: editedImage.jpegData(compressionQuality: 1.0)!,
-                    originalImageData: originalImage.jpegData(compressionQuality: 1.0)!,
-                    imageFormat: "jpeg"
-                )
-            }
-        } else {
-            let hasAlpha: Bool
-            if let alphaInfo = editedImage.cgImage?.alphaInfo {
-                hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-            } else {
-                hasAlpha = false
-            }
+        let format = targetFormat ?? detectOptimalFormat(for: editedImage)
+        let imageToConvert = removeUnnecessaryAlpha(from: editedImage, for: format)
+        let editedData: Data
 
-            if hasAlpha {
-                return ConversionResult(
-                    editedImageData: editedImage.pngData()!,
-                    originalImageData: originalImage.pngData()!,
-                    imageFormat: "png"
-                )
-            } else {
-                return ConversionResult(
-                    editedImageData: editedImage.jpegData(compressionQuality: 1.0)!,
-                    originalImageData: originalImage.jpegData(compressionQuality: 1.0)!,
-                    imageFormat: "jpeg"
-                )
-            }
+        switch format {
+        case .heic:
+            editedData = imageToConvert.heicData(compressionQuality: 1.0)
+                         ?? imageToConvert.jpegData(compressionQuality: 1.0)!
+        case .png:
+            editedData = imageToConvert.pngData()!
+        case .jpeg:
+            editedData = imageToConvert.jpegData(compressionQuality: 1.0)!
         }
+
+        return ConversionResult(
+            editedImageData: editedData,
+            originalImageData: originalData,
+            imageFormat: format.rawValue
+        )
+    }
+
+    private static func removeUnnecessaryAlpha(from image: UIImage, for format: ImageSourceData.ImageFormat) -> UIImage {
+        guard format == .heic || format == .jpeg else {
+            return image
+        }
+
+        guard let cgImage = image.cgImage else {
+            return image
+        }
+
+        let alphaInfo = cgImage.alphaInfo
+        let hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+
+        guard hasAlpha else {
+            return image
+        }
+
+        let width = cgImage.width
+        let height = cgImage.height
+        let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else {
+            return image
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        guard let newCGImage = context.makeImage() else {
+            return image
+        }
+
+        return UIImage(cgImage: newCGImage, scale: image.scale, orientation: image.imageOrientation)
+    }
+
+    private static func detectOptimalFormat(for image: UIImage) -> ImageSourceData.ImageFormat {
+        let hasAlpha: Bool
+        if let alphaInfo = image.cgImage?.alphaInfo {
+            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+        } else {
+            hasAlpha = false
+        }
+
+        return hasAlpha ? .png : .heic
     }
 }

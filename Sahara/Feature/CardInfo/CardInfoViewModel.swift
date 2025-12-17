@@ -300,6 +300,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
 
         let stickers = imageSourceData?.stickers ?? []
+        let trueOriginalData = imageSourceData?.originalData
+        let sourceFormat = imageSourceData?.format
+        let hasEdits = wasImageEdited || !stickers.isEmpty
+
+        Logger.database.info("Save: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
+
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
@@ -312,7 +318,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
 
-        if !stickers.isEmpty, wasImageEdited, let imageSource = imageSourceData {
+        if !stickers.isEmpty {
             return Observable.create { [weak self] observer in
                 guard let self = self else {
                     observer.onCompleted()
@@ -321,14 +327,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let conversionResult = ImageFormatHelper.convertImages(
+                    let conversionResult = ImageFormatHelper.convertToFormat(
                         editedImage: compositedImage,
-                        originalImage: resizedImage,
-                        sourceFormat: imageSource.format
+                        originalData: trueOriginalData,
+                        targetFormat: sourceFormat
                     )
                     let editedImageData = conversionResult.editedImageData
-                    let originalImageData: Data? = conversionResult.originalImageData
-                    let imageFormat: String? = conversionResult.imageFormat
+                    let originalImageData = trueOriginalData
+                    let imageFormat = conversionResult.imageFormat
 
                     self.ocrManager.recognizeText(from: editedImage)
                         .subscribe(
@@ -346,7 +352,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                 card.ocrText = ocrText
                                 card.originalImageData = originalImageData
                                 card.imageFormat = imageFormat
-                                card.wasEdited = self.wasImageEdited
+                                card.wasEdited = hasEdits
 
                                 Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
@@ -399,66 +405,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             }
         } else {
             let editedImageData: Data
-            var originalImageData: Data?
-            var imageFormat: String?
+            let originalImageData: Data?
+            let imageFormat: String
 
-            if wasImageEdited {
+            if hasEdits {
                 let resizedImage = editedImage.resized()
-
-                if let imageSource = imageSourceData, let format = imageSource.format {
-                    switch format {
-                    case .heic:
-                        editedImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "heic"
-                    case .png:
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    case .jpeg:
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                } else {
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
-                originalImageData = nil
+                let conversionResult = ImageFormatHelper.convertToFormat(
+                    editedImage: resizedImage,
+                    originalData: trueOriginalData,
+                    targetFormat: sourceFormat
+                )
+                editedImageData = conversionResult.editedImageData
+                originalImageData = trueOriginalData
+                imageFormat = conversionResult.imageFormat
             } else {
-                if let imageSource = imageSourceData,
-                   let original = imageSource.originalData,
-                   let format = imageSource.format {
-                    editedImageData = original
-                    originalImageData = original
-                    imageFormat = format.rawValue
-                } else {
-                    let resizedImage = editedImage.resized()
-
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
+                editedImageData = trueOriginalData ?? {
+                    let conversionResult = ImageFormatHelper.convertToFormat(
+                        editedImage: editedImage,
+                        originalData: nil,
+                        targetFormat: sourceFormat
+                    )
+                    return conversionResult.editedImageData
+                }()
+                originalImageData = trueOriginalData
+                imageFormat = sourceFormat?.rawValue ?? "heic"
             }
 
             return ocrManager.recognizeText(from: editedImage)
@@ -478,7 +448,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     card.ocrText = ocrText
                     card.originalImageData = originalImageData
                     card.imageFormat = imageFormat
-                    card.wasEdited = self.wasImageEdited
+                    card.wasEdited = hasEdits
 
                     Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
@@ -519,6 +489,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
 
         let stickers = imageSourceData?.stickers ?? []
+        let trueOriginalData = imageSourceData?.originalData
+        let sourceFormat = imageSourceData?.format
+        let hasEdits = wasImageEdited || !stickers.isEmpty
+
+        Logger.database.info("Update: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
+
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
@@ -556,7 +532,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
-        if !stickers.isEmpty, wasImageEdited, let imageSource = imageSourceData {
+        if !stickers.isEmpty {
             return Observable.create { [weak self] observer in
                 guard let self = self else {
                     observer.onCompleted()
@@ -565,14 +541,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let conversionResult = ImageFormatHelper.convertImages(
+                    let conversionResult = ImageFormatHelper.convertToFormat(
                         editedImage: compositedImage,
-                        originalImage: resizedImage,
-                        sourceFormat: imageSource.format
+                        originalData: trueOriginalData,
+                        targetFormat: sourceFormat
                     )
                     let editedImageData = conversionResult.editedImageData
-                    let originalImageData: Data? = conversionResult.originalImageData
-                    let imageFormat: String? = conversionResult.imageFormat
+                    let originalImageData = trueOriginalData
+                    let imageFormat = conversionResult.imageFormat
 
                     ocrObservable
                         .subscribe(
@@ -583,7 +559,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                     card.editedImageData = editedImageData
                                     card.originalImageData = originalImageData
                                     card.imageFormat = imageFormat
-                                    card.wasEdited = self.wasImageEdited
+                                    card.wasEdited = hasEdits
 
                                     Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
@@ -643,66 +619,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             }
         } else {
             let editedImageData: Data
-            var originalImageData: Data?
-            var imageFormat: String?
+            let originalImageData: Data?
+            let imageFormat: String
 
-            if wasImageEdited {
+            if hasEdits {
                 let resizedImage = editedImage.resized()
-
-                if let imageSource = imageSourceData, let format = imageSource.format {
-                    switch format {
-                    case .heic:
-                        editedImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "heic"
-                    case .png:
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    case .jpeg:
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                } else {
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
-                originalImageData = nil
+                let conversionResult = ImageFormatHelper.convertToFormat(
+                    editedImage: resizedImage,
+                    originalData: trueOriginalData,
+                    targetFormat: sourceFormat
+                )
+                editedImageData = conversionResult.editedImageData
+                originalImageData = trueOriginalData
+                imageFormat = conversionResult.imageFormat
             } else {
-                if let imageSource = imageSourceData,
-                   let original = imageSource.originalData,
-                   let format = imageSource.format {
-                    editedImageData = original
-                    originalImageData = original
-                    imageFormat = format.rawValue
-                } else {
-                    let resizedImage = editedImage.resized()
-
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
+                editedImageData = trueOriginalData ?? {
+                    let conversionResult = ImageFormatHelper.convertToFormat(
+                        editedImage: editedImage,
+                        originalData: nil,
+                        targetFormat: sourceFormat
+                    )
+                    return conversionResult.editedImageData
+                }()
+                originalImageData = trueOriginalData
+                imageFormat = sourceFormat?.rawValue ?? "heic"
             }
 
             return ocrObservable
@@ -715,7 +655,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                         card.editedImageData = editedImageData
                         card.originalImageData = originalImageData
                         card.imageFormat = imageFormat
-                        card.wasEdited = self.wasImageEdited
+                        card.wasEdited = hasEdits
 
                         Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
@@ -746,6 +686,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
 
         let stickers = imageSourceData?.stickers ?? []
+        let trueOriginalData = imageSourceData?.originalData
+        let sourceFormat = imageSourceData?.format
+        let hasEdits = wasImageEdited || !stickers.isEmpty
+
+        Logger.database.info("Replace: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
+
         let memoText: String? = {
             guard let memo = memo, !memo.isEmpty else { return nil }
             return memo
@@ -783,7 +729,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
 
-        if !stickers.isEmpty, wasImageEdited, let imageSource = imageSourceData {
+        if !stickers.isEmpty {
             return Observable.create { [weak self] observer in
                 guard let self = self else {
                     observer.onCompleted()
@@ -792,14 +738,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
                 let resizedImage = editedImage.resized()
                 MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let conversionResult = ImageFormatHelper.convertImages(
+                    let conversionResult = ImageFormatHelper.convertToFormat(
                         editedImage: compositedImage,
-                        originalImage: resizedImage,
-                        sourceFormat: imageSource.format
+                        originalData: trueOriginalData,
+                        targetFormat: sourceFormat
                     )
                     let editedImageData = conversionResult.editedImageData
-                    let originalImageData: Data? = conversionResult.originalImageData
-                    let imageFormat: String? = conversionResult.imageFormat
+                    let originalImageData = trueOriginalData
+                    let imageFormat = conversionResult.imageFormat
 
                     ocrObservable
                         .subscribe(
@@ -817,7 +763,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                                 newCard.ocrText = ocrText
                                 newCard.originalImageData = originalImageData
                                 newCard.imageFormat = imageFormat
-                                newCard.wasEdited = self.wasImageEdited
+                                newCard.wasEdited = hasEdits
 
                                 Logger.database.notice("Replaced card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
@@ -875,66 +821,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             }
         } else {
             let editedImageData: Data
-            var originalImageData: Data?
-            var imageFormat: String?
+            let originalImageData: Data?
+            let imageFormat: String
 
-            if wasImageEdited {
+            if hasEdits {
                 let resizedImage = editedImage.resized()
-
-                if let imageSource = imageSourceData, let format = imageSource.format {
-                    switch format {
-                    case .heic:
-                        editedImageData = resizedImage.heicData(compressionQuality: 1.0) ?? resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "heic"
-                    case .png:
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    case .jpeg:
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                } else {
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
-                originalImageData = nil
+                let conversionResult = ImageFormatHelper.convertToFormat(
+                    editedImage: resizedImage,
+                    originalData: trueOriginalData,
+                    targetFormat: sourceFormat
+                )
+                editedImageData = conversionResult.editedImageData
+                originalImageData = trueOriginalData
+                imageFormat = conversionResult.imageFormat
             } else {
-                if let imageSource = imageSourceData,
-                   let original = imageSource.originalData,
-                   let format = imageSource.format {
-                    editedImageData = original
-                    originalImageData = original
-                    imageFormat = format.rawValue
-                } else {
-                    let resizedImage = editedImage.resized()
-
-                    let hasAlpha: Bool
-                    if let alphaInfo = resizedImage.cgImage?.alphaInfo {
-                        hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-                    } else {
-                        hasAlpha = false
-                    }
-
-                    if hasAlpha {
-                        editedImageData = resizedImage.pngData()!
-                        imageFormat = "png"
-                    } else {
-                        editedImageData = resizedImage.jpegData(compressionQuality: 1.0)!
-                        imageFormat = "jpeg"
-                    }
-                }
+                editedImageData = trueOriginalData ?? {
+                    let conversionResult = ImageFormatHelper.convertToFormat(
+                        editedImage: editedImage,
+                        originalData: nil,
+                        targetFormat: sourceFormat
+                    )
+                    return conversionResult.editedImageData
+                }()
+                originalImageData = trueOriginalData
+                imageFormat = sourceFormat?.rawValue ?? "heic"
             }
 
             return ocrObservable
@@ -954,7 +864,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     newCard.ocrText = ocrText
                     newCard.originalImageData = originalImageData
                     newCard.imageFormat = imageFormat
-                    newCard.wasEdited = self.wasImageEdited
+                    newCard.wasEdited = hasEdits
 
                     Logger.database.notice("Replaced card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
