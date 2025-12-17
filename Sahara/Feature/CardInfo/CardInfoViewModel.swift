@@ -472,34 +472,26 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
 
-    private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage else { return .empty() }
+    private struct SanitizedFields {
+        let memo: String?
+        let customFolder: String?
+    }
 
-        let stickers = imageSourceData?.stickers ?? []
-        let trueOriginalData = imageSourceData?.originalData
-        let sourceFormat = imageSourceData?.format
-        let hasEdits = wasImageEdited || !stickers.isEmpty
+    private func sanitizeTextFields(memo: String?, customFolder: String?) -> SanitizedFields {
+        let memoText = (memo?.isEmpty == false) ? memo : nil
+        let folderText = (customFolder?.isEmpty == false) ? customFolder : nil
+        return SanitizedFields(memo: memoText, customFolder: folderText)
+    }
 
-        Logger.database.info("Update: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
-
-        let memoText: String? = {
-            guard let memo = memo, !memo.isEmpty else { return nil }
-            return memo
-        }()
-        let folderText: String? = {
-            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
-            return customFolder
-        }()
-
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
-
-        let oldOcrText = card.ocrText
-        let oldLatitude = card.latitude
-        let oldLongitude = card.longitude
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-
+    private func trackEditTypes(
+        memoText: String?,
+        folderText: String?,
+        oldLocation: CLLocation?,
+        newLocation: CLLocation?,
+        isLocked: Bool
+    ) -> [String] {
         var editTypes: [String] = []
+
         if imageChanged {
             editTypes.append("photo")
         }
@@ -509,164 +501,139 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         if initialCustomFolder != folderText {
             editTypes.append("folder")
         }
-        let oldLocation = (oldLatitude != nil && oldLongitude != nil) ? CLLocation(latitude: oldLatitude!, longitude: oldLongitude!) : nil
-        if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
+
+        let locationChanged = (oldLocation == nil && newLocation != nil) ||
+                            (oldLocation != nil && newLocation == nil) ||
+                            (oldLocation != nil && newLocation != nil && oldLocation!.distance(from: newLocation!) > 1)
+        if locationChanged {
             editTypes.append("location")
         }
+
         if initialIsLocked != isLocked {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
+        return editTypes
+    }
 
-        if !stickers.isEmpty {
-            return Observable.create { [weak self] observer in
-                guard let self = self else {
-                    observer.onCompleted()
-                    return Disposables.create()
-                }
+    private func updateCardInRealm(
+        cardId: ObjectId,
+        date: Date,
+        imageData: PreparedImageData,
+        ocrText: String?,
+        memoText: String?,
+        folderText: String?,
+        location: CLLocation?,
+        isLocked: Bool,
+        hasEdits: Bool,
+        stickers: [StickerDTO],
+        isAnimatedFlags: [Bool]
+    ) -> Observable<Void> {
+        return realmManager.update { realm in
+            guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+            card.date = date
+            card.editedImageData = imageData.editedImageData
+            card.originalImageData = imageData.originalImageData
+            card.imageFormat = imageData.imageFormat
+            card.wasEdited = hasEdits
 
-                let resizedImage = editedImage.resized()
-                MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
-                    let conversionResult = ImageFormatHelper.convertToFormat(
-                        editedImage: compositedImage,
-                        originalData: trueOriginalData,
-                        targetFormat: sourceFormat
-                    )
-                    let editedImageData = conversionResult.editedImageData
-                    let originalImageData = trueOriginalData
-                    let imageFormat = conversionResult.imageFormat
+            Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
 
-                    ocrObservable
-                        .subscribe(
-                            onNext: { ocrText in
-                                self.realmManager.update { realm in
-                                    guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
-                                    card.date = date
-                                    card.editedImageData = editedImageData
-                                    card.originalImageData = originalImageData
-                                    card.imageFormat = imageFormat
-                                    card.wasEdited = hasEdits
+            card.appliedFilterIndex = self.currentFilterIndex
+            card.cropMetadata = self.currentCropMetadata
 
-                                    Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
+            card.memo = memoText
+            card.customFolder = folderText
+            card.isLocked = isLocked
+            card.latitude = location?.coordinate.latitude
+            card.longitude = location?.coordinate.longitude
+            card.ocrText = ocrText
 
-                                    card.appliedFilterIndex = self.currentFilterIndex
-                                    card.cropMetadata = self.currentCropMetadata
-
-                                    card.memo = memoText
-                                    card.customFolder = folderText
-                                    card.isLocked = isLocked
-                                    card.latitude = location?.coordinate.latitude
-                                    card.longitude = location?.coordinate.longitude
-                                    card.ocrText = ocrText
-
-                                    card.stickers.removeAll()
-                                    for (index, stickerDTO) in stickers.enumerated() {
-                                        let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : false
-                                        let stickerObject = Sticker(
-                                            x: stickerDTO.x,
-                                            y: stickerDTO.y,
-                                            scale: stickerDTO.scale,
-                                            rotation: stickerDTO.rotation,
-                                            zIndex: stickerDTO.zIndex,
-                                            sourceType: stickerDTO.sourceType,
-                                            resourceUrl: stickerDTO.resourceUrl,
-                                            localFilePath: stickerDTO.localFilePath,
-                                            photoAssetId: stickerDTO.photoAssetId,
-                                            isAnimated: isAnimated
-                                        )
-                                        card.stickers.append(stickerObject)
-                                    }
-                                }
-                                .subscribe(
-                                    onNext: {
-                                        if !editTypes.isEmpty {
-                                            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-                                        }
-                                        if !hadLocationBefore && location != nil {
-                                            AnalyticsManager.shared.logFirstLocationAdded()
-                                        }
-                                        observer.onNext(())
-                                        observer.onCompleted()
-                                    },
-                                    onError: { error in
-                                        observer.onError(error)
-                                    }
-                                )
-                                .disposed(by: self.disposeBag)
-                            },
-                            onError: { error in
-                                observer.onError(error)
-                            }
-                        )
-                        .disposed(by: self.disposeBag)
-                }
-
-                return Disposables.create()
-            }
-        } else {
-            let editedImageData: Data
-            let originalImageData: Data?
-            let imageFormat: String
-
-            if hasEdits {
-                let resizedImage = editedImage.resized()
-                let conversionResult = ImageFormatHelper.convertToFormat(
-                    editedImage: resizedImage,
-                    originalData: trueOriginalData,
-                    targetFormat: sourceFormat
+            card.stickers.removeAll()
+            for (index, stickerDTO) in stickers.enumerated() {
+                let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : stickerDTO.isAnimated
+                let stickerObject = Sticker(
+                    x: stickerDTO.x,
+                    y: stickerDTO.y,
+                    scale: stickerDTO.scale,
+                    rotation: stickerDTO.rotation,
+                    zIndex: stickerDTO.zIndex,
+                    sourceType: stickerDTO.sourceType,
+                    resourceUrl: stickerDTO.resourceUrl,
+                    localFilePath: stickerDTO.localFilePath,
+                    photoAssetId: stickerDTO.photoAssetId,
+                    isAnimated: isAnimated
                 )
-                editedImageData = conversionResult.editedImageData
-                originalImageData = trueOriginalData
-                imageFormat = conversionResult.imageFormat
-            } else {
-                editedImageData = trueOriginalData ?? {
-                    let conversionResult = ImageFormatHelper.convertToFormat(
-                        editedImage: editedImage,
-                        originalData: nil,
-                        targetFormat: sourceFormat
-                    )
-                    return conversionResult.editedImageData
-                }()
-                originalImageData = trueOriginalData
-                imageFormat = sourceFormat?.rawValue ?? "heic"
+                card.stickers.append(stickerObject)
             }
-
-            return ocrObservable
-                .flatMap { [weak self] ocrText -> Observable<Void> in
-                    guard let self = self else { return .empty() }
-
-                    return self.realmManager.update { realm in
-                        guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
-                        card.date = date
-                        card.editedImageData = editedImageData
-                        card.originalImageData = originalImageData
-                        card.imageFormat = imageFormat
-                        card.wasEdited = hasEdits
-
-                        Logger.database.notice("Updated card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
-
-                        card.appliedFilterIndex = self.currentFilterIndex
-                        card.cropMetadata = self.currentCropMetadata
-
-                        card.memo = memoText
-                        card.customFolder = folderText
-                        card.isLocked = isLocked
-                        card.latitude = location?.coordinate.latitude
-                        card.longitude = location?.coordinate.longitude
-                        card.ocrText = ocrText
-                    }
-                    .observe(on: MainScheduler.instance)
-                    .do(onNext: {
-                        if !editTypes.isEmpty {
-                            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-                        }
-                        if !hadLocationBefore && location != nil {
-                            AnalyticsManager.shared.logFirstLocationAdded()
-                        }
-                    })
-                }
         }
+    }
+
+    private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
+        if !editTypes.isEmpty {
+            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        }
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
+        }
+    }
+
+    private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
+        guard let editedImage = editedImage else { return .empty() }
+        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
+
+        let stickers = imageSourceData?.stickers ?? []
+        let trueOriginalData = imageSourceData?.originalData
+        let sourceFormat = imageSourceData?.format
+        let hasEdits = wasImageEdited || !stickers.isEmpty
+
+        Logger.database.info("Update: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
+
+        let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
+        let editTypes = trackEditTypes(
+            memoText: sanitizedFields.memo,
+            folderText: sanitizedFields.customFolder,
+            oldLocation: oldLocation,
+            newLocation: location,
+            isLocked: isLocked
+        )
+
+        let allCards = realmManager.fetch(Card.self)
+        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
+
+        let imageDataObservable = prepareImageData(
+            editedImage: editedImage,
+            stickers: stickers,
+            trueOriginalData: trueOriginalData,
+            sourceFormat: sourceFormat,
+            hasEdits: hasEdits
+        )
+        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+
+        return Observable.zip(imageDataObservable, ocrObservable)
+            .flatMap { [weak self] result -> Observable<Void> in
+                guard let self = self else { return .empty() }
+                let ((imageData, isAnimatedFlags), ocrText) = result
+
+                return self.updateCardInRealm(
+                    cardId: cardId,
+                    date: date,
+                    imageData: imageData,
+                    ocrText: ocrText,
+                    memoText: sanitizedFields.memo,
+                    folderText: sanitizedFields.customFolder,
+                    location: location,
+                    isLocked: isLocked,
+                    hasEdits: hasEdits,
+                    stickers: stickers,
+                    isAnimatedFlags: isAnimatedFlags
+                )
+                .observe(on: MainScheduler.instance)
+                .do(onNext: {
+                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: hadLocationBefore, location: location)
+                })
+            }
     }
 
     private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
