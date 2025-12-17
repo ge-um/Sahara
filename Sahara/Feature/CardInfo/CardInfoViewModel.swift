@@ -278,15 +278,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return originalDateComponents != newDateComponents
 
         case .locationView:
-            if let originalLocation = originalLocation, let newLocation = newLocation {
-                return originalLocation.distance(from: newLocation) > 100
-            } else if originalLocation == nil && newLocation != nil {
-                return true
-            } else if originalLocation != nil && newLocation == nil {
-                return true
-            } else {
-                return false
-            }
+            return hasLocationChanged(from: originalLocation, to: newLocation, threshold: 100.0)
 
         case .themeView:
             return imageChanged
@@ -483,6 +475,19 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return SanitizedFields(memo: memoText, customFolder: folderText)
     }
 
+    private func hasLocationChanged(from old: CLLocation?, to new: CLLocation?, threshold: Double = 1.0) -> Bool {
+        switch (old, new) {
+        case (nil, .some):
+            return true
+        case (.some, nil):
+            return true
+        case let (.some(oldLoc), .some(newLoc)):
+            return oldLoc.distance(from: newLoc) > threshold
+        case (nil, nil):
+            return false
+        }
+    }
+
     private func trackEditTypes(
         memoText: String?,
         folderText: String?,
@@ -501,14 +506,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         if initialCustomFolder != folderText {
             editTypes.append("folder")
         }
-
-        let locationChanged = (oldLocation == nil && newLocation != nil) ||
-                            (oldLocation != nil && newLocation == nil) ||
-                            (oldLocation != nil && newLocation != nil && oldLocation!.distance(from: newLocation!) > 1)
-        if locationChanged {
+        if hasLocationChanged(from: oldLocation, to: newLocation, threshold: 1.0) {
             editTypes.append("location")
         }
-
         if initialIsLocked != isLocked {
             editTypes.append("lock")
         }
