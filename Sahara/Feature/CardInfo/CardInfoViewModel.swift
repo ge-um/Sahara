@@ -89,6 +89,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = sourceType
     }
 
+    private func loadCardData(from card: Card) {
+        self.editedImage = UIImage(data: card.editedImageData)
+        self.originalDate = card.date
+        self.initialMemo = card.memo
+        self.initialIsLocked = card.isLocked
+        self.initialCustomFolder = card.customFolder
+
+        if let lat = card.latitude, let lon = card.longitude {
+            self.originalLocation = CLLocation(latitude: lat, longitude: lon)
+        }
+    }
+
+    private func createImageSourceData(from card: Card, editedImage: UIImage) -> ImageSourceData {
+        let stickers = Array(card.stickers.map { StickerDTO(from: $0) })
+        let format = card.imageFormat.flatMap { ImageSourceData.ImageFormat(rawValue: $0) }
+
+        return ImageSourceData(
+            image: editedImage,
+            originalData: card.originalImageData,
+            format: format,
+            stickers: stickers
+        )
+    }
+
     init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
         self.realmManager = realmManager
         self.ocrManager = ocrManager
@@ -99,31 +123,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return
         }
 
-        self.editedImage = UIImage(data: card.editedImageData)
-
-        let stickers = Array(card.stickers.map { StickerDTO(from: $0) })
-        self.originalDate = card.date
-        self.initialMemo = card.memo
-        self.initialIsLocked = card.isLocked
-        self.initialCustomFolder = card.customFolder
-        if let lat = card.latitude, let lon = card.longitude {
-            self.originalLocation = CLLocation(latitude: lat, longitude: lon)
-        }
-
-        let format: ImageSourceData.ImageFormat? = {
-            if let formatString = card.imageFormat {
-                return ImageSourceData.ImageFormat(rawValue: formatString)
-            }
-            return nil
-        }()
+        loadCardData(from: card)
 
         if let editedImage = self.editedImage {
-            self.imageSourceData = ImageSourceData(
-                image: editedImage,
-                originalData: card.originalImageData,
-                format: format,
-                stickers: stickers
-            )
+            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage)
         }
     }
 
@@ -303,10 +306,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         switch sourceType {
         case .dateView:
             guard let originalDate = originalDate else { return false }
-            let calendar = Calendar.current
-            let originalDateComponents = calendar.dateComponents([.year, .month, .day], from: originalDate)
-            let newDateComponents = calendar.dateComponents([.year, .month, .day], from: newDate)
-            return originalDateComponents != newDateComponents
+            return hasDayChanged(from: originalDate, to: newDate)
 
         case .locationView:
             return hasLocationChanged(from: originalLocation, to: newLocation, threshold: 100.0)
@@ -323,6 +323,63 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let editedImageData: Data
         let originalImageData: Data?
         let imageFormat: String
+    }
+
+    private struct ImageProcessingContext {
+        let stickers: [StickerDTO]
+        let originalData: Data?
+        let sourceFormat: ImageSourceData.ImageFormat?
+        let hasEdits: Bool
+    }
+
+    private struct AnalyticsContext {
+        let isFirstCard: Bool
+        let hadLocationBefore: Bool
+    }
+
+    private func extractImageContext() -> ImageProcessingContext {
+        let stickers = imageSourceData?.stickers ?? []
+        let originalData = imageSourceData?.originalData
+        let sourceFormat = imageSourceData?.format
+        let hasEdits = wasImageEdited || !stickers.isEmpty
+        return ImageProcessingContext(
+            stickers: stickers,
+            originalData: originalData,
+            sourceFormat: sourceFormat,
+            hasEdits: hasEdits
+        )
+    }
+
+    private func collectAnalyticsContext() -> AnalyticsContext {
+        let isFirstCard = realmManager.isEmpty(Card.self)
+        let allCards = realmManager.fetch(Card.self)
+        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
+        return AnalyticsContext(isFirstCard: isFirstCard, hadLocationBefore: hadLocationBefore)
+    }
+
+    private func hasDayChanged(from old: Date, to new: Date) -> Bool {
+        let calendar = Calendar.current
+        let oldComponents = calendar.dateComponents([.year, .month, .day], from: old)
+        let newComponents = calendar.dateComponents([.year, .month, .day], from: new)
+        return oldComponents != newComponents
+    }
+
+    private func createStickerObjects(from dtos: [StickerDTO], isAnimatedFlags: [Bool]) -> [Sticker] {
+        return dtos.enumerated().map { index, dto in
+            let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : dto.isAnimated
+            return Sticker(
+                x: dto.x,
+                y: dto.y,
+                scale: dto.scale,
+                rotation: dto.rotation,
+                zIndex: dto.zIndex,
+                sourceType: dto.sourceType,
+                resourceUrl: dto.resourceUrl,
+                localFilePath: dto.localFilePath,
+                photoAssetId: dto.photoAssetId,
+                isAnimated: isAnimated
+            )
+        }
     }
 
     private func prepareImageData(
@@ -415,22 +472,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func addStickers(to card: Card, stickers: [StickerDTO], isAnimatedFlags: [Bool]) {
-        for (index, stickerDTO) in stickers.enumerated() {
-            let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : stickerDTO.isAnimated
-            let stickerObject = Sticker(
-                x: stickerDTO.x,
-                y: stickerDTO.y,
-                scale: stickerDTO.scale,
-                rotation: stickerDTO.rotation,
-                zIndex: stickerDTO.zIndex,
-                sourceType: stickerDTO.sourceType,
-                resourceUrl: stickerDTO.resourceUrl,
-                localFilePath: stickerDTO.localFilePath,
-                photoAssetId: stickerDTO.photoAssetId,
-                isAnimated: isAnimated
-            )
-            card.stickers.append(stickerObject)
-        }
+        let stickerObjects = createStickerObjects(from: stickers, isAnimatedFlags: isAnimatedFlags)
+        stickerObjects.forEach { card.stickers.append($0) }
     }
 
     private func logSaveAnalytics(isFirstCard: Bool, hadLocationBefore: Bool, location: CLLocation?) {
@@ -445,25 +488,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
 
-        let stickers = imageSourceData?.stickers ?? []
-        let trueOriginalData = imageSourceData?.originalData
-        let sourceFormat = imageSourceData?.format
-        let hasEdits = wasImageEdited || !stickers.isEmpty
+        let context = extractImageContext()
+        let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
 
-        Logger.database.info("Save: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
-
-        let memoText = memo?.isEmpty == false ? memo : nil
-        let folderText = customFolder?.isEmpty == false ? customFolder : nil
-        let isFirstCard = realmManager.isEmpty(Card.self)
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
+        Logger.database.info("Save: hasEdits=\(context.hasEdits), hasOriginal=\(context.originalData != nil), format=\(context.sourceFormat?.rawValue ?? "nil"), stickers=\(context.stickers.count)")
 
         let imageDataObservable = prepareImageData(
             editedImage: editedImage,
-            stickers: stickers,
-            trueOriginalData: trueOriginalData,
-            sourceFormat: sourceFormat,
-            hasEdits: hasEdits
+            stickers: context.stickers,
+            trueOriginalData: context.originalData,
+            sourceFormat: context.sourceFormat,
+            hasEdits: context.hasEdits
         )
         let ocrObservable = ocrManager.recognizeText(from: editedImage)
 
@@ -476,20 +512,20 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     date: date,
                     imageData: imageData,
                     ocrText: ocrText,
-                    memo: memoText,
-                    customFolder: folderText,
+                    memo: sanitized.memo,
+                    customFolder: sanitized.customFolder,
                     location: location,
                     isLocked: isLocked,
-                    hasEdits: hasEdits
+                    hasEdits: context.hasEdits
                 )
 
-                self.addStickers(to: card, stickers: stickers, isAnimatedFlags: isAnimatedFlags)
+                self.addStickers(to: card, stickers: context.stickers, isAnimatedFlags: isAnimatedFlags)
 
-                Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(stickers.count)")
+                Logger.database.notice("Saved card: filter=\(self.currentFilterIndex.orNil), crop=\(self.currentCropMetadata.presenceLog), stickers=\(context.stickers.count)")
 
                 return self.realmManager.add(card)
                     .do(onNext: {
-                        self.logSaveAnalytics(isFirstCard: isFirstCard, hadLocationBefore: hadLocationBefore, location: location)
+                        self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                     })
             }
     }
@@ -581,22 +617,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.ocrText = ocrText
 
             card.stickers.removeAll()
-            for (index, stickerDTO) in stickers.enumerated() {
-                let isAnimated = index < isAnimatedFlags.count ? isAnimatedFlags[index] : stickerDTO.isAnimated
-                let stickerObject = Sticker(
-                    x: stickerDTO.x,
-                    y: stickerDTO.y,
-                    scale: stickerDTO.scale,
-                    rotation: stickerDTO.rotation,
-                    zIndex: stickerDTO.zIndex,
-                    sourceType: stickerDTO.sourceType,
-                    resourceUrl: stickerDTO.resourceUrl,
-                    localFilePath: stickerDTO.localFilePath,
-                    photoAssetId: stickerDTO.photoAssetId,
-                    isAnimated: isAnimated
-                )
-                card.stickers.append(stickerObject)
-            }
+            let stickerObjects = self.createStickerObjects(from: stickers, isAnimatedFlags: isAnimatedFlags)
+            stickerObjects.forEach { card.stickers.append($0) }
         }
     }
 
@@ -613,14 +635,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
-        let stickers = imageSourceData?.stickers ?? []
-        let trueOriginalData = imageSourceData?.originalData
-        let sourceFormat = imageSourceData?.format
-        let hasEdits = wasImageEdited || !stickers.isEmpty
-
-        Logger.database.info("Update: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
-
+        let context = extractImageContext()
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
+
+        Logger.database.info("Update: hasEdits=\(context.hasEdits), hasOriginal=\(context.originalData != nil), format=\(context.sourceFormat?.rawValue ?? "nil"), stickers=\(context.stickers.count)")
+
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         let editTypes = trackEditTypes(
             memoText: sanitizedFields.memo,
@@ -630,15 +650,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-
         let imageDataObservable = prepareImageData(
             editedImage: editedImage,
-            stickers: stickers,
-            trueOriginalData: trueOriginalData,
-            sourceFormat: sourceFormat,
-            hasEdits: hasEdits
+            stickers: context.stickers,
+            trueOriginalData: context.originalData,
+            sourceFormat: context.sourceFormat,
+            hasEdits: context.hasEdits
         )
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
@@ -656,13 +673,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     folderText: sanitizedFields.customFolder,
                     location: location,
                     isLocked: isLocked,
-                    hasEdits: hasEdits,
-                    stickers: stickers,
+                    hasEdits: context.hasEdits,
+                    stickers: context.stickers,
                     isAnimatedFlags: isAnimatedFlags
                 )
                 .observe(on: MainScheduler.instance)
                 .do(onNext: {
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: hadLocationBefore, location: location)
+                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
             }
     }
@@ -707,14 +724,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
-        let stickers = imageSourceData?.stickers ?? []
-        let trueOriginalData = imageSourceData?.originalData
-        let sourceFormat = imageSourceData?.format
-        let hasEdits = wasImageEdited || !stickers.isEmpty
-
-        Logger.database.info("Replace: hasEdits=\(hasEdits), hasOriginal=\(trueOriginalData != nil), format=\(sourceFormat?.rawValue ?? "nil"), stickers=\(stickers.count)")
-
+        let context = extractImageContext()
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
+
+        Logger.database.info("Replace: hasEdits=\(context.hasEdits), hasOriginal=\(context.originalData != nil), format=\(context.sourceFormat?.rawValue ?? "nil"), stickers=\(context.stickers.count)")
+
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         let editTypes = trackEditTypes(
             memoText: sanitizedFields.memo,
@@ -724,15 +739,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-
         let imageDataObservable = prepareImageData(
             editedImage: editedImage,
-            stickers: stickers,
-            trueOriginalData: trueOriginalData,
-            sourceFormat: sourceFormat,
-            hasEdits: hasEdits
+            stickers: context.stickers,
+            trueOriginalData: context.originalData,
+            sourceFormat: context.sourceFormat,
+            hasEdits: context.hasEdits
         )
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
@@ -750,13 +762,13 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     folderText: sanitizedFields.customFolder,
                     location: location,
                     isLocked: isLocked,
-                    hasEdits: hasEdits,
-                    stickers: stickers,
+                    hasEdits: context.hasEdits,
+                    stickers: context.stickers,
                     isAnimatedFlags: isAnimatedFlags
                 )
                 .observe(on: MainScheduler.instance)
                 .do(onNext: {
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: hadLocationBefore, location: location)
+                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
             }
     }
