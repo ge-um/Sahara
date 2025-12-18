@@ -158,6 +158,7 @@ final class PhotoCardView: UIView {
 
     private func configureUI() {
         backgroundColor = .clear
+        self.clipsToBounds = true
 
         addSubview(cardContainerView)
         cardContainerView.addSubview(frontCardView)
