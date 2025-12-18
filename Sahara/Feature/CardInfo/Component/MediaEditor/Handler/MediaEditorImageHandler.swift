@@ -140,7 +140,8 @@ final class MediaEditorImageHandler {
                     let image = item.image
 
                     let imageStickerSize = baseStickerSize * sticker.scale * displayToImageScale
-                    let width = imageStickerSize
+                    let imageAspectRatio = image.size.width / image.size.height
+                    let width = imageStickerSize * imageAspectRatio
                     let height = imageStickerSize
                     let centerX = sticker.x * imageSize.width
                     let centerY = sticker.y * imageSize.height
