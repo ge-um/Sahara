@@ -317,8 +317,16 @@ extension CardInfoViewController {
 
         contentView.photoEditButton.rx.tap
             .bind(with: self) { owner, _ in
-                guard let _ = owner.contentView.photoImageView.image,
-                      let currentImageSourceData = owner.imageSourceDataRelay.value else { return }
+                guard let currentImage = owner.contentView.photoImageView.image else { return }
+
+                let currentImageSourceData = owner.imageSourceDataRelay.value ?? ImageSourceData(
+                    image: currentImage,
+                    originalData: nil,
+                    format: nil,
+                    stickers: [],
+                    appliedFilterIndex: nil,
+                    cropMetadata: nil
+                )
 
                 owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
                     guard let owner = owner else { return }
@@ -421,7 +429,7 @@ extension CardInfoViewController {
             .drive(with: self) { owner, hasImage in
                 owner.contentView.photoImageView.isHidden = !hasImage
                 owner.contentView.photoSelectButton.isHidden = hasImage
-                owner.contentView.photoEditButton.isHidden = !hasImage || output.isEditMode
+                owner.contentView.photoEditButton.isHidden = !hasImage
                 if hasImage {
                     if let image = owner.contentView.photoImageView.image {
                         owner.contentView.updatePhotoImageHeight(for: image)

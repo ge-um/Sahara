@@ -508,6 +508,20 @@ final class MediaEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.cachedOriginalImageForFilter = image
+
+                if !output.initialStickers.isEmpty {
+                    DispatchQueue.main.async {
+                        owner.view.layoutIfNeeded()
+                        owner.restoreInitialStickers(output.initialStickers, on: image)
+                    }
+                }
+
+                if let filterIndex = output.initialFilterIndex {
+                    DispatchQueue.main.async {
+                        let indexPath = IndexPath(item: filterIndex, section: 0)
+                        owner.filterCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
+                    }
+                }
             }
             .disposed(by: disposeBag)
 
@@ -724,6 +738,106 @@ final class MediaEditorViewController: UIViewController {
     private func deselectAll() {
         selectedView?.isSelected = false
         selectedView = nil
+    }
+
+    private func restoreInitialStickers(_ stickers: [StickerDTO], on image: UIImage) {
+        guard !stickers.isEmpty else { return }
+
+        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            imageSize: image.size,
+            in: photoImageView.bounds.size
+        )
+
+        guard imageRect.width > 0, imageRect.height > 0 else { return }
+
+        for stickerDTO in stickers {
+            if stickerDTO.sourceType == .kilpy {
+                restoreKlipySticker(stickerDTO, imageSize: image.size, displayRect: imageRect)
+            } else if stickerDTO.sourceType == .photo {
+                restorePhotoSticker(stickerDTO, imageSize: image.size, displayRect: imageRect)
+            }
+        }
+
+        Logger.mediaEditor.info("Restored \(stickers.count) stickers")
+    }
+
+    private func restoreKlipySticker(_ stickerDTO: StickerDTO, imageSize: CGSize, displayRect: CGRect) {
+        guard let resourceUrl = stickerDTO.resourceUrl, let url = URL(string: resourceUrl) else { return }
+
+        let stickerView = DraggableStickerView()
+        stickerView.configure(with: stickerDTO)
+
+        stickerView.onDragChanged = { [weak self] view in
+            self?.dragHandler.handleDragChanged(view: view)
+        }
+
+        stickerView.onDragEnded = { [weak self] view in
+            guard let self = self else { return }
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
+        }
+
+        stickerView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+
+        stickerContainerView.addSubview(stickerView)
+
+        let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
+        let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
+        let baseStickerSize: CGFloat = 100
+        let displayScale = displayRect.width / imageSize.width
+        let stickerSize = baseStickerSize * stickerDTO.scale * displayScale
+
+        stickerView.frame = CGRect(
+            x: centerX - stickerSize / 2,
+            y: centerY - stickerSize / 2,
+            width: stickerSize,
+            height: stickerSize
+        )
+        stickerView.transform = CGAffineTransform(rotationAngle: stickerDTO.rotation)
+
+        stickerViews.append(stickerView)
+    }
+
+    private func restorePhotoSticker(_ stickerDTO: StickerDTO, imageSize: CGSize, displayRect: CGRect) {
+        guard let localFilePath = stickerDTO.localFilePath else { return }
+
+        let fileURL = URL(fileURLWithPath: localFilePath)
+        guard let photoImage = UIImage(contentsOfFile: fileURL.path) else { return }
+
+        let imageView = DraggableImageView(frame: .zero)
+        imageView.configure(with: photoImage)
+
+        imageView.onDragChanged = { [weak self] view in
+            self?.dragHandler.handleDragChanged(view: view)
+        }
+
+        imageView.onDragEnded = { [weak self] view in
+            guard let self = self else { return }
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
+        }
+
+        imageView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+
+        stickerContainerView.addSubview(imageView)
+
+        let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
+        let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
+        let baseStickerSize: CGFloat = 100
+        let displayScale = displayRect.width / imageSize.width
+        let stickerSize = baseStickerSize * stickerDTO.scale * displayScale
+
+        imageView.frame = CGRect(
+            x: centerX - stickerSize / 2,
+            y: centerY - stickerSize / 2,
+            width: stickerSize,
+            height: stickerSize
+        )
+        imageView.transform = CGAffineTransform(rotationAngle: stickerDTO.rotation)
+
+        photoViews.append(imageView)
     }
 
     private func convertStickersToDTO() -> [StickerDTO] {

@@ -59,6 +59,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
         let selectedFilterIndex: Driver<Int?>
         let cropMetadata: Driver<CropMetadata?>
+        let initialStickers: [StickerDTO]
+        let initialFilterIndex: Int?
+        let initialCropMetadata: CropMetadata?
     }
 
     private let originalImageSource: ImageSourceData
@@ -67,6 +70,14 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         self.originalImageSource = imageSource
         self.imageStateHandler = MediaEditorImageStateHandler(originalImage: imageSource.image)
         self.networkManager = networkManager
+
+        if let filterIndex = imageSource.appliedFilterIndex {
+            self.selectedFilterIndexRelay.accept(filterIndex)
+        }
+
+        if let cropMetadata = imageSource.cropMetadata {
+            self.cropMetadataRelay.accept(cropMetadata)
+        }
     }
 
     func transform(input: Input) -> Output {
@@ -344,7 +355,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             wasEdited: wasEditedRelay.asDriver(),
             addedStickers: addedStickersRelay.asDriver(),
             selectedFilterIndex: selectedFilterIndexRelay.asDriver(),
-            cropMetadata: cropMetadataRelay.asDriver()
+            cropMetadata: cropMetadataRelay.asDriver(),
+            initialStickers: originalImageSource.stickers,
+            initialFilterIndex: originalImageSource.appliedFilterIndex,
+            initialCropMetadata: originalImageSource.cropMetadata
         )
     }
 
