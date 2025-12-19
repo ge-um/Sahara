@@ -129,7 +129,7 @@ extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
             guard let self = self, let originalImageSource = self.currentImageSource else { return }
 
             let updatedImageSource = ImageSourceData(
-                image: image,
+                image: originalImageSource.image,
                 originalData: originalImageSource.originalData,
                 format: originalImageSource.format,
                 stickers: stickers,
@@ -137,7 +137,7 @@ extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
                 cropMetadata: cropMetadata
             )
 
-            self.onMediaEditingComplete?(image, updatedImageSource, wasEdited)
+            self.onMediaEditingComplete?(originalImageSource.image, updatedImageSource, wasEdited)
             self.onMediaEditingComplete = nil
             self.mediaEditorCoordinator = nil
             self.currentImageSource = nil

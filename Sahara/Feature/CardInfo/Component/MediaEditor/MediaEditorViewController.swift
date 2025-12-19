@@ -540,10 +540,11 @@ final class MediaEditorViewController: UIViewController {
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, result in
-                let (editedImage, wasEdited, filterIndex, cropMetadata) = result
+                let (_, wasEdited, filterIndex, cropMetadata) = result
                 let stickerDTOs = owner.convertStickersToDTO()
+                let baseImage = owner.photoImageView.image ?? UIImage()
                 Logger.mediaEditor.info("Finishing edit: filter=\(filterIndex.orNil), crop=\(cropMetadata.presenceLog), stickers=\(stickerDTOs.count)")
-                owner.coordinator?.finishEditing(with: editedImage, stickers: stickerDTOs, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata)
+                owner.coordinator?.finishEditing(with: baseImage, stickers: stickerDTOs, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata)
             }
             .disposed(by: disposeBag)
 

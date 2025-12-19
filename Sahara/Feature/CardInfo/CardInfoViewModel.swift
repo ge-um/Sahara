@@ -67,6 +67,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialCustomFolder: String?
         let initialLocation: CLLocation?
         let initialIsLocked: Bool
+        let initialImageSourceData: ImageSourceData?
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
         let shouldPopToListOnDelete: Driver<Bool>
@@ -294,6 +295,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             initialCustomFolder: initialCustomFolder,
             initialLocation: initialLocation,
             initialIsLocked: initialIsLocked,
+            initialImageSourceData: imageSourceData,
             deleted: deleted,
             shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false),
             shouldPopToListOnDelete: shouldPopToListOnDeleteRelay.asDriver(onErrorJustReturn: false)

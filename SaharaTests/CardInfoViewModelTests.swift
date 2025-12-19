@@ -54,6 +54,8 @@ final class CardInfoViewModelTests: XCTestCase {
             selectedImage: .just(testImage),
             imageSourceData: .just(nil),
             wasEdited: .just(false),
+            selectedFilterIndex: .just(nil),
+            cropMetadata: .just(nil),
             date: .just(Date()),
             memo: .just("Test memo"),
             customFolder: .empty(),
