@@ -54,6 +54,11 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let shouldShowStickerModal: Driver<Void>
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
         let initialStickers: [StickerDTO]
+        let initialFilterIndex: Int?
+        let initialUncroppedImage: UIImage?
+        let initialCropRect: CGRect?
+        let initialDrawingData: Data?
+        let initialImageFormat: ImageSourceData.ImageFormat?
     }
 
     private let originalImageSource: ImageSourceData
@@ -302,7 +307,12 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
             shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
             addedStickers: addedStickersRelay.asDriver(),
-            initialStickers: originalImageSource.stickers
+            initialStickers: originalImageSource.stickers,
+            initialFilterIndex: originalImageSource.filterIndex,
+            initialUncroppedImage: originalImageSource.uncroppedImage,
+            initialCropRect: originalImageSource.cropRect,
+            initialDrawingData: originalImageSource.drawingData,
+            initialImageFormat: originalImageSource.format
         )
     }
 

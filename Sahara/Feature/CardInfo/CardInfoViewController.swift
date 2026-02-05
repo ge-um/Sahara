@@ -313,17 +313,17 @@ extension CardInfoViewController {
 
                 let currentImageSourceData = owner.imageSourceDataRelay.value ?? ImageSourceData(image: currentImage)
 
-                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData in
+                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] displayImage, imageSourceData in
                     guard let owner = owner else { return }
 
-                    Logger.cardInfo.info("Received editor result: stickers=\(imageSourceData.stickers.count)")
+                    Logger.cardInfo.info("Received editor result: stickers=\(imageSourceData.stickers.count), filter=\(imageSourceData.filterIndex ?? 0)")
 
-                    owner.contentView.photoImageView.image = editedImage
+                    owner.contentView.photoImageView.image = displayImage
                     owner.contentView.photoImageView.isHidden = false
                     owner.contentView.photoSelectButton.isHidden = true
-                    owner.contentView.updatePhotoImageHeight(for: editedImage)
+                    owner.contentView.updatePhotoImageHeight(for: displayImage)
 
-                    selectedImageSubject.onNext(editedImage)
+                    selectedImageSubject.onNext(displayImage)
                     owner.imageSourceDataRelay.accept(imageSourceData)
                 }
             }

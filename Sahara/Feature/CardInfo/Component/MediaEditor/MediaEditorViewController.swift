@@ -259,6 +259,8 @@ final class MediaEditorViewController: UIViewController {
     var cachedUncroppedOriginalImage: UIImage?
     var lastCropRect: CGRect?
     private var cachedOriginalImageForFilter: UIImage?
+    private var currentFilterIndex: Int = 0
+    private var initialImageFormat: ImageSourceData.ImageFormat?
 
     private let filterHandler = MediaEditorFilterHandler()
     private lazy var dragHandler = MediaEditorDragHandler(
@@ -508,6 +510,14 @@ final class MediaEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.cachedOriginalImageForFilter = image
+                owner.initialImageFormat = output.initialImageFormat
+
+                if let initialUncroppedImage = output.initialUncroppedImage {
+                    owner.cachedUncroppedOriginalImage = initialUncroppedImage
+                }
+                if let initialCropRect = output.initialCropRect {
+                    owner.lastCropRect = initialCropRect
+                }
 
                 if !output.initialStickers.isEmpty {
                     DispatchQueue.main.async {
@@ -516,6 +526,16 @@ final class MediaEditorViewController: UIViewController {
                     }
                 }
 
+                if let drawingData = output.initialDrawingData {
+                    owner.restoreDrawing(from: drawingData)
+                }
+
+                if let filterIndex = output.initialFilterIndex, filterIndex > 0 {
+                    owner.currentFilterIndex = filterIndex
+                    DispatchQueue.main.async {
+                        owner.restoreFilterSelection(index: filterIndex)
+                    }
+                }
             }
             .disposed(by: disposeBag)
 
@@ -543,10 +563,9 @@ final class MediaEditorViewController: UIViewController {
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, _ in
-                let stickerDTOs = owner.convertStickersToDTO()
-                let baseImage = owner.photoImageView.image ?? UIImage()
-                Logger.mediaEditor.info("Finishing edit: stickers=\(stickerDTOs.count)")
-                owner.coordinator?.finishEditing(with: baseImage, stickers: stickerDTOs)
+                let editState = owner.prepareEditState()
+                Logger.mediaEditor.info("Finishing edit: stickers=\(editState.stickers.count), filter=\(editState.filterIndex ?? 0)")
+                owner.coordinator?.finishEditing(with: editState)
             }
             .disposed(by: disposeBag)
 
@@ -585,6 +604,7 @@ final class MediaEditorViewController: UIViewController {
             .withLatestFrom(output.originalImage) { (owner: $0.0, indexPath: $0.1, croppedImage: $0.2, originalImage: $1) }
             .map { data -> (Int, UIImage?) in
                 let baseImage = data.croppedImage ?? data.originalImage
+                data.owner.currentFilterIndex = data.indexPath.item
                 return (data.indexPath.item, baseImage)
             }
             .bind(to: filterSelectedRelay)
@@ -728,6 +748,23 @@ final class MediaEditorViewController: UIViewController {
         selectedView = nil
     }
 
+    private func restoreDrawing(from data: Data) {
+        do {
+            let drawing = try PKDrawing(data: data)
+            canvasView.drawing = drawing
+            Logger.mediaEditor.info("Restored drawing")
+        } catch {
+            Logger.mediaEditor.error("Failed to restore drawing: \(error.localizedDescription)")
+        }
+    }
+
+    private func restoreFilterSelection(index: Int) {
+        let indexPath = IndexPath(item: index, section: 0)
+        filterCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
+        filterSelectedRelay.accept((index, cachedOriginalImageForFilter))
+        Logger.mediaEditor.info("Restored filter selection: \(index)")
+    }
+
     private func restoreInitialStickers(_ stickers: [StickerDTO], on image: UIImage) {
         guard !stickers.isEmpty else { return }
 
@@ -771,16 +808,15 @@ final class MediaEditorViewController: UIViewController {
         let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
         let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
         let baseStickerSize: CGFloat = 100
-        let displayScale = displayRect.width / imageSize.width
-        let stickerSize = baseStickerSize * stickerDTO.scale * displayScale
 
         stickerView.frame = CGRect(
-            x: centerX - stickerSize / 2,
-            y: centerY - stickerSize / 2,
-            width: stickerSize,
-            height: stickerSize
+            x: centerX - baseStickerSize / 2,
+            y: centerY - baseStickerSize / 2,
+            width: baseStickerSize,
+            height: baseStickerSize
         )
-        stickerView.transform = CGAffineTransform(rotationAngle: stickerDTO.rotation)
+        stickerView.transform = CGAffineTransform(scaleX: stickerDTO.scale, y: stickerDTO.scale)
+            .rotated(by: stickerDTO.rotation)
 
         stickerViews.append(stickerView)
     }
@@ -812,18 +848,42 @@ final class MediaEditorViewController: UIViewController {
         let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
         let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
         let baseStickerSize: CGFloat = 100
-        let displayScale = displayRect.width / imageSize.width
-        let stickerSize = baseStickerSize * stickerDTO.scale * displayScale
 
         imageView.frame = CGRect(
-            x: centerX - stickerSize / 2,
-            y: centerY - stickerSize / 2,
-            width: stickerSize,
-            height: stickerSize
+            x: centerX - baseStickerSize / 2,
+            y: centerY - baseStickerSize / 2,
+            width: baseStickerSize,
+            height: baseStickerSize
         )
-        imageView.transform = CGAffineTransform(rotationAngle: stickerDTO.rotation)
+        imageView.transform = CGAffineTransform(scaleX: stickerDTO.scale, y: stickerDTO.scale)
+            .rotated(by: stickerDTO.rotation)
 
         photoViews.append(imageView)
+    }
+
+    private func prepareEditState() -> ImageSourceData {
+        let stickerDTOs = convertStickersToDTO()
+        let unfilteredBaseImage = cachedOriginalImageForFilter ?? photoImageView.image ?? UIImage()
+        let currentDisplayImage = photoImageView.image ?? UIImage()
+        let drawingData = canvasView.drawing.dataRepresentation()
+
+        var previewImage: UIImage?
+        if !stickerDTOs.isEmpty || !canvasView.drawing.strokes.isEmpty {
+            previewImage = generateFinalImage()
+        } else {
+            previewImage = currentDisplayImage
+        }
+
+        return ImageSourceData(
+            image: unfilteredBaseImage,
+            format: initialImageFormat,
+            stickers: stickerDTOs,
+            filterIndex: currentFilterIndex,
+            uncroppedImage: cachedUncroppedOriginalImage,
+            cropRect: lastCropRect,
+            drawingData: drawingData,
+            previewImage: previewImage
+        )
     }
 
     private func convertStickersToDTO() -> [StickerDTO] {
