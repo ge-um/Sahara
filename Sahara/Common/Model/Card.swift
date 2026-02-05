@@ -44,9 +44,7 @@ final class Card: Object {
     @Persisted var modifiedDate: Date?
     
     @Persisted var editedImageData: Data
-    @Persisted var originalImageData: Data?
     @Persisted var imageFormat: String?
-    @Persisted var wasEdited: Bool = false
     @Persisted var drawingData: Data?
     @Persisted var memo: String?
     @Persisted var latitude: Double?
@@ -58,13 +56,9 @@ final class Card: Object {
     @Persisted var visionTags: List<VisionTag>
     @Persisted var locationName: String?
     @Persisted var mood: Mood?
-    @Persisted var stickers: List<Sticker>
     @Persisted var customFolder: String?
     @Persisted var ocrText: String?
     @Persisted var weatherCondition: WeatherCondition?
-
-    @Persisted var appliedFilterIndex: Int?
-    @Persisted var cropMetadata: CropMetadata?
 
     convenience init(
         date: Date,
@@ -89,7 +83,7 @@ final class Card: Object {
 // MARK: - 현재 사용하지 않지만, 차후 업데이트를 위해 남겨둔 프로퍼티들
 enum ContentType: String, PersistableEnum {
     case photo
-    case videoo
+    case video
 }
 
 enum WeatherCondition: String, PersistableEnum {
