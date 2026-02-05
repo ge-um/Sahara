@@ -91,7 +91,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func loadCardData(from card: Card) {
-        self.editedImage = UIImage(data: card.editedImageData)
+        let screenScale = UIScreen.main.scale
+        let screenBounds = UIScreen.main.bounds
+        let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
+        self.editedImage = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
         self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked

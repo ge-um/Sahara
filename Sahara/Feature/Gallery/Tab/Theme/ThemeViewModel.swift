@@ -79,7 +79,7 @@ final class ThemeViewModel: BaseViewModelProtocol {
                     var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
                     for card in memos {
-                        guard let image = UIImage(data: card.editedImageData),
+                        guard let image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: 500),
                               let cgImage = image.cgImage else { continue }
 
                         let category = self.classifyImage(cgImage)

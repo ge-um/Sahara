@@ -183,11 +183,13 @@ final class SearchViewController: UIViewController {
 extension SearchViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
         guard let card = viewModel.getCard(at: indexPath.item),
-              let image = UIImage(data: card.editedImageData) else {
+              let size = ImageDownsampler.imageSize(from: card.editedImageData) else {
             return 180
         }
 
-        let aspectRatio = image.size.height / image.size.width
+        guard size.width > 0 else { return 180 }
+
+        let aspectRatio = size.height / size.width
         let cellWidth = (collectionView.bounds.width - 8) / 2
         return cellWidth * aspectRatio
     }

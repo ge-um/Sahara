@@ -80,11 +80,11 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
         let photoImage = Observable.combineLatest(cardData, hasStickers)
             .map { data, hasStickers -> UIImage? in
-                if hasStickers, let originalImageData = data.originalImage {
-                    return UIImage(data: originalImageData)
-                } else {
-                    return UIImage(data: data.image)
-                }
+                let screenScale = UIScreen.main.scale
+                let screenBounds = UIScreen.main.bounds
+                let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
+                let imageData = (hasStickers && data.originalImage != nil) ? data.originalImage! : data.image
+                return ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
             }
             .asDriver(onErrorJustReturn: nil)
 
