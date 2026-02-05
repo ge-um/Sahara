@@ -39,7 +39,7 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
-    static let currentSchemaVersion: UInt64 = 4
+    static let currentSchemaVersion: UInt64 = 1
 
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
@@ -59,30 +59,6 @@ final class RealmManager: RealmManagerProtocol {
                     newObject?["date"] = createdDate
                 }
             }
-        }
-
-        if oldSchemaVersion < 2 {
-            migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
-                newObject?["originalImageData"] = nil
-                newObject?["imageFormat"] = nil
-                newObject?["wasEdited"] = false
-                newObject?["drawingData"] = nil
-            }
-
-            migration.enumerateObjects(ofType: "Sticker") { oldObject, newObject in
-                newObject?["localFilePath"] = nil
-            }
-        }
-        
-        if oldSchemaVersion < 3 {
-            migration.enumerateObjects(ofType: "Card") { oldObject, newObject in
-                newObject?["appliedFilterIndex"] = nil
-                newObject?["cropMetadata"] = nil
-            }
-        }
-
-        // TODO: - 테스트를 위해 임시로 Migration, 차후에 출시할 때는 버전 2로 진행
-        if oldSchemaVersion < 4 {
         }
     }
 
