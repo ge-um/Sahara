@@ -57,7 +57,8 @@ final class StickerCell: UICollectionViewCell, IsIdentifiable {
                 .scaleFactor(UIScreen.main.scale),
                 .memoryCacheExpiration(.seconds(600)),
                 .diskCacheExpiration(.days(7)),
-                .cacheOriginalImage
+                .cacheOriginalImage,
+                .onlyLoadFirstFrame
             ]
             imageView.kf.setImage(with: url, options: options)
         }
