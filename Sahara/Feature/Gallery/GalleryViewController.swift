@@ -402,7 +402,7 @@ extension GalleryViewController: MKMapViewDelegate {
             let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
 
             if let firstPhoto = sortedPhotos.first {
-                representativeImage = UIImage(data: firstPhoto.editedImageData)
+                representativeImage = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale)
                 isLocked = firstPhoto.isLocked
             }
 
@@ -426,7 +426,7 @@ extension GalleryViewController: MKMapViewDelegate {
         let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first,
-           let image = UIImage(data: firstPhoto.editedImageData) {
+           let image = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale) {
             annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
         }
 

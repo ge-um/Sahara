@@ -81,9 +81,8 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         let cards = group.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
         let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
-        if let firstPhoto = sortedPhotos.first,
-           let image = UIImage(data: firstPhoto.editedImageData) {
-            thumbnailImageView.image = image
+        if let firstPhoto = sortedPhotos.first {
+            thumbnailImageView.image = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale)
             blurEffectView.isHidden = !firstPhoto.isLocked
         }
     }

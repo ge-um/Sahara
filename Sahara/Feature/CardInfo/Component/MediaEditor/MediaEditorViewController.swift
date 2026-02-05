@@ -762,8 +762,6 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func restoreKlipySticker(_ stickerDTO: StickerDTO, imageSize: CGSize, displayRect: CGRect) {
-        guard let resourceUrl = stickerDTO.resourceUrl, let url = URL(string: resourceUrl) else { return }
-
         let stickerView = DraggableStickerView()
         stickerView.configure(with: stickerDTO)
 

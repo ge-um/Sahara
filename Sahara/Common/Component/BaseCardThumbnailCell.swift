@@ -43,8 +43,8 @@ class BaseCardThumbnailCell: UICollectionViewCell, IsIdentifiable {
         }
     }
 
-    func setImage(_ imageData: Data) {
-        imageView.image = UIImage(data: imageData)
+    func setImage(_ imageData: Data, maxDimension: CGFloat) {
+        imageView.image = ImageDownsampler.downsample(data: imageData, maxDimension: maxDimension)
     }
 
     func setBlur(isHidden: Bool) {

@@ -128,7 +128,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        imageView.image = UIImage(data: card.editedImageData)
+        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
+        imageView.image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
         imageView.layer.cornerRadius = 8
         imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
@@ -155,8 +156,9 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        imageView1.image = UIImage(data: photo1.editedImageData)
-        imageView2.image = UIImage(data: photo2.editedImageData)
+        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
+        imageView1.image = ImageDownsampler.downsample(data: photo1.editedImageData, maxDimension: maxDim)
+        imageView2.image = ImageDownsampler.downsample(data: photo2.editedImageData, maxDimension: maxDim)
 
         imageView1.layer.cornerRadius = 8
         imageView1.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -209,9 +211,10 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(bottomLeftImageView)
         containerView.addSubview(bottomRightImageView)
 
-        topImageView.image = UIImage(data: cards[0].editedImageData)
-        bottomLeftImageView.image = UIImage(data: cards[1].editedImageData)
-        bottomRightImageView.image = UIImage(data: cards[2].editedImageData)
+        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
+        topImageView.image = ImageDownsampler.downsample(data: cards[0].editedImageData, maxDimension: maxDim)
+        bottomLeftImageView.image = ImageDownsampler.downsample(data: cards[1].editedImageData, maxDimension: maxDim)
+        bottomRightImageView.image = ImageDownsampler.downsample(data: cards[2].editedImageData, maxDimension: maxDim)
 
         topImageView.layer.cornerRadius = 8
         topImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
