@@ -393,8 +393,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     ) -> Observable<(PreparedImageData, [Bool])> {
         if !stickers.isEmpty {
             return Observable.create { observer in
-                let resizedImage = editedImage.resized()
-                MediaEditorImageHandler.compositeStickersOnImage(resizedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
+                MediaEditorImageHandler.compositeStickersOnImage(editedImage, stickers: stickers) { compositedImage, isAnimatedFlags in
                     let conversionResult = ImageFormatHelper.convertToFormat(
                         editedImage: compositedImage,
                         originalData: trueOriginalData,
@@ -415,9 +414,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             let imageFormat: String
 
             if hasEdits {
-                let resizedImage = editedImage.resized()
                 let conversionResult = ImageFormatHelper.convertToFormat(
-                    editedImage: resizedImage,
+                    editedImage: editedImage,
                     originalData: trueOriginalData,
                     targetFormat: sourceFormat
                 )
