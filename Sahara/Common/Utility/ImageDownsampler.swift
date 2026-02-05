@@ -16,11 +16,18 @@ final class ImageDownsampler {
             return nil
         }
 
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        let pixelWidth = properties?[kCGImagePropertyPixelWidth] as? CGFloat ?? 0
+        let pixelHeight = properties?[kCGImagePropertyPixelHeight] as? CGFloat ?? 0
+        let imageMaxDim = max(pixelWidth, pixelHeight)
+
+        let targetDimension = imageMaxDim > 0 ? min(maxDimension, imageMaxDim) : maxDimension
+
         let downsampleOptions: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxDimension
+            kCGImageSourceThumbnailMaxPixelSize: targetDimension
         ]
 
         guard let downsampledImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions as CFDictionary) else {
