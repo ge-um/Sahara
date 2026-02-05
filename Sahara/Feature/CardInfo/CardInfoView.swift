@@ -32,8 +32,6 @@ final class CardInfoView: UIView {
         return imageView
     }()
 
-    private var stickerViews: [AnimatedStickerView] = []
-
     lazy var photoSelectButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(named: "editBox"), for: .normal)
@@ -172,32 +170,6 @@ final class CardInfoView: UIView {
         }
 
         layoutIfNeeded()
-    }
-
-    func renderStickers(_ stickers: [StickerDTO]) {
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
-
-        guard let image = photoImageView.image else { return }
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: image.size,
-            in: photoContainer.bounds.size
-        )
-
-        let sortedStickers = stickers.sorted { $0.zIndex < $1.zIndex }
-
-        for sticker in sortedStickers {
-            let stickerView = AnimatedStickerView()
-            stickerView.configure(with: sticker, containerSize: imageRect.size, imageOrigin: imageRect.origin)
-            photoContainer.addSubview(stickerView)
-            stickerViews.append(stickerView)
-        }
-    }
-
-    func clearStickers() {
-        stickerViews.forEach { $0.removeFromSuperview() }
-        stickerViews.removeAll()
     }
 
     func applyGradients() {

@@ -54,9 +54,6 @@ final class CardInfoViewController: UIViewController {
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
     let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
-    let wasEditedRelay = BehaviorRelay<Bool>(value: false)
-    let selectedFilterIndexRelay = BehaviorRelay<Int?>(value: nil)
-    let cropMetadataRelay = BehaviorRelay<CropMetadata?>(value: nil)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -164,7 +161,6 @@ final class CardInfoViewController: UIViewController {
 
         setupInitialData(output, initialLocationRelay: initialLocationRelay)
         bindImageOutputs(output)
-        bindStickerRendering()
         bindSaveOutputs(output)
         bindDeleteOutputs(output)
         bindDismissOutput(output)
@@ -221,8 +217,6 @@ final class CardInfoViewController: UIViewController {
 }
 
 extension CardInfoViewController {
-
-    // MARK: - Card Bindings
 
     private func bindLocationCard(
         initialLocationRelay: BehaviorSubject<CLLocation?>,
@@ -292,8 +286,6 @@ extension CardInfoViewController {
             .disposed(by: disposeBag)
     }
 
-    // MARK: - Photo Bindings
-
     private func bindPhotoActions(
         selectedImageSubject: BehaviorSubject<UIImage?>,
         initialLocationRelay: BehaviorSubject<CLLocation?>
@@ -319,40 +311,24 @@ extension CardInfoViewController {
             .bind(with: self) { owner, _ in
                 guard let currentImage = owner.contentView.photoImageView.image else { return }
 
-                let currentImageSourceData = owner.imageSourceDataRelay.value ?? ImageSourceData(
-                    image: currentImage,
-                    originalData: nil,
-                    format: nil,
-                    stickers: [],
-                    appliedFilterIndex: nil,
-                    cropMetadata: nil
-                )
+                let currentImageSourceData = owner.imageSourceDataRelay.value ?? ImageSourceData(image: currentImage)
 
-                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData, wasEdited in
+                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] editedImage, imageSourceData in
                     guard let owner = owner else { return }
 
-                    Logger.cardInfo.info("Received editor metadata: filter=\(imageSourceData.appliedFilterIndex.orNil), crop=\(imageSourceData.cropMetadata.presenceLog), stickers=\(imageSourceData.stickers.count)")
+                    Logger.cardInfo.info("Received editor result: stickers=\(imageSourceData.stickers.count)")
 
                     owner.contentView.photoImageView.image = editedImage
                     owner.contentView.photoImageView.isHidden = false
                     owner.contentView.photoSelectButton.isHidden = true
                     owner.contentView.updatePhotoImageHeight(for: editedImage)
 
-                    owner.view.layoutIfNeeded()
-
-                    owner.contentView.renderStickers(imageSourceData.stickers)
-
                     selectedImageSubject.onNext(editedImage)
                     owner.imageSourceDataRelay.accept(imageSourceData)
-                    owner.wasEditedRelay.accept(wasEdited)
-                    owner.selectedFilterIndexRelay.accept(imageSourceData.appliedFilterIndex)
-                    owner.cropMetadataRelay.accept(imageSourceData.cropMetadata)
                 }
             }
             .disposed(by: disposeBag)
     }
-
-    // MARK: - ViewModel Setup
 
     private func createViewModelInput(
         selectedImageSubject: BehaviorSubject<UIImage?>,
@@ -362,9 +338,6 @@ extension CardInfoViewController {
         return CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             imageSourceData: imageSourceDataRelay.asObservable(),
-            wasEdited: wasEditedRelay.asObservable(),
-            selectedFilterIndex: selectedFilterIndexRelay.asObservable(),
-            cropMetadata: cropMetadataRelay.asObservable(),
             date: selectedDateRelay.asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
@@ -405,15 +378,11 @@ extension CardInfoViewController {
 
             if let imageSourceData = output.initialImageSourceData {
                 imageSourceDataRelay.accept(imageSourceData)
-                selectedFilterIndexRelay.accept(imageSourceData.appliedFilterIndex)
-                cropMetadataRelay.accept(imageSourceData.cropMetadata)
             }
         } else {
             contentView.memoCard.showPlaceholder()
         }
     }
-
-    // MARK: - Output Bindings
 
     private func bindImageOutputs(_ output: CardInfoViewModel.Output) {
         output.editedImage
@@ -437,18 +406,6 @@ extension CardInfoViewController {
                 } else {
                     owner.contentView.resetPhotoImageHeight()
                 }
-            }
-            .disposed(by: disposeBag)
-    }
-
-    private func bindStickerRendering() {
-        imageSourceDataRelay
-            .compactMap { $0 }
-            .filter { !$0.stickers.isEmpty }
-            .observe(on: MainScheduler.instance)
-            .bind(with: self) { owner, imageSourceData in
-                owner.view.layoutIfNeeded()
-                owner.contentView.renderStickers(imageSourceData.stickers)
             }
             .disposed(by: disposeBag)
     }
@@ -504,8 +461,6 @@ extension CardInfoViewController {
             .disposed(by: disposeBag)
     }
 
-    // MARK: - Gestures
-
     private func bindPhotoImageTapGesture(
         selectedImageSubject: BehaviorSubject<UIImage?>,
         initialLocationRelay: BehaviorSubject<CLLocation?>,
@@ -544,8 +499,6 @@ extension CardInfoViewController {
             }
             .disposed(by: disposeBag)
     }
-
-    // MARK: - Alerts
 
     private func presentBiometricPermissionAlert() {
         let alert = UIAlertController(
