@@ -45,13 +45,11 @@ final class ImageFormatHelper {
 
     struct ConversionResult {
         let editedImageData: Data
-        let originalImageData: Data?
         let imageFormat: String
     }
 
     static func convertToFormat(
         editedImage: UIImage,
-        originalData: Data?,
         targetFormat: ImageSourceData.ImageFormat?
     ) -> ConversionResult {
         let format = targetFormat ?? detectOptimalFormat(for: editedImage)
@@ -70,7 +68,6 @@ final class ImageFormatHelper {
 
         return ConversionResult(
             editedImageData: editedData,
-            originalImageData: originalData,
             imageFormat: format.rawValue
         )
     }

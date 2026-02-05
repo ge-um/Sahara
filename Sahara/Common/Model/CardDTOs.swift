@@ -11,24 +11,18 @@ import RealmSwift
 struct CardListItemDTO {
     let id: ObjectId
     let editedImageData: Data
-    let originalImageData: Data?
     let isLocked: Bool
-    let stickers: [StickerDTO]
 
     init(from card: Card) {
         self.id = card.id
         self.editedImageData = card.editedImageData
-        self.originalImageData = card.originalImageData
         self.isLocked = card.isLocked
-        self.stickers = card.stickers.map { StickerDTO(from: $0) }
     }
 
     init(from dto: CardCalendarItemDTO) {
         self.id = dto.id
         self.editedImageData = dto.editedImageData
-        self.originalImageData = dto.originalImageData
         self.isLocked = dto.isLocked
-        self.stickers = dto.stickers
     }
 }
 
@@ -36,7 +30,6 @@ struct CardDetailDTO {
     let id: ObjectId
     let date: Date
     let editedImageData: Data
-    let originalImageData: Data?
     let memo: String?
     let latitude: Double?
     let longitude: Double?
@@ -47,7 +40,6 @@ struct CardDetailDTO {
         self.id = card.id
         self.date = card.date
         self.editedImageData = card.editedImageData
-        self.originalImageData = card.originalImageData
         self.memo = card.memo
         self.latitude = card.latitude
         self.longitude = card.longitude
@@ -60,18 +52,19 @@ struct CardCalendarItemDTO {
     let id: ObjectId
     let date: Date
     let editedImageData: Data
-    let originalImageData: Data?
     let isLocked: Bool
-    let stickers: [StickerDTO]
 
     init(from card: Card) {
         self.id = card.id
         self.date = card.date
         self.editedImageData = card.editedImageData
-        self.originalImageData = card.originalImageData
         self.isLocked = card.isLocked
-        self.stickers = card.stickers.map { StickerDTO(from: $0) }
     }
+}
+
+enum StickerSourceType: String {
+    case klipy
+    case photo
 }
 
 struct StickerDTO {
@@ -86,7 +79,18 @@ struct StickerDTO {
     let photoAssetId: String?
     let isAnimated: Bool
 
-    init(x: Double, y: Double, scale: Double, rotation: Double, zIndex: Int, sourceType: StickerSourceType, resourceUrl: String?, localFilePath: String?, photoAssetId: String?, isAnimated: Bool = false) {
+    init(
+        x: Double,
+        y: Double,
+        scale: Double,
+        rotation: Double,
+        zIndex: Int,
+        sourceType: StickerSourceType,
+        resourceUrl: String?,
+        localFilePath: String?,
+        photoAssetId: String?,
+        isAnimated: Bool = false
+    ) {
         self.x = x
         self.y = y
         self.scale = scale
@@ -97,18 +101,5 @@ struct StickerDTO {
         self.localFilePath = localFilePath
         self.photoAssetId = photoAssetId
         self.isAnimated = isAnimated
-    }
-
-    init(from sticker: Sticker) {
-        self.x = sticker.x
-        self.y = sticker.y
-        self.scale = sticker.scale
-        self.rotation = sticker.rotation
-        self.zIndex = sticker.zIndex
-        self.sourceType = sticker.sourceType
-        self.resourceUrl = sticker.resourceUrl
-        self.localFilePath = sticker.localFilePath
-        self.photoAssetId = sticker.photoAssetId
-        self.isAnimated = sticker.isAnimated
     }
 }
