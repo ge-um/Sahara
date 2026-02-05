@@ -60,12 +60,6 @@ final class PhotoCardView: UIView {
         return imageView
     }()
 
-    private let stickerContainerView: UIView = {
-        let view = UIView()
-        view.isUserInteractionEnabled = false
-        return view
-    }()
-
     private let deleteButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = ColorSystem.white.withAlphaComponent(0.9)
@@ -165,7 +159,6 @@ final class PhotoCardView: UIView {
         cardContainerView.addSubview(backCardView)
 
         frontCardView.addSubview(photoImageView)
-        frontCardView.addSubview(stickerContainerView)
         frontCardView.addSubview(overlayView)
         frontCardView.addSubview(deleteButton)
         overlayView.addSubview(dateLabel)
@@ -191,10 +184,6 @@ final class PhotoCardView: UIView {
 
         photoImageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-        }
-
-        stickerContainerView.snp.makeConstraints { make in
-            make.edges.equalTo(photoImageView)
         }
 
         overlayView.snp.makeConstraints { make in
@@ -272,27 +261,16 @@ final class PhotoCardView: UIView {
         locationText: Driver<String>,
         memoText: Driver<String>,
         shouldFlipToBack: Observable<Void>,
-        shouldFlipToFront: Observable<Void>,
-        animatedStickers: Driver<[PhotoCardViewModel.AnimatedStickerInfo]>
+        shouldFlipToFront: Observable<Void>
     ) {
-        let imageAndStickers = Driver.combineLatest(photoImage, animatedStickers)
-
-        imageAndStickers
-            .drive(with: self) { owner, result in
-                let (image, stickers) = result
-
+        photoImage
+            .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 if let image = image {
                     let imageHeight = image.heightForWidth(owner.cardWidth)
                     let minimumHeight: CGFloat = 200
                     let finalHeight = max(imageHeight, minimumHeight)
                     owner.photoImageHeightConstraint?.update(offset: finalHeight)
-
-                    owner.layoutIfNeeded()
-
-                    if !stickers.isEmpty {
-                        owner.renderAnimatedStickers(stickers)
-                    }
                 }
             }
             .disposed(by: disposeBag)
@@ -320,53 +298,6 @@ final class PhotoCardView: UIView {
                 owner.flipToFront()
             }
             .disposed(by: disposeBag)
-    }
-
-    private func renderAnimatedStickers(_ stickers: [PhotoCardViewModel.AnimatedStickerInfo]) {
-        stickerContainerView.subviews.forEach { $0.removeFromSuperview() }
-
-        guard let baseImage = photoImageView.image else { return }
-
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
-            imageSize: baseImage.size,
-            in: photoImageView.bounds.size
-        )
-
-        guard imageRect.width > 0 && imageRect.height > 0 else { return }
-
-        for sticker in stickers.sorted(by: { $0.zIndex < $1.zIndex }) {
-            let stickerImageView = AnimatedImageView()
-            stickerImageView.contentMode = .scaleAspectFit
-
-            let layout = MediaEditorCropHandler.calculateStickerDisplayLayout(
-                normalizedX: sticker.x,
-                normalizedY: sticker.y,
-                scale: sticker.scale,
-                rotation: sticker.rotation,
-                baseImageSize: baseImage.size,
-                displayRect: imageRect
-            )
-
-            stickerImageView.frame = layout.frame
-            stickerImageView.transform = CGAffineTransform(rotationAngle: layout.rotation)
-
-            let options: KingfisherOptionsInfo = [
-                .scaleFactor(UIScreen.main.scale),
-                .memoryCacheExpiration(.seconds(600)),
-                .diskCacheExpiration(.days(7)),
-                .cacheOriginalImage,
-                .onFailureImage(nil)
-            ]
-
-            if let url = sticker.url {
-                stickerImageView.kf.setImage(with: url, options: options)
-            } else if let localPath = sticker.localFilePath {
-                let fileURL = URL(fileURLWithPath: localPath)
-                stickerImageView.kf.setImage(with: fileURL, options: options)
-            }
-
-            stickerContainerView.addSubview(stickerImageView)
-        }
     }
 
     private func flipToBack() {

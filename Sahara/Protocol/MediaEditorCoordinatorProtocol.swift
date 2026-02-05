@@ -17,6 +17,6 @@ protocol MediaEditorCoordinatorProtocol: AnyObject {
         onPhotoSelected: @escaping (UIImage) -> Void
     )
 
-    func finishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?)
+    func finishEditing(with image: UIImage, stickers: [StickerDTO])
     func cancelEditing()
 }

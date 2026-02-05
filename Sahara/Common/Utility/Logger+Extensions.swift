@@ -36,15 +36,3 @@ extension Int? {
         self?.description ?? "nil"
     }
 }
-
-extension CropMetadata {
-    func formattedCoordinates() -> String {
-        "x: \(String(format: "%.4f", self.x)), y: \(String(format: "%.4f", self.y)), width: \(String(format: "%.4f", self.width)), height: \(String(format: "%.4f", self.height))"
-    }
-}
-
-extension CropMetadata? {
-    var presenceLog: String {
-        self != nil ? "present" : "nil"
-    }
-}

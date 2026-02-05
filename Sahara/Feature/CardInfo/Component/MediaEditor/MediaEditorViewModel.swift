@@ -20,10 +20,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
     private let currentQueryRelay = BehaviorRelay<String>(value: "")
-    private let wasEditedRelay = BehaviorRelay<Bool>(value: false)
     private let addedStickersRelay = BehaviorRelay<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>(value: [])
-    private let selectedFilterIndexRelay = BehaviorRelay<Int?>(value: nil)
-    private let cropMetadataRelay = BehaviorRelay<CropMetadata?>(value: nil)
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -55,13 +52,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let errorMessage: Driver<String>
         let networkErrorMessage: Driver<String>
         let shouldShowStickerModal: Driver<Void>
-        let wasEdited: Driver<Bool>
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
-        let selectedFilterIndex: Driver<Int?>
-        let cropMetadata: Driver<CropMetadata?>
         let initialStickers: [StickerDTO]
-        let initialFilterIndex: Int?
-        let initialCropMetadata: CropMetadata?
     }
 
     private let originalImageSource: ImageSourceData
@@ -70,14 +62,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         self.originalImageSource = imageSource
         self.imageStateHandler = MediaEditorImageStateHandler(originalImage: imageSource.image)
         self.networkManager = networkManager
-
-        if let filterIndex = imageSource.appliedFilterIndex {
-            self.selectedFilterIndexRelay.accept(filterIndex)
-        }
-
-        if let cropMetadata = imageSource.cropMetadata {
-            self.cropMetadataRelay.accept(cropMetadata)
-        }
     }
 
     func transform(input: Input) -> Output {
@@ -250,12 +234,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 let (index, baseImage) = data
                 guard let baseImage = baseImage else { return }
 
-                owner.selectedFilterIndexRelay.accept(index == 0 ? nil : index)
-
                 if index == 0 {
                     owner.imageStateHandler.applyFilter(baseImage)
                     filteredImageRelay.accept(baseImage)
-                    owner.wasEditedRelay.accept(true)
                     return
                 }
 
@@ -264,13 +245,12 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
 
                 owner.imageStateHandler.applyFilter(filteredImage)
                 filteredImageRelay.accept(filteredImage)
-                owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
         input.cropApplied
             .withUnretained(self)
-            .compactMap { owner, data -> (UIImage, CropMetadata)? in
+            .compactMap { owner, data -> UIImage? in
                 let (image, cropRect, displayedRect) = data
                 let scaledCropRect = MediaEditorCropHandler.convertCropRectToImageCoordinates(
                     cropRect: cropRect,
@@ -278,33 +258,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                     displayedImageRect: displayedRect
                 )
 
-                let normalizedX = scaledCropRect.origin.x / image.size.width
-                let normalizedY = scaledCropRect.origin.y / image.size.height
-                let normalizedWidth = scaledCropRect.size.width / image.size.width
-                let normalizedHeight = scaledCropRect.size.height / image.size.height
-
-                let cropMetadata = CropMetadata(
-                    x: normalizedX,
-                    y: normalizedY,
-                    width: normalizedWidth,
-                    height: normalizedHeight
-                )
-
-                guard let croppedImage = MediaEditorCropHandler.cropImage(image, to: scaledCropRect) else {
-                    return nil
-                }
-
-                return (croppedImage, cropMetadata)
+                return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
             }
-            .do(onNext: { result in
-                let (_, cropMetadata) = result
-                Logger.imageMetadata.info("Cropped image: \(cropMetadata.formattedCoordinates())")
-            })
-            .bind(with: self) { owner, result in
-                let (croppedImage, cropMetadata) = result
+            .bind(with: self) { owner, croppedImage in
                 owner.imageStateHandler.applyCrop(croppedImage)
-                owner.cropMetadataRelay.accept(cropMetadata)
-                owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
@@ -314,14 +271,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 var currentStickers = owner.addedStickersRelay.value
                 currentStickers.append(stickerData)
                 owner.addedStickersRelay.accept(currentStickers)
-                owner.wasEditedRelay.accept(true)
-            }
-            .disposed(by: disposeBag)
-
-        input.drawingChanged
-            .withUnretained(self)
-            .bind { owner, _ in
-                owner.wasEditedRelay.accept(true)
             }
             .disposed(by: disposeBag)
 
@@ -352,13 +301,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             errorMessage: errorRelay.asDriver(onErrorJustReturn: ""),
             networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
             shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
-            wasEdited: wasEditedRelay.asDriver(),
             addedStickers: addedStickersRelay.asDriver(),
-            selectedFilterIndex: selectedFilterIndexRelay.asDriver(),
-            cropMetadata: cropMetadataRelay.asDriver(),
-            initialStickers: originalImageSource.stickers,
-            initialFilterIndex: originalImageSource.appliedFilterIndex,
-            initialCropMetadata: originalImageSource.cropMetadata
+            initialStickers: originalImageSource.stickers
         )
     }
 

@@ -18,7 +18,7 @@ protocol CardInfoCoordinatorProtocol: AnyObject {
     func presentMediaEditor(
         imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
-        onEditingComplete: @escaping (UIImage, ImageSourceData, Bool) -> Void
+        onEditingComplete: @escaping (UIImage, ImageSourceData) -> Void
     )
 
     func presentDatePicker(

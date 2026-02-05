@@ -19,7 +19,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?
     weak var cardInfoViewController: UIViewController?
-    private var onMediaEditingComplete: ((UIImage, ImageSourceData, Bool) -> Void)?
+    private var onMediaEditingComplete: ((UIImage, ImageSourceData) -> Void)?
     private var mediaEditorCoordinator: MediaEditorCoordinator?
     private var currentImageSource: ImageSourceData?
 
@@ -53,7 +53,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     func presentMediaEditor(
         imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
-        onEditingComplete: @escaping (UIImage, ImageSourceData, Bool) -> Void
+        onEditingComplete: @escaping (UIImage, ImageSourceData) -> Void
     ) {
         self.onMediaEditingComplete = onEditingComplete
         self.currentImageSource = imageSource
@@ -124,20 +124,17 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?) {
+    func didFinishEditing(with image: UIImage, stickers: [StickerDTO]) {
         getPresentingViewController()?.dismiss(animated: true) { [weak self] in
             guard let self = self, let originalImageSource = self.currentImageSource else { return }
 
             let updatedImageSource = ImageSourceData(
-                image: originalImageSource.image,
-                originalData: originalImageSource.originalData,
+                image: image,
                 format: originalImageSource.format,
-                stickers: stickers,
-                appliedFilterIndex: filterIndex,
-                cropMetadata: cropMetadata
+                stickers: stickers
             )
 
-            self.onMediaEditingComplete?(originalImageSource.image, updatedImageSource, wasEdited)
+            self.onMediaEditingComplete?(image, updatedImageSource)
             self.onMediaEditingComplete = nil
             self.mediaEditorCoordinator = nil
             self.currentImageSource = nil

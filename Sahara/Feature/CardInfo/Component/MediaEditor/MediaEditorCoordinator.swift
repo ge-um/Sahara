@@ -8,7 +8,7 @@
 import UIKit
 
 protocol MediaEditorCoordinatorDelegate: AnyObject {
-    func didFinishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?)
+    func didFinishEditing(with image: UIImage, stickers: [StickerDTO])
     func didCancelEditing()
 }
 
@@ -64,8 +64,8 @@ final class MediaEditorCoordinator: Coordinator, MediaEditorCoordinatorProtocol 
         currentVC.present(navController, animated: true)
     }
 
-    func finishEditing(with image: UIImage, stickers: [StickerDTO], wasEdited: Bool, filterIndex: Int?, cropMetadata: CropMetadata?) {
-        delegate?.didFinishEditing(with: image, stickers: stickers, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata)
+    func finishEditing(with image: UIImage, stickers: [StickerDTO]) {
+        delegate?.didFinishEditing(with: image, stickers: stickers)
     }
 
     func cancelEditing() {

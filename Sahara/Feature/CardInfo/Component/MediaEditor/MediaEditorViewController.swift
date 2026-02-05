@@ -516,12 +516,6 @@ final class MediaEditorViewController: UIViewController {
                     }
                 }
 
-                if let filterIndex = output.initialFilterIndex {
-                    DispatchQueue.main.async {
-                        let indexPath = IndexPath(item: filterIndex, section: 0)
-                        owner.filterCollectionView.selectItem(at: indexPath, animated: false, scrollPosition: .centeredHorizontally)
-                    }
-                }
             }
             .disposed(by: disposeBag)
 
@@ -543,22 +537,16 @@ final class MediaEditorViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        Driver.combineLatest(
-            output.navigateToMetadata,
-            output.wasEdited,
-            output.selectedFilterIndex,
-            output.cropMetadata
-        )
+        output.navigateToMetadata
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
-            .drive(with: self) { owner, result in
-                let (_, wasEdited, filterIndex, cropMetadata) = result
+            .drive(with: self) { owner, _ in
                 let stickerDTOs = owner.convertStickersToDTO()
                 let baseImage = owner.photoImageView.image ?? UIImage()
-                Logger.mediaEditor.info("Finishing edit: filter=\(filterIndex.orNil), crop=\(cropMetadata.presenceLog), stickers=\(stickerDTOs.count)")
-                owner.coordinator?.finishEditing(with: baseImage, stickers: stickerDTOs, wasEdited: wasEdited, filterIndex: filterIndex, cropMetadata: cropMetadata)
+                Logger.mediaEditor.info("Finishing edit: stickers=\(stickerDTOs.count)")
+                owner.coordinator?.finishEditing(with: baseImage, stickers: stickerDTOs)
             }
             .disposed(by: disposeBag)
 

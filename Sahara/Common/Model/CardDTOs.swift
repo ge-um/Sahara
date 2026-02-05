@@ -62,11 +62,6 @@ struct CardCalendarItemDTO {
     }
 }
 
-enum StickerSourceType: String {
-    case klipy
-    case photo
-}
-
 struct StickerDTO {
     let x: Double
     let y: Double

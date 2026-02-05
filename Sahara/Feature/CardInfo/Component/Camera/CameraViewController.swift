@@ -162,7 +162,6 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
         let format = ImageFormatHelper.detect(from: imageData)
         let imageSource = ImageSourceData(
             image: image,
-            originalData: imageData,
             format: format
         )
 

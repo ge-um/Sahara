@@ -313,7 +313,6 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                 DispatchQueue.main.async {
                     let imageSource = ImageSourceData(
                         image: image,
-                        originalData: data,
                         format: format
                     )
                     self?.imagePickerResultRelay.accept((imageSource, nil, nil, .library))
