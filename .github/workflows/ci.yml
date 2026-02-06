@@ -19,6 +19,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create Secret Files
+        env:
+          GOOGLE_SERVICE_INFO: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+          API_CONFIG: ${{ secrets.API_CONFIG_SWIFT }}
+          DEVELOPER_CONFIG: ${{ secrets.DEVELOPER_CONFIG_SWIFT }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO" | base64 --decode > Sahara/GoogleService-Info.plist
+          mkdir -p Sahara/Secret
+          echo "$API_CONFIG" | base64 --decode > Sahara/Secret/APIConfig.swift
+          echo "$DEVELOPER_CONFIG" | base64 --decode > Sahara/Secret/DeveloperConfig.swift
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
