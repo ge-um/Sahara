@@ -39,24 +39,15 @@ jobs:
       - name: Cache SPM
         uses: actions/cache@v4
         with:
-          path: |
-            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
-            .build
+          path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
-
-      - name: Resolve Dependencies
-        run: |
-          xcodebuild -resolvePackageDependencies \
-            -scheme Sahara \
-            -clonedSourcePackagesDirPath SourcePackages
 
       - name: Build
         run: |
           xcodebuild build \
             -scheme Sahara \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
-            -clonedSourcePackagesDirPath SourcePackages \
             -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO
