@@ -27,7 +27,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let cameraButtonTapped: Observable<Void>
         let libraryButtonTapped: Observable<Void>
         let photoSelected: Observable<PHAsset>
-        let imagePickerResult: Observable<(UIImage, CLLocation?, Date?, MediaSource)>
+        let imagePickerResult: Observable<(ImageSourceData, CLLocation?, Date?, MediaSource)>
     }
 
     struct Output {
@@ -37,7 +37,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let showPHPicker: Driver<Void>
         let showCameraPermissionAlert: Driver<Void>
         let showPhotoPermissionAlert: Driver<Void>
-        let selectedMedia: Driver<(UIImage, CLLocation?, Date?)>
+        let selectedMedia: Driver<(ImageSourceData, CLLocation?, Date?)>
         let requestPhotoPermission: Driver<Void>
         let requestCameraPermission: Driver<Void>
         let showLimitedLibraryPicker: Driver<Void>
@@ -49,7 +49,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let showPHPickerRelay = PublishRelay<Void>()
         let showCameraPermissionAlertRelay = PublishRelay<Void>()
         let showPhotoPermissionAlertRelay = PublishRelay<Void>()
-        let selectedMediaRelay = PublishRelay<(UIImage, CLLocation?, Date?)>()
+        let selectedMediaRelay = PublishRelay<(ImageSourceData, CLLocation?, Date?)>()
         let requestPhotoPermissionRelay = PublishRelay<Void>()
         let requestCameraPermissionRelay = PublishRelay<Void>()
         let showLimitedLibraryPickerRelay = PublishRelay<Void>()
@@ -99,7 +99,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             .do(onNext: { _ in
                 AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
             })
-            .flatMap { owner, asset -> Observable<(UIImage, CLLocation?, Date?)> in
+            .flatMap { owner, asset -> Observable<(ImageSourceData, CLLocation?, Date?)> in
                 return owner.loadImage(from: asset)
             }
             .bind(to: selectedMediaRelay)
@@ -110,7 +110,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
                 let sourceString = source == .camera ? "camera" : "library"
                 AnalyticsManager.shared.logPhotoSourceSelected(source: sourceString)
             })
-            .map { image, location, date, _ in (image, location, date) }
+            .map { imageSource, location, date, _ in (imageSource, location, date) }
             .bind(to: selectedMediaRelay)
             .disposed(by: disposeBag)
 
@@ -150,27 +150,40 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         relay.accept(photos)
     }
 
-    private func loadImage(from asset: PHAsset) -> Observable<(UIImage, CLLocation?, Date?)> {
+    private func loadImage(from asset: PHAsset) -> Observable<(ImageSourceData, CLLocation?, Date?)> {
         return Observable.create { observer in
             let imageManager = PHCachingImageManager()
             let options = PHImageRequestOptions()
             options.isSynchronous = false
             options.deliveryMode = .highQualityFormat
+            options.isNetworkAccessAllowed = true
 
-            imageManager.requestImage(
+            imageManager.requestImageDataAndOrientation(
                 for: asset,
-                targetSize: PHImageManagerMaximumSize,
-                contentMode: .aspectFit,
                 options: options
-            ) { image, _ in
-                if let image = image {
-                    let location = asset.location
-                    let date = asset.creationDate
-                    observer.onNext((image, location, date))
+            ) { data, uti, orientation, _ in
+                guard let data = data,
+                      let image = UIImage(data: data) else {
                     observer.onCompleted()
-                } else {
-                    observer.onCompleted()
+                    return
                 }
+
+                let format: ImageSourceData.ImageFormat?
+                if let uti = uti {
+                    format = ImageFormatHelper.detectFromUTI(uti as String)
+                } else {
+                    format = ImageFormatHelper.detect(from: data)
+                }
+
+                let imageSource = ImageSourceData(
+                    image: image,
+                    format: format
+                )
+
+                let location = asset.location
+                let date = asset.creationDate
+                observer.onNext((imageSource, location, date))
+                observer.onCompleted()
             }
 
             return Disposables.create()

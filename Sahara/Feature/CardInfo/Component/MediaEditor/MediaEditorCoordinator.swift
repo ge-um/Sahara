@@ -8,7 +8,7 @@
 import UIKit
 
 protocol MediaEditorCoordinatorDelegate: AnyObject {
-    func didFinishEditing(with image: UIImage)
+    func didFinishEditing(with editState: ImageSourceData)
     func didCancelEditing()
 }
 
@@ -16,15 +16,15 @@ final class MediaEditorCoordinator: Coordinator, MediaEditorCoordinatorProtocol 
     var navigationController: UINavigationController?
     weak var delegate: MediaEditorCoordinatorDelegate?
 
-    private let originalImage: UIImage
+    private let imageSource: ImageSourceData
 
-    init(navigationController: UINavigationController?, originalImage: UIImage) {
+    init(navigationController: UINavigationController?, imageSource: ImageSourceData) {
         self.navigationController = navigationController
-        self.originalImage = originalImage
+        self.imageSource = imageSource
     }
 
     func start() {
-        let viewModel = MediaEditorViewModel(originalImage: originalImage)
+        let viewModel = MediaEditorViewModel(imageSource: imageSource)
         let editorVC = MediaEditorViewController(viewModel: viewModel)
         editorVC.coordinator = self
 
@@ -52,8 +52,8 @@ final class MediaEditorCoordinator: Coordinator, MediaEditorCoordinatorProtocol 
         guard let currentVC = navigationController?.topViewController else { return }
 
         let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { image, _, _ in
-            onPhotoSelected(image)
+        mediaSelectionVC.onMediaSelected = { imageSource, _, _ in
+            onPhotoSelected(imageSource.image)
         }
 
         let navController = UINavigationController(rootViewController: mediaSelectionVC)
@@ -64,8 +64,8 @@ final class MediaEditorCoordinator: Coordinator, MediaEditorCoordinatorProtocol 
         currentVC.present(navController, animated: true)
     }
 
-    func finishEditing(with image: UIImage) {
-        delegate?.didFinishEditing(with: image)
+    func finishEditing(with editState: ImageSourceData) {
+        delegate?.didFinishEditing(with: editState)
     }
 
     func cancelEditing() {

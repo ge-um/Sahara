@@ -61,3 +61,40 @@ struct CardCalendarItemDTO {
         self.isLocked = card.isLocked
     }
 }
+
+struct StickerDTO {
+    let x: Double
+    let y: Double
+    let scale: Double
+    let rotation: Double
+    let zIndex: Int
+    let sourceType: StickerSourceType
+    let resourceUrl: String?
+    let localFilePath: String?
+    let photoAssetId: String?
+    let isAnimated: Bool
+
+    init(
+        x: Double,
+        y: Double,
+        scale: Double,
+        rotation: Double,
+        zIndex: Int,
+        sourceType: StickerSourceType,
+        resourceUrl: String?,
+        localFilePath: String?,
+        photoAssetId: String?,
+        isAnimated: Bool = false
+    ) {
+        self.x = x
+        self.y = y
+        self.scale = scale
+        self.rotation = rotation
+        self.zIndex = zIndex
+        self.sourceType = sourceType
+        self.resourceUrl = resourceUrl
+        self.localFilePath = localFilePath
+        self.photoAssetId = photoAssetId
+        self.isAnimated = isAnimated
+    }
+}

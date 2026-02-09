@@ -159,8 +159,13 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else { return }
 
-        // 스티커 편집 화면으로 이동
-        let stickerViewModel = MediaEditorViewModel(originalImage: image)
+        let format = ImageFormatHelper.detect(from: imageData)
+        let imageSource = ImageSourceData(
+            image: image,
+            format: format
+        )
+
+        let stickerViewModel = MediaEditorViewModel(imageSource: imageSource)
         let stickerVC = MediaEditorViewController(viewModel: stickerViewModel)
         let nav = UINavigationController(rootViewController: stickerVC)
         nav.modalPresentationStyle = .fullScreen

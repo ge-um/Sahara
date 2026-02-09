@@ -14,6 +14,10 @@ final class DraggableImageView: BaseGestureView {
         return imageView
     }()
 
+    var image: UIImage? {
+        return imageView.image
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureUI()

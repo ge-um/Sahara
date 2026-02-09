@@ -41,7 +41,7 @@ final class SearchViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
-        collectionView.register(SearchCell.self, forCellWithReuseIdentifier: SearchCell.identifier)
+        collectionView.register(CardThumbnailCell.self, forCellWithReuseIdentifier: CardThumbnailCell.identifier)
         collectionView.keyboardDismissMode = .onDrag
         return collectionView
     }()
@@ -122,7 +122,7 @@ final class SearchViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.cards
-            .drive(collectionView.rx.items(cellIdentifier: SearchCell.identifier, cellType: SearchCell.self)) { _, card, cell in
+            .drive(collectionView.rx.items(cellIdentifier: CardThumbnailCell.identifier, cellType: CardThumbnailCell.self)) { _, card, cell in
                 cell.configure(with: card)
             }
             .disposed(by: disposeBag)
@@ -183,63 +183,14 @@ final class SearchViewController: UIViewController {
 extension SearchViewController: PinterestLayoutDelegate {
     func collectionView(_ collectionView: UICollectionView, heightForPhotoAtIndexPath indexPath: IndexPath) -> CGFloat {
         guard let card = viewModel.getCard(at: indexPath.item),
-              let image = UIImage(data: card.editedImageData) else {
+              let size = ImageDownsampler.imageSize(from: card.editedImageData) else {
             return 180
         }
 
-        let aspectRatio = image.size.height / image.size.width
+        guard size.width > 0 else { return 180 }
+
+        let aspectRatio = size.height / size.width
         let cellWidth = (collectionView.bounds.width - 8) / 2
         return cellWidth * aspectRatio
-    }
-}
-
-final class SearchCell: UICollectionViewCell {
-    static let identifier = "SearchCell"
-
-    private let imageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.backgroundColor = .systemGray6
-        return imageView
-    }()
-
-    private lazy var blurEffectView: UIVisualEffectView = BlurUtility.createBlurView(cornerRadius: 8)
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        configureUI()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    private func configureUI() {
-        contentView.addSubview(imageView)
-        contentView.addSubview(blurEffectView)
-        contentView.layer.cornerRadius = 8
-        contentView.clipsToBounds = true
-
-        imageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        blurEffectView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-    }
-
-    func configure(with card: Card) {
-        if let image = UIImage(data: card.editedImageData) {
-            imageView.image = image
-        }
-        blurEffectView.isHidden = !card.isLocked
-    }
-
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        imageView.image = nil
-        blurEffectView.isHidden = true
     }
 }

@@ -20,7 +20,8 @@ final class MediaEditorViewModelTests: XCTestCase {
         super.setUp()
         mockNetworkManager = MockNetworkManager()
         testImage = UIImage(systemName: "photo")!
-        sut = MediaEditorViewModel(originalImage: testImage, networkManager: mockNetworkManager)
+        let imageSource = ImageSourceData(image: testImage, originalData: nil, format: nil, stickers: [])
+        sut = MediaEditorViewModel(imageSource: imageSource, networkManager: mockNetworkManager)
         disposeBag = DisposeBag()
     }
 
@@ -52,6 +53,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: .empty(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),
@@ -97,6 +99,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: searchQuery.asObservable(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),
@@ -143,6 +146,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: searchQuery.asObservable(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),
@@ -200,6 +204,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: .empty(),
             loadMoreTrigger: loadMore.asObservable(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),
@@ -245,6 +250,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: .empty(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),
@@ -289,6 +295,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             searchQuery: searchQuery.asObservable(),
             loadMoreTrigger: .empty(),
             stickerSelected: .empty(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),

@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import OSLog
 import RealmSwift
 import RxCocoa
 import RxSwift
@@ -60,7 +61,10 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
         let photoImage = cardData
             .map { data -> UIImage? in
-                UIImage(data: data.image)
+                let screenScale = UIScreen.main.scale
+                let screenBounds = UIScreen.main.bounds
+                let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
+                return ImageDownsampler.downsample(data: data.image, maxDimension: maxDim)
             }
             .asDriver(onErrorJustReturn: nil)
 

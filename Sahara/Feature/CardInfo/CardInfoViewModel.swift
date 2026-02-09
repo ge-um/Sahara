@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import OSLog
 import RealmSwift
 import RxCocoa
 import RxSwift
@@ -24,6 +25,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private let realmManager: RealmManagerProtocol
     private let ocrManager: OCRManagerProtocol
     private var editedImage: UIImage?
+    private var imageSourceData: ImageSourceData?
     private var cardToEditId: ObjectId?
     private var originalDate: Date?
     private var originalLocation: CLLocation?
@@ -35,6 +37,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
     struct Input {
         let selectedImage: Observable<UIImage?>
+        let imageSourceData: Observable<ImageSourceData?>
         let date: Observable<Date>
         let memo: Observable<String?>
         let customFolder: Observable<String?>
@@ -58,6 +61,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let initialCustomFolder: String?
         let initialLocation: CLLocation?
         let initialIsLocked: Bool
+        let initialImageSourceData: ImageSourceData?
         let deleted: Driver<Void>
         let shouldPopToList: Driver<Bool>
         let shouldPopToListOnDelete: Driver<Bool>
@@ -80,6 +84,26 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = sourceType
     }
 
+    private func loadCardData(from card: Card) {
+        let screenScale = UIScreen.main.scale
+        let screenBounds = UIScreen.main.bounds
+        let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
+        self.editedImage = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
+        self.originalDate = card.date
+        self.initialMemo = card.memo
+        self.initialIsLocked = card.isLocked
+        self.initialCustomFolder = card.customFolder
+
+        if let lat = card.latitude, let lon = card.longitude {
+            self.originalLocation = CLLocation(latitude: lat, longitude: lon)
+        }
+    }
+
+    private func createImageSourceData(from card: Card, editedImage: UIImage) -> ImageSourceData {
+        let format = card.imageFormat.flatMap { ImageSourceData.ImageFormat(rawValue: $0) }
+        return ImageSourceData(image: editedImage, format: format)
+    }
+
     init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
         self.realmManager = realmManager
         self.ocrManager = ocrManager
@@ -90,23 +114,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return
         }
 
-        self.editedImage = UIImage(data: card.editedImageData)
-        self.originalDate = card.date
-        self.initialMemo = card.memo
-        self.initialIsLocked = card.isLocked
-        self.initialCustomFolder = card.customFolder
-        if let lat = card.latitude, let lon = card.longitude {
-            self.originalLocation = CLLocation(latitude: lat, longitude: lon)
+        loadCardData(from: card)
+
+        if let editedImage = self.editedImage {
+            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage)
         }
     }
 
-    func transform(input: Input) -> Output {
-        let isEditMode = cardToEditId != nil
-        let initialLocation: CLLocation? = originalLocation
-
-        let locationRelay = BehaviorRelay<CLLocation?>(value: initialLocation)
-        let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
-
+    private func bindInputs(
+        input: Input,
+        imageRelay: BehaviorRelay<UIImage?>,
+        locationRelay: BehaviorRelay<CLLocation?>
+    ) {
         input.selectedImage
             .compactMap { $0 }
             .bind(with: self) { owner, image in
@@ -118,13 +137,79 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             }
             .disposed(by: disposeBag)
 
+        input.imageSourceData
+            .bind(with: self) { owner, imageSource in
+                owner.imageSourceData = imageSource
+            }
+            .disposed(by: disposeBag)
+
         input.location
             .bind(to: locationRelay)
             .disposed(by: disposeBag)
+    }
 
+    private func logCardSaveAnalytics(memo: String?, location: CLLocation?, isLocked: Bool) {
+        AnalyticsManager.shared.logCardSave(
+            hasPhoto: editedImage != nil,
+            hasMemo: !(memo?.isEmpty ?? true),
+            hasLocation: location != nil,
+            isLocked: isLocked
+        )
+    }
+
+    private func handleSaveAction(
+        date: Date,
+        memo: String?,
+        customFolder: String?,
+        location: CLLocation?,
+        isLocked: Bool,
+        saveErrorRelay: PublishRelay<String>,
+        shouldPopToListRelay: PublishRelay<Bool>
+    ) -> Observable<Bool> {
+        if editedImage == nil {
+            saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
+            return .just(false)
+        }
+
+        if let cardId = cardToEditId {
+            let shouldPop = shouldPopToList(newDate: date, newLocation: location)
+            shouldPopToListRelay.accept(shouldPop)
+
+            if shouldPop {
+                return replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                    .map { true }
+            } else {
+                return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                    .map { true }
+            }
+        } else {
+            shouldPopToListRelay.accept(false)
+            return saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                .map { true }
+        }
+    }
+
+    private func handleDeleteAction(shouldPopToListOnDeleteRelay: PublishRelay<Bool>) -> Observable<Void> {
+        guard let cardId = cardToEditId else { return .just(()) }
+
+        return realmManager.delete(Card.self, forPrimaryKey: cardId)
+            .do(onNext: { [weak self] _ in
+                guard let self = self else { return }
+                shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
+            })
+    }
+
+    func transform(input: Input) -> Output {
+        let isEditMode = cardToEditId != nil
+        let initialLocation: CLLocation? = originalLocation
+
+        let locationRelay = BehaviorRelay<CLLocation?>(value: initialLocation)
+        let imageRelay = BehaviorRelay<UIImage?>(value: editedImage)
         let saveErrorRelay = PublishRelay<String>()
         let shouldPopToListRelay = PublishRelay<Bool>()
         let shouldPopToListOnDeleteRelay = PublishRelay<Bool>()
+
+        bindInputs(input: input, imageRelay: imageRelay, locationRelay: locationRelay)
 
         let saved = input.saveButtonTapped
             .withLatestFrom(
@@ -137,57 +222,30 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
             )
             .do(onNext: { [weak self] _, memo, _, location, isLocked in
-                guard let self = self else { return }
-                AnalyticsManager.shared.logCardSave(
-                    hasPhoto: self.editedImage != nil,
-                    hasMemo: !(memo?.isEmpty ?? true),
-                    hasLocation: location != nil,
-                    isLocked: isLocked
-                )
+                self?.logCardSaveAnalytics(memo: memo, location: location, isLocked: isLocked)
             })
             .flatMap { [weak self] date, memo, customFolder, location, isLocked -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
-
-                if self.editedImage == nil {
-                    saveErrorRelay.accept(NSLocalizedString("card_info.image_required", comment: ""))
-                    return .just(false)
-                }
-
-                if let cardId = self.cardToEditId {
-                    let shouldPop = self.shouldPopToList(newDate: date, newLocation: location)
-                    shouldPopToListRelay.accept(shouldPop)
-
-                    if shouldPop {
-                        return self.replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                            .map { true }
-                    } else {
-                        return self.updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                            .map { true }
-                    }
-                } else {
-                    shouldPopToListRelay.accept(false)
-                    return self.saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                        .map { true }
-                }
+                return self.handleSaveAction(
+                    date: date,
+                    memo: memo,
+                    customFolder: customFolder,
+                    location: location,
+                    isLocked: isLocked,
+                    saveErrorRelay: saveErrorRelay,
+                    shouldPopToListRelay: shouldPopToListRelay
+                )
             }
             .asDriver(onErrorJustReturn: false)
 
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
-            .do(onNext: { owner, _ in
+            .do(onNext: { _, _ in
                 AnalyticsManager.shared.logCardDelete()
             })
-            .flatMap { owner, _ -> Observable<Void> in
-                guard let cardId = owner.cardToEditId else { return .just(()) }
-
-                return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
-                    .do(onNext: { _ in
-                        if owner.sourceType != nil {
-                            shouldPopToListOnDeleteRelay.accept(true)
-                        } else {
-                            shouldPopToListOnDeleteRelay.accept(false)
-                        }
-                    })
+            .flatMap { [weak self] _, _ -> Observable<Void> in
+                guard let self = self else { return .just(()) }
+                return self.handleDeleteAction(shouldPopToListOnDeleteRelay: shouldPopToListOnDeleteRelay)
             }
             .asDriver(onErrorJustReturn: ())
 
@@ -209,6 +267,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             initialCustomFolder: initialCustomFolder,
             initialLocation: initialLocation,
             initialIsLocked: initialIsLocked,
+            initialImageSourceData: imageSourceData,
             deleted: deleted,
             shouldPopToList: shouldPopToListRelay.asDriver(onErrorJustReturn: false),
             shouldPopToListOnDelete: shouldPopToListOnDeleteRelay.asDriver(onErrorJustReturn: false)
@@ -221,21 +280,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         switch sourceType {
         case .dateView:
             guard let originalDate = originalDate else { return false }
-            let calendar = Calendar.current
-            let originalDateComponents = calendar.dateComponents([.year, .month, .day], from: originalDate)
-            let newDateComponents = calendar.dateComponents([.year, .month, .day], from: newDate)
-            return originalDateComponents != newDateComponents
+            return hasDayChanged(from: originalDate, to: newDate)
 
         case .locationView:
-            if let originalLocation = originalLocation, let newLocation = newLocation {
-                return originalLocation.distance(from: newLocation) > 100
-            } else if originalLocation == nil && newLocation != nil {
-                return true
-            } else if originalLocation != nil && newLocation == nil {
-                return true
-            } else {
-                return false
-            }
+            return hasLocationChanged(from: originalLocation, to: newLocation, threshold: 100.0)
 
         case .themeView:
             return imageChanged
@@ -245,77 +293,180 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+    private struct PreparedImageData {
+        let editedImageData: Data
+        let imageFormat: String
+    }
 
-        let memoText: String? = {
-            guard let memo = memo, !memo.isEmpty else { return nil }
-            return memo
-        }()
+    private struct ImageProcessingContext {
+        let stickers: [StickerDTO]
+        let sourceFormat: ImageSourceData.ImageFormat?
+    }
 
-        let folderText: String? = {
-            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
-            return customFolder
-        }()
+    private struct AnalyticsContext {
+        let isFirstCard: Bool
+        let hadLocationBefore: Bool
+    }
 
+    private func extractImageContext() -> ImageProcessingContext {
+        let stickers = imageSourceData?.stickers ?? []
+        let sourceFormat = imageSourceData?.format
+        return ImageProcessingContext(stickers: stickers, sourceFormat: sourceFormat)
+    }
+
+    private func collectAnalyticsContext() -> AnalyticsContext {
         let isFirstCard = realmManager.isEmpty(Card.self)
         let allCards = realmManager.fetch(Card.self)
         let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
+        return AnalyticsContext(isFirstCard: isFirstCard, hadLocationBefore: hadLocationBefore)
+    }
 
-        return ocrManager.recognizeText(from: editedImage)
-            .flatMap { [weak self] ocrText -> Observable<Void> in
+    private func hasDayChanged(from old: Date, to new: Date) -> Bool {
+        let calendar = Calendar.current
+        let oldComponents = calendar.dateComponents([.year, .month, .day], from: old)
+        let newComponents = calendar.dateComponents([.year, .month, .day], from: new)
+        return oldComponents != newComponents
+    }
+
+    private func prepareImageData(
+        editedImage: UIImage,
+        stickers: [StickerDTO],
+        sourceFormat: ImageSourceData.ImageFormat?
+    ) -> Observable<PreparedImageData> {
+        if !stickers.isEmpty {
+            return Observable.create { observer in
+                MediaEditorImageHandler.compositeStickersOnImage(editedImage, stickers: stickers) { compositedImage, _ in
+                    let conversionResult = ImageFormatHelper.convertToFormat(
+                        editedImage: compositedImage,
+                        targetFormat: sourceFormat
+                    )
+                    let preparedData = PreparedImageData(
+                        editedImageData: conversionResult.editedImageData,
+                        imageFormat: conversionResult.imageFormat
+                    )
+                    observer.onNext(preparedData)
+                    observer.onCompleted()
+                }
+                return Disposables.create()
+            }
+        } else {
+            let conversionResult = ImageFormatHelper.convertToFormat(
+                editedImage: editedImage,
+                targetFormat: sourceFormat
+            )
+            let preparedData = PreparedImageData(
+                editedImageData: conversionResult.editedImageData,
+                imageFormat: conversionResult.imageFormat
+            )
+            return Observable.just(preparedData)
+        }
+    }
+
+    private func createCard(
+        date: Date,
+        imageData: PreparedImageData,
+        ocrText: String?,
+        memo: String?,
+        customFolder: String?,
+        location: CLLocation?,
+        isLocked: Bool
+    ) -> Card {
+        let card = Card(
+            date: date,
+            createdDate: Date(),
+            editedImageData: imageData.editedImageData,
+            memo: memo,
+            latitude: location?.coordinate.latitude,
+            longitude: location?.coordinate.longitude,
+            isLocked: isLocked
+        )
+        card.customFolder = customFolder
+        card.ocrText = ocrText
+        card.imageFormat = imageData.imageFormat
+        return card
+    }
+
+    private func logSaveAnalytics(isFirstCard: Bool, hadLocationBefore: Bool, location: CLLocation?) {
+        if isFirstCard {
+            AnalyticsManager.shared.logFirstCardCreated()
+        }
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
+        }
+    }
+
+    private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
+        guard let editedImage = editedImage else { return .empty() }
+
+        let context = extractImageContext()
+        let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
+
+        Logger.database.info("Save: stickers=\(context.stickers.count)")
+
+        let imageDataObservable = prepareImageData(
+            editedImage: editedImage,
+            stickers: context.stickers,
+            sourceFormat: context.sourceFormat
+        )
+        let ocrObservable = ocrManager.recognizeText(from: editedImage)
+
+        return Observable.zip(imageDataObservable, ocrObservable)
+            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
-                let card = Card(
+                let card = self.createCard(
                     date: date,
-                    createdDate: Date(),
-                    editedImageData: imageData,
-                    memo: memoText,
-                    latitude: location?.coordinate.latitude,
-                    longitude: location?.coordinate.longitude,
+                    imageData: imageData,
+                    ocrText: ocrText,
+                    memo: sanitized.memo,
+                    customFolder: sanitized.customFolder,
+                    location: location,
                     isLocked: isLocked
                 )
-                card.customFolder = folderText
-                card.ocrText = ocrText
+
+                Logger.database.notice("Saved card: stickers=\(context.stickers.count)")
 
                 return self.realmManager.add(card)
-                    .observe(on: MainScheduler.instance)
                     .do(onNext: {
-                        if isFirstCard {
-                            AnalyticsManager.shared.logFirstCardCreated()
-                        }
-                        if !hadLocationBefore && location != nil {
-                            AnalyticsManager.shared.logFirstLocationAdded()
-                        }
+                        self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                     })
             }
     }
 
-    private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
+    private struct SanitizedFields {
+        let memo: String?
+        let customFolder: String?
+    }
 
-        let memoText: String? = {
-            guard let memo = memo, !memo.isEmpty else { return nil }
-            return memo
-        }()
+    private func sanitizeTextFields(memo: String?, customFolder: String?) -> SanitizedFields {
+        let memoText = (memo?.isEmpty == false) ? memo : nil
+        let folderText = (customFolder?.isEmpty == false) ? customFolder : nil
+        return SanitizedFields(memo: memoText, customFolder: folderText)
+    }
 
-        let folderText: String? = {
-            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
-            return customFolder
-        }()
+    private func hasLocationChanged(from old: CLLocation?, to new: CLLocation?, threshold: Double = 1.0) -> Bool {
+        switch (old, new) {
+        case (nil, .some):
+            return true
+        case (.some, nil):
+            return true
+        case let (.some(oldLoc), .some(newLoc)):
+            return oldLoc.distance(from: newLoc) > threshold
+        case (nil, nil):
+            return false
+        }
+    }
 
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
-
-        let oldOcrText = card.ocrText
-        let oldLatitude = card.latitude
-        let oldLongitude = card.longitude
-
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-
+    private func trackEditTypes(
+        memoText: String?,
+        folderText: String?,
+        oldLocation: CLLocation?,
+        newLocation: CLLocation?,
+        isLocked: Bool
+    ) -> [String] {
         var editTypes: [String] = []
+
         if imageChanged {
             editTypes.append("photo")
         }
@@ -325,115 +476,169 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         if initialCustomFolder != folderText {
             editTypes.append("folder")
         }
-        let oldLocation = (oldLatitude != nil && oldLongitude != nil) ? CLLocation(latitude: oldLatitude!, longitude: oldLongitude!) : nil
-        if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
+        if hasLocationChanged(from: oldLocation, to: newLocation, threshold: 1.0) {
             editTypes.append("location")
         }
         if initialIsLocked != isLocked {
             editTypes.append("lock")
         }
 
-        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
+        return editTypes
+    }
 
-        return ocrObservable
-            .flatMap { [weak self] ocrText -> Observable<Void> in
+    private func updateCardInRealm(
+        cardId: ObjectId,
+        date: Date,
+        imageData: PreparedImageData,
+        ocrText: String?,
+        memoText: String?,
+        folderText: String?,
+        location: CLLocation?,
+        isLocked: Bool
+    ) -> Observable<Void> {
+        return realmManager.update { realm in
+            guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+            card.date = date
+            card.editedImageData = imageData.editedImageData
+            card.imageFormat = imageData.imageFormat
+            card.memo = memoText
+            card.customFolder = folderText
+            card.isLocked = isLocked
+            card.latitude = location?.coordinate.latitude
+            card.longitude = location?.coordinate.longitude
+            card.ocrText = ocrText
+        }
+    }
+
+    private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
+        if !editTypes.isEmpty {
+            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+        }
+        if !hadLocationBefore && location != nil {
+            AnalyticsManager.shared.logFirstLocationAdded()
+        }
+    }
+
+    private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
+        guard let editedImage = editedImage else { return .empty() }
+        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
+
+        let context = extractImageContext()
+        let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
+
+        Logger.database.info("Update: stickers=\(context.stickers.count)")
+
+        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
+        let editTypes = trackEditTypes(
+            memoText: sanitizedFields.memo,
+            folderText: sanitizedFields.customFolder,
+            oldLocation: oldLocation,
+            newLocation: location,
+            isLocked: isLocked
+        )
+
+        let imageDataObservable = prepareImageData(
+            editedImage: editedImage,
+            stickers: context.stickers,
+            sourceFormat: context.sourceFormat
+        )
+        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+
+        return Observable.zip(imageDataObservable, ocrObservable)
+            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
-                return self.realmManager.update { realm in
-                    guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
-                    card.date = date
-                    card.editedImageData = imageData
-                    card.memo = memoText
-                    card.customFolder = folderText
-                    card.isLocked = isLocked
-                    card.latitude = location?.coordinate.latitude
-                    card.longitude = location?.coordinate.longitude
-                    card.ocrText = ocrText
-                }
+                return self.updateCardInRealm(
+                    cardId: cardId,
+                    date: date,
+                    imageData: imageData,
+                    ocrText: ocrText,
+                    memoText: sanitizedFields.memo,
+                    folderText: sanitizedFields.customFolder,
+                    location: location,
+                    isLocked: isLocked
+                )
                 .observe(on: MainScheduler.instance)
                 .do(onNext: {
-                    if !editTypes.isEmpty {
-                        AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-                    }
-                    if !hadLocationBefore && location != nil {
-                        AnalyticsManager.shared.logFirstLocationAdded()
-                    }
+                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
             }
     }
 
+    private func createNewCardAndReplaceOld(
+        cardId: ObjectId,
+        date: Date,
+        imageData: PreparedImageData,
+        ocrText: String?,
+        memoText: String?,
+        folderText: String?,
+        location: CLLocation?,
+        isLocked: Bool
+    ) -> Observable<Void> {
+        let newCard = createCard(
+            date: date,
+            imageData: imageData,
+            ocrText: ocrText,
+            memo: memoText,
+            customFolder: folderText,
+            location: location,
+            isLocked: isLocked
+        )
+
+        Logger.database.notice("Replaced card")
+
+        return realmManager.update { realm in
+            realm.add(newCard)
+            if let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) {
+                realm.delete(cardToDelete)
+            }
+        }
+    }
+
     private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage,
-              let imageData = editedImage.jpegData(compressionQuality: 0.8) else { return .empty() }
-        let memoText: String? = {
-            guard let memo = memo, !memo.isEmpty else { return nil }
-            return memo
-        }()
+        guard let editedImage = editedImage else { return .empty() }
+        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
-        let folderText: String? = {
-            guard let customFolder = customFolder, !customFolder.isEmpty else { return nil }
-            return customFolder
-        }()
+        let context = extractImageContext()
+        let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
+        let analyticsCtx = collectAnalyticsContext()
 
-        guard let cardToDelete = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
+        Logger.database.info("Replace: stickers=\(context.stickers.count)")
 
-        let oldOcrText = cardToDelete.ocrText
-        let oldLatitude = cardToDelete.latitude
-        let oldLongitude = cardToDelete.longitude
+        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
+        let editTypes = trackEditTypes(
+            memoText: sanitizedFields.memo,
+            folderText: sanitizedFields.customFolder,
+            oldLocation: oldLocation,
+            newLocation: location,
+            isLocked: isLocked
+        )
 
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
+        let imageDataObservable = prepareImageData(
+            editedImage: editedImage,
+            stickers: context.stickers,
+            sourceFormat: context.sourceFormat
+        )
+        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
-        var editTypes: [String] = []
-        if imageChanged {
-            editTypes.append("photo")
-        }
-        if initialMemo != memoText {
-            editTypes.append("memo")
-        }
-        if initialCustomFolder != folderText {
-            editTypes.append("folder")
-        }
-        let oldLocation = (oldLatitude != nil && oldLongitude != nil) ? CLLocation(latitude: oldLatitude!, longitude: oldLongitude!) : nil
-        if (oldLocation == nil && location != nil) || (oldLocation != nil && location == nil) || (oldLocation != nil && location != nil && oldLocation!.distance(from: location!) > 1) {
-            editTypes.append("location")
-        }
-        if initialIsLocked != isLocked {
-            editTypes.append("lock")
-        }
-
-        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(oldOcrText)
-
-        return ocrObservable
-            .flatMap { [weak self] ocrText -> Observable<Void> in
+        return Observable.zip(imageDataObservable, ocrObservable)
+            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
-                let newCard = Card(
+                return self.createNewCardAndReplaceOld(
+                    cardId: cardId,
                     date: date,
-                    createdDate: Date(),
-                    editedImageData: imageData,
-                    memo: memoText,
-                    latitude: location?.coordinate.latitude,
-                    longitude: location?.coordinate.longitude,
+                    imageData: imageData,
+                    ocrText: ocrText,
+                    memoText: sanitizedFields.memo,
+                    folderText: sanitizedFields.customFolder,
+                    location: location,
                     isLocked: isLocked
                 )
-                newCard.customFolder = folderText
-                newCard.ocrText = ocrText
-
-                return self.realmManager.update { realm in
-                    realm.add(newCard)
-                    if let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) {
-                        realm.delete(cardToDelete)
-                    }
-                }
                 .observe(on: MainScheduler.instance)
                 .do(onNext: {
-                    if !editTypes.isEmpty {
-                        AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-                    }
-                    if !hadLocationBefore && location != nil {
-                        AnalyticsManager.shared.logFirstLocationAdded()
-                    }
+                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
             }
     }

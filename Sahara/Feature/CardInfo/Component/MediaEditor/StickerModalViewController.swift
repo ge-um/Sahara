@@ -93,6 +93,7 @@ final class StickerModalViewController: UIViewController {
             searchQuery: searchQuery,
             loadMoreTrigger: loadMoreRelay.asObservable(),
             stickerSelected: stickerCollectionView.rx.modelSelected(KlipySticker.self).asObservable(),
+            stickerAdded: .empty(),
             filterSelected: .empty(),
             cropApplied: .empty(),
             drawingChanged: .empty(),

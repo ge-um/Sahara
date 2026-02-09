@@ -18,11 +18,16 @@ final class CardInfoView: UIView {
 
     private let contentView = UIView()
 
+    private let photoContainer: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 16
+        view.clipsToBounds = true
+        return view
+    }()
+
     let photoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.layer.cornerRadius = 16
-        imageView.clipsToBounds = true
         imageView.isUserInteractionEnabled = true
         return imageView
     }()
@@ -33,6 +38,20 @@ final class CardInfoView: UIView {
         button.imageView?.contentMode = .scaleAspectFit
         button.layer.cornerRadius = 16
         button.clipsToBounds = true
+        return button
+    }()
+
+    lazy var photoEditButton: UIButton = {
+        let button = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(named: "editBox")?.withRenderingMode(.alwaysTemplate)
+        config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.9)
+        config.baseForegroundColor = ColorSystem.black
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+        button.configuration = config
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.isHidden = true
         return button
     }()
 
@@ -58,7 +77,9 @@ final class CardInfoView: UIView {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        contentView.addSubview(photoImageView)
+        contentView.addSubview(photoContainer)
+        photoContainer.addSubview(photoImageView)
+        photoContainer.addSubview(photoEditButton)
         contentView.addSubview(photoSelectButton)
         contentView.addSubview(dateCard)
         contentView.addSubview(memoCard)
@@ -76,10 +97,19 @@ final class CardInfoView: UIView {
             make.width.equalTo(scrollView)
         }
 
-        photoImageView.snp.makeConstraints { make in
+        photoContainer.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
             photoImageHeightConstraint = make.height.equalTo(300).constraint
+        }
+
+        photoImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        photoEditButton.snp.makeConstraints { make in
+            make.top.leading.equalToSuperview().inset(12)
+            make.width.height.equalTo(40)
         }
 
         photoSelectButton.snp.makeConstraints { make in
@@ -89,7 +119,7 @@ final class CardInfoView: UIView {
         }
 
         dateCard.snp.makeConstraints { make in
-            make.top.equalTo(photoImageView.snp.bottom).offset(20)
+            make.top.equalTo(photoContainer.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
         }
 
@@ -123,17 +153,17 @@ final class CardInfoView: UIView {
     func updatePhotoImageHeight(for image: UIImage) {
         let aspectRatio = image.size.height / image.size.width
 
-        photoImageView.snp.remakeConstraints { make in
+        photoContainer.snp.remakeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(photoImageView.snp.width).multipliedBy(aspectRatio)
+            make.height.equalTo(photoContainer.snp.width).multipliedBy(aspectRatio)
         }
 
         layoutIfNeeded()
     }
 
     func resetPhotoImageHeight() {
-        photoImageView.snp.remakeConstraints { make in
+        photoContainer.snp.remakeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(300)

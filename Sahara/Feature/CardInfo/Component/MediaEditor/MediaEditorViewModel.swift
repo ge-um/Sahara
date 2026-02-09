@@ -7,6 +7,7 @@
 
 import Alamofire
 import Foundation
+import OSLog
 import RxCocoa
 import RxSwift
 import UIKit
@@ -19,6 +20,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
     private let currentQueryRelay = BehaviorRelay<String>(value: "")
+    private let addedStickersRelay = BehaviorRelay<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>(value: [])
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -26,6 +28,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let searchQuery: Observable<String>
         let loadMoreTrigger: Observable<Void>
         let stickerSelected: Observable<KlipySticker>
+        let stickerAdded: Observable<(sticker: KlipySticker, position: CGPoint, scale: CGFloat)>
         let filterSelected: Observable<(Int, UIImage?)>
         let cropApplied: Observable<(UIImage, CGRect, CGRect)>
         let drawingChanged: Observable<Void>
@@ -49,10 +52,20 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let errorMessage: Driver<String>
         let networkErrorMessage: Driver<String>
         let shouldShowStickerModal: Driver<Void>
+        let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
+        let initialStickers: [StickerDTO]
+        let initialFilterIndex: Int?
+        let initialUncroppedImage: UIImage?
+        let initialCropRect: CGRect?
+        let initialDrawingData: Data?
+        let initialImageFormat: ImageSourceData.ImageFormat?
     }
 
-    init(originalImage: UIImage, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
-        self.imageStateHandler = MediaEditorImageStateHandler(originalImage: originalImage)
+    private let originalImageSource: ImageSourceData
+
+    init(imageSource: ImageSourceData, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
+        self.originalImageSource = imageSource
+        self.imageStateHandler = MediaEditorImageStateHandler(originalImage: imageSource.image)
         self.networkManager = networkManager
     }
 
@@ -220,38 +233,49 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             }
             .disposed(by: disposeBag)
 
-        // 필터 적용 로직
         input.filterSelected
             .withUnretained(self)
-            .compactMap { owner, data -> UIImage? in
+            .bind { owner, data in
                 let (index, baseImage) = data
-                guard let baseImage = baseImage else { return nil }
+                guard let baseImage = baseImage else { return }
 
                 if index == 0 {
-                    return baseImage
+                    owner.imageStateHandler.applyFilter(baseImage)
+                    filteredImageRelay.accept(baseImage)
+                    return
                 }
 
-                guard let filter = owner.createFilter(at: index) else { return nil }
-                return owner.applyFilter(filter, to: baseImage)
-            }
-            .bind(with: self) { owner, image in
-                owner.imageStateHandler.applyFilter(image)
-                filteredImageRelay.accept(image)
+                guard let filter = owner.createFilter(at: index),
+                      let filteredImage = owner.applyFilter(filter, to: baseImage) else { return }
+
+                owner.imageStateHandler.applyFilter(filteredImage)
+                filteredImageRelay.accept(filteredImage)
             }
             .disposed(by: disposeBag)
 
-        // 자르기 적용 로직
         input.cropApplied
-            .compactMap { image, cropRect, displayedRect -> UIImage? in
+            .withUnretained(self)
+            .compactMap { owner, data -> UIImage? in
+                let (image, cropRect, displayedRect) = data
                 let scaledCropRect = MediaEditorCropHandler.convertCropRectToImageCoordinates(
                     cropRect: cropRect,
                     imageSize: image.size,
                     displayedImageRect: displayedRect
                 )
+
                 return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
             }
             .bind(with: self) { owner, croppedImage in
                 owner.imageStateHandler.applyCrop(croppedImage)
+            }
+            .disposed(by: disposeBag)
+
+        input.stickerAdded
+            .withUnretained(self)
+            .bind { owner, stickerData in
+                var currentStickers = owner.addedStickersRelay.value
+                currentStickers.append(stickerData)
+                owner.addedStickersRelay.accept(currentStickers)
             }
             .disposed(by: disposeBag)
 
@@ -281,7 +305,14 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             dismiss: dismiss,
             errorMessage: errorRelay.asDriver(onErrorJustReturn: ""),
             networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
-            shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty())
+            shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
+            addedStickers: addedStickersRelay.asDriver(),
+            initialStickers: originalImageSource.stickers,
+            initialFilterIndex: originalImageSource.filterIndex,
+            initialUncroppedImage: originalImageSource.uncroppedImage,
+            initialCropRect: originalImageSource.cropRect,
+            initialDrawingData: originalImageSource.drawingData,
+            initialImageFormat: originalImageSource.format
         )
     }
 

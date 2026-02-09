@@ -9,7 +9,9 @@ import UIKit
 
 extension UIView {
     func asImage() -> UIImage? {
-        let renderer = UIGraphicsImageRenderer(bounds: bounds)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = isOpaque
+        let renderer = UIGraphicsImageRenderer(bounds: bounds, format: format)
         return renderer.image { context in
             layer.render(in: context.cgContext)
         }

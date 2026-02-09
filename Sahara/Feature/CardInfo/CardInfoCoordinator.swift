@@ -18,8 +18,10 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
     var navigationController: UINavigationController?
     weak var delegate: CardInfoCoordinatorDelegate?
     weak var parentViewController: UIViewController?
-    private var onMediaEditingComplete: ((UIImage) -> Void)?
+    weak var cardInfoViewController: UIViewController?
+    private var onMediaEditingComplete: ((UIImage, ImageSourceData) -> Void)?
     private var mediaEditorCoordinator: MediaEditorCoordinator?
+    private var currentImageSource: ImageSourceData?
 
     init(parentViewController: UIViewController) {
         self.parentViewController = parentViewController
@@ -27,10 +29,17 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
     func start() {}
 
-    func presentMediaSelection(selectedImageSubject: BehaviorSubject<UIImage?>, completion: @escaping (UIImage, CLLocation?, Date?) -> Void) {
+    private func getPresentingViewController() -> UIViewController? {
+        if let cardInfoVC = cardInfoViewController {
+            return cardInfoVC.navigationController ?? cardInfoVC
+        }
+        return parentViewController
+    }
+
+    func presentMediaSelection(selectedImageSubject: BehaviorSubject<UIImage?>, completion: @escaping (ImageSourceData, CLLocation?, Date?) -> Void) {
         let mediaSelectionVC = MediaSelectionViewController()
-        mediaSelectionVC.onMediaSelected = { image, location, date in
-            completion(image, location, date)
+        mediaSelectionVC.onMediaSelected = { imageSource, location, date in
+            completion(imageSource, location, date)
         }
 
         let navController = UINavigationController(rootViewController: mediaSelectionVC)
@@ -38,31 +47,28 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
         }
-        parentViewController?.present(navController, animated: true)
+        getPresentingViewController()?.present(navController, animated: true)
     }
 
     func presentMediaEditor(
-        image: UIImage,
+        imageSource: ImageSourceData,
         selectedImageSubject: BehaviorSubject<UIImage?>,
-        onEditingComplete: @escaping (UIImage) -> Void
+        onEditingComplete: @escaping (UIImage, ImageSourceData) -> Void
     ) {
         self.onMediaEditingComplete = onEditingComplete
+        self.currentImageSource = imageSource
 
-        parentViewController?.dismiss(animated: true) { [weak self] in
-            guard let self = self else { return }
+        let navController = UINavigationController()
+        navController.modalPresentationStyle = .fullScreen
 
-            let navController = UINavigationController()
-            navController.modalPresentationStyle = .fullScreen
+        self.mediaEditorCoordinator = MediaEditorCoordinator(
+            navigationController: navController,
+            imageSource: imageSource
+        )
+        self.mediaEditorCoordinator?.delegate = self
+        self.mediaEditorCoordinator?.start()
 
-            self.mediaEditorCoordinator = MediaEditorCoordinator(
-                navigationController: navController,
-                originalImage: image
-            )
-            self.mediaEditorCoordinator?.delegate = self
-            self.mediaEditorCoordinator?.start()
-
-            self.parentViewController?.present(navController, animated: true)
-        }
+        getPresentingViewController()?.present(navController, animated: true)
     }
 
     func presentDatePicker(initialDate: Date, onDateSelected: @escaping (Date) -> Void) {
@@ -73,7 +79,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
-        parentViewController?.present(datePickerVC, animated: true)
+        getPresentingViewController()?.present(datePickerVC, animated: true)
     }
 
     func presentLocationSearch(onLocationSelected: @escaping (CLLocationCoordinate2D, String) -> Void) {
@@ -81,16 +87,21 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
         locationSearchVC.onLocationSelected = onLocationSelected
 
         let nav = UINavigationController(rootViewController: locationSearchVC)
-        parentViewController?.present(nav, animated: true)
+        getPresentingViewController()?.present(nav, animated: true)
     }
 
     func dismiss() {
-        parentViewController?.dismiss(animated: true)
+        if let cardInfoVC = cardInfoViewController {
+            cardInfoVC.navigationController?.dismiss(animated: true)
+        } else {
+            parentViewController?.dismiss(animated: true)
+        }
     }
 
     func popToList(isEditMode: Bool) {
-        guard let parentVC = parentViewController,
-              let presentingVC = parentVC.presentingViewController else {
+        guard let cardInfoVC = cardInfoViewController,
+              let cardInfoNavController = cardInfoVC.navigationController,
+              let presentingVC = cardInfoNavController.presentingViewController else {
             return
         }
 
@@ -106,23 +117,28 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
         guard let nav = navController else { return }
 
-        parentVC.dismiss(animated: true) {
+        cardInfoNavController.dismiss(animated: true) {
             nav.popViewController(animated: true)
         }
     }
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with image: UIImage) {
-        parentViewController?.dismiss(animated: true) { [weak self] in
-            self?.onMediaEditingComplete?(image)
-            self?.onMediaEditingComplete = nil
-            self?.mediaEditorCoordinator = nil
+    func didFinishEditing(with editState: ImageSourceData) {
+        getPresentingViewController()?.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+
+            let displayImage = editState.previewImage ?? editState.image
+            self.onMediaEditingComplete?(displayImage, editState)
+            self.onMediaEditingComplete = nil
+            self.mediaEditorCoordinator = nil
+            self.currentImageSource = nil
         }
     }
 
     func didCancelEditing() {
         onMediaEditingComplete = nil
         mediaEditorCoordinator = nil
+        currentImageSource = nil
     }
 }

@@ -8,6 +8,7 @@
 import CoreLocation
 import LocalAuthentication
 import MapKit
+import OSLog
 import RxCocoa
 import RxSwift
 import SnapKit
@@ -52,6 +53,7 @@ final class CardInfoViewController: UIViewController {
     let disposeBag = DisposeBag()
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
+    let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -137,225 +139,38 @@ final class CardInfoViewController: UIViewController {
         let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
         let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
-        let locationOutput = contentView.locationCard.bind(
-            initialLocation: initialLocationRelay.asObservable(),
-            selectedLocation: selectedLocationSubject.asObservable()
+        let locationOutput = bindLocationCard(
+            initialLocationRelay: initialLocationRelay,
+            selectedLocationSubject: selectedLocationSubject
+        )
+        let biometricOutput = bindBiometricLockCard()
+
+        bindDateCard()
+        bindDeleteCard()
+        bindPhotoActions(
+            selectedImageSubject: selectedImageSubject,
+            initialLocationRelay: initialLocationRelay
         )
 
-        selectedLocationSubject
-            .bind(with: self) { owner, result in
-                let (coordinate, address) = result
-                owner.contentView.locationCard.locationLabel.text = address
-                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
-                owner.contentView.locationCard.removeButton.isHidden = false
-                owner.contentView.locationCard.updateMapView(with: coordinate)
-            }
-            .disposed(by: disposeBag)
-
-        locationOutput.presentLocationSearch
-            .drive(with: self) { owner, _ in
-                owner.coordinator.presentLocationSearch { coordinate, address in
-                    selectedLocationSubject.onNext((coordinate, address))
-                }
-            }
-            .disposed(by: disposeBag)
-
-        let biometricOutput = contentView.biometricLockCard.bind(initialIsLocked: false)
-
-        biometricOutput.presentPermissionAlert
-            .drive(with: self) { owner, _ in
-                let alert = UIAlertController(
-                    title: NSLocalizedString("biometric.permission_required", comment: ""),
-                    message: NSLocalizedString("biometric.permission_message", comment: ""),
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                })
-                alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
-                owner.present(alert, animated: true)
-            }
-            .disposed(by: disposeBag)
-
-        biometricOutput.showNoSupportToast
-            .drive(with: self) { owner, message in
-                owner.showToast(message: message)
-            }
-            .disposed(by: disposeBag)
-
-        let photoImageTapGesture = UITapGestureRecognizer()
-        contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
-
-        photoImageTapGesture.rx.event
-            .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        contentView.photoSelectButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { image, location, date in
-                    owner.openPhotoEditor(with: image, location: location, date: date, selectedImageSubject: selectedImageSubject, initialLocationRelay: initialLocationRelay)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        contentView.dateCard.selectButton.rx.tap
-            .subscribe(with: self) { owner, _ in
-                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
-                    owner.selectedDateRelay.accept(date)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        contentView.dateCard.bind(date: selectedDateRelay.asDriver())
-
-        contentView.deleteCard.deleteButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.showDeleteAlert()
-            }
-            .disposed(by: disposeBag)
-
-        let input = CardInfoViewModel.Input(
-            selectedImage: selectedImageSubject.asObservable(),
-            date: selectedDateRelay.asObservable(),
-            memo: contentView.memoCard.textView.rx.text
-                .map { [weak self] text in
-                    guard let self = self else { return nil }
-                    if self.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
-                        return nil
-                    }
-                    return text
-                }
-                .asObservable(),
-            customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
-            location: locationOutput.location.asObservable(),
-            isLocked: biometricOutput.isLocked.asObservable(),
-            saveButtonTapped: saveButton.rx.tap.asObservable(),
-            cancelButtonTapped: cancelButton.rx.tap.asObservable(),
-            deleteButtonTapped: deleteConfirmedRelay.asObservable()
+        let input = createViewModelInput(
+            selectedImageSubject: selectedImageSubject,
+            locationOutput: locationOutput,
+            biometricOutput: biometricOutput
         )
-
         let output = viewModel.transform(input: input)
 
-        output.editedImage
-            .drive(with: self) { owner, image in
-                owner.contentView.photoImageView.image = image
-                if let image = image {
-                    owner.contentView.updatePhotoImageHeight(for: image)
-                }
-            }
-            .disposed(by: disposeBag)
+        setupInitialData(output, initialLocationRelay: initialLocationRelay)
+        bindImageOutputs(output)
+        bindSaveOutputs(output)
+        bindDeleteOutputs(output)
+        bindDismissOutput(output)
 
-        selectedDateRelay.accept(output.initialDate)
-        contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
-
-        if output.isEditMode {
-            contentView.deleteCard.isHidden = false
-            if let memo = output.initialMemo {
-                contentView.memoCard.setMemo(memo)
-            } else {
-                contentView.memoCard.showPlaceholder()
-            }
-            if let location = output.initialLocation {
-                initialLocationRelay.onNext(location)
-            }
-            contentView.folderCard.setFolder(output.initialCustomFolder)
-        } else {
-            contentView.memoCard.showPlaceholder()
-        }
-
-        output.hasImage
-            .drive(with: self) { owner, hasImage in
-                owner.contentView.photoImageView.isHidden = !hasImage
-                owner.contentView.photoSelectButton.isHidden = hasImage
-                if hasImage {
-                    if let image = owner.contentView.photoImageView.image {
-                        owner.contentView.updatePhotoImageHeight(for: image)
-                    }
-                } else {
-                    owner.contentView.resetPhotoImageHeight()
-                }
-            }
-            .disposed(by: disposeBag)
-
-        Observable.zip(
-            output.saved.asObservable(),
-            output.shouldPopToList.asObservable()
+        bindPhotoImageTapGesture(
+            selectedImageSubject: selectedImageSubject,
+            initialLocationRelay: initialLocationRelay,
+            isEditMode: output.isEditMode
         )
-        .observe(on: MainScheduler.instance)
-        .bind(with: self) { owner, result in
-            let (success, shouldPopToList) = result
-            if success {
-                owner.contentView.folderCard.refreshFolderTags()
-                if shouldPopToList {
-                    owner.coordinator.popToList(isEditMode: output.isEditMode)
-                } else {
-                    owner.coordinator.dismiss()
-                }
-            }
-        }
-        .disposed(by: disposeBag)
-
-        output.saveError
-            .drive(with: self) { owner, errorMessage in
-                owner.showToast(message: errorMessage)
-            }
-            .disposed(by: disposeBag)
-
-        output.dismiss
-            .drive(with: self) { owner, _ in
-                owner.coordinator.dismiss()
-            }
-            .disposed(by: disposeBag)
-
-        Observable.zip(
-            output.deleted.asObservable(),
-            output.shouldPopToListOnDelete.asObservable()
-        )
-        .observe(on: MainScheduler.instance)
-        .bind(with: self) { owner, result in
-            let (_, shouldPopToList) = result
-            if shouldPopToList {
-                owner.coordinator.popToList(isEditMode: output.isEditMode)
-            } else {
-                owner.coordinator.dismiss()
-            }
-        }
-        .disposed(by: disposeBag)
-
-        let tapGesture = UITapGestureRecognizer()
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-
-        tapGesture.rx.event
-            .bind(with: self) { owner, _ in
-                owner.view.endEditing(true)
-            }
-            .disposed(by: disposeBag)
-    }
-
-    private func openPhotoEditor(with image: UIImage, location: CLLocation?, date: Date?, selectedImageSubject: BehaviorSubject<UIImage?>, initialLocationRelay: BehaviorSubject<CLLocation?>) {
-        if let date = date {
-            selectedDateRelay.accept(date)
-        }
-
-        if let location = location {
-            initialLocationRelay.onNext(location)
-        } else {
-            initialLocationRelay.onNext(nil)
-        }
-
-        coordinator.presentMediaEditor(image: image, selectedImageSubject: selectedImageSubject) { [weak self] editedImage in
-            self?.contentView.photoImageView.image = editedImage
-            self?.contentView.photoImageView.isHidden = false
-            self?.contentView.photoSelectButton.isHidden = true
-            selectedImageSubject.onNext(editedImage)
-        }
+        bindKeyboardDismissGesture()
     }
 
     private func setupKeyboardHandling() {
@@ -398,5 +213,305 @@ final class CardInfoViewController: UIViewController {
         AlertUtility.showDeleteConfirmation(on: self) { [weak self] in
             self?.deleteConfirmedRelay.accept(())
         }
+    }
+}
+
+extension CardInfoViewController {
+
+    private func bindLocationCard(
+        initialLocationRelay: BehaviorSubject<CLLocation?>,
+        selectedLocationSubject: PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>
+    ) -> LocationSelectionCardViewModel.Output {
+        let locationOutput = contentView.locationCard.bind(
+            initialLocation: initialLocationRelay.asObservable(),
+            selectedLocation: selectedLocationSubject.asObservable()
+        )
+
+        selectedLocationSubject
+            .bind(with: self) { owner, result in
+                let (coordinate, address) = result
+                owner.contentView.locationCard.locationLabel.text = address
+                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
+                owner.contentView.locationCard.removeButton.isHidden = false
+                owner.contentView.locationCard.updateMapView(with: coordinate)
+            }
+            .disposed(by: disposeBag)
+
+        locationOutput.presentLocationSearch
+            .drive(with: self) { owner, _ in
+                owner.coordinator.presentLocationSearch { coordinate, address in
+                    selectedLocationSubject.onNext((coordinate, address))
+                }
+            }
+            .disposed(by: disposeBag)
+
+        return locationOutput
+    }
+
+    private func bindBiometricLockCard() -> BiometricLockCardViewModel.Output {
+        let biometricOutput = contentView.biometricLockCard.bind(initialIsLocked: false)
+
+        biometricOutput.presentPermissionAlert
+            .drive(with: self) { owner, _ in
+                owner.presentBiometricPermissionAlert()
+            }
+            .disposed(by: disposeBag)
+
+        biometricOutput.showNoSupportToast
+            .drive(with: self) { owner, message in
+                owner.showToast(message: message)
+            }
+            .disposed(by: disposeBag)
+
+        return biometricOutput
+    }
+
+    private func bindDateCard() {
+        contentView.dateCard.selectButton.rx.tap
+            .subscribe(with: self) { owner, _ in
+                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
+                    owner.selectedDateRelay.accept(date)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        contentView.dateCard.bind(date: selectedDateRelay.asDriver())
+    }
+
+    private func bindDeleteCard() {
+        contentView.deleteCard.deleteButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.showDeleteAlert()
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func bindPhotoActions(
+        selectedImageSubject: BehaviorSubject<UIImage?>,
+        initialLocationRelay: BehaviorSubject<CLLocation?>
+    ) {
+        contentView.photoSelectButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                    selectedImageSubject.onNext(imageSource.image)
+                    owner.imageSourceDataRelay.accept(imageSource)
+
+                    if let date = date {
+                        owner.selectedDateRelay.accept(date)
+                    }
+
+                    if let location = location {
+                        initialLocationRelay.onNext(location)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+
+        contentView.photoEditButton.rx.tap
+            .bind(with: self) { owner, _ in
+                guard let currentImage = owner.contentView.photoImageView.image else { return }
+
+                let currentImageSourceData = owner.imageSourceDataRelay.value ?? ImageSourceData(image: currentImage)
+
+                owner.coordinator.presentMediaEditor(imageSource: currentImageSourceData, selectedImageSubject: selectedImageSubject) { [weak owner] displayImage, imageSourceData in
+                    guard let owner = owner else { return }
+
+                    Logger.cardInfo.info("Received editor result: stickers=\(imageSourceData.stickers.count), filter=\(imageSourceData.filterIndex ?? 0)")
+
+                    owner.contentView.photoImageView.image = displayImage
+                    owner.contentView.photoImageView.isHidden = false
+                    owner.contentView.photoSelectButton.isHidden = true
+                    owner.contentView.updatePhotoImageHeight(for: displayImage)
+
+                    selectedImageSubject.onNext(displayImage)
+                    owner.imageSourceDataRelay.accept(imageSourceData)
+                }
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func createViewModelInput(
+        selectedImageSubject: BehaviorSubject<UIImage?>,
+        locationOutput: LocationSelectionCardViewModel.Output,
+        biometricOutput: BiometricLockCardViewModel.Output
+    ) -> CardInfoViewModel.Input {
+        return CardInfoViewModel.Input(
+            selectedImage: selectedImageSubject.asObservable(),
+            imageSourceData: imageSourceDataRelay.asObservable(),
+            date: selectedDateRelay.asObservable(),
+            memo: contentView.memoCard.textView.rx.text
+                .withUnretained(self)
+                .map { owner, text in
+                    if owner.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
+                        return nil
+                    }
+                    return text
+                }
+                .asObservable(),
+            customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
+            location: locationOutput.location.asObservable(),
+            isLocked: biometricOutput.isLocked.asObservable(),
+            saveButtonTapped: saveButton.rx.tap.asObservable(),
+            cancelButtonTapped: cancelButton.rx.tap.asObservable(),
+            deleteButtonTapped: deleteConfirmedRelay.asObservable()
+        )
+    }
+
+    private func setupInitialData(
+        _ output: CardInfoViewModel.Output,
+        initialLocationRelay: BehaviorSubject<CLLocation?>
+    ) {
+        selectedDateRelay.accept(output.initialDate)
+        contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
+
+        if output.isEditMode {
+            contentView.deleteCard.isHidden = false
+            if let memo = output.initialMemo {
+                contentView.memoCard.setMemo(memo)
+            } else {
+                contentView.memoCard.showPlaceholder()
+            }
+            if let location = output.initialLocation {
+                initialLocationRelay.onNext(location)
+            }
+            contentView.folderCard.setFolder(output.initialCustomFolder)
+
+            if let imageSourceData = output.initialImageSourceData {
+                imageSourceDataRelay.accept(imageSourceData)
+            }
+        } else {
+            contentView.memoCard.showPlaceholder()
+        }
+    }
+
+    private func bindImageOutputs(_ output: CardInfoViewModel.Output) {
+        output.editedImage
+            .drive(with: self) { owner, image in
+                owner.contentView.photoImageView.image = image
+                if let image = image {
+                    owner.contentView.updatePhotoImageHeight(for: image)
+                }
+            }
+            .disposed(by: disposeBag)
+
+        output.hasImage
+            .drive(with: self) { owner, hasImage in
+                owner.contentView.photoImageView.isHidden = !hasImage
+                owner.contentView.photoSelectButton.isHidden = hasImage
+                owner.contentView.photoEditButton.isHidden = !hasImage
+                if hasImage {
+                    if let image = owner.contentView.photoImageView.image {
+                        owner.contentView.updatePhotoImageHeight(for: image)
+                    }
+                } else {
+                    owner.contentView.resetPhotoImageHeight()
+                }
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func bindSaveOutputs(_ output: CardInfoViewModel.Output) {
+        Observable.zip(
+            output.saved.asObservable(),
+            output.shouldPopToList.asObservable()
+        )
+        .observe(on: MainScheduler.instance)
+        .bind(with: self) { owner, result in
+            let (success, shouldPopToList) = result
+            if success {
+                owner.contentView.folderCard.refreshFolderTags()
+                if shouldPopToList {
+                    owner.coordinator.popToList(isEditMode: output.isEditMode)
+                } else {
+                    owner.coordinator.dismiss()
+                }
+            }
+        }
+        .disposed(by: disposeBag)
+
+        output.saveError
+            .drive(with: self) { owner, errorMessage in
+                owner.showToast(message: errorMessage)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func bindDeleteOutputs(_ output: CardInfoViewModel.Output) {
+        Observable.zip(
+            output.deleted.asObservable(),
+            output.shouldPopToListOnDelete.asObservable()
+        )
+        .observe(on: MainScheduler.instance)
+        .bind(with: self) { owner, result in
+            let (_, shouldPopToList) = result
+            if shouldPopToList {
+                owner.coordinator.popToList(isEditMode: output.isEditMode)
+            } else {
+                owner.coordinator.dismiss()
+            }
+        }
+        .disposed(by: disposeBag)
+    }
+
+    private func bindDismissOutput(_ output: CardInfoViewModel.Output) {
+        output.dismiss
+            .drive(with: self) { owner, _ in
+                owner.coordinator.dismiss()
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func bindPhotoImageTapGesture(
+        selectedImageSubject: BehaviorSubject<UIImage?>,
+        initialLocationRelay: BehaviorSubject<CLLocation?>,
+        isEditMode: Bool
+    ) {
+        let photoImageTapGesture = UITapGestureRecognizer()
+        contentView.photoImageView.addGestureRecognizer(photoImageTapGesture)
+
+        photoImageTapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                guard isEditMode else { return }
+                owner.coordinator.presentMediaSelection(selectedImageSubject: selectedImageSubject) { imageSource, location, date in
+                    selectedImageSubject.onNext(imageSource.image)
+                    owner.imageSourceDataRelay.accept(imageSource)
+
+                    if let date = date {
+                        owner.selectedDateRelay.accept(date)
+                    }
+
+                    if let location = location {
+                        initialLocationRelay.onNext(location)
+                    }
+                }
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func bindKeyboardDismissGesture() {
+        let tapGesture = UITapGestureRecognizer()
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+
+        tapGesture.rx.event
+            .bind(with: self) { owner, _ in
+                owner.view.endEditing(true)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func presentBiometricPermissionAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("biometric.permission_required", comment: ""),
+            message: NSLocalizedString("biometric.permission_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("media_selection.go_to_settings", comment: ""), style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
+        present(alert, animated: true)
     }
 }

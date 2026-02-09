@@ -40,14 +40,14 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let selectedViewType = BehaviorRelay<GalleryViewType>(value: .date)
 
         let photos = currentMonth
-            .flatMapLatest { [weak self] month -> Observable<[CardCalendarItemDTO]> in
-                guard let self = self else { return .just([]) }
+            .flatMapLatest { [weak self] month -> Observable<(Date, [CardCalendarItemDTO])> in
+                guard let self = self else { return .just((month, [])) }
                 return self.realmManager.observeCards(for: .month(month))
+                    .map { (month, $0) }
             }
             .share(replay: 1, scope: .whileConnected)
 
-        let calendarItems = Observable
-            .combineLatest(currentMonth, photos)
+        let calendarItems = photos
             .map { month, items in
                 self.generateCalendar(for: month, items: items)
             }

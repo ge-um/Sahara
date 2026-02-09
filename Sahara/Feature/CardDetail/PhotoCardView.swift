@@ -5,6 +5,8 @@
 //  Created by 금가경 on 1/11/25.
 //
 
+import Kingfisher
+import OSLog
 import RxCocoa
 import RxSwift
 import SnapKit
@@ -28,7 +30,6 @@ final class PhotoCardView: UIView {
 
     private let frontCardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 20
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOffset = CGSize(width: 0, height: 4)
@@ -51,9 +52,9 @@ final class PhotoCardView: UIView {
         return view
     }()
 
-    private let photoImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
+    private let photoImageView: AnimatedImageView = {
+        let imageView = AnimatedImageView()
+        imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 20
         return imageView
@@ -151,6 +152,7 @@ final class PhotoCardView: UIView {
 
     private func configureUI() {
         backgroundColor = .clear
+        self.clipsToBounds = true
 
         addSubview(cardContainerView)
         cardContainerView.addSubview(frontCardView)

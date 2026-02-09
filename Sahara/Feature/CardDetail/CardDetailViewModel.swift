@@ -52,13 +52,10 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let saveResult = input.saveButtonTapped
             .withLatestFrom(cardImage)
             .flatMap { imageData -> Observable<Result<Void, Error>> in
-                guard let image = UIImage(data: imageData) else {
-                    return .just(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.image_load_error", comment: "")])))
-                }
-
                 return Observable.create { observer in
                     PHPhotoLibrary.shared().performChanges({
-                        PHAssetChangeRequest.creationRequestForAsset(from: image)
+                        let request = PHAssetCreationRequest.forAsset()
+                        request.addResource(with: .photo, data: imageData, options: nil)
                     }) { success, error in
                         if success {
                             observer.onNext(.success(()))
@@ -77,7 +74,10 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
             .compactMap { imageData -> UIImage? in
-                UIImage(data: imageData)
+                let screenScale = UIScreen.main.scale
+                let screenBounds = UIScreen.main.bounds
+                let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
+                return ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
             }
             .asDriver(onErrorDriveWith: .empty())
 
