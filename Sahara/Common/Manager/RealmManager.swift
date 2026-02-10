@@ -39,7 +39,7 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
-    static let currentSchemaVersion: UInt64 = 1
+    static let currentSchemaVersion: UInt64 = 2
 
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
@@ -59,6 +59,13 @@ final class RealmManager: RealmManagerProtocol {
                     newObject?["date"] = createdDate
                 }
             }
+        }
+
+        if oldSchemaVersion < 2 {
+            // v1.4.1 → v1.5.0 스키마 변경 대응
+            // Card: imageFormat(String?), drawingData(Data?) 추가 → Realm이 자동으로 nil 할당
+            // Card: stickers(List<Sticker>) 제거 → Realm이 자동으로 컬럼 삭제
+            // Sticker: localFilePath(String?), isAnimated(Bool) 추가 → Realm이 자동 처리
         }
     }
 
