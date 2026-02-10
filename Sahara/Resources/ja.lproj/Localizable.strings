@@ -217,6 +217,7 @@
 "language.chinese" = "简体中文";
 
 /* Release Note Details */
+"release_note.1.5.1.1" = "アプリがより安定して動作します";
 "release_note.1.5.0.1" = "保存した写真を再編集できます";
 "release_note.1.5.0.2" = "アプリがより安定して動作します";
 "release_note.1.4.1.1" = "お問い合わせ時にデバイス情報が自動的に含まれ、より正確なサポートを受けられます";
