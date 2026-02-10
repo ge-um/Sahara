@@ -211,6 +211,7 @@
 "language.chinese" = "简体中文";
 
 /* Release Note Details */
+"release_note.1.5.1.1" = "应用更加稳定";
 "release_note.1.5.0.1" = "可以重新编辑已保存的照片";
 "release_note.1.5.0.2" = "应用更加稳定";
 "release_note.1.4.1.1" = "联系我们时会自动包含设备信息，以获得更准确的支持";
