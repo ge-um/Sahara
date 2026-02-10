@@ -412,6 +412,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let ocrObservable = ocrManager.recognizeText(from: editedImage)
 
         return Observable.zip(imageDataObservable, ocrObservable)
+            .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
@@ -546,6 +547,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
         return Observable.zip(imageDataObservable, ocrObservable)
+            .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
@@ -559,7 +561,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     location: location,
                     isLocked: isLocked
                 )
-                .observe(on: MainScheduler.instance)
                 .do(onNext: {
                     self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
@@ -623,6 +624,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
         return Observable.zip(imageDataObservable, ocrObservable)
+            .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
@@ -636,7 +638,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     location: location,
                     isLocked: isLocked
                 )
-                .observe(on: MainScheduler.instance)
                 .do(onNext: {
                     self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
