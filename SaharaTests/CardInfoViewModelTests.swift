@@ -53,9 +53,6 @@ final class CardInfoViewModelTests: XCTestCase {
         let input = CardInfoViewModel.Input(
             selectedImage: .just(testImage),
             imageSourceData: .just(nil),
-            wasEdited: .just(false),
-            selectedFilterIndex: .just(nil),
-            cropMetadata: .just(nil),
             date: .just(Date()),
             memo: .just("Test memo"),
             customFolder: .empty(),
@@ -92,7 +89,6 @@ final class CardInfoViewModelTests: XCTestCase {
         let input = CardInfoViewModel.Input(
             selectedImage: .empty(),
             imageSourceData: .just(nil),
-            wasEdited: .just(false),
             date: .empty(),
             memo: .empty(),
             customFolder: .empty(),
@@ -126,7 +122,6 @@ final class CardInfoViewModelTests: XCTestCase {
         let input = CardInfoViewModel.Input(
             selectedImage: selectedImage.asObservable(),
             imageSourceData: .just(nil),
-            wasEdited: .just(false),
             date: .empty(),
             memo: .empty(),
             customFolder: .empty(),
@@ -161,7 +156,6 @@ final class CardInfoViewModelTests: XCTestCase {
         let output = sut.transform(input: CardInfoViewModel.Input(
             selectedImage: .empty(),
             imageSourceData: .just(nil),
-            wasEdited: .just(false),
             date: .empty(),
             memo: .empty(),
             customFolder: .empty(),
