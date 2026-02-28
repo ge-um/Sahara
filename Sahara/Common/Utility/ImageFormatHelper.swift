@@ -52,8 +52,12 @@ final class ImageFormatHelper {
         editedImage: UIImage,
         targetFormat: ImageSourceData.ImageFormat?
     ) -> ConversionResult {
-        let format = targetFormat ?? detectOptimalFormat(for: editedImage)
-        let imageToConvert = removeUnnecessaryAlpha(from: editedImage, for: format)
+        if editedImage.imageOrientation != .up {
+            Logger.imageMetadata.info("Normalized orientation: \(editedImage.imageOrientation.rawValue) to .up")
+        }
+        let normalizedImage = editedImage.normalizedOrientation()
+        let format = targetFormat ?? detectOptimalFormat(for: normalizedImage)
+        let imageToConvert = removeUnnecessaryAlpha(from: normalizedImage, for: format)
         let editedData: Data
 
         switch format {
