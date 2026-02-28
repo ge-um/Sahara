@@ -55,7 +55,7 @@ final class CardInfoViewModelTests: XCTestCase {
             imageSourceData: .just(nil),
             date: .just(Date()),
             memo: .just("Test memo"),
-            customFolder: .empty(),
+            customFolder: .just(nil),
             location: .empty(),
             isLocked: .just(false),
             saveButtonTapped: saveButtonTapped.asObservable(),
