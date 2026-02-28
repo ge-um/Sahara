@@ -69,7 +69,7 @@ final class ImageOrientationTests: XCTestCase {
     }
 
     func test_convertToFormat_heicWithRightOrientation_producesCorrectPixels() {
-        let image = createImageWithOrientation(.right, size: CGSize(width: 200, height: 100))
+        let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
         let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .heic)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
@@ -77,12 +77,12 @@ final class ImageOrientationTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(reloaded.size.width, 200, accuracy: 1.0)
-        XCTAssertEqual(reloaded.size.height, 100, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.width, image.size.width, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.height, image.size.height, accuracy: 1.0)
     }
 
     func test_convertToFormat_pngWithRightOrientation_producesCorrectPixels() {
-        let image = createImageWithOrientation(.right, size: CGSize(width: 200, height: 100))
+        let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
         let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .png)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
@@ -90,12 +90,12 @@ final class ImageOrientationTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(reloaded.size.width, 200, accuracy: 1.0)
-        XCTAssertEqual(reloaded.size.height, 100, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.width, image.size.width, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.height, image.size.height, accuracy: 1.0)
     }
 
     func test_convertToFormat_jpegWithRightOrientation_producesCorrectPixels() {
-        let image = createImageWithOrientation(.right, size: CGSize(width: 200, height: 100))
+        let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
         let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .jpeg)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
@@ -103,12 +103,12 @@ final class ImageOrientationTests: XCTestCase {
             return
         }
 
-        XCTAssertEqual(reloaded.size.width, 200, accuracy: 1.0)
-        XCTAssertEqual(reloaded.size.height, 100, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.width, image.size.width, accuracy: 1.0)
+        XCTAssertEqual(reloaded.size.height, image.size.height, accuracy: 1.0)
     }
 
     func test_downsample_afterConvertToFormat_preservesOrientation() {
-        let image = createImageWithOrientation(.right, size: CGSize(width: 400, height: 200))
+        let image = createImageWithOrientation(.right, size: CGSize(width: 200, height: 400))
         let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .heic)
 
         guard let downsampled = ImageDownsampler.downsample(data: result.editedImageData, maxDimension: 200) else {
