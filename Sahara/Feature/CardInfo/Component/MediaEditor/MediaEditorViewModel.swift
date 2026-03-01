@@ -59,6 +59,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let initialCropRect: CGRect?
         let initialDrawingData: Data?
         let initialImageFormat: ImageSourceData.ImageFormat?
+        let initialOriginalData: Data?
     }
 
     private let originalImageSource: ImageSourceData
@@ -312,7 +313,8 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             initialUncroppedImage: originalImageSource.uncroppedImage,
             initialCropRect: originalImageSource.cropRect,
             initialDrawingData: originalImageSource.drawingData,
-            initialImageFormat: originalImageSource.format
+            initialImageFormat: originalImageSource.format,
+            initialOriginalData: originalImageSource.originalData
         )
     }
 
