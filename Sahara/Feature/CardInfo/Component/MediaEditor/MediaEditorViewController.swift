@@ -563,9 +563,9 @@ final class MediaEditorViewController: UIViewController {
                 AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, _ in
-                let editState = owner.prepareEditState()
-                Logger.mediaEditor.info("Finishing edit: stickers=\(editState.stickers.count), filter=\(editState.filterIndex ?? 0)")
-                owner.coordinator?.finishEditing(with: editState)
+                let (displayImage, metadata) = owner.prepareEditResult()
+                Logger.mediaEditor.info("Finishing edit: stickers=\(metadata.stickers.count), filter=\(metadata.filterIndex ?? 0)")
+                owner.coordinator?.finishEditing(displayImage: displayImage, metadata: metadata)
             }
             .disposed(by: disposeBag)
 
@@ -861,29 +861,30 @@ final class MediaEditorViewController: UIViewController {
         photoViews.append(imageView)
     }
 
-    private func prepareEditState() -> ImageSourceData {
+    private func prepareEditResult() -> (displayImage: UIImage, metadata: ImageSourceData) {
         let stickerDTOs = convertStickersToDTO()
-        let unfilteredBaseImage = cachedOriginalImageForFilter ?? photoImageView.image ?? UIImage()
-        let currentDisplayImage = photoImageView.image ?? UIImage()
+        let filteredBase = photoImageView.image ?? UIImage()
         let drawingData = canvasView.drawing.dataRepresentation()
 
-        var previewImage: UIImage?
+        let displayImage: UIImage
         if !stickerDTOs.isEmpty || !canvasView.drawing.strokes.isEmpty {
-            previewImage = generateFinalImage()
+            displayImage = generateFinalImage()
         } else {
-            previewImage = currentDisplayImage
+            displayImage = filteredBase
         }
 
-        return ImageSourceData(
-            image: unfilteredBaseImage,
+        let metadata = ImageSourceData(
+            image: filteredBase,
+            editorViewSize: photoImageView.bounds.size,
             format: initialImageFormat,
             stickers: stickerDTOs,
             filterIndex: currentFilterIndex,
             uncroppedImage: cachedUncroppedOriginalImage,
             cropRect: lastCropRect,
-            drawingData: drawingData,
-            previewImage: previewImage
+            drawingData: drawingData
         )
+
+        return (displayImage, metadata)
     }
 
     private func convertStickersToDTO() -> [StickerDTO] {

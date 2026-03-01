@@ -51,7 +51,7 @@ final class MediaEditorImageHandler {
         return image
     }
 
-    static func compositeStickersOnImage(_ baseImage: UIImage, stickers: [StickerDTO], completion: @escaping (UIImage, [Bool]) -> Void) {
+    static func compositeStickersOnImage(_ baseImage: UIImage, stickers: [StickerDTO], editorViewSize: CGSize? = nil, completion: @escaping (UIImage, [Bool]) -> Void) {
         let imageSize = baseImage.size
         let group = DispatchGroup()
         let syncQueue = DispatchQueue(label: "com.sahara.stickerSync")
@@ -109,8 +109,13 @@ final class MediaEditorImageHandler {
         }
 
         group.notify(queue: .global(qos: .userInitiated)) {
-            let standardCardWidth = min(UIScreen.main.bounds.width - 64, 400)
-            let viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
+            let viewSize: CGSize
+            if let editorSize = editorViewSize {
+                viewSize = editorSize
+            } else {
+                let standardCardWidth = min(UIScreen.main.bounds.width - 64, 400)
+                viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
+            }
             let displayRect = MediaEditorCropHandler.calculateDisplayedImageRect(
                 imageSize: imageSize,
                 in: viewSize
@@ -140,10 +145,17 @@ final class MediaEditorImageHandler {
                     let sticker = item.sticker
                     let image = item.image
 
-                    let imageStickerSize = baseStickerSize * sticker.scale * displayToImageScale
-                    let imageAspectRatio = image.size.width / image.size.height
-                    let width = imageStickerSize * imageAspectRatio
-                    let height = imageStickerSize
+                    let stickerFrameSize = baseStickerSize * sticker.scale * displayToImageScale
+                    let stickerAspect = image.size.width / image.size.height
+                    let width: CGFloat
+                    let height: CGFloat
+                    if stickerAspect >= 1 {
+                        width = stickerFrameSize
+                        height = stickerFrameSize / stickerAspect
+                    } else {
+                        width = stickerFrameSize * stickerAspect
+                        height = stickerFrameSize
+                    }
                     let centerX = sticker.x * imageSize.width
                     let centerY = sticker.y * imageSize.height
 
