@@ -124,12 +124,11 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 }
 
 extension CardInfoCoordinator: MediaEditorCoordinatorDelegate {
-    func didFinishEditing(with editState: ImageSourceData) {
+    func didFinishEditing(displayImage: UIImage, metadata: ImageSourceData) {
         getPresentingViewController()?.dismiss(animated: true) { [weak self] in
             guard let self = self else { return }
 
-            let displayImage = editState.previewImage ?? editState.image
-            self.onMediaEditingComplete?(displayImage, editState)
+            self.onMediaEditingComplete?(displayImage, metadata)
             self.onMediaEditingComplete = nil
             self.mediaEditorCoordinator = nil
             self.currentImageSource = nil

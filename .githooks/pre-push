@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Running tests before push..."
-make test -q 2>&1 | tail -5
+make -s test 2>&1 | tail -5
 
 if [ ${PIPESTATUS[0]} -ne 0 ]; then
     echo ""
