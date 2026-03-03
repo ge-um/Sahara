@@ -199,6 +199,14 @@
 "settings.ios_version" = "iOS Version";
 "settings.device_model" = "Device Model";
 
+/* Realm Error */
+"realm_error.title" = "Unable to Load Data";
+"realm_error.message" = "An error occurred while loading your data.\nPlease do not delete the app to protect your data.\nContact the developer and we'll help resolve the issue promptly.";
+"realm_error.contact" = "Contact Us";
+"realm_error.email_copied" = "Email address copied. Please contact gageum0@gmail.com.";
+"realm_error.mail_subject" = "[Sahara] Data Error Inquiry";
+"realm_error.mail_body" = "Unable to load data on app launch.";
+
 /* Release Notes */
 "release_notes.title" = "Release Notes";
 
