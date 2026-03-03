@@ -51,9 +51,11 @@ final class ThemeViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         let navigateToPhotos = input.itemSelected
-            .withLatestFrom(themeGroupsRelay) { indexPath, groups in
-                groups[indexPath.row]
+            .withLatestFrom(themeGroupsRelay) { indexPath, groups -> ThemeGroup? in
+                guard groups.indices.contains(indexPath.row) else { return nil }
+                return groups[indexPath.row]
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         return Output(

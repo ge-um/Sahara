@@ -44,9 +44,11 @@ final class CardListViewModel: BaseViewModelProtocol {
         observeCards()
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in
-                cards[indexPath.item].id
+            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards -> ObjectId? in
+                guard cards.indices.contains(indexPath.item) else { return nil }
+                return cards[indexPath.item].id
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         let dismiss = input.closeButtonTapped
