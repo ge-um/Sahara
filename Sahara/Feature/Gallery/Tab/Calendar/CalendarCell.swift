@@ -128,8 +128,9 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         containerView.addSubview(imageView)
 
-        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
-        imageView.image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: card.id, size: .small) { [weak imageView] image in
+            imageView?.image = image
+        }
         imageView.layer.cornerRadius = 8
         imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
 
@@ -156,9 +157,12 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
-        imageView1.image = ImageDownsampler.downsample(data: photo1.editedImageData, maxDimension: maxDim)
-        imageView2.image = ImageDownsampler.downsample(data: photo2.editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: photo1.id, size: .small) { [weak imageView1] image in
+            imageView1?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: photo2.id, size: .small) { [weak imageView2] image in
+            imageView2?.image = image
+        }
 
         imageView1.layer.cornerRadius = 8
         imageView1.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -211,10 +215,15 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(bottomLeftImageView)
         containerView.addSubview(bottomRightImageView)
 
-        let maxDim = max(containerView.bounds.width, containerView.bounds.height) * UIScreen.main.scale
-        topImageView.image = ImageDownsampler.downsample(data: cards[0].editedImageData, maxDimension: maxDim)
-        bottomLeftImageView.image = ImageDownsampler.downsample(data: cards[1].editedImageData, maxDimension: maxDim)
-        bottomRightImageView.image = ImageDownsampler.downsample(data: cards[2].editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, size: .small) { [weak topImageView] image in
+            topImageView?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, size: .small) { [weak bottomLeftImageView] image in
+            bottomLeftImageView?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, size: .small) { [weak bottomRightImageView] image in
+            bottomRightImageView?.image = image
+        }
 
         topImageView.layer.cornerRadius = 8
         topImageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]

@@ -75,14 +75,20 @@ final class CardListViewModel: BaseViewModelProtocol {
                 cards = realm.objects(Card.self)
             }
 
+            MemoryTracker.measure("CardList.before")
             let sortedCards = Array(cards).sorted { $0.date > $1.date }
             observer.onNext(sortedCards.map { CardListItemDTO(from: $0) })
+            MemoryTracker.measure("CardList.after")
+            MemoryTracker.compare("CardList.before", "CardList.after")
 
             let token = cards.observe { changes in
                 switch changes {
                 case .initial(let results):
+                    MemoryTracker.measure("CardList.observe.before")
                     let sorted = Array(results).sorted { $0.date > $1.date }
                     observer.onNext(sorted.map { CardListItemDTO(from: $0) })
+                    MemoryTracker.measure("CardList.observe.after")
+                    MemoryTracker.compare("CardList.observe.before", "CardList.observe.after")
                 case .update(let results, _, _, _):
                     let sorted = Array(results).sorted { $0.date > $1.date }
                     observer.onNext(sorted.map { CardListItemDTO(from: $0) })

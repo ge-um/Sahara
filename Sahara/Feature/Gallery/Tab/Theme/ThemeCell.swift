@@ -82,8 +82,10 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first {
-            thumbnailImageView.image = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale)
             blurEffectView.isHidden = !firstPhoto.isLocked
+            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, size: .small) { [weak self] image in
+                self?.thumbnailImageView.image = image
+            }
         }
     }
 

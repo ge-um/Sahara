@@ -108,8 +108,9 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         thumbnailContainerView.addSubview(imageView)
 
-        let maxDim = max(thumbnailContainerView.bounds.width, thumbnailContainerView.bounds.height) * UIScreen.main.scale
-        imageView.image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: card.id, size: .small) { [weak imageView] image in
+            imageView?.image = image
+        }
 
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -124,9 +125,12 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         thumbnailContainerView.addSubview(imageView1)
         thumbnailContainerView.addSubview(imageView2)
 
-        let maxDim = max(thumbnailContainerView.bounds.width, thumbnailContainerView.bounds.height) * UIScreen.main.scale
-        imageView1.image = ImageDownsampler.downsample(data: card1.editedImageData, maxDimension: maxDim)
-        imageView2.image = ImageDownsampler.downsample(data: card2.editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: card1.id, size: .small) { [weak imageView1] image in
+            imageView1?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: card2.id, size: .small) { [weak imageView2] image in
+            imageView2?.image = image
+        }
 
         imageView1.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -151,10 +155,15 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         thumbnailContainerView.addSubview(bottomLeftImageView)
         thumbnailContainerView.addSubview(bottomRightImageView)
 
-        let maxDim = max(thumbnailContainerView.bounds.width, thumbnailContainerView.bounds.height) * UIScreen.main.scale
-        topImageView.image = ImageDownsampler.downsample(data: cards[0].editedImageData, maxDimension: maxDim)
-        bottomLeftImageView.image = ImageDownsampler.downsample(data: cards[1].editedImageData, maxDimension: maxDim)
-        bottomRightImageView.image = ImageDownsampler.downsample(data: cards[2].editedImageData, maxDimension: maxDim)
+        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, size: .small) { [weak topImageView] image in
+            topImageView?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, size: .small) { [weak bottomLeftImageView] image in
+            bottomLeftImageView?.image = image
+        }
+        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, size: .small) { [weak bottomRightImageView] image in
+            bottomRightImageView?.image = image
+        }
 
         topImageView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()

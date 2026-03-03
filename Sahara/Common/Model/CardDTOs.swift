@@ -10,18 +10,15 @@ import RealmSwift
 
 struct CardListItemDTO {
     let id: ObjectId
-    let editedImageData: Data
     let isLocked: Bool
 
     init(from card: Card) {
         self.id = card.id
-        self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
 
     init(from dto: CardCalendarItemDTO) {
         self.id = dto.id
-        self.editedImageData = dto.editedImageData
         self.isLocked = dto.isLocked
     }
 }
@@ -51,13 +48,11 @@ struct CardDetailDTO {
 struct CardCalendarItemDTO {
     let id: ObjectId
     let date: Date
-    let editedImageData: Data
     let isLocked: Bool
 
     init(from card: Card) {
         self.id = card.id
         self.date = card.date
-        self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
 }
