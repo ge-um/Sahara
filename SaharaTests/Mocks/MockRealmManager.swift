@@ -111,6 +111,10 @@ final class MockRealmManager: RealmManagerProtocol {
         return Observable.just(mockCards)
     }
 
+    func fetchImageData(for cardId: ObjectId) -> Data? {
+        return mockCards.first(where: { $0.id == cardId })?.editedImageData
+    }
+
     func reset() {
         addCalled = false
         fetchCalled = false

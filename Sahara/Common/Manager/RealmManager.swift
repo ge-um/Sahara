@@ -26,6 +26,7 @@ protocol RealmManagerProtocol {
     func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool>
     func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]>
     func observeAllCards() -> Observable<[Card]>
+    func fetchImageData(for cardId: ObjectId) -> Data?
 }
 
 extension RealmManagerProtocol {
@@ -264,7 +265,10 @@ final class RealmManager: RealmManagerProtocol {
             let token = results.observe { change in
                 switch change {
                 case .initial(let collection):
+                    MemoryTracker.measure("RealmObserve.initial.before")
                     let dtos = Array(collection).map { CardCalendarItemDTO(from: $0) }
+                    MemoryTracker.measure("RealmObserve.initial.after")
+                    MemoryTracker.compare("RealmObserve.initial.before", "RealmObserve.initial.after")
                     observer.onNext(dtos)
                 case .update(let collection, _, _, _):
                     let dtos = Array(collection).map { CardCalendarItemDTO(from: $0) }
@@ -305,6 +309,10 @@ final class RealmManager: RealmManagerProtocol {
                 token.invalidate()
             }
         }
+    }
+    func fetchImageData(for cardId: ObjectId) -> Data? {
+        guard let realm = try? getRealm() else { return nil }
+        return realm.object(ofType: Card.self, forPrimaryKey: cardId)?.editedImageData
     }
 }
 
@@ -397,5 +405,9 @@ final class MockRealmManager: RealmManagerProtocol {
 
     func observeAllCards() -> Observable<[Card]> {
         return Observable.just(objects.compactMap { $0 as? Card })
+    }
+
+    func fetchImageData(for cardId: ObjectId) -> Data? {
+        return (objects.first { ($0 as? Card)?.id == cardId } as? Card)?.editedImageData
     }
 }
