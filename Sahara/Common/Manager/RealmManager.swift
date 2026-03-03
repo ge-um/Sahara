@@ -26,6 +26,8 @@ protocol RealmManagerProtocol {
     func observeIsEmpty<T: Object>(_ type: T.Type) -> Observable<Bool>
     func observeCards(for period: DatePeriod) -> Observable<[CardCalendarItemDTO]>
     func observeAllCards() -> Observable<[Card]>
+    func observeCards(withIds ids: [ObjectId]) -> Observable<[CardListItemDTO]>
+    func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]>
     func fetchImageData(for cardId: ObjectId) -> Data?
 }
 
@@ -67,6 +69,15 @@ final class RealmManager: RealmManagerProtocol {
             // Card: imageFormat(String?), drawingData(Data?) 추가 → Realm이 자동으로 nil 할당
             // Card: stickers(List<Sticker>) 제거 → Realm이 자동으로 컬럼 삭제
             // Sticker: localFilePath(String?), isAnimated(Bool) 추가 → Realm이 자동 처리
+        }
+    }
+
+    static func validateRealm(configuration: Realm.Configuration = .defaultConfiguration) -> Error? {
+        do {
+            _ = try Realm(configuration: configuration)
+            return nil
+        } catch {
+            return error
         }
     }
 
@@ -310,6 +321,67 @@ final class RealmManager: RealmManagerProtocol {
             }
         }
     }
+    func observeCards(withIds ids: [ObjectId]) -> Observable<[CardListItemDTO]> {
+        return Observable.create { observer in
+            guard let realm = try? self.getRealm() else {
+                observer.onNext([])
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let results = realm.objects(Card.self).filter("id IN %@", ids)
+
+            let token = results.observe { change in
+                switch change {
+                case .initial(let collection), .update(let collection, _, _, _):
+                    let sorted = Array(collection).sorted { $0.date > $1.date }
+                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
+    }
+
+    func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]> {
+        return Observable.create { observer in
+            guard let realm = try? self.getRealm() else {
+                observer.onNext([])
+                observer.onCompleted()
+                return Disposables.create()
+            }
+
+            let results: Results<Card>
+            let defaultFolderName = NSLocalizedString("folder.default", comment: "")
+
+            if let folderName = folderName, folderName == defaultFolderName {
+                results = realm.objects(Card.self).filter("customFolder == nil OR customFolder == ''")
+            } else if let folderName = folderName {
+                results = realm.objects(Card.self).filter("customFolder == %@", folderName)
+            } else {
+                results = realm.objects(Card.self)
+            }
+
+            let token = results.observe { change in
+                switch change {
+                case .initial(let collection), .update(let collection, _, _, _):
+                    let sorted = Array(collection).sorted { $0.date > $1.date }
+                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
+                case .error(let error):
+                    observer.onError(error)
+                }
+            }
+
+            return Disposables.create {
+                token.invalidate()
+            }
+        }
+    }
+
     func fetchImageData(for cardId: ObjectId) -> Data? {
         guard let realm = try? getRealm() else { return nil }
         return realm.object(ofType: Card.self, forPrimaryKey: cardId)?.editedImageData
@@ -405,6 +477,16 @@ final class MockRealmManager: RealmManagerProtocol {
 
     func observeAllCards() -> Observable<[Card]> {
         return Observable.just(objects.compactMap { $0 as? Card })
+    }
+
+    func observeCards(withIds ids: [ObjectId]) -> Observable<[CardListItemDTO]> {
+        let cards = objects.compactMap { $0 as? Card }.filter { ids.contains($0.id) }
+        return Observable.just(cards.map { CardListItemDTO(from: $0) })
+    }
+
+    func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]> {
+        let cards = objects.compactMap { $0 as? Card }
+        return Observable.just(cards.map { CardListItemDTO(from: $0) })
     }
 
     func fetchImageData(for cardId: ObjectId) -> Data? {
