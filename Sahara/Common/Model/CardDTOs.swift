@@ -7,6 +7,7 @@
 
 import Foundation
 import RealmSwift
+import UIKit
 
 struct CardListItemDTO {
     let id: ObjectId
@@ -42,6 +43,18 @@ struct CardDetailDTO {
         self.longitude = card.longitude
         self.isLocked = card.isLocked
         self.customFolder = card.customFolder
+    }
+}
+
+struct SearchCardDTO {
+    let id: ObjectId
+    let isLocked: Bool
+    let imageSize: CGSize
+
+    init(from card: Card) {
+        self.id = card.id
+        self.isLocked = card.isLocked
+        self.imageSize = ImageDownsampler.imageSize(from: card.editedImageData) ?? CGSize(width: 1, height: 1)
     }
 }
 

@@ -18,7 +18,7 @@ enum SearchEmptyState {
 final class SearchViewModel: BaseViewModelProtocol {
     private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
-    private let cardsRelay = BehaviorRelay<[Card]>(value: [])
+    private let cardsRelay = BehaviorRelay<[SearchCardDTO]>(value: [])
     private let emptyStateRelay = BehaviorRelay<SearchEmptyState>(value: .initial)
 
     init(realmManager: RealmManagerProtocol = RealmManager.shared) {
@@ -31,13 +31,14 @@ final class SearchViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let cards: Driver<[Card]>
+        let cards: Driver<[SearchCardDTO]>
         let emptyState: Driver<SearchEmptyState>
         let navigateToDetail: Driver<ObjectId>
     }
 
     func transform(input: Input) -> Output {
         input.searchText
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .distinctUntilChanged()
             .withUnretained(self)
             .bind { owner, searchText in
@@ -46,9 +47,11 @@ final class SearchViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in
-                cards[indexPath.item].id
+            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards -> ObjectId? in
+                guard cards.indices.contains(indexPath.item) else { return nil }
+                return cards[indexPath.item].id
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         return Output(
@@ -71,6 +74,7 @@ final class SearchViewModel: BaseViewModelProtocol {
                     return memoMatches || ocrTextMatches
                 }
                 .sorted { $0.date > $1.date }
+                .map { SearchCardDTO(from: $0) }
 
             cardsRelay.accept(results)
 
@@ -80,13 +84,13 @@ final class SearchViewModel: BaseViewModelProtocol {
         }
     }
 
-    func getCard(at index: Int) -> Card? {
+    func getCard(at index: Int) -> SearchCardDTO? {
         let cards = cardsRelay.value
-        guard index < cards.count else { return nil }
+        guard cards.indices.contains(index) else { return nil }
         return cards[index]
     }
 
-    func getCard(by id: ObjectId) -> Card? {
+    func getCard(by id: ObjectId) -> SearchCardDTO? {
         return cardsRelay.value.first { $0.id == id }
     }
 }
