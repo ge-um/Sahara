@@ -274,14 +274,12 @@ extension CardListViewController: PinterestLayoutDelegate {
             return 180
         }
 
-        guard let item = item, let size = ImageDownsampler.imageSize(from: item.editedImageData) else {
+        guard let item = item,
+              let aspectRatio = ThumbnailCache.shared.aspectRatio(for: item.id) else {
             return 180
         }
 
-        guard size.width > 0 else { return 180 }
-
         let columnWidth = collectionView.bounds.width / 2
-        let aspectRatio = size.height / size.width
         let calculatedHeight = columnWidth * aspectRatio
 
         return calculatedHeight.isFinite && calculatedHeight > 0 ? calculatedHeight : 180
