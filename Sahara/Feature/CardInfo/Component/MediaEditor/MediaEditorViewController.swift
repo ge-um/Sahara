@@ -261,6 +261,7 @@ final class MediaEditorViewController: UIViewController {
     private var cachedOriginalImageForFilter: UIImage?
     private var currentFilterIndex: Int = 0
     private var initialImageFormat: ImageSourceData.ImageFormat?
+    private var initialOriginalData: Data?
 
     private let filterHandler = MediaEditorFilterHandler()
     private lazy var dragHandler = MediaEditorDragHandler(
@@ -511,6 +512,7 @@ final class MediaEditorViewController: UIViewController {
                 owner.photoImageView.image = image
                 owner.cachedOriginalImageForFilter = image
                 owner.initialImageFormat = output.initialImageFormat
+                owner.initialOriginalData = output.initialOriginalData
 
                 if let initialUncroppedImage = output.initialUncroppedImage {
                     owner.cachedUncroppedOriginalImage = initialUncroppedImage
@@ -864,10 +866,10 @@ final class MediaEditorViewController: UIViewController {
     private func prepareEditResult() -> (displayImage: UIImage, metadata: ImageSourceData) {
         let stickerDTOs = convertStickersToDTO()
         let filteredBase = photoImageView.image ?? UIImage()
-        let drawingData = canvasView.drawing.dataRepresentation()
+        let hasDrawing = !canvasView.drawing.strokes.isEmpty
 
         let displayImage: UIImage
-        if !stickerDTOs.isEmpty || !canvasView.drawing.strokes.isEmpty {
+        if !stickerDTOs.isEmpty || hasDrawing {
             displayImage = generateFinalImage()
         } else {
             displayImage = filteredBase
@@ -875,13 +877,14 @@ final class MediaEditorViewController: UIViewController {
 
         let metadata = ImageSourceData(
             image: filteredBase,
+            originalData: initialOriginalData,
             editorViewSize: photoImageView.bounds.size,
             format: initialImageFormat,
             stickers: stickerDTOs,
             filterIndex: currentFilterIndex,
             uncroppedImage: cachedUncroppedOriginalImage,
             cropRect: lastCropRect,
-            drawingData: drawingData
+            drawingData: hasDrawing ? canvasView.drawing.dataRepresentation() : nil
         )
 
         return (displayImage, metadata)

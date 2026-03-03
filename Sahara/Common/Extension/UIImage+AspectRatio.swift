@@ -19,11 +19,17 @@ extension UIImage {
 
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
+        format.opaque = !hasAlphaChannel
 
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
         return renderer.image { _ in
             draw(in: CGRect(origin: .zero, size: size))
         }
+    }
+
+    var hasAlphaChannel: Bool {
+        guard let alphaInfo = cgImage?.alphaInfo else { return false }
+        return !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
     }
 
     func heicData(compressionQuality: CGFloat = 0.8) -> Data? {

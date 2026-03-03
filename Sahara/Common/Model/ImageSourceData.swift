@@ -9,6 +9,7 @@ import UIKit
 
 struct ImageSourceData {
     let image: UIImage
+    let originalData: Data?
     let editorViewSize: CGSize?
     let format: ImageFormat?
     let stickers: [StickerDTO]
@@ -25,6 +26,7 @@ struct ImageSourceData {
 
     init(
         image: UIImage,
+        originalData: Data? = nil,
         editorViewSize: CGSize? = nil,
         format: ImageFormat? = nil,
         stickers: [StickerDTO] = [],
@@ -34,6 +36,7 @@ struct ImageSourceData {
         drawingData: Data? = nil
     ) {
         self.image = image
+        self.originalData = originalData
         self.editorViewSize = editorViewSize
         self.format = format
         self.stickers = stickers
@@ -41,5 +44,13 @@ struct ImageSourceData {
         self.uncroppedImage = uncroppedImage
         self.cropRect = cropRect
         self.drawingData = drawingData
+    }
+
+    var hasEdits: Bool {
+        if let filterIndex = filterIndex, filterIndex > 0 { return true }
+        if !stickers.isEmpty { return true }
+        if cropRect != nil { return true }
+        if drawingData != nil { return true }
+        return false
     }
 }
