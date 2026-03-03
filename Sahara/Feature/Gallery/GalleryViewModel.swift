@@ -44,6 +44,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
                 guard let self = self else { return .just((month, [])) }
                 return self.realmManager.observeCards(for: .month(month))
                     .map { (month, $0) }
+                    .startWith((month, []))
             }
             .share(replay: 1, scope: .whileConnected)
 
