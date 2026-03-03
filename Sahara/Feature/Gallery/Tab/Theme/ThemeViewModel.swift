@@ -13,7 +13,12 @@ import UIKit
 import Vision
 
 final class ThemeViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -59,51 +64,28 @@ final class ThemeViewModel: BaseViewModelProtocol {
     }
 
     private func observeAndAnalyzePhotos(themeGroupsRelay: BehaviorRelay<[ThemeGroup]>) -> Observable<Void> {
-        return Observable.create { [weak self] observer in
-            guard let self = self else {
-                observer.onCompleted()
-                return Disposables.create()
-            }
-
-            let realm = try! Realm()
-            let cards = realm.objects(Card.self)
-
-            observer.onNext(())
-
-            let token = cards.observe { [weak self] changes in
+        return realmManager.observeAllCards()
+            .map { [weak self] cards -> Void in
                 guard let self = self else { return }
+                var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
-                switch changes {
-                case .initial(let results), .update(let results, _, _, _):
-                    let memos = Array(results)
-                    var categoryDict: [ThemeCategory: [ObjectId]] = [:]
+                for card in cards {
+                    guard let image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: 500),
+                          let cgImage = image.cgImage else { continue }
 
-                    for card in memos {
-                        guard let image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: 500),
-                              let cgImage = image.cgImage else { continue }
+                    let category = self.classifyImage(cgImage)
+                    categoryDict[category, default: []].append(card.id)
+                }
 
-                        let category = self.classifyImage(cgImage)
-                        categoryDict[category, default: []].append(card.id)
+                let groups = categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }
+                    .sorted { first, second in
+                        if first.category == .others { return false }
+                        if second.category == .others { return true }
+                        return first.category.localizedName < second.category.localizedName
                     }
 
-                    let groups = categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }
-                        .sorted { first, second in
-                            if first.category == .others { return false }
-                            if second.category == .others { return true }
-                            return first.category.localizedName < second.category.localizedName
-                        }
-
-                    themeGroupsRelay.accept(groups)
-
-                case .error(let error):
-                    observer.onError(error)
-                }
+                themeGroupsRelay.accept(groups)
             }
-
-            return Disposables.create {
-                token.invalidate()
-            }
-        }
     }
 
 

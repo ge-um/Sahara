@@ -14,6 +14,7 @@ import UIKit
 final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
     private let photoCardViewModel: PhotoCardViewModel
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
     private let sourceType: EditSourceType
 
@@ -73,9 +74,10 @@ final class CardDetailViewController: UIViewController {
     }()
 
 
-    init(cardId: ObjectId, sourceType: EditSourceType = .dateView) {
-        self.viewModel = CardDetailViewModel(cardId: cardId)
-        self.photoCardViewModel = PhotoCardViewModel(cardId: cardId)
+    init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+        self.viewModel = CardDetailViewModel(cardId: cardId, realmManager: realmManager)
+        self.photoCardViewModel = PhotoCardViewModel(cardId: cardId, realmManager: realmManager)
         self.sourceType = sourceType
         super.init(nibName: nil, bundle: nil)
     }
@@ -186,9 +188,8 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func openEditView() {
-        let realm = try! Realm()
-        guard let card = realm.object(ofType: Card.self, forPrimaryKey: viewModel.cardId) else { return }
-        let editViewModel = CardInfoViewModel(cardToEdit: card.id, sourceType: sourceType)
+        guard realmManager.fetchObject(Card.self, forPrimaryKey: viewModel.cardId) != nil else { return }
+        let editViewModel = CardInfoViewModel(cardToEdit: viewModel.cardId, sourceType: sourceType)
         let coordinator = CardInfoCoordinator(parentViewController: self)
         let editVC = CardInfoViewController(viewModel: editViewModel, coordinator: coordinator)
         coordinator.cardInfoViewController = editVC

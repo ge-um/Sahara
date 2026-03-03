@@ -16,9 +16,14 @@ enum SearchEmptyState {
 }
 
 final class SearchViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[Card]>(value: [])
     private let emptyStateRelay = BehaviorRelay<SearchEmptyState>(value: .initial)
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
 
     struct Input {
         let searchText: Observable<String>
@@ -54,24 +59,22 @@ final class SearchViewModel: BaseViewModelProtocol {
     }
 
     private func searchCards(with query: String) {
-        let realm = try! Realm()
-
         if query.isEmpty {
             cardsRelay.accept([])
             emptyStateRelay.accept(.initial)
         } else {
-            let results = realm.objects(Card.self)
+            let allCards = realmManager.fetch(Card.self)
+            let results = allCards
                 .filter { card in
                     let memoMatches = card.memo?.localizedCaseInsensitiveContains(query) ?? false
                     let ocrTextMatches = card.ocrText?.localizedCaseInsensitiveContains(query) ?? false
                     return memoMatches || ocrTextMatches
                 }
-                .sorted(by: { $0.date > $1.date })
+                .sorted { $0.date > $1.date }
 
-            let cards = Array(results)
-            cardsRelay.accept(cards)
+            cardsRelay.accept(results)
 
-            if cards.isEmpty {
+            if results.isEmpty {
                 emptyStateRelay.accept(.noResults)
             }
         }
