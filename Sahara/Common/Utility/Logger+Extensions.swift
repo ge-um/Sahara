@@ -19,6 +19,7 @@ extension Logger {
         case mediaEditor
         case cardInfo
         case realmManager
+        case performance
     }
 
     static func logger(subsystem: Subsystem, category: Category) -> Logger {
@@ -29,6 +30,7 @@ extension Logger {
     static let mediaEditor = logger(subsystem: .imageProcessing, category: .mediaEditor)
     static let cardInfo = logger(subsystem: .ui, category: .cardInfo)
     static let database = logger(subsystem: .database, category: .realmManager)
+    static let performance = logger(subsystem: .ui, category: .performance)
 }
 
 extension Int? {
