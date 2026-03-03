@@ -199,6 +199,14 @@
 "settings.ios_version" = "iOSバージョン";
 "settings.device_model" = "デバイスモデル";
 
+/* Realm Error */
+"realm_error.title" = "データを読み込めません";
+"realm_error.message" = "データの読み込み中にエラーが発生しました。\n大切なデータを守るため、アプリを削除しないでください。\n開発者にお問い合わせいただければ、迅速に対応いたします。";
+"realm_error.contact" = "お問い合わせ";
+"realm_error.email_copied" = "メールアドレスがコピーされました。gageum0@gmail.comまでお問い合わせください。";
+"realm_error.mail_subject" = "[サハラ] データエラーのお問い合わせ";
+"realm_error.mail_body" = "アプリ起動時にデータを読み込めません。";
+
 /* Release Notes */
 "release_notes.title" = "バージョン履歴";
 

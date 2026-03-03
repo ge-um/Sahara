@@ -15,6 +15,7 @@ import UIKit
 
 final class CardDetailViewModel: BaseViewModelProtocol {
     let cardId: ObjectId
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -30,8 +31,9 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let deleteCompleted: Driver<Void>
     }
 
-    init(cardId: ObjectId) {
+    init(cardId: ObjectId, realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.cardId = cardId
+        self.realmManager = realmManager
     }
 
     func transform(input: Input) -> Output {
@@ -41,8 +43,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .observe(on: MainScheduler.instance)
             .bind { owner, _ in
-                let realm = try! Realm()
-                guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return }
+                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
                 cardImageRelay.accept(card.editedImageData)
             }
             .disposed(by: disposeBag)
@@ -83,17 +84,9 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
-            .map { owner, _ -> Void in
-                let realm = try! Realm()
-                guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return () }
-
-                do {
-                    try realm.write {
-                        realm.delete(card)
-                    }
-                } catch {}
-
-                return ()
+            .flatMap { owner, _ in
+                owner.realmManager.delete(Card.self, forPrimaryKey: owner.cardId)
+                    .catch { _ in .empty() }
             }
             .asDriver(onErrorJustReturn: ())
 

@@ -111,6 +111,15 @@ final class MockRealmManager: RealmManagerProtocol {
         return Observable.just(mockCards)
     }
 
+    func observeCards(withIds ids: [ObjectId]) -> Observable<[CardListItemDTO]> {
+        let cards = mockCards.filter { ids.contains($0.id) }
+        return Observable.just(cards.map { CardListItemDTO(from: $0) })
+    }
+
+    func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]> {
+        return Observable.just(mockCards.map { CardListItemDTO(from: $0) })
+    }
+
     func fetchImageData(for cardId: ObjectId) -> Data? {
         return mockCards.first(where: { $0.id == cardId })?.editedImageData
     }

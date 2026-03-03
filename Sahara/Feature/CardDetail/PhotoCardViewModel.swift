@@ -15,6 +15,7 @@ import UIKit
 
 final class PhotoCardViewModel: BaseViewModelProtocol {
     private let cardId: ObjectId
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -32,8 +33,9 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
         let shouldFlipToFront: Driver<Void>
     }
 
-    init(cardId: ObjectId) {
+    init(cardId: ObjectId, realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.cardId = cardId
+        self.realmManager = realmManager
     }
 
     func transform(input: Input) -> Output {
@@ -43,8 +45,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .observe(on: MainScheduler.instance)
             .bind { owner, _ in
-                let realm = try! Realm()
-                guard let card = realm.object(ofType: Card.self, forPrimaryKey: owner.cardId) else { return }
+                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
 
                 let data = (
                     image: card.editedImageData,
