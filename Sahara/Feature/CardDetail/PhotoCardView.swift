@@ -62,13 +62,13 @@ final class PhotoCardView: UIView {
 
     private let deleteButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = ColorSystem.white.withAlphaComponent(0.9)
+        button.backgroundColor = UIColor.token(.backgroundPrimary).withAlphaComponent(0.9)
         button.layer.cornerRadius = 18
         button.clipsToBounds = true
 
         var config = UIButton.Configuration.plain()
         config.image = UIImage(named: "xmark")
-        config.baseForegroundColor = ColorSystem.black
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
 
@@ -82,7 +82,7 @@ final class PhotoCardView: UIView {
 
     private let overlayView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20.withAlphaComponent(0.6)
+        view.backgroundColor = UIColor.token(.backgroundCard).withAlphaComponent(0.6)
         view.layer.cornerRadius = 20
         view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         return view

@@ -56,7 +56,7 @@ final class LanguageSelectionViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
 
         view.addSubview(customNavigationBar)
         view.addSubview(tableView)
@@ -93,7 +93,7 @@ final class LanguageSelectionViewController: UIViewController {
                 let currentLanguage = LanguageManager.shared.currentLanguage
                 if language == currentLanguage {
                     cell.accessoryType = .checkmark
-                    cell.tintColor = ColorSystem.systemBlue
+                    cell.tintColor = .token(.info)
                 } else {
                     cell.accessoryType = .none
                 }

@@ -17,7 +17,7 @@ final class LocationSelectionCard: BaseCard {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.textColor = .token(.textSecondary)
         label.numberOfLines = 2
         return label
     }()

@@ -202,7 +202,7 @@ final class MediaEditorViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = ColorSystem.purpleGray20
+        collectionView.backgroundColor = .token(.backgroundCard)
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(FilterCell.self, forCellWithReuseIdentifier: FilterCell.identifier)
         collectionView.dataSource = self
@@ -301,8 +301,8 @@ final class MediaEditorViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         toolBarContainer.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = toolBarContainer.bounds
-        doneButton.applyGradient(.hotPink)
-        cropApplyButton.applyGradient(.hotPink)
+        doneButton.applyGradient(.ctaPink)
+        cropApplyButton.applyGradient(.ctaPink)
         updateStarPositions()
     }
 

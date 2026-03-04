@@ -51,8 +51,10 @@ final class CustomNavigationBar: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        if containerView.layer.sublayers?.first as? CAGradientLayer == nil {
-            containerView.applyGradient(.paleBlueToGray)
+        if let gradientLayer = containerView.layer.sublayers?.first as? CAGradientLayer {
+            gradientLayer.frame = containerView.bounds
+        } else {
+            containerView.applyGradient(.tabBar)
         }
     }
 

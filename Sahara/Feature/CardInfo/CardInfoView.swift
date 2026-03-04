@@ -45,8 +45,8 @@ final class CardInfoView: UIView {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.image = UIImage(named: "editBox")?.withRenderingMode(.alwaysTemplate)
-        config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.9)
-        config.baseForegroundColor = ColorSystem.black
+        config.baseBackgroundColor = .token(.backgroundPrimary).withAlphaComponent(0.9)
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
         button.layer.cornerRadius = 8
@@ -173,7 +173,7 @@ final class CardInfoView: UIView {
     }
 
     func applyGradients() {
-        photoSelectButton.applyGradient(.paleBlueToGray)
-        locationCard.searchButton.applyGradient(.lemonToLime)
+        photoSelectButton.applyGradient(.tabBar)
+        locationCard.searchButton.applyGradient(.fresh)
     }
 }

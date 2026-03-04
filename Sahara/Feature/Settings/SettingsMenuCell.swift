@@ -14,14 +14,14 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 10)
-        label.textColor = ColorSystem.charcoal
+        label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
         return label
     }()
@@ -29,21 +29,21 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.charcoal
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = ColorSystem.darkGray
+        imageView.tintColor = .token(.iconTint)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
     private lazy var toggleSwitch: UISwitch = {
         let toggle = UISwitch()
-        toggle.onTintColor = ColorSystem.skyBlue
+        toggle.onTintColor = .token(.accent)
         toggle.addTarget(self, action: #selector(toggleChanged), for: .valueChanged)
         return toggle
     }()

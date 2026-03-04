@@ -27,7 +27,7 @@ final class ListItemView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = ColorSystem.lavender20
+        backgroundColor = .token(.backgroundOverlay)
         layer.cornerRadius = 12
         clipsToBounds = true
 
@@ -44,14 +44,14 @@ final class ListItemView: UIView {
             let label = UILabel()
             label.text = NSLocalizedString("stats.no_data", comment: "")
             label.font = FontSystem.galmuriMono(size: 12)
-            label.textColor = UIColor(hex: "#666666")
+            label.textColor = .token(.textTertiary)
             stackView.addArrangedSubview(label)
         } else {
             for item in items {
                 let label = UILabel()
                 label.text = "• \(item)"
                 label.font = FontSystem.galmuriMono(size: 12)
-                label.textColor = .black
+                label.textColor = .token(.textPrimary)
                 stackView.addArrangedSubview(label)
             }
         }

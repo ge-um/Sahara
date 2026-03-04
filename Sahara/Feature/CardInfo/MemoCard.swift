@@ -14,7 +14,7 @@ final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
         textView.font = FontSystem.galmuriMono(size: 14)
-        textView.textColor = ColorSystem.charcoal
+        textView.textColor = .token(.textPrimary)
         textView.backgroundColor = .clear
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
@@ -25,7 +25,7 @@ final class MemoCard: BaseCard {
         let label = UILabel()
         label.text = "0"
         label.font = FontSystem.galmuriMono(size: 13)
-        label.textColor = ColorSystem.darkGray
+        label.textColor = .token(.textSecondary)
         label.textAlignment = .right
         return label
     }()
@@ -66,9 +66,9 @@ final class MemoCard: BaseCard {
         textView.rx.didBeginEditing
             .withUnretained(self)
             .bind { owner, _ in
-                if owner.textView.textColor == ColorSystem.darkGray {
+                if owner.textView.textColor == .token(.textSecondary) {
                     owner.textView.text = ""
-                    owner.textView.textColor = ColorSystem.charcoal
+                    owner.textView.textColor = .token(.textPrimary)
                 }
             }
             .disposed(by: disposeBag)
@@ -86,9 +86,9 @@ final class MemoCard: BaseCard {
             .orEmpty
             .withUnretained(self)
             .bind { owner, text in
-                let count = owner.textView.textColor == ColorSystem.darkGray ? 0 : text.count
+                let count = owner.textView.textColor == .token(.textSecondary) ? 0 : text.count
                 owner.characterCountLabel.text = "\(count)"
-                owner.characterCountLabel.textColor = ColorSystem.darkGray
+                owner.characterCountLabel.textColor = .token(.textSecondary)
             }
             .disposed(by: disposeBag)
     }
@@ -97,17 +97,17 @@ final class MemoCard: BaseCard {
         textView.attributedText = NSAttributedString(
             string: placeholderText,
             attributes: [
-                .foregroundColor: ColorSystem.darkGray,
+                .foregroundColor: UIColor.token(.textSecondary),
                 .font: FontSystem.galmuriMono(size: 14)
             ]
         )
         characterCountLabel.text = "0"
-        characterCountLabel.textColor = ColorSystem.darkGray
+        characterCountLabel.textColor = .token(.textSecondary)
     }
 
     func setMemo(_ memo: String) {
         textView.text = memo
-        textView.textColor = ColorSystem.charcoal
+        textView.textColor = .token(.textPrimary)
         characterCountLabel.text = "\(memo.count)"
     }
 }

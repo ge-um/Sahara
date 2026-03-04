@@ -8,7 +8,7 @@
 import UIKit
 
 final class GradientButton: UIButton {
-    private var currentGradient: ColorSystem.Gradient?
+    private var currentGradient: DesignToken.Gradient?
 
     init(title: String) {
         super.init(frame: .zero)
@@ -43,11 +43,11 @@ final class GradientButton: UIButton {
         layer.masksToBounds = true
     }
 
-    func setGradient(_ gradient: ColorSystem.Gradient, isSelected: Bool = true) {
+    func setGradient(_ gradient: DesignToken.Gradient, isSelected: Bool = true) {
         currentGradient = gradient
 
         var config = configuration
-        let color: UIColor = isSelected ? .white : UIColor(hex: "#494949")
+        let color: UIColor = isSelected ? .token(.textOnAccent) : .token(.navigationText)
         let attributedTitle = AttributedString(
             titleText,
             attributes: AttributeContainer([

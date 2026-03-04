@@ -11,7 +11,7 @@ import UIKit
 class BaseCard: UIView {
     let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20
+        view.backgroundColor = .token(.backgroundCard)
         view.layer.cornerRadius = 12
         return view
     }()
@@ -19,7 +19,7 @@ class BaseCard: UIView {
     let titleLabel: UILabel = {
         let label = UILabel()
         label.font = FontSystem.galmuriMono(size: 15)
-        label.textColor = ColorSystem.black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 

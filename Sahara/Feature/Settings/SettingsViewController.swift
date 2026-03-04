@@ -64,7 +64,7 @@ final class SettingsViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
 
         view.addSubview(customNavigationBar)
         view.addSubview(collectionView)
