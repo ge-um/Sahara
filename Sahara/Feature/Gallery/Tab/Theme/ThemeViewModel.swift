@@ -51,9 +51,11 @@ final class ThemeViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         let navigateToPhotos = input.itemSelected
-            .withLatestFrom(themeGroupsRelay) { indexPath, groups in
-                groups[indexPath.row]
+            .withLatestFrom(themeGroupsRelay) { indexPath, groups -> ThemeGroup? in
+                guard groups.indices.contains(indexPath.row) else { return nil }
+                return groups[indexPath.row]
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         return Output(
@@ -64,26 +66,34 @@ final class ThemeViewModel: BaseViewModelProtocol {
     }
 
     private func observeAndAnalyzePhotos(themeGroupsRelay: BehaviorRelay<[ThemeGroup]>) -> Observable<Void> {
+        let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
+
         return realmManager.observeAllCards()
-            .map { [weak self] cards -> Void in
-                guard let self = self else { return }
+            .map { cards in
+                cards.map { (id: $0.id, imageData: $0.editedImageData) }
+            }
+            .observe(on: backgroundScheduler)
+            .map { [weak self] items -> [ThemeGroup] in
+                guard let self = self else { return [] }
                 var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
-                for card in cards {
-                    guard let image = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: 500),
+                for item in items {
+                    guard let image = ImageDownsampler.downsample(data: item.imageData, maxDimension: 500),
                           let cgImage = image.cgImage else { continue }
 
                     let category = self.classifyImage(cgImage)
-                    categoryDict[category, default: []].append(card.id)
+                    categoryDict[category, default: []].append(item.id)
                 }
 
-                let groups = categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }
+                return categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }
                     .sorted { first, second in
                         if first.category == .others { return false }
                         if second.category == .others { return true }
                         return first.category.localizedName < second.category.localizedName
                     }
-
+            }
+            .observe(on: MainScheduler.instance)
+            .map { groups -> Void in
                 themeGroupsRelay.accept(groups)
             }
     }

@@ -16,10 +16,10 @@ final class CardThumbnailCell: BaseCardThumbnailCell {
         setBlur(isHidden: !item.isLocked)
     }
 
-    func configure(with card: Card) {
-        ThumbnailCache.shared.loadThumbnail(for: card.id, size: .medium) { [weak self] image in
+    func configure(with item: SearchCardDTO) {
+        ThumbnailCache.shared.loadThumbnail(for: item.id, size: .medium) { [weak self] image in
             self?.imageView.image = image
         }
-        setBlur(isHidden: !card.isLocked)
+        setBlur(isHidden: !item.isLocked)
     }
 }
