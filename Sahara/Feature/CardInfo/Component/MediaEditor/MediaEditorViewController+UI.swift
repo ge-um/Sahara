@@ -81,7 +81,7 @@ extension MediaEditorViewController {
     }
 
     func configureUI() {
-        view.applyGradient(.mintToOrange)
+        view.applyGradient(.warm)
 
         view.addSubview(cropDimOverlay)
         view.addSubview(customNavigationBar)
@@ -102,7 +102,7 @@ extension MediaEditorViewController {
         toolBarContainer.addSubview(toolBarScrollView)
         toolBarScrollView.addSubview(modeButtonStackView)
 
-        toolBarContainer.applyGradient(.paleBlueToGray)
+        toolBarContainer.applyGradient(.tabBar)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)

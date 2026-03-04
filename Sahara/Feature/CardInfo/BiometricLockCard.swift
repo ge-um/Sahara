@@ -15,7 +15,7 @@ final class BiometricLockCard: BaseCard {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.secret_description", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.textColor = .token(.textSecondary)
         return label
     }()
 

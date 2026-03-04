@@ -11,7 +11,7 @@ import UIKit
 final class TabButton: UIView {
     private let backgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(hex: "#D2D1E4")
+        view.backgroundColor = .token(.tabBackground)
         view.layer.cornerRadius = 8
         view.clipsToBounds = true
         view.alpha = 0

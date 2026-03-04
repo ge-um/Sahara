@@ -242,7 +242,7 @@ final class MediaSelectionViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.whiteToGray)
+        view.applyGradient(.subtle)
 
         let titleLabel = UILabel()
         titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
@@ -349,7 +349,7 @@ final class ActionCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.tintColor = ColorSystem.skyBlue
+        iv.tintColor = .token(.accent)
         return iv
     }()
 

@@ -46,16 +46,16 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = "📊 " + NSLocalizedString("stats.my_pattern_header", comment: "")
         label.font = FontSystem.galmuriMono(size: 16)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
     private lazy var weekdayInsightLabel: PaddedLabel = {
         let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
-        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.backgroundColor = .token(.backgroundGlass)
         label.layer.cornerRadius = 12
         label.clipsToBounds = true
         label.textAlignment = .left
@@ -65,9 +65,9 @@ final class StatsViewController: UIViewController {
     private lazy var timeInsightLabel: PaddedLabel = {
         let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
-        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.backgroundColor = .token(.backgroundGlass)
         label.layer.cornerRadius = 12
         label.clipsToBounds = true
         label.textAlignment = .left
@@ -77,9 +77,9 @@ final class StatsViewController: UIViewController {
     private lazy var thisMonthInsightLabel: PaddedLabel = {
         let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
-        label.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        label.backgroundColor = .token(.backgroundGlass)
         label.layer.cornerRadius = 12
         label.clipsToBounds = true
         label.textAlignment = .left
@@ -90,7 +90,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.time_pattern", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
@@ -98,7 +98,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
@@ -106,7 +106,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.monthly_chart", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
@@ -118,7 +118,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.mood_distribution", comment: "")
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
@@ -138,11 +138,11 @@ final class StatsViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
 
-        timeChartView.setBarGradient(.yellowGreen)
-        weekdayChartView.setBarGradient(.yellowGreen)
-        monthlyChartView.setBarGradient(.yellowGreen)
+        timeChartView.setBarGradient(.highlight)
+        weekdayChartView.setBarGradient(.highlight)
+        monthlyChartView.setBarGradient(.highlight)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)

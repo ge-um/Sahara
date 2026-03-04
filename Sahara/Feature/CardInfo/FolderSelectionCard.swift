@@ -15,7 +15,7 @@ final class FolderSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder")
-        imageView.tintColor = ColorSystem.darkGray
+        imageView.tintColor = .token(.iconTint)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -24,7 +24,7 @@ final class FolderSelectionCard: BaseCard {
         let textField = UITextField()
         textField.placeholder = NSLocalizedString("folder.default", comment: "")
         textField.font = FontSystem.galmuriMono(size: 14)
-        textField.textColor = ColorSystem.darkGray
+        textField.textColor = .token(.textSecondary)
         textField.returnKeyType = .done
         return textField
     }()
@@ -134,8 +134,8 @@ final class FolderSelectionCard: BaseCard {
     private func createTagButton(title: String) -> UIButton {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.3)
-        config.baseForegroundColor = ColorSystem.darkGray
+        config.baseBackgroundColor = .token(.backgroundPrimary).withAlphaComponent(0.3)
+        config.baseForegroundColor = .token(.textSecondary)
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 

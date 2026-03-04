@@ -14,7 +14,7 @@ final class DateSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "calendar")
-        imageView.tintColor = ColorSystem.darkGray
+        imageView.tintColor = .token(.iconTint)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -26,7 +26,7 @@ final class DateSelectionCard: BaseCard {
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
         label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.textColor = .token(.textSecondary)
         return label
     }()
 

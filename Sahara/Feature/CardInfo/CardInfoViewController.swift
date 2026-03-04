@@ -76,7 +76,7 @@ final class CardInfoViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.hotPink)
+        saveButton.applyGradient(.ctaPink)
         contentView.applyGradients()
     }
 
@@ -112,7 +112,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.mintToOrange)
+        view.applyGradient(.warm)
 
         view.addSubview(customNavigationBar)
         view.addSubview(contentView)
@@ -231,7 +231,7 @@ extension CardInfoViewController {
             .bind(with: self) { owner, result in
                 let (coordinate, address) = result
                 owner.contentView.locationCard.locationLabel.text = address
-                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
+                owner.contentView.locationCard.locationLabel.textColor = .token(.textPrimary)
                 owner.contentView.locationCard.removeButton.isHidden = false
                 owner.contentView.locationCard.updateMapView(with: coordinate)
             }
@@ -342,7 +342,7 @@ extension CardInfoViewController {
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
                 .map { owner, text in
-                    if owner.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
+                    if owner.contentView.memoCard.textView.textColor == .token(.textSecondary) {
                         return nil
                     }
                     return text

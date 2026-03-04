@@ -66,13 +66,13 @@ final class LocationSearchViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         bind()
-        currentLocationButton.applyGradient(.royalBlue)
+        currentLocationButton.applyGradient(.ctaBlue)
         viewDidLoadRelay.accept(())
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        currentLocationButton.applyGradient(.royalBlue)
+        currentLocationButton.applyGradient(.ctaBlue)
     }
 
     private func bind() {
@@ -132,9 +132,9 @@ final class LocationSearchViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.whiteToGray)
+        view.applyGradient(.subtle)
 
-        navigationController?.view.applyGradient(.whiteToGray)
+        navigationController?.view.applyGradient(.subtle)
         navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.navigationBar.isTranslucent = true

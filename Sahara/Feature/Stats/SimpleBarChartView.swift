@@ -11,11 +11,11 @@ final class SimpleBarChartView: UIView {
     private var labels: [String] = []
     private var values: [CGFloat] = []
     private var gradientLayers: [CAGradientLayer] = []
-    private var barGradient: ColorSystem.Gradient = .mintToOrange
+    private var barGradient: DesignToken.Gradient = .warm
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = ColorSystem.lavender20
+        backgroundColor = .token(.backgroundOverlay)
         layer.cornerRadius = 12
         clipsToBounds = true
     }
@@ -24,7 +24,7 @@ final class SimpleBarChartView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func setBarGradient(_ gradient: ColorSystem.Gradient) {
+    func setBarGradient(_ gradient: DesignToken.Gradient) {
         self.barGradient = gradient
     }
 

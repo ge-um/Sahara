@@ -28,7 +28,7 @@ final class PieChartView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = ColorSystem.lavender20
+        backgroundColor = .token(.backgroundOverlay)
         layer.cornerRadius = 12
         clipsToBounds = true
     }
@@ -109,7 +109,7 @@ final class PieChartView: UIView {
             textLayer.string = labelText
             textLayer.font = FontSystem.galmuriMono(size: 12)
             textLayer.fontSize = 12
-            textLayer.foregroundColor = ColorSystem.black.cgColor
+            textLayer.foregroundColor = UIColor.token(.textPrimary).cgColor
             textLayer.alignmentMode = .center
             textLayer.contentsScale = UIScreen.main.scale
 

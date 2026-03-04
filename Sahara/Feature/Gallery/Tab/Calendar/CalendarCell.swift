@@ -22,7 +22,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let label = UILabel()
         label.text = "+"
         label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = ColorSystem.darkestGray
+        label.textColor = .token(.border)
         label.textAlignment = .center
         label.isHidden = true
         return label
@@ -40,13 +40,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
     required init?(coder: NSCoder) { fatalError() }
 
     private func configureUI() {
-        contentView.backgroundColor = ColorSystem.clear
+        contentView.backgroundColor = .clear
 
         addSubview(containerView)
         addSubview(dayLabel)
         addSubview(addButton)
 
-        containerView.backgroundColor = ColorSystem.clear
+        containerView.backgroundColor = .clear
 
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -83,13 +83,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             isToday = isTodayDate
 
             if !item.isCurrentMonth {
-                dayLabel.textColor = ColorSystem.lightGray
+                dayLabel.textColor = .token(.textTertiary)
             } else if weekday == 1 {
-                dayLabel.textColor = ColorSystem.systemRed
+                dayLabel.textColor = .token(.destructive)
             } else if weekday == 7 {
-                dayLabel.textColor = ColorSystem.systemBlue
+                dayLabel.textColor = .token(.info)
             } else {
-                dayLabel.textColor = ColorSystem.label
+                dayLabel.textColor = .token(.textPrimary)
             }
 
             let sortedCards = item.cards.sorted { !$0.isLocked && $1.isLocked }
@@ -97,11 +97,11 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             let shouldShowBorder = isTodayDate && photoCount == 0
 
-            contentView.layer.borderColor = shouldShowBorder ? ColorSystem.darkestGray.cgColor : nil
+            contentView.layer.borderColor = shouldShowBorder ? UIColor.token(.border).cgColor : nil
             contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
 
             if photoCount == 0 {
-                containerView.backgroundColor = ColorSystem.clear
+                containerView.backgroundColor = .clear
                 addButton.isHidden = !isTodayDate
             } else {
                 addButton.isHidden = true
@@ -115,8 +115,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             }
         } else {
             dayLabel.text = ""
-            dayLabel.textColor = ColorSystem.label
-            containerView.backgroundColor = ColorSystem.clear
+            dayLabel.textColor = .token(.textPrimary)
+            containerView.backgroundColor = .clear
             addButton.isHidden = true
             contentView.layer.borderColor = nil
             contentView.layer.borderWidth = 0

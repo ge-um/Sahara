@@ -15,7 +15,7 @@ final class DatePickerViewController: UIViewController {
         let label = UILabel()
         label.text = "날짜 선택"
         label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = ColorSystem.charcoal
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
     }()
@@ -74,7 +74,7 @@ final class DatePickerViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        confirmButton.applyGradient(.hotPink)
+        confirmButton.applyGradient(.ctaPink)
     }
 
     private func configureUI() {
