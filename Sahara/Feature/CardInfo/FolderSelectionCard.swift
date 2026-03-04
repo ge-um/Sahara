@@ -108,8 +108,7 @@ final class FolderSelectionCard: BaseCard {
     }
 
     private func loadExistingFolders() {
-        let realm = try! Realm()
-        let cards = realm.objects(Card.self)
+        let cards = RealmManager.shared.fetch(Card.self)
 
         var folderNames = Set<String>()
         folderNames.insert(NSLocalizedString("folder.default", comment: ""))

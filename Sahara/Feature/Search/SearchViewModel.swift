@@ -16,9 +16,14 @@ enum SearchEmptyState {
 }
 
 final class SearchViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
-    private let cardsRelay = BehaviorRelay<[Card]>(value: [])
+    private let cardsRelay = BehaviorRelay<[SearchCardDTO]>(value: [])
     private let emptyStateRelay = BehaviorRelay<SearchEmptyState>(value: .initial)
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
 
     struct Input {
         let searchText: Observable<String>
@@ -26,13 +31,14 @@ final class SearchViewModel: BaseViewModelProtocol {
     }
 
     struct Output {
-        let cards: Driver<[Card]>
+        let cards: Driver<[SearchCardDTO]>
         let emptyState: Driver<SearchEmptyState>
         let navigateToDetail: Driver<ObjectId>
     }
 
     func transform(input: Input) -> Output {
         input.searchText
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .distinctUntilChanged()
             .withUnretained(self)
             .bind { owner, searchText in
@@ -41,9 +47,11 @@ final class SearchViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in
-                cards[indexPath.item].id
+            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards -> ObjectId? in
+                guard cards.indices.contains(indexPath.item) else { return nil }
+                return cards[indexPath.item].id
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         return Output(
@@ -54,36 +62,35 @@ final class SearchViewModel: BaseViewModelProtocol {
     }
 
     private func searchCards(with query: String) {
-        let realm = try! Realm()
-
         if query.isEmpty {
             cardsRelay.accept([])
             emptyStateRelay.accept(.initial)
         } else {
-            let results = realm.objects(Card.self)
+            let allCards = realmManager.fetch(Card.self)
+            let results = allCards
                 .filter { card in
                     let memoMatches = card.memo?.localizedCaseInsensitiveContains(query) ?? false
                     let ocrTextMatches = card.ocrText?.localizedCaseInsensitiveContains(query) ?? false
                     return memoMatches || ocrTextMatches
                 }
-                .sorted(by: { $0.date > $1.date })
+                .sorted { $0.date > $1.date }
+                .map { SearchCardDTO(from: $0) }
 
-            let cards = Array(results)
-            cardsRelay.accept(cards)
+            cardsRelay.accept(results)
 
-            if cards.isEmpty {
+            if results.isEmpty {
                 emptyStateRelay.accept(.noResults)
             }
         }
     }
 
-    func getCard(at index: Int) -> Card? {
+    func getCard(at index: Int) -> SearchCardDTO? {
         let cards = cardsRelay.value
-        guard index < cards.count else { return nil }
+        guard cards.indices.contains(index) else { return nil }
         return cards[index]
     }
 
-    func getCard(by id: ObjectId) -> Card? {
+    func getCard(by id: ObjectId) -> SearchCardDTO? {
         return cardsRelay.value.first { $0.id == id }
     }
 }

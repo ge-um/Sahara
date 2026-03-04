@@ -38,7 +38,12 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let cards = realmManager.observeCards(for: .day(date))
+            .do(onNext: { _ in MemoryTracker.measure("CalendarDetail.before") })
             .map { $0.map { CardListItemDTO(from: $0) } }
+            .do(onNext: { _ in
+                MemoryTracker.measure("CalendarDetail.after")
+                MemoryTracker.compare("CalendarDetail.before", "CalendarDetail.after")
+            })
             .share(replay: 1, scope: .whileConnected)
 
         cards

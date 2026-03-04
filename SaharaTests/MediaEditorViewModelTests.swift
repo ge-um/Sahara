@@ -20,7 +20,7 @@ final class MediaEditorViewModelTests: XCTestCase {
         super.setUp()
         mockNetworkManager = MockNetworkManager()
         testImage = UIImage(systemName: "photo")!
-        let imageSource = ImageSourceData(image: testImage, originalData: nil, format: nil, stickers: [])
+        let imageSource = ImageSourceData(image: testImage, format: nil, stickers: [])
         sut = MediaEditorViewModel(imageSource: imageSource, networkManager: mockNetworkManager)
         disposeBag = DisposeBag()
     }

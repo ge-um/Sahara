@@ -13,6 +13,7 @@ import RxSwift
 final class CardListViewModel: BaseViewModelProtocol {
     private let cardIds: [ObjectId]?
     private let folderName: String?
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
@@ -27,23 +28,27 @@ final class CardListViewModel: BaseViewModelProtocol {
         let dismiss: Driver<Void>
     }
 
-    init(cardIds: [ObjectId]) {
+    init(cardIds: [ObjectId], realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.cardIds = cardIds
         self.folderName = nil
+        self.realmManager = realmManager
     }
 
-    init(folderName: String) {
+    init(folderName: String, realmManager: RealmManagerProtocol = RealmManager.shared) {
         self.cardIds = nil
         self.folderName = folderName
+        self.realmManager = realmManager
     }
 
     func transform(input: Input) -> Output {
         observeCards()
 
         let navigateToDetail = input.itemSelected
-            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards in
-                cards[indexPath.item].id
+            .withLatestFrom(cardsRelay.asObservable()) { indexPath, cards -> ObjectId? in
+                guard cards.indices.contains(indexPath.item) else { return nil }
+                return cards[indexPath.item].id
             }
+            .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
         let dismiss = input.closeButtonTapped
@@ -57,46 +62,19 @@ final class CardListViewModel: BaseViewModelProtocol {
     }
 
     private func observeCards() {
-        let realm = try! Realm()
+        let observable: Observable<[CardListItemDTO]>
 
-        Observable<[CardListItemDTO]>.create { observer in
-            let cards: Results<Card>
-
-            if let folderName = self.folderName {
-                let defaultFolderName = NSLocalizedString("folder.default", comment: "")
-                if folderName == defaultFolderName {
-                    cards = realm.objects(Card.self).filter("customFolder == nil OR customFolder == ''")
-                } else {
-                    cards = realm.objects(Card.self).filter("customFolder == %@", folderName)
-                }
-            } else if let cardIds = self.cardIds {
-                cards = realm.objects(Card.self).filter("id IN %@", cardIds)
-            } else {
-                cards = realm.objects(Card.self)
-            }
-
-            let sortedCards = Array(cards).sorted { $0.date > $1.date }
-            observer.onNext(sortedCards.map { CardListItemDTO(from: $0) })
-
-            let token = cards.observe { changes in
-                switch changes {
-                case .initial(let results):
-                    let sorted = Array(results).sorted { $0.date > $1.date }
-                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
-                case .update(let results, _, _, _):
-                    let sorted = Array(results).sorted { $0.date > $1.date }
-                    observer.onNext(sorted.map { CardListItemDTO(from: $0) })
-                case .error(let error):
-                    observer.onError(error)
-                }
-            }
-
-            return Disposables.create {
-                token.invalidate()
-            }
+        if let folderName = folderName {
+            observable = realmManager.observeCards(inFolder: folderName)
+        } else if let cardIds = cardIds {
+            observable = realmManager.observeCards(withIds: cardIds)
+        } else {
+            observable = realmManager.observeCards(inFolder: nil)
         }
-        .bind(to: cardsRelay)
-        .disposed(by: disposeBag)
+
+        observable
+            .bind(to: cardsRelay)
+            .disposed(by: disposeBag)
     }
 
     func getCard(at index: Int) -> CardListItemDTO? {

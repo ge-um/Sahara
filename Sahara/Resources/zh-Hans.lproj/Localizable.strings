@@ -193,6 +193,14 @@
 "settings.notification_denied_title" = "需要通知设置";
 "settings.notification_denied_message" = "请在设置中启用通知";
 
+/* Realm Error */
+"realm_error.title" = "无法加载数据";
+"realm_error.message" = "加载数据时发生了错误。\n为保护您的数据，请勿删除应用。\n请联系开发者，我们将尽快为您解决问题。";
+"realm_error.contact" = "联系我们";
+"realm_error.email_copied" = "邮箱地址已复制。请联系 gageum0@gmail.com。";
+"realm_error.mail_subject" = "[撒哈拉] 数据错误咨询";
+"realm_error.mail_body" = "应用启动时无法加载数据。";
+
 /* Release Notes */
 "release_notes.title" = "版本记录";
 
@@ -211,6 +219,10 @@
 "language.chinese" = "简体中文";
 
 /* Release Note Details */
+"release_note.1.6.0.1" = "修复了照片加载缓慢的问题";
+"release_note.1.6.0.2" = "修复了照片质量下降的问题";
+"release_note.1.6.0.3" = "修复了横向照片显示翻转的问题";
+"release_note.1.6.0.4" = "提升了应用稳定性";
 "release_note.1.5.1.1" = "应用更加稳定";
 "release_note.1.5.0.1" = "可以重新编辑已保存的照片";
 "release_note.1.5.0.2" = "应用更加稳定";

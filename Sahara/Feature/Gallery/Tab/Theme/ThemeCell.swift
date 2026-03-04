@@ -77,13 +77,14 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         titleLabel.text = group.category.localizedName
         countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cardIds.count)
 
-        let realm = try! Realm()
-        let cards = group.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+        let cards = group.cardIds.compactMap { RealmManager.shared.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first {
-            thumbnailImageView.image = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale)
             blurEffectView.isHidden = !firstPhoto.isLocked
+            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, size: .small) { [weak self] image in
+                self?.thumbnailImageView.image = image
+            }
         }
     }
 

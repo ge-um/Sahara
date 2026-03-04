@@ -93,12 +93,13 @@ final class GalleryViewController: UIViewController {
         return vc
     }()
 
-    private let realm = try! Realm()
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
     private let viewTypeRelay = BehaviorRelay<GalleryViewType>(value: .date)
-    
-    init(viewModel: GalleryViewModel) {
+
+    init(viewModel: GalleryViewModel, realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -186,8 +187,7 @@ final class GalleryViewController: UIViewController {
     private func loadMapAnnotations() {
         mapView.removeAnnotations(mapView.annotations)
 
-        let memos = realm.objects(Card.self)
-            .filter("latitude != nil AND longitude != nil")
+        let memos = realmManager.fetch(Card.self, filter: "latitude != nil AND longitude != nil", sortKey: nil, ascending: true)
             .filter { $0.latitude != 0 && $0.longitude != 0 }
 
         let annotations = Array(memos.compactMap { memo -> MediaAnnotation? in
@@ -396,13 +396,13 @@ extension GalleryViewController: MKMapViewDelegate {
             var isLocked = false
 
             let allPhotos = photoAnnotations.flatMap { annotation in
-                annotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+                annotation.cardIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
             }
 
             let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
 
             if let firstPhoto = sortedPhotos.first {
-                representativeImage = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale)
+                representativeImage = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small)
                 isLocked = firstPhoto.isLocked
             }
 
@@ -422,11 +422,11 @@ extension GalleryViewController: MKMapViewDelegate {
 
         annotationView?.clusteringIdentifier = MediaAnnotation.clusterID
 
-        let photos = photoAnnotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+        let photos = photoAnnotation.cardIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first,
-           let image = ImageDownsampler.downsample(data: firstPhoto.editedImageData, maxDimension: 80 * UIScreen.main.scale) {
+           let image = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small) {
             annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
         }
 
@@ -439,14 +439,14 @@ extension GalleryViewController: MKMapViewDelegate {
         if let cluster = view.annotation as? MKClusterAnnotation {
             let photoAnnotations = cluster.memberAnnotations.compactMap { $0 as? MediaAnnotation }
             let allPhotoIds = photoAnnotations.flatMap { $0.cardIds }
-            let allPhotos = allPhotoIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+            let allPhotos = allPhotoIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
 
             if !allPhotos.isEmpty {
                 showGallery(for: allPhotos)
             }
         }
         else if let photoAnnotation = view.annotation as? MediaAnnotation {
-            let cards = photoAnnotation.cardIds.compactMap { realm.object(ofType: Card.self, forPrimaryKey: $0) }
+            let cards = photoAnnotation.cardIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
             showGallery(for: cards)
         }
     }

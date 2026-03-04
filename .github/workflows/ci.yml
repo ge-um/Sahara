@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches:
+      - main
+      - 'hotfix/**'
+      - 'release/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -44,10 +47,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-
 
-      - name: Build
+      - name: Build and Test
         run: |
-          xcodebuild build \
+          xcodebuild test \
             -scheme Sahara \
+            -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
             -skipPackagePluginValidation \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            -resultBundlePath TestResults
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults

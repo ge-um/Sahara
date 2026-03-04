@@ -24,6 +24,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let realmManager: RealmManagerProtocol
     private let ocrManager: OCRManagerProtocol
+    private let imagePrepareService: ImagePrepareServiceProtocol
     private var editedImage: UIImage?
     private var imageSourceData: ImageSourceData?
     private var cardToEditId: ObjectId?
@@ -67,17 +68,19 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let shouldPopToListOnDelete: Driver<Bool>
     }
 
-    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
+    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.ocrManager = ocrManager
+        self.imagePrepareService = imagePrepareService
         self.editedImage = editedImage
         self.cardToEditId = nil
         self.sourceType = nil
     }
 
-    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
+    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.ocrManager = ocrManager
+        self.imagePrepareService = imagePrepareService
         self.editedImage = nil
         self.cardToEditId = nil
         self.originalDate = initialDate
@@ -104,9 +107,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return ImageSourceData(image: editedImage, format: format)
     }
 
-    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared) {
+    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.ocrManager = ocrManager
+        self.imagePrepareService = imagePrepareService
         self.cardToEditId = cardId
         self.sourceType = sourceType
 
@@ -293,25 +297,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private struct PreparedImageData {
-        let editedImageData: Data
-        let imageFormat: String
-    }
-
-    private struct ImageProcessingContext {
-        let stickers: [StickerDTO]
-        let sourceFormat: ImageSourceData.ImageFormat?
-    }
-
     private struct AnalyticsContext {
         let isFirstCard: Bool
         let hadLocationBefore: Bool
-    }
-
-    private func extractImageContext() -> ImageProcessingContext {
-        let stickers = imageSourceData?.stickers ?? []
-        let sourceFormat = imageSourceData?.format
-        return ImageProcessingContext(stickers: stickers, sourceFormat: sourceFormat)
     }
 
     private func collectAnalyticsContext() -> AnalyticsContext {
@@ -328,38 +316,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return oldComponents != newComponents
     }
 
-    private func prepareImageData(
-        editedImage: UIImage,
-        stickers: [StickerDTO],
-        sourceFormat: ImageSourceData.ImageFormat?
-    ) -> Observable<PreparedImageData> {
-        if !stickers.isEmpty {
-            return Observable.create { observer in
-                MediaEditorImageHandler.compositeStickersOnImage(editedImage, stickers: stickers) { compositedImage, _ in
-                    let conversionResult = ImageFormatHelper.convertToFormat(
-                        editedImage: compositedImage,
-                        targetFormat: sourceFormat
-                    )
-                    let preparedData = PreparedImageData(
-                        editedImageData: conversionResult.editedImageData,
-                        imageFormat: conversionResult.imageFormat
-                    )
-                    observer.onNext(preparedData)
-                    observer.onCompleted()
-                }
-                return Disposables.create()
-            }
-        } else {
-            let conversionResult = ImageFormatHelper.convertToFormat(
-                editedImage: editedImage,
-                targetFormat: sourceFormat
-            )
-            let preparedData = PreparedImageData(
-                editedImageData: conversionResult.editedImageData,
-                imageFormat: conversionResult.imageFormat
-            )
-            return Observable.just(preparedData)
-        }
+    private func prepareImage(from editedImage: UIImage) -> Observable<PreparedImageData> {
+        let metadata = imageSourceData ?? ImageSourceData(image: editedImage)
+        return imagePrepareService.prepareForSave(baseImage: metadata.image, metadata: metadata)
     }
 
     private func createCard(
@@ -398,20 +357,16 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
 
-        let context = extractImageContext()
         let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
         let analyticsCtx = collectAnalyticsContext()
+        let stickers = imageSourceData?.stickers ?? []
 
-        Logger.database.info("Save: stickers=\(context.stickers.count)")
+        Logger.database.info("Save: stickers=\(stickers.count)")
 
-        let imageDataObservable = prepareImageData(
-            editedImage: editedImage,
-            stickers: context.stickers,
-            sourceFormat: context.sourceFormat
-        )
-        let ocrObservable = ocrManager.recognizeText(from: editedImage)
+        let imageData$ = prepareImage(from: editedImage)
+        let ocr$ = ocrManager.recognizeText(from: editedImage)
 
-        return Observable.zip(imageDataObservable, ocrObservable)
+        return Observable.zip(imageData$, ocr$)
             .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
@@ -426,7 +381,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     isLocked: isLocked
                 )
 
-                Logger.database.notice("Saved card: stickers=\(context.stickers.count)")
+                Logger.database.notice("Saved card: stickers=\(stickers.count)")
 
                 return self.realmManager.add(card)
                     .do(onNext: {
@@ -524,11 +479,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
-        let context = extractImageContext()
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
         let analyticsCtx = collectAnalyticsContext()
+        let stickers = imageSourceData?.stickers ?? []
 
-        Logger.database.info("Update: stickers=\(context.stickers.count)")
+        Logger.database.info("Update: stickers=\(stickers.count)")
 
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         let editTypes = trackEditTypes(
@@ -539,14 +494,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        let imageDataObservable = prepareImageData(
-            editedImage: editedImage,
-            stickers: context.stickers,
-            sourceFormat: context.sourceFormat
-        )
-        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+        let imageData$ = prepareImage(from: editedImage)
+        let ocr$ = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
-        return Observable.zip(imageDataObservable, ocrObservable)
+        return Observable.zip(imageData$, ocr$)
             .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }
@@ -601,11 +552,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
-        let context = extractImageContext()
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
         let analyticsCtx = collectAnalyticsContext()
+        let stickers = imageSourceData?.stickers ?? []
 
-        Logger.database.info("Replace: stickers=\(context.stickers.count)")
+        Logger.database.info("Replace: stickers=\(stickers.count)")
 
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         let editTypes = trackEditTypes(
@@ -616,14 +567,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
-        let imageDataObservable = prepareImageData(
-            editedImage: editedImage,
-            stickers: context.stickers,
-            sourceFormat: context.sourceFormat
-        )
-        let ocrObservable = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+        let imageData$ = prepareImage(from: editedImage)
+        let ocr$ = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
 
-        return Observable.zip(imageDataObservable, ocrObservable)
+        return Observable.zip(imageData$, ocr$)
             .observe(on: MainScheduler.instance)
             .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
                 guard let self = self else { return .empty() }

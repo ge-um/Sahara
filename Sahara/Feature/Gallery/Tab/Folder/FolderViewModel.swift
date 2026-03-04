@@ -16,8 +16,12 @@ struct FolderGroup {
 }
 
 final class FolderViewModel: BaseViewModelProtocol {
+    private let realmManager: RealmManagerProtocol
     private let disposeBag = DisposeBag()
-    private var notificationToken: NotificationToken?
+
+    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+        self.realmManager = realmManager
+    }
 
     struct Input {
         let viewWillAppear: Observable<Void>
@@ -28,10 +32,6 @@ final class FolderViewModel: BaseViewModelProtocol {
         let folderGroups: Driver<[FolderGroup]>
         let isLoading: Driver<Bool>
         let navigateToPhotos: Driver<FolderGroup>
-    }
-
-    deinit {
-        notificationToken?.invalidate()
     }
 
     func transform(input: Input) -> Output {
@@ -65,21 +65,16 @@ final class FolderViewModel: BaseViewModelProtocol {
     }
 
     private func observeAndGroupByFolder(folderGroupsRelay: BehaviorRelay<[FolderGroup]>) {
-        let realm = try! Realm()
-        let cards = realm.objects(Card.self)
-
-        notificationToken = cards.observe { changes in
-            switch changes {
-            case .initial(let results), .update(let results, _, _, _):
-                let memos = Array(results)
+        realmManager.observeAllCards()
+            .map { cards -> [FolderGroup] in
                 var folderDict: [String: [Card]] = [:]
 
-                for card in memos {
+                for card in cards {
                     let folderName = card.customFolder ?? NSLocalizedString("folder.default", comment: "")
                     folderDict[folderName, default: []].append(card)
                 }
 
-                let groups = folderDict.map { FolderGroup(folderName: $0.key, cards: $0.value) }
+                return folderDict.map { FolderGroup(folderName: $0.key, cards: $0.value) }
                     .sorted { first, second in
                         if first.folderName == NSLocalizedString("folder.default", comment: "") {
                             return true
@@ -89,12 +84,8 @@ final class FolderViewModel: BaseViewModelProtocol {
                         }
                         return first.folderName < second.folderName
                     }
-
-                folderGroupsRelay.accept(groups)
-
-            case .error:
-                break
             }
-        }
+            .bind(to: folderGroupsRelay)
+            .disposed(by: disposeBag)
     }
 }

@@ -7,21 +7,19 @@
 
 import Foundation
 import RealmSwift
+import UIKit
 
 struct CardListItemDTO {
     let id: ObjectId
-    let editedImageData: Data
     let isLocked: Bool
 
     init(from card: Card) {
         self.id = card.id
-        self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
 
     init(from dto: CardCalendarItemDTO) {
         self.id = dto.id
-        self.editedImageData = dto.editedImageData
         self.isLocked = dto.isLocked
     }
 }
@@ -48,16 +46,26 @@ struct CardDetailDTO {
     }
 }
 
+struct SearchCardDTO {
+    let id: ObjectId
+    let isLocked: Bool
+    let imageSize: CGSize
+
+    init(from card: Card) {
+        self.id = card.id
+        self.isLocked = card.isLocked
+        self.imageSize = ImageDownsampler.imageSize(from: card.editedImageData) ?? CGSize(width: 1, height: 1)
+    }
+}
+
 struct CardCalendarItemDTO {
     let id: ObjectId
     let date: Date
-    let editedImageData: Data
     let isLocked: Bool
 
     init(from card: Card) {
         self.id = card.id
         self.date = card.date
-        self.editedImageData = card.editedImageData
         self.isLocked = card.isLocked
     }
 }

@@ -177,6 +177,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
                 let imageSource = ImageSourceData(
                     image: image,
+                    originalData: data,
                     format: format
                 )
 

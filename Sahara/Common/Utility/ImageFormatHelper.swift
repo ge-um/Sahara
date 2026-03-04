@@ -52,8 +52,12 @@ final class ImageFormatHelper {
         editedImage: UIImage,
         targetFormat: ImageSourceData.ImageFormat?
     ) -> ConversionResult {
-        let format = targetFormat ?? detectOptimalFormat(for: editedImage)
-        let imageToConvert = removeUnnecessaryAlpha(from: editedImage, for: format)
+        if editedImage.imageOrientation != .up {
+            Logger.imageMetadata.info("Normalized orientation: \(editedImage.imageOrientation.rawValue) to .up")
+        }
+        let normalizedImage = editedImage.normalizedOrientation()
+        let format = targetFormat ?? detectOptimalFormat(for: normalizedImage)
+        let imageToConvert = removeUnnecessaryAlpha(from: normalizedImage, for: format)
         let editedData: Data
 
         switch format {
@@ -77,40 +81,39 @@ final class ImageFormatHelper {
             return image
         }
 
-        guard let cgImage = image.cgImage else {
+        guard image.hasAlphaChannel else {
             return image
         }
 
-        let alphaInfo = cgImage.alphaInfo
-        let hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
+        let rendererFormat = UIGraphicsImageRendererFormat()
+        rendererFormat.scale = image.scale
+        rendererFormat.opaque = true
 
-        guard hasAlpha else {
-            return image
+        let renderer = UIGraphicsImageRenderer(size: image.size, format: rendererFormat)
+        let result = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
         }
 
-        let width = cgImage.width
-        let height = cgImage.height
+        guard result.hasAlphaChannel, let cgImage = result.cgImage else {
+            return result
+        }
+
         let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-
         guard let context = CGContext(
             data: nil,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: width * 4,
+            width: cgImage.width,
+            height: cgImage.height,
+            bitsPerComponent: cgImage.bitsPerComponent,
+            bytesPerRow: 0,
             space: colorSpace,
             bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
         ) else {
-            return image
+            return result
         }
 
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-
-        guard let newCGImage = context.makeImage() else {
-            return image
-        }
-
-        return UIImage(cgImage: newCGImage, scale: image.scale, orientation: image.imageOrientation)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
+        guard let strippedCGImage = context.makeImage() else { return result }
+        return UIImage(cgImage: strippedCGImage, scale: result.scale, orientation: result.imageOrientation)
     }
 
     private static func detectOptimalFormat(for image: UIImage) -> ImageSourceData.ImageFormat {
