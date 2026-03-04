@@ -8,7 +8,7 @@
 import UIKit
 
 extension UIView {
-    func applyGradient(_ gradient: ColorSystem.Gradient, removeExisting: Bool = false) {
+    func applyGradient(_ gradient: DesignToken.Gradient, removeExisting: Bool = false) {
         if removeExisting {
             layer.sublayers?.filter { $0 is CAGradientLayer }.forEach { $0.removeFromSuperlayer() }
         }
@@ -44,7 +44,7 @@ extension UIView {
         layer.insertSublayer(dotLayer, at: 1)
     }
 
-    func applyGradientWithDots(_ gradient: ColorSystem.Gradient, dotSize: CGFloat, spacing: CGFloat, dotColor: UIColor) {
+    func applyGradientWithDots(_ gradient: DesignToken.Gradient, dotSize: CGFloat, spacing: CGFloat, dotColor: UIColor) {
         applyGradient(gradient)
         applyDotPattern(dotSize: dotSize, spacing: spacing, color: dotColor)
     }
