@@ -27,7 +27,9 @@ final class ImagePrepareService: ImagePrepareServiceProtocol {
         baseImage: UIImage,
         metadata: ImageSourceData
     ) -> Observable<PreparedImageData> {
-        if let originalData = metadata.originalData, !metadata.hasEdits {
+        let realmDataLimit = 15 * 1_024 * 1_024  // 15 MB (Realm 16 MB 상한 마진)
+        if let originalData = metadata.originalData, !metadata.hasEdits,
+           originalData.count < realmDataLimit {
             return bypassWithOriginalData(originalData, format: metadata.format)
         }
 

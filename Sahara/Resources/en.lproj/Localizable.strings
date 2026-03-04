@@ -224,6 +224,8 @@
 "language.japanese" = "日本語";
 "language.chinese" = "简体中文";
 
+"release_note.1.6.1.1" = "Improved app stability";
+
 /* Release Note Details */
 "release_note.1.6.0.1" = "Fixed slow photo loading";
 "release_note.1.6.0.2" = "Fixed photo quality degradation";
