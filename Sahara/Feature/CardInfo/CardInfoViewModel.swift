@@ -91,7 +91,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let screenScale = UIScreen.main.scale
         let screenBounds = UIScreen.main.bounds
         let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
-        self.editedImage = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
+        self.editedImage = ImageDownsampler.downsample(data: card.resolvedImageData(), maxDimension: maxDim)
         self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked
@@ -196,7 +196,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func handleDeleteAction(shouldPopToListOnDeleteRelay: PublishRelay<Bool>) -> Observable<Void> {
         guard let cardId = cardToEditId else { return .just(()) }
 
-        return realmManager.delete(Card.self, forPrimaryKey: cardId)
+        return realmManager.deleteCard(forPrimaryKey: cardId)
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
@@ -333,7 +333,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let card = Card(
             date: date,
             createdDate: Date(),
-            editedImageData: imageData.editedImageData,
+            editedImageData: Data(),
             memo: memo,
             latitude: location?.coordinate.latitude,
             longitude: location?.coordinate.longitude,
@@ -342,6 +342,20 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         card.customFolder = customFolder
         card.ocrText = ocrText
         card.imageFormat = imageData.imageFormat
+
+        do {
+            let fileName = try ImageFileManager.shared.saveImageFile(
+                data: imageData.editedImageData,
+                cardId: card.id,
+                format: imageData.imageFormat
+            )
+            card.imagePath = fileName
+            Logger.database.notice("[ImageStorage] Saved to disk: \(fileName) (\(imageData.editedImageData.count / 1024)KB)")
+        } catch {
+            card.editedImageData = imageData.editedImageData
+            Logger.database.error("[ImageStorage] Disk save failed, fallback to Realm: \(error.localizedDescription)")
+        }
+
         return card
     }
 
@@ -452,10 +466,28 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         location: CLLocation?,
         isLocked: Bool
     ) -> Observable<Void> {
+        let oldImagePath = realmManager.fetchObject(Card.self, forPrimaryKey: cardId)?.imagePath
+
+        var newImagePath: String?
+        do {
+            newImagePath = try ImageFileManager.shared.saveImageFile(
+                data: imageData.editedImageData,
+                cardId: cardId,
+                format: imageData.imageFormat
+            )
+        } catch {
+            newImagePath = nil
+        }
+
         return realmManager.update { realm in
             guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
             card.date = date
-            card.editedImageData = imageData.editedImageData
+            if let newImagePath = newImagePath {
+                card.imagePath = newImagePath
+                card.editedImageData = Data()
+            } else {
+                card.editedImageData = imageData.editedImageData
+            }
             card.imageFormat = imageData.imageFormat
             card.memo = memoText
             card.customFolder = folderText
@@ -464,6 +496,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.longitude = location?.coordinate.longitude
             card.ocrText = ocrText
         }
+        .do(onNext: {
+            if let oldPath = oldImagePath, oldPath != newImagePath {
+                ImageFileManager.shared.deleteImageFile(at: oldPath)
+            }
+            ThumbnailCache.shared.invalidate(for: cardId)
+        })
     }
 
     private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
@@ -528,6 +566,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         location: CLLocation?,
         isLocked: Bool
     ) -> Observable<Void> {
+        let oldImagePath = realmManager.fetchObject(Card.self, forPrimaryKey: cardId)?.imagePath
+
         let newCard = createCard(
             date: date,
             imageData: imageData,
@@ -546,6 +586,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 realm.delete(cardToDelete)
             }
         }
+        .do(onNext: {
+            if let oldPath = oldImagePath {
+                ImageFileManager.shared.deleteImageFile(at: oldPath)
+            }
+            ThumbnailCache.shared.invalidate(for: cardId)
+        })
     }
 
     private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
