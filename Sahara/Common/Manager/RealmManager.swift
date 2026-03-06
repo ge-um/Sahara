@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import OSLog
 import RealmSwift
 import RxSwift
 
@@ -29,6 +30,7 @@ protocol RealmManagerProtocol {
     func observeCards(withIds ids: [ObjectId]) -> Observable<[CardListItemDTO]>
     func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]>
     func fetchImageData(for cardId: ObjectId) -> Data?
+    func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void>
 }
 
 extension RealmManagerProtocol {
@@ -42,7 +44,7 @@ final class RealmManager: RealmManagerProtocol {
 
     private let configuration: Realm.Configuration
 
-    static let currentSchemaVersion: UInt64 = 2
+    static let currentSchemaVersion: UInt64 = 3
 
     init(configuration: Realm.Configuration = .defaultConfiguration) {
         self.configuration = configuration
@@ -69,6 +71,10 @@ final class RealmManager: RealmManagerProtocol {
             // Card: imageFormat(String?), drawingData(Data?) 추가 → Realm이 자동으로 nil 할당
             // Card: stickers(List<Sticker>) 제거 → Realm이 자동으로 컬럼 삭제
             // Sticker: localFilePath(String?), isAnimated(Bool) 추가 → Realm이 자동 처리
+        }
+
+        if oldSchemaVersion < 3 {
+            // Card: imagePath(String?) 추가 → Realm이 자동으로 nil 할당
         }
     }
 
@@ -384,7 +390,50 @@ final class RealmManager: RealmManagerProtocol {
 
     func fetchImageData(for cardId: ObjectId) -> Data? {
         guard let realm = try? getRealm() else { return nil }
-        return realm.object(ofType: Card.self, forPrimaryKey: cardId)?.editedImageData
+        guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return nil }
+
+        if let imagePath = card.imagePath,
+           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
+            Logger.database.info("[ImageStorage] Loaded from disk: \(imagePath)")
+            return diskData
+        }
+
+        let realmData = card.editedImageData
+        guard !realmData.isEmpty else { return nil }
+
+        Logger.database.notice("[ImageStorage] Loaded from Realm (\(realmData.count / 1024)KB), starting lazy migration...")
+
+        // Lazy migration: 기존 Realm 데이터를 백그라운드에서 디스크로 이전
+        let format = card.imageFormat ?? "jpeg"
+        let dataCopy = Data(realmData)
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let self = self else { return }
+            do {
+                let fileName = try ImageFileManager.shared.saveImageFile(data: dataCopy, cardId: cardId, format: format)
+                _ = self.update { realm in
+                    guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+                    card.imagePath = fileName
+                    card.editedImageData = Data()
+                }
+                Logger.database.notice("[ImageStorage] Lazy migration done: \(fileName)")
+            } catch {
+                // 디스크 저장 실패 시 Realm에 유지 — 다음 접근 시 재시도
+            }
+        }
+
+        return realmData
+    }
+
+    func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {
+        let imagePath = fetchObject(Card.self, forPrimaryKey: key)?.imagePath
+
+        return delete(Card.self, forPrimaryKey: key)
+            .do(onNext: {
+                if let imagePath = imagePath {
+                    ImageFileManager.shared.deleteImageFile(at: imagePath)
+                }
+                ThumbnailCache.shared.invalidate(for: key)
+            })
     }
 }
 
@@ -490,6 +539,17 @@ final class MockRealmManager: RealmManagerProtocol {
     }
 
     func fetchImageData(for cardId: ObjectId) -> Data? {
-        return (objects.first { ($0 as? Card)?.id == cardId } as? Card)?.editedImageData
+        guard let card = objects.first(where: { ($0 as? Card)?.id == cardId }) as? Card else {
+            return nil
+        }
+        if let imagePath = card.imagePath,
+           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
+            return diskData
+        }
+        return card.editedImageData.isEmpty ? nil : card.editedImageData
+    }
+
+    func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {
+        return delete(Card.self, forPrimaryKey: key)
     }
 }

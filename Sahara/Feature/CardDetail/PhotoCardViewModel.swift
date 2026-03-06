@@ -48,7 +48,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
                 guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
 
                 let data = (
-                    image: card.editedImageData,
+                    image: card.resolvedImageData(),
                     date: card.date,
                     latitude: card.latitude,
                     longitude: card.longitude,

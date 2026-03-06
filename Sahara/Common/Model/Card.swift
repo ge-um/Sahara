@@ -44,6 +44,7 @@ final class Card: Object {
     @Persisted var modifiedDate: Date?
     
     @Persisted var editedImageData: Data
+    @Persisted var imagePath: String?
     @Persisted var imageFormat: String?
     @Persisted var drawingData: Data?
     @Persisted var memo: String?
@@ -77,6 +78,18 @@ final class Card: Object {
         self.latitude = latitude
         self.longitude = longitude
         self.isLocked = isLocked
+    }
+}
+
+// MARK: - Image Loading
+
+extension Card {
+    func resolvedImageData() -> Data {
+        if let imagePath = imagePath,
+           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
+            return diskData
+        }
+        return editedImageData
     }
 }
 

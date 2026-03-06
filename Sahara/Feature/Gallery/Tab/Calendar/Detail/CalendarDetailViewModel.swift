@@ -59,7 +59,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
                 let (index, cards) = data
                 guard index < cards.count else { return .empty() }
                 let cardId = cards[index].id
-                return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
+                return owner.realmManager.deleteCard(forPrimaryKey: cardId)
             }
             .share()
 

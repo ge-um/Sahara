@@ -44,7 +44,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .observe(on: MainScheduler.instance)
             .bind { owner, _ in
                 guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
-                cardImageRelay.accept(card.editedImageData)
+                cardImageRelay.accept(card.resolvedImageData())
             }
             .disposed(by: disposeBag)
 
@@ -85,7 +85,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let deleteCompleted = input.deleteConfirmed
             .withUnretained(self)
             .flatMap { owner, _ in
-                owner.realmManager.delete(Card.self, forPrimaryKey: owner.cardId)
+                owner.realmManager.deleteCard(forPrimaryKey: owner.cardId)
                     .catch { _ in .empty() }
             }
             .asDriver(onErrorJustReturn: ())

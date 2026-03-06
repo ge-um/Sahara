@@ -70,7 +70,7 @@ final class ThemeViewModel: BaseViewModelProtocol {
 
         return realmManager.observeAllCards()
             .map { cards in
-                cards.map { (id: $0.id, imageData: $0.editedImageData) }
+                cards.map { (id: $0.id, imageData: $0.resolvedImageData()) }
             }
             .observe(on: backgroundScheduler)
             .map { [weak self] items -> [ThemeGroup] in

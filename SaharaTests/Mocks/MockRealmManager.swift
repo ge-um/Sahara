@@ -121,7 +121,16 @@ final class MockRealmManager: RealmManagerProtocol {
     }
 
     func fetchImageData(for cardId: ObjectId) -> Data? {
-        return mockCards.first(where: { $0.id == cardId })?.editedImageData
+        guard let card = mockCards.first(where: { $0.id == cardId }) else { return nil }
+        if let imagePath = card.imagePath,
+           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
+            return diskData
+        }
+        return card.editedImageData.isEmpty ? nil : card.editedImageData
+    }
+
+    func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {
+        return delete(Card.self, forPrimaryKey: key)
     }
 
     func reset() {
