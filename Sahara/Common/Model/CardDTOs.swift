@@ -37,7 +37,7 @@ struct CardDetailDTO {
     init(from card: Card) {
         self.id = card.id
         self.date = card.date
-        self.editedImageData = card.editedImageData
+        self.editedImageData = card.resolvedImageData()
         self.memo = card.memo
         self.latitude = card.latitude
         self.longitude = card.longitude
@@ -54,7 +54,7 @@ struct SearchCardDTO {
     init(from card: Card) {
         self.id = card.id
         self.isLocked = card.isLocked
-        self.imageSize = ImageDownsampler.imageSize(from: card.editedImageData) ?? CGSize(width: 1, height: 1)
+        self.imageSize = ImageDownsampler.imageSize(from: card.resolvedImageData()) ?? CGSize(width: 1, height: 1)
     }
 }
 

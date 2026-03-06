@@ -31,7 +31,7 @@ final class RealmMigrationTests: XCTestCase {
 
     func testCurrentSchemaVersion() throws {
         let currentVersion = RealmManager.currentSchemaVersion
-        XCTAssertEqual(currentVersion, 2)
+        XCTAssertEqual(currentVersion, 3)
     }
 
     func testCreateAndReadCardV2() throws {
