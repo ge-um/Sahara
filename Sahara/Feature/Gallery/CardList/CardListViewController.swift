@@ -204,6 +204,9 @@ final class CardListViewController: UIViewController {
                 var snapshot = NSDiffableDataSourceSnapshot<Int, ObjectId>()
                 snapshot.appendSections([0])
                 snapshot.appendItems(cardIds)
+                let existing = Set(dataSource.snapshot().itemIdentifiers)
+                let toReconfigure = cardIds.filter { existing.contains($0) }
+                snapshot.reconfigureItems(toReconfigure)
                 dataSource.apply(snapshot, animatingDifferences: true) {
                     owner.pinterestLayout.invalidateLayout()
                 }
