@@ -39,6 +39,22 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Determine Scheme
+        id: scheme
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.base_ref }}"
+          else
+            BASE="${{ github.ref_name }}"
+          fi
+          if [[ "$BASE" == "develop" ]]; then
+            SCHEME="SaharaDev"
+          else
+            SCHEME="Sahara"
+          fi
+          echo "name=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Branch target: $BASE → Scheme: $SCHEME"
+
       - name: Cache SPM
         uses: actions/cache@v4
         with:
@@ -50,7 +66,7 @@ jobs:
       - name: Build and Test
         run: |
           xcodebuild test \
-            -scheme Sahara \
+            -scheme ${{ steps.scheme.outputs.name }} \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
             -skipPackagePluginValidation \

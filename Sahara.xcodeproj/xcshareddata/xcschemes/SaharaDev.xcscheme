@@ -6,6 +6,24 @@
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
       buildArchitectures = "Automatic">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Check Branch-Scheme Match"
+               scriptText = "BRANCH=$(git -C &quot;${SRCROOT}&quot; rev-parse --abbrev-ref HEAD 2&gt;/dev/null)&#10;if [[ &quot;$BRANCH&quot; == &quot;main&quot; || &quot;$BRANCH&quot; == release/* || &quot;$BRANCH&quot; == hotfix/* ]]; then&#10;    echo &quot;error: Use Sahara scheme on main/release/hotfix branches (current: $BRANCH)&quot;&#10;    exit 1&#10;fi&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "03E2B5B42E8664AB00A8C8DA"
+                     BuildableName = "Sahara.app"
+                     BlueprintName = "Sahara"
+                     ReferencedContainer = "container:Sahara.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
