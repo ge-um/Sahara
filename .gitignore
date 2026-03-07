@@ -104,4 +104,5 @@ iOSInjectionProject/
 
 
 GoogleService-Info.plist
-feature-photo-loading-optimization-plan.md
+feature-*-plan.md
+firebase-debug.log
