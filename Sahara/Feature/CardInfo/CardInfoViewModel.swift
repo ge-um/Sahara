@@ -87,11 +87,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = sourceType
     }
 
-    private func loadCardData(from card: Card) {
+    private func loadCardData(from card: Card, imageData: Data) {
         let screenScale = UIScreen.main.scale
         let screenBounds = UIScreen.main.bounds
         let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
-        self.editedImage = ImageDownsampler.downsample(data: card.resolvedImageData(), maxDimension: maxDim)
+        self.editedImage = ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
         self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked
@@ -102,9 +102,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func createImageSourceData(from card: Card, editedImage: UIImage) -> ImageSourceData {
+    private func createImageSourceData(from card: Card, editedImage: UIImage, imageData: Data) -> ImageSourceData {
         let format = card.imageFormat.flatMap { ImageSourceData.ImageFormat(rawValue: $0) }
-        return ImageSourceData(image: editedImage, format: format)
+        let originalData: Data? = imageData.isEmpty ? nil : imageData
+        return ImageSourceData(image: editedImage, originalData: originalData, format: format)
     }
 
     init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
@@ -118,10 +119,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return
         }
 
-        loadCardData(from: card)
+        let imageData = card.resolvedImageData()
+        loadCardData(from: card, imageData: imageData)
 
         if let editedImage = self.editedImage {
-            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage)
+            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage, imageData: imageData)
         }
     }
 
@@ -513,15 +515,31 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
+    private func updateCardMetadataOnly(
+        cardId: ObjectId,
+        date: Date,
+        memoText: String?,
+        folderText: String?,
+        location: CLLocation?,
+        isLocked: Bool
+    ) -> Observable<Void> {
+        return realmManager.update { realm in
+            guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+            card.date = date
+            card.memo = memoText
+            card.customFolder = folderText
+            card.isLocked = isLocked
+            card.latitude = location?.coordinate.latitude
+            card.longitude = location?.coordinate.longitude
+        }
+    }
+
     private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
         guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
 
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
         let analyticsCtx = collectAnalyticsContext()
-        let stickers = imageSourceData?.stickers ?? []
-
-        Logger.database.info("Update: stickers=\(stickers.count)")
 
         let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
         let editTypes = trackEditTypes(
@@ -532,8 +550,26 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             isLocked: isLocked
         )
 
+        if !imageChanged {
+            return updateCardMetadataOnly(
+                cardId: cardId,
+                date: date,
+                memoText: sanitizedFields.memo,
+                folderText: sanitizedFields.customFolder,
+                location: location,
+                isLocked: isLocked
+            )
+            .do(onNext: { [weak self] in
+                guard let self = self else { return }
+                self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
+            })
+        }
+
+        let stickers = imageSourceData?.stickers ?? []
+        Logger.database.info("Update: stickers=\(stickers.count)")
+
         let imageData$ = prepareImage(from: editedImage)
-        let ocr$ = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
+        let ocr$ = ocrManager.recognizeText(from: editedImage)
 
         return Observable.zip(imageData$, ocr$)
             .observe(on: MainScheduler.instance)
