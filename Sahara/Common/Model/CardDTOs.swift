@@ -27,7 +27,7 @@ struct CardListItemDTO {
 struct CardDetailDTO {
     let id: ObjectId
     let date: Date
-    let editedImageData: Data
+    let editedImageData: Data?
     let memo: String?
     let latitude: Double?
     let longitude: Double?
@@ -54,7 +54,7 @@ struct SearchCardDTO {
     init(from card: Card) {
         self.id = card.id
         self.isLocked = card.isLocked
-        self.imageSize = ImageDownsampler.imageSize(from: card.resolvedImageData()) ?? CGSize(width: 1, height: 1)
+        self.imageSize = card.resolvedImageData().flatMap(ImageDownsampler.imageSize) ?? CGSize(width: 1, height: 1)
     }
 }
 
