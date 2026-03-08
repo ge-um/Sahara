@@ -45,6 +45,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func configureRealm() {
+        RealmManager.migrateRealmFileIfNeeded()
         let config = RealmManager.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
     }
