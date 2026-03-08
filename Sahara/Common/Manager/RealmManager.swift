@@ -10,6 +10,8 @@ import OSLog
 import RealmSwift
 import RxSwift
 
+private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sahara", category: "RealmMigration")
+
 enum DatePeriod {
     case day(Date)
     case month(Date)
@@ -50,8 +52,68 @@ final class RealmManager: RealmManagerProtocol {
         self.configuration = configuration
     }
 
+    static var realmFileURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return appSupport.appendingPathComponent("default.realm")
+    }
+
+    static func migrateRealmFileIfNeeded(
+        documentsDir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0],
+        appSupportDir: URL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    ) {
+        let fm = FileManager.default
+        let oldURL = documentsDir.appendingPathComponent("default.realm")
+        let newURL = appSupportDir.appendingPathComponent("default.realm")
+
+        guard fm.fileExists(atPath: oldURL.path) else { return }
+
+        try? fm.createDirectory(at: appSupportDir, withIntermediateDirectories: true)
+
+        if fm.fileExists(atPath: newURL.path) {
+            try? fm.removeItem(at: oldURL)
+            cleanupAuxiliaryFiles(at: documentsDir)
+            logger.notice("Realm file already at new location — removed old file from Documents/")
+            return
+        }
+
+        do {
+            try fm.moveItem(at: oldURL, to: newURL)
+            cleanupAuxiliaryFiles(at: documentsDir)
+            logger.notice("Realm file migrated from Documents/ to Application Support/")
+        } catch {
+            logger.error("Realm file migration failed: \(error.localizedDescription)")
+        }
+    }
+
+    static func resolveRealmFileURL(
+        documentsDir: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0],
+        appSupportDir: URL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    ) -> URL {
+        let fm = FileManager.default
+        let appSupportURL = appSupportDir.appendingPathComponent("default.realm")
+        let documentsURL = documentsDir.appendingPathComponent("default.realm")
+
+        if fm.fileExists(atPath: appSupportURL.path) {
+            return appSupportURL
+        }
+        if fm.fileExists(atPath: documentsURL.path) {
+            return documentsURL
+        }
+        return appSupportURL
+    }
+
+    private static func cleanupAuxiliaryFiles(at directory: URL) {
+        let fm = FileManager.default
+        let auxiliaryExtensions = ["lock", "note", "management"]
+        for ext in auxiliaryExtensions {
+            let url = directory.appendingPathComponent("default.\(ext)")
+            try? fm.removeItem(at: url)
+        }
+    }
+
     static func createConfiguration(schemaVersion: UInt64 = currentSchemaVersion, migrationBlock: MigrationBlock? = nil) -> Realm.Configuration {
         var config = Realm.Configuration()
+        config.fileURL = resolveRealmFileURL()
         config.schemaVersion = schemaVersion
         config.migrationBlock = migrationBlock ?? defaultMigrationBlock
         return config
