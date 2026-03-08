@@ -43,7 +43,7 @@ final class Card: Object {
     @Persisted var createdDate: Date
     @Persisted var modifiedDate: Date?
     
-    @Persisted var editedImageData: Data
+    @Persisted var editedImageData: Data?
     @Persisted var imagePath: String?
     @Persisted var imageFormat: String?
     @Persisted var drawingData: Data?
@@ -64,7 +64,7 @@ final class Card: Object {
     convenience init(
         date: Date,
         createdDate: Date,
-        editedImageData: Data,
+        editedImageData: Data? = nil,
         memo: String? = nil,
         latitude: Double? = nil,
         longitude: Double? = nil,
@@ -84,12 +84,13 @@ final class Card: Object {
 // MARK: - Image Loading
 
 extension Card {
-    func resolvedImageData() -> Data {
+    func resolvedImageData() -> Data? {
         if let imagePath = imagePath,
            let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
             return diskData
         }
-        return editedImageData
+        guard let data = editedImageData, !data.isEmpty else { return nil }
+        return data
     }
 }
 

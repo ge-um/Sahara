@@ -136,7 +136,9 @@ final class RealmManager: RealmManagerProtocol {
         }
 
         if oldSchemaVersion < 3 {
+            // v1.6.1 → v2.0.0 스키마 변경 대응
             // Card: imagePath(String?) 추가 → Realm이 자동으로 nil 할당
+            // Card: editedImageData(Data → Data?) 변경 → Realm이 자동으로 optional 전환
         }
     }
 
@@ -453,21 +455,18 @@ final class RealmManager: RealmManagerProtocol {
     func fetchImageData(for cardId: ObjectId) -> Data? {
         guard let realm = try? getRealm() else { return nil }
         guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return nil }
+        guard let resolvedData = card.resolvedImageData() else { return nil }
 
-        if let imagePath = card.imagePath,
-           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
-            Logger.database.info("[ImageStorage] Loaded from disk: \(imagePath)")
-            return diskData
+        if card.imagePath != nil {
+            Logger.database.info("[ImageStorage] Loaded from disk: \(card.imagePath!)")
+            return resolvedData
         }
 
-        let realmData = card.editedImageData
-        guard !realmData.isEmpty else { return nil }
-
-        Logger.database.notice("[ImageStorage] Loaded from Realm (\(realmData.count / 1024)KB), starting lazy migration...")
+        Logger.database.notice("[ImageStorage] Loaded from Realm (\(resolvedData.count / 1024)KB), starting lazy migration...")
 
         // Lazy migration: 기존 Realm 데이터를 백그라운드에서 디스크로 이전
         let format = card.imageFormat ?? "jpeg"
-        let dataCopy = Data(realmData)
+        let dataCopy = Data(resolvedData)
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
             do {
@@ -475,7 +474,7 @@ final class RealmManager: RealmManagerProtocol {
                 _ = self.update { realm in
                     guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
                     card.imagePath = fileName
-                    card.editedImageData = Data()
+                    card.editedImageData = nil
                 }
                 Logger.database.notice("[ImageStorage] Lazy migration done: \(fileName)")
             } catch {
@@ -483,7 +482,7 @@ final class RealmManager: RealmManagerProtocol {
             }
         }
 
-        return realmData
+        return resolvedData
     }
 
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {
@@ -604,11 +603,7 @@ final class MockRealmManager: RealmManagerProtocol {
         guard let card = objects.first(where: { ($0 as? Card)?.id == cardId }) as? Card else {
             return nil
         }
-        if let imagePath = card.imagePath,
-           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
-            return diskData
-        }
-        return card.editedImageData.isEmpty ? nil : card.editedImageData
+        return card.resolvedImageData()
     }
 
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {

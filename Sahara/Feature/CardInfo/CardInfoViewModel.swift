@@ -104,8 +104,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
     private func createImageSourceData(from card: Card, editedImage: UIImage, imageData: Data) -> ImageSourceData {
         let format = card.imageFormat.flatMap { ImageSourceData.ImageFormat(rawValue: $0) }
-        let originalData: Data? = imageData.isEmpty ? nil : imageData
-        return ImageSourceData(image: editedImage, originalData: originalData, format: format)
+        return ImageSourceData(image: editedImage, originalData: imageData, format: format)
     }
 
     init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
@@ -119,7 +118,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return
         }
 
-        let imageData = card.resolvedImageData()
+        guard let imageData = card.resolvedImageData() else { return }
         loadCardData(from: card, imageData: imageData)
 
         if let editedImage = self.editedImage {
@@ -335,7 +334,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let card = Card(
             date: date,
             createdDate: Date(),
-            editedImageData: Data(),
+            editedImageData: nil,
             memo: memo,
             latitude: location?.coordinate.latitude,
             longitude: location?.coordinate.longitude,
@@ -486,7 +485,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.date = date
             if let newImagePath = newImagePath {
                 card.imagePath = newImagePath
-                card.editedImageData = Data()
+                card.editedImageData = nil
             } else {
                 card.editedImageData = imageData.editedImageData
             }

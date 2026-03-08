@@ -45,10 +45,11 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .observe(on: MainScheduler.instance)
             .bind { owner, _ in
-                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
+                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId),
+                      let imageData = card.resolvedImageData() else { return }
 
                 let data = (
-                    image: card.resolvedImageData(),
+                    image: imageData,
                     date: card.date,
                     latitude: card.latitude,
                     longitude: card.longitude,
