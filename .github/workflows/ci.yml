@@ -73,6 +73,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults
 
+      - name: Build for iPad
+        run: |
+          xcodebuild build \
+            -scheme ${{ steps.scheme.outputs.name }} \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPad (10th generation),OS=18.2' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO
+
       - name: Upload Test Results
         if: failure()
         uses: actions/upload-artifact@v4
