@@ -198,6 +198,23 @@
 "settings.app_version" = "앱 버전";
 "settings.ios_version" = "iOS 버전";
 "settings.device_model" = "기기 모델";
+"settings.section_data" = "데이터 관리";
+"settings.export_photos" = "사진 내보내기";
+"settings.export_backup" = "앱 백업";
+"settings.import_backup" = "백업 가져오기";
+
+/* Backup */
+"backup.exporting" = "백업 생성 중...";
+"backup.importing" = "데이터 복원 중...";
+"backup.confirm_import_title" = "데이터 복원";
+"backup.confirm_import_message" = "현재 데이터가 백업 파일의 데이터(%d개의 카드)로 교체됩니다. 계속하시겠어요?";
+"backup.confirm_import_action" = "복원";
+"backup.export_success" = "백업 생성 완료";
+"backup.import_success" = "데이터 복원 완료";
+"backup.export_failed" = "백업 생성 실패";
+"backup.import_failed" = "데이터 복원 실패";
+"backup.invalid_file" = "올바르지 않은 백업 파일입니다";
+"backup.version_mismatch" = "이 백업 파일은 최신 버전의 앱에서 생성되었습니다. 앱을 업데이트해주세요.";
 
 /* Realm Error */
 "realm_error.title" = "데이터를 불러올 수 없습니다";

@@ -31,6 +31,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.rootViewController = mainTabBarController
 
         window?.makeKeyAndVisible()
+
+        if let urlContext = connectionOptions.urlContexts.first {
+            handleBackupFileImport(url: urlContext.url)
+        }
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let urlContext = URLContexts.first else { return }
+        handleBackupFileImport(url: urlContext.url)
     }
 
     private func showRealmFailureAlert(on viewController: UIViewController) {
@@ -108,6 +117,98 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+    }
+
+    private func handleBackupFileImport(url: URL) {
+        do {
+            let (tempURL, metadata) = try BackupManager.shared.prepareForImport(from: url)
+            showImportConfirmation(metadata: metadata, fileURL: tempURL)
+        } catch {
+            showImportError(error)
+        }
+    }
+
+    private func showImportConfirmation(metadata: BackupMetadata, fileURL: URL) {
+        guard let rootVC = window?.rootViewController else { return }
+
+        let title = NSLocalizedString("backup.confirm_import_title", comment: "")
+        let message = String(
+            format: NSLocalizedString("backup.confirm_import_message", comment: ""),
+            metadata.cardCount
+        )
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("backup.confirm_import_action", comment: ""),
+            style: .destructive
+        ) { _ in
+            self.performImport(from: fileURL)
+        })
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ))
+
+        let presenter = rootVC.presentedViewController ?? rootVC
+        presenter.present(alert, animated: true)
+    }
+
+    private func performImport(from url: URL) {
+        guard let rootVC = window?.rootViewController else { return }
+
+        let progressAlert = UIAlertController.progressAlert(
+            title: NSLocalizedString("backup.importing", comment: "")
+        )
+
+        let presenter = rootVC.presentedViewController ?? rootVC
+        presenter.present(progressAlert.alert, animated: true)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try BackupManager.shared.importBackup(from: url) { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showImportSuccess()
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showImportError(error)
+                    }
+                }
+            }
+        }
+    }
+
+    private func showImportSuccess() {
+        guard let rootVC = window?.rootViewController else { return }
+        let alert = UIAlertController(
+            title: NSLocalizedString("backup.import_success", comment: ""),
+            message: nil,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ))
+        rootVC.present(alert, animated: true)
+    }
+
+    private func showImportError(_ error: Error) {
+        guard let rootVC = window?.rootViewController else { return }
+        let presenter = rootVC.presentedViewController ?? rootVC
+        let alert = UIAlertController(
+            title: NSLocalizedString("backup.import_failed", comment: ""),
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        presenter.present(alert, animated: true)
     }
 
     func handleNotification(type: String, userInfo: [AnyHashable: Any]) {

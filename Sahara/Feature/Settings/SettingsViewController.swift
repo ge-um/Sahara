@@ -11,6 +11,7 @@ import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
+import UniformTypeIdentifiers
 
 final class SettingsViewController: UIViewController {
     private let viewModel: SettingsViewModel
@@ -151,6 +152,24 @@ final class SettingsViewController: UIViewController {
                 owner.navigationController?.pushViewController(releaseNotesVC, animated: true)
             }
             .disposed(by: disposeBag)
+
+        output.exportPhotos
+            .drive(with: self) { owner, _ in
+                owner.performExport(using: BackupManager.shared.exportPhotosOnly)
+            }
+            .disposed(by: disposeBag)
+
+        output.exportBackup
+            .drive(with: self) { owner, _ in
+                owner.performExport(using: BackupManager.shared.exportBackup)
+            }
+            .disposed(by: disposeBag)
+
+        output.importBackup
+            .drive(with: self) { owner, _ in
+                owner.presentDocumentPicker()
+            }
+            .disposed(by: disposeBag)
     }
 
     private func presentMailComposer(to email: String) {
@@ -185,17 +204,7 @@ final class SettingsViewController: UIViewController {
     }
 
     private func getDeviceModel() -> String {
-        var systemInfo = utsname()
-        uname(&systemInfo)
-        let modelCode = withUnsafePointer(to: &systemInfo.machine) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 1) {
-                String(validatingUTF8: $0)
-            }
-        }
-
-        guard let code = modelCode else {
-            return UIDevice.current.model
-        }
+        let code = DeviceInfo.modelIdentifier
 
         let deviceModelMap: [String: String] = [
             "iPhone14,2": "iPhone 13 Pro",
@@ -252,6 +261,65 @@ final class SettingsViewController: UIViewController {
         }
     }
 
+    // MARK: - Backup & Restore
+
+    private func performExport(using operation: @escaping (@escaping (Double) -> Void) throws -> URL) {
+        let progressAlert = createProgressAlert(title: NSLocalizedString("backup.exporting", comment: ""))
+        present(progressAlert.alert, animated: true)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                let url = try operation { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.presentShareSheet(for: url)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showBackupError(title: NSLocalizedString("backup.export_failed", comment: ""), error: error)
+                    }
+                }
+            }
+        }
+    }
+
+    private func presentDocumentPicker() {
+        let saharaType = UTType("com.miya.sahara.backup") ?? .data
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [saharaType])
+        picker.delegate = self
+        picker.allowsMultipleSelection = false
+        present(picker, animated: true)
+    }
+
+    private func createProgressAlert(title: String) -> (alert: UIAlertController, progressView: UIProgressView) {
+        UIAlertController.progressAlert(title: title)
+    }
+
+    private func presentShareSheet(for url: URL) {
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        present(activityVC, animated: true)
+    }
+
+    private func showBackupError(title: String, error: Error) {
+        let alert = UIAlertController(
+            title: title,
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        present(alert, animated: true)
+    }
+
     private func showSettingsAlert() {
         let alert = UIAlertController(
             title: NSLocalizedString("settings.notification_denied_title", comment: ""),
@@ -290,5 +358,91 @@ extension SettingsViewController: UICollectionViewDelegateFlowLayout {
 extension SettingsViewController: MFMailComposeViewControllerDelegate {
     func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
         controller.dismiss(animated: true)
+    }
+}
+
+extension SettingsViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+
+        do {
+            let (tempURL, metadata) = try BackupManager.shared.prepareForImport(from: url)
+            showImportConfirmation(metadata: metadata, fileURL: tempURL)
+        } catch {
+            showBackupError(title: NSLocalizedString("backup.import_failed", comment: ""), error: error)
+        }
+    }
+
+    private func showImportConfirmation(metadata: BackupMetadata, fileURL: URL) {
+        let title = NSLocalizedString("backup.confirm_import_title", comment: "")
+        let message = String(
+            format: NSLocalizedString("backup.confirm_import_message", comment: ""),
+            metadata.cardCount
+        )
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("backup.confirm_import_action", comment: ""),
+            style: .destructive
+        ) { [weak self] _ in
+            self?.performImport(from: fileURL)
+        })
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ))
+        present(alert, animated: true)
+    }
+
+    private func performImport(from url: URL) {
+        let progressAlert = createProgressAlert(title: NSLocalizedString("backup.importing", comment: ""))
+        present(progressAlert.alert, animated: true)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try BackupManager.shared.importBackup(from: url) { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        guard let self else { return }
+                        let alert = UIAlertController(
+                            title: NSLocalizedString("backup.import_success", comment: ""),
+                            message: nil,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(
+                            title: NSLocalizedString("common.ok", comment: ""),
+                            style: .default
+                        ))
+                        self.present(alert, animated: true)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showBackupError(
+                            title: NSLocalizedString("backup.import_failed", comment: ""),
+                            error: error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension UIAlertController {
+    static func progressAlert(title: String) -> (alert: UIAlertController, progressView: UIProgressView) {
+        let alert = UIAlertController(title: title, message: "\n\n", preferredStyle: .alert)
+        let progressView = UIProgressView(progressViewStyle: .default)
+        alert.view.addSubview(progressView)
+        progressView.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(45)
+        }
+        return (alert, progressView)
     }
 }

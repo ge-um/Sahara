@@ -9,6 +9,9 @@ import Foundation
 
 enum SettingsMenuItem: CaseIterable {
     case language
+    case exportPhotos
+    case exportBackup
+    case importBackup
     case serviceNews
     case contactDeveloper
     case releaseNotes
@@ -18,6 +21,12 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return NSLocalizedString("settings.language", comment: "")
+        case .exportPhotos:
+            return NSLocalizedString("settings.export_photos", comment: "")
+        case .exportBackup:
+            return NSLocalizedString("settings.export_backup", comment: "")
+        case .importBackup:
+            return NSLocalizedString("settings.import_backup", comment: "")
         case .serviceNews:
             return NSLocalizedString("settings.service_news", comment: "")
         case .contactDeveloper:
@@ -44,7 +53,7 @@ enum SettingsMenuItem: CaseIterable {
 
     var isSelectable: Bool {
         switch self {
-        case .language, .contactDeveloper, .releaseNotes:
+        case .language, .contactDeveloper, .releaseNotes, .exportPhotos, .exportBackup, .importBackup:
             return true
         case .serviceNews, .versionInfo:
             return false
