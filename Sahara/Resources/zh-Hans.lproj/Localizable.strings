@@ -192,6 +192,23 @@
 "settings.mail_error_message" = "邮件应用不可用";
 "settings.notification_denied_title" = "需要通知设置";
 "settings.notification_denied_message" = "请在设置中启用通知";
+"settings.section_data" = "数据管理";
+"settings.export_photos" = "导出照片";
+"settings.export_backup" = "应用备份";
+"settings.import_backup" = "导入备份";
+
+/* Backup */
+"backup.exporting" = "正在创建备份...";
+"backup.importing" = "正在恢复数据...";
+"backup.confirm_import_title" = "恢复数据";
+"backup.confirm_import_message" = "当前数据将被备份数据（%d张卡片）替换。是否继续？";
+"backup.confirm_import_action" = "恢复";
+"backup.export_success" = "备份创建完成";
+"backup.import_success" = "数据恢复完成";
+"backup.export_failed" = "备份创建失败";
+"backup.import_failed" = "数据恢复失败";
+"backup.invalid_file" = "无效的备份文件";
+"backup.version_mismatch" = "此备份由较新版本的应用创建，请更新应用。";
 
 /* Realm Error */
 "realm_error.title" = "无法加载数据";

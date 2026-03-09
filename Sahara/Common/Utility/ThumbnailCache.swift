@@ -147,6 +147,17 @@ final class ThumbnailCache {
 
     // MARK: - Invalidation
 
+    func clearAll() {
+        smallCache.removeAllObjects()
+        mediumCache.removeAllObjects()
+        serialQueue.sync {
+            inFlightRequests.removeAll()
+            aspectRatioCache.removeAll()
+        }
+        try? FileManager.default.removeItem(at: cacheDirectory)
+        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+    }
+
     func invalidate(for cardId: ObjectId) {
         for size in [ThumbnailSize.small, .medium] {
             let key = cacheKey(cardId: cardId, size: size)

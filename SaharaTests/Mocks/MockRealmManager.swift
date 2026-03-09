@@ -129,6 +129,12 @@ final class MockRealmManager: RealmManagerProtocol {
         return delete(Card.self, forPrimaryKey: key)
     }
 
+    func createConfiguration() -> Realm.Configuration {
+        var config = Realm.Configuration.defaultConfiguration
+        config.inMemoryIdentifier = "MockRealm"
+        return config
+    }
+
     func reset() {
         addCalled = false
         fetchCalled = false

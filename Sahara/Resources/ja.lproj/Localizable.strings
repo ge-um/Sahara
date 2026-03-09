@@ -198,6 +198,23 @@
 "settings.app_version" = "アプリバージョン";
 "settings.ios_version" = "iOSバージョン";
 "settings.device_model" = "デバイスモデル";
+"settings.section_data" = "データ管理";
+"settings.export_photos" = "写真をエクスポート";
+"settings.export_backup" = "アプリバックアップ";
+"settings.import_backup" = "バックアップをインポート";
+
+/* Backup */
+"backup.exporting" = "バックアップ作成中...";
+"backup.importing" = "データ復元中...";
+"backup.confirm_import_title" = "データ復元";
+"backup.confirm_import_message" = "現在のデータがバックアップデータ（%d枚のカード）に置き換えられます。続けますか？";
+"backup.confirm_import_action" = "復元";
+"backup.export_success" = "バックアップ作成完了";
+"backup.import_success" = "データ復元完了";
+"backup.export_failed" = "バックアップ作成失敗";
+"backup.import_failed" = "データ復元失敗";
+"backup.invalid_file" = "無効なバックアップファイルです";
+"backup.version_mismatch" = "このバックアップは新しいバージョンのアプリで作成されました。アプリをアップデートしてください。";
 
 /* Realm Error */
 "realm_error.title" = "データを読み込めません";

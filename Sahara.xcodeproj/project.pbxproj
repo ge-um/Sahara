@@ -21,6 +21,7 @@
 		03E2B5DA2E866F3C00A8C8DA /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5D92E866F3C00A8C8DA /* RxCocoa */; };
 		03E2B5DC2E866F3C00A8C8DA /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DB2E866F3C00A8C8DA /* RxSwift */; };
 		03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DE2E866F4B00A8C8DA /* Kingfisher */; };
+		03F1A0032EC3D00100B4C003 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 03F1A0022EC3D00100B4C002 /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +114,7 @@
 				035A09162E90D2B900221B3E /* FirebaseCrashlytics in Frameworks */,
 				039745922E86DFD100BDA511 /* Alamofire in Frameworks */,
 				03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */,
+				03F1A0032EC3D00100B4C003 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +205,7 @@
 				035A09132E90D2B900221B3E /* FirebaseAnalytics */,
 				035A09152E90D2B900221B3E /* FirebaseCrashlytics */,
 				0373CD562EA157EA001DD9A0 /* FirebaseMessaging */,
+				03F1A0022EC3D00100B4C002 /* ZIPFoundation */,
 			);
 			productName = Sahara;
 			productReference = 03E2B5B52E8664AB00A8C8DA /* Sahara.app */;
@@ -247,6 +250,7 @@
 				039745932E86E08500BDA511 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				030F3A3E2E8B6E02000E04B5 /* XCRemoteSwiftPackageReference "RxDataSources" */,
 				035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				03F1A0012EC3D00100B4C001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 03E2B5B62E8664AB00A8C8DA /* Products */;
@@ -674,6 +678,14 @@
 				minimumVersion = 8.5.0;
 			};
 		};
+		03F1A0012EC3D00100B4C001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -731,6 +743,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 03E2B5DD2E866F4B00A8C8DA /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		03F1A0022EC3D00100B4C002 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 03F1A0012EC3D00100B4C001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

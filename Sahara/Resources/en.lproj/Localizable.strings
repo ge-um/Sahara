@@ -198,6 +198,23 @@
 "settings.app_version" = "App Version";
 "settings.ios_version" = "iOS Version";
 "settings.device_model" = "Device Model";
+"settings.section_data" = "Data Management";
+"settings.export_photos" = "Export Photos";
+"settings.export_backup" = "App Backup";
+"settings.import_backup" = "Import Backup";
+
+/* Backup */
+"backup.exporting" = "Creating backup...";
+"backup.importing" = "Restoring data...";
+"backup.confirm_import_title" = "Restore Data";
+"backup.confirm_import_message" = "Your current data will be replaced with the backup data (%d cards). Continue?";
+"backup.confirm_import_action" = "Restore";
+"backup.export_success" = "Backup created";
+"backup.import_success" = "Data restored";
+"backup.export_failed" = "Backup failed";
+"backup.import_failed" = "Restore failed";
+"backup.invalid_file" = "Invalid backup file";
+"backup.version_mismatch" = "This backup was created by a newer version of the app. Please update the app.";
 
 /* Realm Error */
 "realm_error.title" = "Unable to Load Data";
