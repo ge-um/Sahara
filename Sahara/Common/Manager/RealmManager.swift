@@ -33,6 +33,7 @@ protocol RealmManagerProtocol {
     func observeCards(inFolder folderName: String?) -> Observable<[CardListItemDTO]>
     func fetchImageData(for cardId: ObjectId) -> Data?
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void>
+    func createConfiguration() -> Realm.Configuration
 }
 
 extension RealmManagerProtocol {
@@ -109,6 +110,10 @@ final class RealmManager: RealmManagerProtocol {
             let url = directory.appendingPathComponent("default.\(ext)")
             try? fm.removeItem(at: url)
         }
+    }
+
+    func createConfiguration() -> Realm.Configuration {
+        Self.createConfiguration()
     }
 
     static func createConfiguration(schemaVersion: UInt64 = currentSchemaVersion, migrationBlock: MigrationBlock? = nil) -> Realm.Configuration {
@@ -608,5 +613,11 @@ final class MockRealmManager: RealmManagerProtocol {
 
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void> {
         return delete(Card.self, forPrimaryKey: key)
+    }
+
+    func createConfiguration() -> Realm.Configuration {
+        var config = Realm.Configuration.defaultConfiguration
+        config.inMemoryIdentifier = "MockRealm"
+        return config
     }
 }
