@@ -107,8 +107,8 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
 
         var navController: UINavigationController?
 
-        if let tabBarController = presentingVC as? UITabBarController {
-            navController = tabBarController.selectedViewController as? UINavigationController
+        if let mainTabBar = presentingVC as? MainTabBarController {
+            navController = mainTabBar.selectedViewController as? UINavigationController
         } else if let nav = presentingVC as? UINavigationController {
             navController = nav
         } else {

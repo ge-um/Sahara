@@ -78,7 +78,9 @@ final class SettingsViewController: UIViewController {
 
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(600)
+            make.horizontalEdges.equalToSuperview().inset(20).priority(.medium)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }

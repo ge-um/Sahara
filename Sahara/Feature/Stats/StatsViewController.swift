@@ -179,8 +179,10 @@ final class StatsViewController: UIViewController {
         }
 
         contentStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(20)
-            make.width.equalTo(scrollView.snp.width).offset(-40)
+            make.top.bottom.equalToSuperview().inset(20)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(600)
+            make.width.equalTo(scrollView.snp.width).offset(-40).priority(.medium)
         }
 
         basicStatsStackView.snp.makeConstraints { make in

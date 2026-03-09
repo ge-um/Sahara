@@ -190,7 +190,7 @@ extension SearchViewController: PinterestLayoutDelegate {
         guard size.width > 0 else { return 180 }
 
         let aspectRatio = size.height / size.width
-        let cellWidth = (collectionView.bounds.width - 8) / 2
+        let cellWidth = collectionView.bounds.width / CGFloat(pinterestLayout.columnCount) - 8
         return cellWidth * aspectRatio
     }
 }

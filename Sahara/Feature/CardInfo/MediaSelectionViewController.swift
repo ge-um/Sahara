@@ -34,13 +34,7 @@ final class MediaSelectionViewController: UIViewController {
     private let imagePickerResultRelay = PublishRelay<(ImageSourceData, CLLocation?, Date?, MediaSource)>()
 
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        let spacing: CGFloat = 2
-        let width = (view.bounds.width - spacing * 4) / 3
-        layout.itemSize = CGSize(width: width, height: width)
-        layout.minimumInteritemSpacing = spacing
-        layout.minimumLineSpacing = spacing
-        layout.sectionInset = UIEdgeInsets(top: spacing, left: spacing, bottom: spacing, right: spacing)
+        let layout = GridLayout(numberOfColumns: 3, cellSpacing: 2, minColumnWidth: 110)
 
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear

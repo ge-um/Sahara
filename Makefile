@@ -1,4 +1,4 @@
-.PHONY: test build help
+.PHONY: test test-ipad build help
 
 CLI_DERIVED_DATA = .build
 
@@ -24,6 +24,16 @@ test:
 		-skipPackagePluginValidation \
 		CODE_SIGNING_ALLOWED=NO
 
+test-ipad:
+	@echo "Branch: $(BRANCH) → Scheme: $(SCHEME) (iPad)"
+	xcodebuild test \
+		-scheme $(SCHEME) \
+		-configuration Debug \
+		-destination 'platform=iOS Simulator,name=iPad (10th generation),OS=18.2' \
+		-derivedDataPath $(CLI_DERIVED_DATA) \
+		-skipPackagePluginValidation \
+		CODE_SIGNING_ALLOWED=NO
+
 build:
 	@echo "Branch: $(BRANCH) → Scheme: $(SCHEME)"
 	xcodebuild build \
@@ -35,9 +45,10 @@ build:
 		CODE_SIGNING_ALLOWED=NO
 
 help:
-	@echo "make test   - Run full test suite locally"
-	@echo "make build  - Build without running tests"
-	@echo "make help   - Show this help"
+	@echo "make test      - Run full test suite locally (iPhone)"
+	@echo "make test-ipad - Run full test suite locally (iPad)"
+	@echo "make build     - Build without running tests"
+	@echo "make help      - Show this help"
 	@echo ""
 	@echo "Branch: $(BRANCH) → Scheme: $(SCHEME)"
 	@echo "Override: make test SCHEME=Sahara"

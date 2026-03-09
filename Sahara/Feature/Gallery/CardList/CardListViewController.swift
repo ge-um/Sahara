@@ -282,7 +282,7 @@ extension CardListViewController: PinterestLayoutDelegate {
             return 180
         }
 
-        let columnWidth = collectionView.bounds.width / 2
+        let columnWidth = collectionView.bounds.width / CGFloat(pinterestLayout.columnCount)
         let calculatedHeight = columnWidth * aspectRatio
 
         return calculatedHeight.isFinite && calculatedHeight > 0 ? calculatedHeight : 180
