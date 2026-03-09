@@ -37,7 +37,7 @@ final class CardDetailViewController: UIViewController {
     }()
 
     private lazy var photoCardView: PhotoCardView = {
-        let cardWidth = view.bounds.width - 64
+        let cardWidth = min(view.bounds.width - 64, 500)
         return PhotoCardView(cardWidth: cardWidth)
     }()
 
@@ -157,7 +157,9 @@ final class CardDetailViewController: UIViewController {
 
         photoCardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(32)
-            make.horizontalEdges.equalToSuperview().inset(32)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(500)
+            make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
         }
 
         buttonContainerView.snp.makeConstraints { make in

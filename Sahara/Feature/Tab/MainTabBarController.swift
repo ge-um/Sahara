@@ -8,7 +8,22 @@
 import UIKit
 import SnapKit
 
-final class MainTabBarController: UITabBarController {
+final class MainTabBarController: UIViewController {
+    private var childNavigationControllers: [UINavigationController] = []
+
+    var selectedIndex: Int = 0 {
+        didSet {
+            guard oldValue != selectedIndex,
+                  !childNavigationControllers.isEmpty else { return }
+            switchTab(from: oldValue, to: selectedIndex)
+        }
+    }
+
+    var selectedViewController: UIViewController? {
+        guard selectedIndex < childNavigationControllers.count else { return nil }
+        return childNavigationControllers[selectedIndex]
+    }
+
     private let customTabBar: UIView = {
         let view = UIView()
         return view
@@ -68,7 +83,6 @@ final class MainTabBarController: UITabBarController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        tabBar.isHidden = true
         setupCustomTabBar()
         setupViewControllers()
     }
@@ -101,7 +115,9 @@ final class MainTabBarController: UITabBarController {
         }
 
         tabButtonStackView.snp.makeConstraints { make in
-            make.horizontalEdges.equalToSuperview().inset(48)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(400)
+            make.horizontalEdges.equalToSuperview().inset(48).priority(.medium)
             make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
         }
 
@@ -132,32 +148,51 @@ final class MainTabBarController: UITabBarController {
         let settingsVC = SettingsViewController(viewModel: settingsVM)
         let settingsNav = UINavigationController(rootViewController: settingsVC)
 
-        viewControllers = [galleryNav, searchNav, statsNav, settingsNav]
+        childNavigationControllers = [galleryNav, searchNav, statsNav, settingsNav]
+
+        let firstNav = childNavigationControllers[0]
+        addChild(firstNav)
+        view.insertSubview(firstNav.view, belowSubview: customTabBar)
+        firstNav.view.frame = view.bounds
+        firstNav.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        firstNav.didMove(toParent: self)
+
+        updateTabSelection()
+    }
+
+    private func switchTab(from oldIndex: Int, to newIndex: Int) {
+        let fromNav = childNavigationControllers[oldIndex]
+        fromNav.willMove(toParent: nil)
+        fromNav.view.removeFromSuperview()
+        fromNav.removeFromParent()
+
+        let toNav = childNavigationControllers[newIndex]
+        addChild(toNav)
+        view.insertSubview(toNav.view, belowSubview: customTabBar)
+        toNav.view.frame = view.bounds
+        toNav.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        toNav.didMove(toParent: self)
 
         updateTabSelection()
     }
 
     @objc private func galleryTabTapped() {
         selectedIndex = 0
-        updateTabSelection()
         AnalyticsManager.shared.logTabSelected(tabName: "gallery")
     }
 
     @objc private func searchTabTapped() {
         selectedIndex = 1
-        updateTabSelection()
         AnalyticsManager.shared.logTabSelected(tabName: "search")
     }
 
     @objc private func statsTabTapped() {
         selectedIndex = 2
-        updateTabSelection()
         AnalyticsManager.shared.logTabSelected(tabName: "stats")
     }
 
     @objc private func settingsTabTapped() {
         selectedIndex = 3
-        updateTabSelection()
         AnalyticsManager.shared.logTabSelected(tabName: "settings")
     }
 
