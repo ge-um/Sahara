@@ -16,7 +16,7 @@ final class FolderViewController: UIViewController {
     private let viewWillAppearRelay = PublishRelay<Void>()
 
     private lazy var collectionView: UICollectionView = {
-        let layout = GridLayout(numberOfColumns: 2, cellSpacing: 8)
+        let layout = GridLayout(numberOfColumns: 2, cellSpacing: 8, minColumnWidth: 160)
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.register(FolderCell.self, forCellWithReuseIdentifier: FolderCell.identifier)
         collectionView.backgroundColor = .clear

@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import UIKit
 
 protocol PinterestLayoutDelegate: AnyObject {
     func collectionView(
@@ -15,11 +14,13 @@ protocol PinterestLayoutDelegate: AnyObject {
 }
 
 class PinterestLayout: UICollectionViewFlowLayout {
-    
+
     weak var delegate: PinterestLayoutDelegate?
-    
+
+    private(set) var columnCount: Int = 2
+
     private var contentHeight: CGFloat = 0
-    
+
     private var contentWidth: CGFloat {
         guard let collectionView = collectionView else {
             return 0
@@ -27,13 +28,13 @@ class PinterestLayout: UICollectionViewFlowLayout {
         let insets = collectionView.contentInset
         return collectionView.bounds.width - (insets.left + insets.right)
     }
-    
+
     private var cache: [UICollectionViewLayoutAttributes] = []
-    
+
     override var collectionViewContentSize: CGSize {
         return CGSize(width: contentWidth, height: contentHeight)
     }
-    
+
     override func prepare() {
         guard let collectionView = collectionView else { return }
 
@@ -42,12 +43,12 @@ class PinterestLayout: UICollectionViewFlowLayout {
 
         guard contentWidth > 0 else { return }
 
-        let numberOfColumns: Int = 2
+        columnCount = max(2, Int(contentWidth / 180))
         let cellPadding: CGFloat = 4
-        let cellWidth: CGFloat = contentWidth / CGFloat(numberOfColumns)
+        let cellWidth: CGFloat = contentWidth / CGFloat(columnCount)
 
-        let xOffSet: [CGFloat] = [0, cellWidth]
-        var yOffSet: [CGFloat] = .init(repeating: 0, count: numberOfColumns)
+        let xOffSet: [CGFloat] = (0..<columnCount).map { CGFloat($0) * cellWidth }
+        var yOffSet: [CGFloat] = .init(repeating: 0, count: columnCount)
 
         var column: Int = 0
 
@@ -72,23 +73,23 @@ class PinterestLayout: UICollectionViewFlowLayout {
             contentHeight = max(contentHeight, frame.maxY)
             yOffSet[column] = yOffSet[column] + height
 
-            column = yOffSet[0] > yOffSet[1] ? 1 : 0
+            column = yOffSet.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
         }
     }
-    
+
     override func layoutAttributesForElements(in rect: CGRect)
     -> [UICollectionViewLayoutAttributes]? {
         var visibleLayoutAttributes: [UICollectionViewLayoutAttributes] = []
-        
+
         for attributes in cache {
             if attributes.frame.intersects(rect) {
                 visibleLayoutAttributes.append(attributes)
             }
         }
-        
+
         return visibleLayoutAttributes
     }
-    
+
     override func layoutAttributesForItem(at indexPath: IndexPath)
     -> UICollectionViewLayoutAttributes? {
         return cache[indexPath.item]
