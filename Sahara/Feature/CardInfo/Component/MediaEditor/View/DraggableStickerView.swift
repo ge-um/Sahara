@@ -48,7 +48,7 @@ final class DraggableStickerView: BaseGestureView {
         if let urlString = urlString, let url = URL(string: urlString) {
             self.stickerURL = url
             let options: KingfisherOptionsInfo = [
-                .scaleFactor(UIScreen.main.scale),
+                .scaleFactor(window?.screen.scale ?? 2.0),
                 .memoryCacheExpiration(.seconds(600)),
                 .diskCacheExpiration(.days(7)),
                 .cacheOriginalImage,
@@ -62,7 +62,7 @@ final class DraggableStickerView: BaseGestureView {
         if let urlString = stickerDTO.resourceUrl, let url = URL(string: urlString) {
             self.stickerURL = url
             let options: KingfisherOptionsInfo = [
-                .scaleFactor(UIScreen.main.scale),
+                .scaleFactor(window?.screen.scale ?? 2.0),
                 .memoryCacheExpiration(.seconds(600)),
                 .diskCacheExpiration(.days(7)),
                 .cacheOriginalImage,

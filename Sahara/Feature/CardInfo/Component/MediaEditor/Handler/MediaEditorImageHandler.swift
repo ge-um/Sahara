@@ -31,8 +31,9 @@ final class MediaEditorImageHandler {
             hasAlpha = false
         }
 
+        let screenScale = photoImageView.window?.screen.scale ?? 2.0
         let format = UIGraphicsImageRendererFormat()
-        format.scale = UIScreen.main.scale
+        format.scale = screenScale
         format.opaque = !hasAlpha
 
         let renderer = UIGraphicsImageRenderer(size: imageRect.size, format: format)
@@ -44,7 +45,7 @@ final class MediaEditorImageHandler {
             photoImageView.layer.render(in: context.cgContext)
             stickerContainerView.layer.render(in: context.cgContext)
 
-            let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: UIScreen.main.scale)
+            let drawingImage = canvasView.drawing.image(from: canvasView.bounds, scale: screenScale)
             drawingImage.draw(at: .zero)
         }
 
@@ -113,7 +114,8 @@ final class MediaEditorImageHandler {
             if let editorSize = editorViewSize {
                 viewSize = editorSize
             } else {
-                let standardCardWidth = min(UIScreen.main.bounds.width - 64, 400)
+                let screenWidth = (UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen.bounds.width) ?? 393
+                let standardCardWidth = min(screenWidth - 64, 400)
                 viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
             }
             let displayRect = MediaEditorCropHandler.calculateDisplayedImageRect(

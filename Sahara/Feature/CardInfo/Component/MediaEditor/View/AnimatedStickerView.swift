@@ -37,7 +37,7 @@ final class AnimatedStickerView: UIView {
         }
 
         let options: KingfisherOptionsInfo = [
-            .scaleFactor(UIScreen.main.scale),
+            .scaleFactor(window?.screen.scale ?? 2.0),
             .memoryCacheExpiration(.seconds(600)),
             .diskCacheExpiration(.days(7)),
             .cacheOriginalImage,

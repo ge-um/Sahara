@@ -75,8 +75,9 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
             .compactMap { imageData -> UIImage? in
-                let screenScale = UIScreen.main.scale
-                let screenBounds = UIScreen.main.bounds
+                let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+                let screenScale = screen?.scale ?? 2.0
+                let screenBounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 393, height: 852)
                 let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
                 return ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
             }

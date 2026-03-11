@@ -88,8 +88,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func loadCardData(from card: Card, imageData: Data) {
-        let screenScale = UIScreen.main.scale
-        let screenBounds = UIScreen.main.bounds
+        let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+        let screenScale = screen?.scale ?? 2.0
+        let screenBounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 393, height: 852)
         let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
         self.editedImage = ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
         self.originalDate = card.date
