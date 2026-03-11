@@ -27,6 +27,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
     struct Output {
         let saveResult: Driver<Result<Void, Error>>
+        let saveFileURL: Driver<URL>
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
     }
@@ -50,6 +51,27 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         let cardImage = cardImageRelay.compactMap { $0 }.asObservable()
 
+        #if targetEnvironment(macCatalyst)
+        let saveResult: Driver<Result<Void, Error>> = .empty()
+        let saveFileURL = input.saveButtonTapped
+            .withLatestFrom(cardImage)
+            .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
+            .compactMap { imageData -> URL? in
+                let ext = ImageFormatHelper.detect(from: imageData)?.rawValue ?? "jpeg"
+                let fileName = "Sahara_Photo_\(UUID().uuidString).\(ext)"
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(fileName)
+                do {
+                    try imageData.write(to: tempURL)
+                    return tempURL
+                } catch {
+                    return nil
+                }
+            }
+            .observe(on: MainScheduler.instance)
+            .asDriver(onErrorDriveWith: .empty())
+        #else
+        let saveFileURL: Driver<URL> = .empty()
         let saveResult = input.saveButtonTapped
             .withLatestFrom(cardImage)
             .flatMap { imageData -> Observable<Result<Void, Error>> in
@@ -71,6 +93,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
                 }
             }
             .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+        #endif
 
         let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
@@ -93,6 +116,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         return Output(
             saveResult: saveResult,
+            saveFileURL: saveFileURL,
             shareImage: shareImage,
             deleteCompleted: deleteCompleted
         )

@@ -304,12 +304,17 @@ final class SettingsViewController: UIViewController {
     }
 
     private func presentShareSheet(for url: URL) {
+        #if targetEnvironment(macCatalyst)
+        let picker = UIDocumentPickerViewController(forExporting: [url])
+        present(picker, animated: true)
+        #else
         let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         if let popover = activityVC.popoverPresentationController {
             popover.sourceView = view
             popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
         }
         present(activityVC, animated: true)
+        #endif
     }
 
     private func showBackupError(title: String, error: Error) {

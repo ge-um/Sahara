@@ -233,6 +233,14 @@ final class CardDetailViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
+        #if targetEnvironment(macCatalyst)
+        output.saveFileURL
+            .drive(with: self) { owner, url in
+                let picker = UIDocumentPickerViewController(forExporting: [url])
+                owner.present(picker, animated: true)
+            }
+            .disposed(by: disposeBag)
+        #else
         output.saveResult
             .drive(with: self) { owner, result in
                 switch result {
@@ -244,6 +252,7 @@ final class CardDetailViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+        #endif
 
         output.shareImage
             .drive(with: self) { owner, image in
