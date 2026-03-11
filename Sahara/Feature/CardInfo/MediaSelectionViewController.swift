@@ -109,26 +109,11 @@ final class MediaSelectionViewController: UIViewController {
                 let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                 var actionItems: [MediaCollectionItem] = []
 
-                #if !targetEnvironment(macCatalyst)
-                if status == .authorized {
-                    actionItems.append(.action(
-                        icon: "camera.fill",
-                        title: NSLocalizedString("media_selection.camera", comment: ""),
-                        type: .camera
-                    ))
-                } else {
-                    actionItems.append(.action(
-                        icon: "camera.fill",
-                        title: NSLocalizedString("media_selection.camera", comment: ""),
-                        type: .camera
-                    ))
-                    actionItems.append(.action(
-                        icon: "photo.on.rectangle",
-                        title: NSLocalizedString("media_selection.library", comment: ""),
-                        type: .library
-                    ))
-                }
-                #else
+                actionItems.append(.action(
+                    icon: "camera.fill",
+                    title: NSLocalizedString("media_selection.camera", comment: ""),
+                    type: .camera
+                ))
                 if status != .authorized {
                     actionItems.append(.action(
                         icon: "photo.on.rectangle",
@@ -136,7 +121,6 @@ final class MediaSelectionViewController: UIViewController {
                         type: .library
                     ))
                 }
-                #endif
 
                 sections.append(SectionModel(model: "actions", items: actionItems))
 
@@ -164,13 +148,11 @@ final class MediaSelectionViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        #if !targetEnvironment(macCatalyst)
         output.showCamera
             .drive(with: self) { owner, _ in
                 owner.presentCamera()
             }
             .disposed(by: disposeBag)
-        #endif
 
         output.showPHPicker
             .drive(with: self) { owner, _ in
@@ -190,7 +172,6 @@ final class MediaSelectionViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        #if !targetEnvironment(macCatalyst)
         output.requestCameraPermission
             .drive(with: self) { owner, _ in
                 PermissionManager.shared.requestPermission(for: .camera, from: owner) { [weak owner] status in
@@ -203,7 +184,6 @@ final class MediaSelectionViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
-        #endif
 
         output.requestPhotoPermission
             .drive(with: self) { owner, _ in
@@ -230,16 +210,14 @@ final class MediaSelectionViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
-    #if !targetEnvironment(macCatalyst)
     private func presentCamera() {
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
-
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        present(picker, animated: true)
+        let cameraVC = CameraViewController()
+        cameraVC.modalPresentationStyle = .fullScreen
+        cameraVC.onPhotoCaptured = { [weak self] imageSource in
+            self?.imagePickerResultRelay.accept((imageSource, nil, Date(), .camera))
+        }
+        present(cameraVC, animated: true)
     }
-    #endif
 
     private func presentPHPicker() {
         var configuration = PHPickerConfiguration(photoLibrary: .shared())
@@ -277,27 +255,6 @@ final class MediaSelectionViewController: UIViewController {
 
     @objc private func closeTapped() {
         dismiss(animated: true)
-    }
-}
-
-extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true)
-
-        if let image = info[.originalImage] as? UIImage {
-            let metadata: EXIFMetadata
-            if let mediaMetadata = info[.mediaMetadata] as? [String: Any] {
-                metadata = EXIFMetadataExtractor.extract(from: mediaMetadata)
-            } else {
-                metadata = EXIFMetadata(location: nil, date: nil)
-            }
-            let imageSource = ImageSourceData(image: image)
-            imagePickerResultRelay.accept((imageSource, nil, metadata.date, .camera))
-        }
-    }
-
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
     }
 }
 
