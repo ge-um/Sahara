@@ -91,6 +91,10 @@
 "media_selection.photo_permission_message" = "请在设置中允许照片库权限";
 "media_selection.go_to_settings" = "前往设置";
 
+/* Camera */
+"camera.unavailable_title" = "无法使用相机";
+"camera.unavailable_message" = "此设备不支持相机功能。";
+
 /* Media Editor */
 "media_editor.title" = "照片编辑";
 "media_editor.done" = "完成";

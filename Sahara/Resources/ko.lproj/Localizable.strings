@@ -91,6 +91,10 @@
 "media_selection.photo_permission_message" = "사진을 선택하려면 설정에서 사진 라이브러리 권한을 허용해요";
 "media_selection.go_to_settings" = "설정으로 이동";
 
+/* Camera */
+"camera.unavailable_title" = "카메라를 사용할 수 없어요";
+"camera.unavailable_message" = "이 기기에서는 카메라를 사용할 수 없습니다.";
+
 /* Media Editor */
 "media_editor.title" = "사진 편집";
 "media_editor.done" = "완료";

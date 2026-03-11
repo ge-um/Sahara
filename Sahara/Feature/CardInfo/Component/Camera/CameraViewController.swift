@@ -75,7 +75,10 @@ final class CameraViewController: UIViewController {
 
         guard let captureSession = captureSession else { return }
 
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentCamera) else { return }
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentCamera) else {
+            showCameraUnavailableAlert()
+            return
+        }
 
         do {
             let input = try AVCaptureDeviceInput(device: camera)
@@ -96,7 +99,23 @@ final class CameraViewController: UIViewController {
                 view.layer.insertSublayer(previewLayer, at: 0)
             }
         } catch {
+            showCameraUnavailableAlert()
         }
+    }
+
+    private func showCameraUnavailableAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("camera.unavailable_title", comment: ""),
+            message: NSLocalizedString("camera.unavailable_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ) { [weak self] _ in
+            self?.dismiss(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     private func configureUI() {
@@ -177,6 +196,12 @@ final class CameraViewController: UIViewController {
                 captureSession.addInput(newInput)
             }
         } catch {
+            currentCamera = currentCamera == .back ? .front : .back
+            if let fallbackCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentCamera),
+               let fallbackInput = try? AVCaptureDeviceInput(device: fallbackCamera),
+               captureSession.canAddInput(fallbackInput) {
+                captureSession.addInput(fallbackInput)
+            }
         }
 
         captureSession.commitConfiguration()

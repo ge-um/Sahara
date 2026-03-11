@@ -91,6 +91,10 @@
 "media_selection.photo_permission_message" = "Please allow photo library access in Settings";
 "media_selection.go_to_settings" = "Go to Settings";
 
+/* Camera */
+"camera.unavailable_title" = "Camera Unavailable";
+"camera.unavailable_message" = "Camera is not available on this device.";
+
 /* Media Editor */
 "media_editor.title" = "Photo Editor";
 "media_editor.done" = "Done";

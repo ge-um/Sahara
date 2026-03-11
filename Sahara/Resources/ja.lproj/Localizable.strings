@@ -91,6 +91,10 @@
 "media_selection.photo_permission_message" = "設定でフォトライブラリアクセス権限を許可してください";
 "media_selection.go_to_settings" = "設定に移動";
 
+/* Camera */
+"camera.unavailable_title" = "カメラを使用できません";
+"camera.unavailable_message" = "このデバイスではカメラを使用できません。";
+
 /* Media Editor */
 "media_editor.title" = "写真編集";
 "media_editor.done" = "完了";
