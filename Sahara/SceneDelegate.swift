@@ -16,6 +16,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
         guard let scene = (scene as? UIWindowScene) else { return }
+
+        #if targetEnvironment(macCatalyst)
+        scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+        scene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 900)
+        #endif
+
         window = UIWindow(windowScene: scene)
 
         if RealmManager.validateRealm() != nil {
