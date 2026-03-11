@@ -616,19 +616,7 @@ final class MediaEditorViewController: UIViewController {
     func addStickerToPhoto(_ sticker: KlipySticker) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: sticker)
-
-        stickerView.onDragChanged = { [weak self] view in
-            self?.dragHandler.handleDragChanged(view: view)
-        }
-
-        stickerView.onDragEnded = { [weak self] view in
-            guard let self = self else { return }
-            _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
-        }
-
-        stickerView.onTapped = { [weak self] tappedView in
-            self?.selectView(tappedView)
-        }
+        configureStickerGestureCallbacks(for: stickerView)
 
         stickerContainerView.addSubview(stickerView)
 
@@ -647,19 +635,7 @@ final class MediaEditorViewController: UIViewController {
     func addPhotoToCanvas(_ image: UIImage) {
         let imageView = DraggableImageView(frame: .zero)
         imageView.configure(with: image)
-
-        imageView.onDragChanged = { [weak self] view in
-            self?.dragHandler.handleDragChanged(view: view)
-        }
-
-        imageView.onDragEnded = { [weak self] view in
-            guard let self = self else { return }
-            _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
-        }
-
-        imageView.onTapped = { [weak self] tappedView in
-            self?.selectView(tappedView)
-        }
+        configurePhotoGestureCallbacks(for: imageView)
 
         stickerContainerView.addSubview(imageView)
 
@@ -745,6 +721,32 @@ final class MediaEditorViewController: UIViewController {
         view.isSelected = true
     }
 
+    private func configureStickerGestureCallbacks(for stickerView: DraggableStickerView) {
+        stickerView.onDragChanged = { [weak self] view in
+            self?.dragHandler.handleDragChanged(view: view)
+        }
+        stickerView.onDragEnded = { [weak self] view in
+            guard let self = self else { return }
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
+        }
+        stickerView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+    }
+
+    private func configurePhotoGestureCallbacks(for imageView: DraggableImageView) {
+        imageView.onDragChanged = { [weak self] view in
+            self?.dragHandler.handleDragChanged(view: view)
+        }
+        imageView.onDragEnded = { [weak self] view in
+            guard let self = self else { return }
+            _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
+        }
+        imageView.onTapped = { [weak self] tappedView in
+            self?.selectView(tappedView)
+        }
+    }
+
     private func deselectAll() {
         selectedView?.isSelected = false
         selectedView = nil
@@ -791,19 +793,7 @@ final class MediaEditorViewController: UIViewController {
     private func restoreKlipySticker(_ stickerDTO: StickerDTO, imageSize: CGSize, displayRect: CGRect) {
         let stickerView = DraggableStickerView()
         stickerView.configure(with: stickerDTO)
-
-        stickerView.onDragChanged = { [weak self] view in
-            self?.dragHandler.handleDragChanged(view: view)
-        }
-
-        stickerView.onDragEnded = { [weak self] view in
-            guard let self = self else { return }
-            _ = self.dragHandler.handleDragEnded(view: view, in: &self.stickerViews)
-        }
-
-        stickerView.onTapped = { [weak self] tappedView in
-            self?.selectView(tappedView)
-        }
+        configureStickerGestureCallbacks(for: stickerView)
 
         stickerContainerView.addSubview(stickerView)
 
@@ -831,19 +821,7 @@ final class MediaEditorViewController: UIViewController {
 
         let imageView = DraggableImageView(frame: .zero)
         imageView.configure(with: photoImage)
-
-        imageView.onDragChanged = { [weak self] view in
-            self?.dragHandler.handleDragChanged(view: view)
-        }
-
-        imageView.onDragEnded = { [weak self] view in
-            guard let self = self else { return }
-            _ = self.dragHandler.handleDragEnded(view: view, in: &self.photoViews)
-        }
-
-        imageView.onTapped = { [weak self] tappedView in
-            self?.selectView(tappedView)
-        }
+        configurePhotoGestureCallbacks(for: imageView)
 
         stickerContainerView.addSubview(imageView)
 
