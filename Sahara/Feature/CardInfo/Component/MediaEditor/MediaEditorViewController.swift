@@ -869,95 +869,88 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func convertStickersToDTO() -> [StickerDTO] {
-        guard let image = photoImageView.image else {
-            return []
-        }
+        guard let image = photoImageView.image else { return [] }
 
         let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
             imageSize: image.size,
             in: photoImageView.bounds.size
         )
-
-        guard imageRect.width > 0, imageRect.height > 0 else {
-            return []
-        }
+        guard imageRect.width > 0, imageRect.height > 0 else { return [] }
 
         var allStickers: [StickerDTO] = []
         var currentZIndex = 0
 
         for stickerView in stickerViews {
-            let scale = sqrt(stickerView.transform.a * stickerView.transform.a + stickerView.transform.c * stickerView.transform.c)
-            let rotation = atan2(stickerView.transform.b, stickerView.transform.a)
-
-            let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
-                centerX: stickerView.center.x,
-                centerY: stickerView.center.y,
-                scale: scale,
-                rotation: rotation,
-                baseImageSize: image.size,
-                displayRect: imageRect
-            )
-
-            let isAnimated = stickerView.stickerURL != nil
-
-            let stickerDTO = StickerDTO(
-                x: normalized.x,
-                y: normalized.y,
-                scale: normalized.scale,
-                rotation: normalized.rotation,
-                zIndex: currentZIndex,
-                sourceType: .kilpy,
-                resourceUrl: stickerView.stickerURL?.absoluteString,
-                localFilePath: nil,
-                photoAssetId: nil,
-                isAnimated: isAnimated
-            )
-            allStickers.append(stickerDTO)
+            allStickers.append(convertStickerViewToDTO(stickerView, image: image, imageRect: imageRect, zIndex: currentZIndex))
             currentZIndex += 1
         }
 
         for photoView in photoViews {
-            let scale = sqrt(photoView.transform.a * photoView.transform.a + photoView.transform.c * photoView.transform.c)
-            let rotation = atan2(photoView.transform.b, photoView.transform.a)
-
-            let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
-                centerX: photoView.center.x,
-                centerY: photoView.center.y,
-                scale: scale,
-                rotation: rotation,
-                baseImageSize: image.size,
-                displayRect: imageRect
-            )
-
-            var localFilePath: String?
-            if let photoImage = photoView.image,
-               let imageData = photoImage.jpegData(compressionQuality: 0.9) {
-                let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                let fileName = UUID().uuidString + ".jpg"
-                let fileURL = documentsPath.appendingPathComponent("PhotoStickers").appendingPathComponent(fileName)
-
-                try? FileManager.default.createDirectory(at: documentsPath.appendingPathComponent("PhotoStickers"), withIntermediateDirectories: true)
-                try? imageData.write(to: fileURL)
-                localFilePath = fileURL.path
-            }
-
-            let photoDTO = StickerDTO(
-                x: normalized.x,
-                y: normalized.y,
-                scale: normalized.scale,
-                rotation: normalized.rotation,
-                zIndex: currentZIndex,
-                sourceType: .photo,
-                resourceUrl: nil,
-                localFilePath: localFilePath,
-                photoAssetId: nil,
-                isAnimated: false
-            )
-            allStickers.append(photoDTO)
+            allStickers.append(convertPhotoViewToDTO(photoView, image: image, imageRect: imageRect, zIndex: currentZIndex))
             currentZIndex += 1
         }
 
         return allStickers
+    }
+
+    private func convertStickerViewToDTO(_ stickerView: DraggableStickerView, image: UIImage, imageRect: CGRect, zIndex: Int) -> StickerDTO {
+        let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
+            centerX: stickerView.center.x,
+            centerY: stickerView.center.y,
+            scale: stickerView.transform.extractedScale,
+            rotation: stickerView.transform.extractedRotation,
+            baseImageSize: image.size,
+            displayRect: imageRect
+        )
+
+        return StickerDTO(
+            x: normalized.x,
+            y: normalized.y,
+            scale: normalized.scale,
+            rotation: normalized.rotation,
+            zIndex: zIndex,
+            sourceType: .kilpy,
+            resourceUrl: stickerView.stickerURL?.absoluteString,
+            localFilePath: nil,
+            photoAssetId: nil,
+            isAnimated: stickerView.stickerURL != nil
+        )
+    }
+
+    private func convertPhotoViewToDTO(_ photoView: DraggableImageView, image: UIImage, imageRect: CGRect, zIndex: Int) -> StickerDTO {
+        let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
+            centerX: photoView.center.x,
+            centerY: photoView.center.y,
+            scale: photoView.transform.extractedScale,
+            rotation: photoView.transform.extractedRotation,
+            baseImageSize: image.size,
+            displayRect: imageRect
+        )
+
+        var localFilePath: String?
+        if let photoImage = photoView.image,
+           let imageData = photoImage.jpegData(compressionQuality: 0.9) {
+            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let fileName = UUID().uuidString + ".jpg"
+            let fileURL = documentsPath.appendingPathComponent("PhotoStickers").appendingPathComponent(fileName)
+
+            try? FileManager.default.createDirectory(at: documentsPath.appendingPathComponent("PhotoStickers"), withIntermediateDirectories: true)
+            try? imageData.write(to: fileURL)
+            localFilePath = fileURL.path
+        }
+
+        return StickerDTO(
+            x: normalized.x,
+            y: normalized.y,
+            scale: normalized.scale,
+            rotation: normalized.rotation,
+            zIndex: zIndex,
+            sourceType: .photo,
+            resourceUrl: nil,
+            localFilePath: localFilePath,
+            photoAssetId: nil,
+            isAnimated: false
+        )
     }
 
 }
