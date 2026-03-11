@@ -78,6 +78,36 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let networkErrorRelay = PublishRelay<String>()
         let shouldShowStickerModalRelay = PublishRelay<Void>()
 
+        bindStickerSearch(
+            input: input,
+            stickersRelay: stickersRelay,
+            isLoadingMoreRelay: isLoadingMoreRelay,
+            errorRelay: errorRelay,
+            networkErrorRelay: networkErrorRelay,
+            shouldShowStickerModalRelay: shouldShowStickerModalRelay
+        )
+
+        bindImageEditing(input: input, filteredImageRelay: filteredImageRelay)
+
+        return buildOutput(
+            input: input,
+            stickersRelay: stickersRelay,
+            filteredImageRelay: filteredImageRelay,
+            isLoadingMoreRelay: isLoadingMoreRelay,
+            errorRelay: errorRelay,
+            networkErrorRelay: networkErrorRelay,
+            shouldShowStickerModalRelay: shouldShowStickerModalRelay
+        )
+    }
+
+    private func bindStickerSearch(
+        input: Input,
+        stickersRelay: BehaviorRelay<[KlipySticker]>,
+        isLoadingMoreRelay: BehaviorRelay<Bool>,
+        errorRelay: PublishRelay<String>,
+        networkErrorRelay: PublishRelay<String>,
+        shouldShowStickerModalRelay: PublishRelay<Void>
+    ) {
         input.stickerButtonTapped
             .withUnretained(self)
             .bind { owner, _ in
@@ -233,7 +263,9 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 stickersRelay.accept(currentStickers + newStickers)
             }
             .disposed(by: disposeBag)
+    }
 
+    private func bindImageEditing(input: Input, filteredImageRelay: BehaviorRelay<UIImage?>) {
         input.filterSelected
             .withUnretained(self)
             .bind { owner, data in
@@ -272,7 +304,17 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 owner.addedStickersRelay.accept(currentStickers)
             }
             .disposed(by: disposeBag)
+    }
 
+    private func buildOutput(
+        input: Input,
+        stickersRelay: BehaviorRelay<[KlipySticker]>,
+        filteredImageRelay: BehaviorRelay<UIImage?>,
+        isLoadingMoreRelay: BehaviorRelay<Bool>,
+        errorRelay: PublishRelay<String>,
+        networkErrorRelay: PublishRelay<String>,
+        shouldShowStickerModalRelay: PublishRelay<Void>
+    ) -> Output {
         let selectedSticker = input.stickerSelected
             .asDriver(onErrorDriveWith: .empty())
 

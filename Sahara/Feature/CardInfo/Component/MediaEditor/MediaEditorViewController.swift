@@ -378,6 +378,13 @@ final class MediaEditorViewController: UIViewController {
     }
 
     private func bind() {
+        bindModeButtons()
+        bindCropButtons()
+        bindUndoRedo()
+        bindViewModel()
+    }
+
+    private func bindModeButtons() {
         stickerModeButton.rx.tap
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .sticker else { return }
@@ -459,8 +466,9 @@ final class MediaEditorViewController: UIViewController {
                 owner.updateModeButtons(currentMode: mode)
             }
             .disposed(by: disposeBag)
+    }
 
-
+    private func bindCropButtons() {
         cropApplyButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.applyCrop()
@@ -472,7 +480,9 @@ final class MediaEditorViewController: UIViewController {
                 owner.currentMode.accept(nil)
             }
             .disposed(by: disposeBag)
+    }
 
+    private func bindUndoRedo() {
         undoButton.rx.tap
             .bind(with: self) { owner, _ in
                 owner.canvasView.undoManager?.undo()
@@ -486,7 +496,9 @@ final class MediaEditorViewController: UIViewController {
                 owner.updateUndoRedoButtons()
             }
             .disposed(by: disposeBag)
+    }
 
+    private func bindViewModel() {
         let input = MediaEditorViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
             stickerButtonTapped: stickerButtonTappedRelay.asObservable(),
