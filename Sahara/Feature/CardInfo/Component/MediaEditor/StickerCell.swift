@@ -40,27 +40,16 @@ final class StickerCell: UICollectionViewCell, IsIdentifiable {
     }
 
     func configure(with sticker: KlipySticker) {
-        var urlString: String?
-
-        if let sm = sticker.file.sm {
-            urlString = sm.gif?.url ?? sm.webp?.url
-        } else if let xs = sticker.file.xs {
-            urlString = xs.gif?.url ?? xs.webp?.url
-        } else if let md = sticker.file.md {
-            urlString = md.gif?.url ?? md.webp?.url
-        } else if let hd = sticker.file.hd {
-            urlString = hd.gif?.url ?? hd.webp?.url
-        }
-
-        if let urlString = urlString, let url = URL(string: urlString) {
-            let options: KingfisherOptionsInfo = [
+        guard let url = sticker.resolveImageURL(quality: .lowFirst) else { return }
+        imageView.kf.setImage(
+            with: url,
+            options: [
                 .scaleFactor(UIScreen.main.scale),
                 .memoryCacheExpiration(.seconds(600)),
                 .diskCacheExpiration(.days(7)),
                 .cacheOriginalImage,
                 .onlyLoadFirstFrame
             ]
-            imageView.kf.setImage(with: url, options: options)
-        }
+        )
     }
 }
