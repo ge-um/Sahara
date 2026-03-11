@@ -56,6 +56,13 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.viewWillAppear
             .bind(with: self) { owner, _ in
+                #if targetEnvironment(macCatalyst)
+                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+                if status == .notDetermined {
+                    requestPhotoPermissionRelay.accept(())
+                    return
+                }
+                #endif
                 owner.fetchPhotos(relay: photosRelay)
             }
             .disposed(by: disposeBag)
@@ -79,6 +86,17 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.libraryButtonTapped
             .bind(with: self) { owner, _ in
+                #if targetEnvironment(macCatalyst)
+                let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
+                switch status {
+                case .authorized:
+                    showPHPickerRelay.accept(())
+                case .notDetermined:
+                    requestPhotoPermissionRelay.accept(())
+                case .denied, .limited:
+                    showPHPickerRelay.accept(())
+                }
+                #else
                 let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
 
                 switch status {
@@ -91,6 +109,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
                 case .notDetermined:
                     requestPhotoPermissionRelay.accept(())
                 }
+                #endif
             }
             .disposed(by: disposeBag)
 

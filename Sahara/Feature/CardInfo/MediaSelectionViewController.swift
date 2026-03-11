@@ -109,6 +109,7 @@ final class MediaSelectionViewController: UIViewController {
                 let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                 var actionItems: [MediaCollectionItem] = []
 
+                #if !targetEnvironment(macCatalyst)
                 if status == .authorized {
                     actionItems.append(.action(
                         icon: "camera.fill",
@@ -127,6 +128,13 @@ final class MediaSelectionViewController: UIViewController {
                         type: .library
                     ))
                 }
+                #else
+                actionItems.append(.action(
+                    icon: "photo.on.rectangle",
+                    title: NSLocalizedString("media_selection.library", comment: ""),
+                    type: .library
+                ))
+                #endif
 
                 sections.append(SectionModel(model: "actions", items: actionItems))
 
@@ -154,11 +162,13 @@ final class MediaSelectionViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        #if !targetEnvironment(macCatalyst)
         output.showCamera
             .drive(with: self) { owner, _ in
                 owner.presentCamera()
             }
             .disposed(by: disposeBag)
+        #endif
 
         output.showPHPicker
             .drive(with: self) { owner, _ in
@@ -178,6 +188,7 @@ final class MediaSelectionViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        #if !targetEnvironment(macCatalyst)
         output.requestCameraPermission
             .drive(with: self) { owner, _ in
                 PermissionManager.shared.requestPermission(for: .camera, from: owner) { [weak owner] status in
@@ -190,6 +201,7 @@ final class MediaSelectionViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+        #endif
 
         output.requestPhotoPermission
             .drive(with: self) { owner, _ in
@@ -216,6 +228,7 @@ final class MediaSelectionViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
+    #if !targetEnvironment(macCatalyst)
     private func presentCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
 
@@ -224,6 +237,7 @@ final class MediaSelectionViewController: UIViewController {
         picker.delegate = self
         present(picker, animated: true)
     }
+    #endif
 
     private func presentPHPicker() {
         var configuration = PHPickerConfiguration()
