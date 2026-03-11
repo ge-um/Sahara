@@ -129,11 +129,13 @@ final class MediaSelectionViewController: UIViewController {
                     ))
                 }
                 #else
-                actionItems.append(.action(
-                    icon: "photo.on.rectangle",
-                    title: NSLocalizedString("media_selection.library", comment: ""),
-                    type: .library
-                ))
+                if status != .authorized {
+                    actionItems.append(.action(
+                        icon: "photo.on.rectangle",
+                        title: NSLocalizedString("media_selection.library", comment: ""),
+                        type: .library
+                    ))
+                }
                 #endif
 
                 sections.append(SectionModel(model: "actions", items: actionItems))
