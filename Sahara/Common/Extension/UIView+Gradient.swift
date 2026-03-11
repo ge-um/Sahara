@@ -15,6 +15,7 @@ extension UIView {
 
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = bounds
+        configureLayerForResizableWindow(gradientLayer)
         gradientLayer.colors = gradient.colors
         gradientLayer.locations = gradient.locations
         gradientLayer.startPoint = gradient.startPoint
@@ -23,25 +24,23 @@ extension UIView {
     }
 
     func applyDotPattern(dotSize: CGFloat, spacing: CGFloat, color: UIColor) {
-        let dotLayer = CAShapeLayer()
-        dotLayer.frame = bounds
-
-        let dotPath = UIBezierPath()
-
-        var y: CGFloat = 0
-        while y < bounds.height {
-            var x: CGFloat = 0
-            while x < bounds.width {
-                let dotRect = CGRect(x: x, y: y, width: dotSize, height: dotSize)
-                dotPath.append(UIBezierPath(ovalIn: dotRect))
-                x += spacing
-            }
-            y += spacing
+        let tileSize = CGSize(width: spacing, height: spacing)
+        let renderer = UIGraphicsImageRenderer(size: tileSize)
+        let patternImage = renderer.image { ctx in
+            ctx.cgContext.setFillColor(color.cgColor)
+            ctx.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: dotSize, height: dotSize))
         }
+        let patternLayer = CALayer()
+        patternLayer.backgroundColor = UIColor(patternImage: patternImage).cgColor
+        patternLayer.frame = bounds
+        configureLayerForResizableWindow(patternLayer)
+        layer.insertSublayer(patternLayer, at: 1)
+    }
 
-        dotLayer.path = dotPath.cgPath
-        dotLayer.fillColor = color.cgColor
-        layer.insertSublayer(dotLayer, at: 1)
+    private func configureLayerForResizableWindow(_ layer: CALayer) {
+        #if targetEnvironment(macCatalyst)
+        layer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        #endif
     }
 
     func applyGradientWithDots(_ gradient: DesignToken.Gradient, dotSize: CGFloat, spacing: CGFloat, dotColor: UIColor) {

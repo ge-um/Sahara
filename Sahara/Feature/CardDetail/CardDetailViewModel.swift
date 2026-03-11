@@ -27,6 +27,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
     struct Output {
         let saveResult: Driver<Result<Void, Error>>
+        let saveFileURL: Driver<URL>
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
     }
@@ -50,8 +51,66 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         let cardImage = cardImageRelay.compactMap { $0 }.asObservable()
 
-        let saveResult = input.saveButtonTapped
+        let saveAction = configureSaveAction(
+            trigger: input.saveButtonTapped, imageData: cardImage
+        )
+        let saveResult = saveAction.saveResult
+        let saveFileURL = saveAction.saveFileURL
+
+        let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
+            .compactMap { imageData -> UIImage? in
+                let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+                let screenScale = screen?.scale ?? 2.0
+                let screenBounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 393, height: 852)
+                let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
+                return ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
+            }
+            .asDriver(onErrorDriveWith: .empty())
+
+        let deleteCompleted = input.deleteConfirmed
+            .withUnretained(self)
+            .flatMap { owner, _ in
+                owner.realmManager.deleteCard(forPrimaryKey: owner.cardId)
+                    .catch { _ in .empty() }
+            }
+            .asDriver(onErrorJustReturn: ())
+
+        return Output(
+            saveResult: saveResult,
+            saveFileURL: saveFileURL,
+            shareImage: shareImage,
+            deleteCompleted: deleteCompleted
+        )
+    }
+
+    private func configureSaveAction(
+        trigger: Observable<Void>, imageData: Observable<Data>
+    ) -> (saveResult: Driver<Result<Void, Error>>, saveFileURL: Driver<URL>) {
+        #if targetEnvironment(macCatalyst)
+        let saveResult: Driver<Result<Void, Error>> = .empty()
+        let saveFileURL = trigger
+            .withLatestFrom(imageData)
+            .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
+            .compactMap { imageData -> URL? in
+                let ext = ImageFormatHelper.detect(from: imageData)?.rawValue ?? "jpeg"
+                let fileName = "Sahara_Photo_\(UUID().uuidString).\(ext)"
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(fileName)
+                do {
+                    try imageData.write(to: tempURL)
+                    return tempURL
+                } catch {
+                    return nil
+                }
+            }
+            .observe(on: MainScheduler.instance)
+            .asDriver(onErrorDriveWith: .empty())
+        return (saveResult, saveFileURL)
+        #else
+        let saveFileURL: Driver<URL> = .empty()
+        let saveResult = trigger
+            .withLatestFrom(imageData)
             .flatMap { imageData -> Observable<Result<Void, Error>> in
                 return Observable.create { observer in
                     PHPhotoLibrary.shared().performChanges({
@@ -71,29 +130,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
                 }
             }
             .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
-
-        let shareImage = input.shareButtonTapped
-            .withLatestFrom(cardImage)
-            .compactMap { imageData -> UIImage? in
-                let screenScale = UIScreen.main.scale
-                let screenBounds = UIScreen.main.bounds
-                let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
-                return ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
-            }
-            .asDriver(onErrorDriveWith: .empty())
-
-        let deleteCompleted = input.deleteConfirmed
-            .withUnretained(self)
-            .flatMap { owner, _ in
-                owner.realmManager.deleteCard(forPrimaryKey: owner.cardId)
-                    .catch { _ in .empty() }
-            }
-            .asDriver(onErrorJustReturn: ())
-
-        return Output(
-            saveResult: saveResult,
-            shareImage: shareImage,
-            deleteCompleted: deleteCompleted
-        )
+        return (saveResult, saveFileURL)
+        #endif
     }
 }

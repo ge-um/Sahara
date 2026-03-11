@@ -200,6 +200,29 @@ final class CardDetailViewController: UIViewController {
         present(navController, animated: true)
     }
 
+    private func bindSaveOutput(_ output: CardDetailViewModel.Output) {
+        #if targetEnvironment(macCatalyst)
+        output.saveFileURL
+            .drive(with: self) { owner, url in
+                let picker = UIDocumentPickerViewController(forExporting: [url])
+                owner.present(picker, animated: true)
+            }
+            .disposed(by: disposeBag)
+        #else
+        output.saveResult
+            .drive(with: self) { owner, result in
+                switch result {
+                case .success:
+                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
+                    owner.showToast(message: message)
+                case .failure(let error):
+                    owner.showToast(message: error.localizedDescription)
+                }
+            }
+            .disposed(by: disposeBag)
+        #endif
+    }
+
     private func bind() {
         photoCardView.deleteButtonTappedRelay
             .bind(with: self) { owner, _ in
@@ -233,23 +256,14 @@ final class CardDetailViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        output.saveResult
-            .drive(with: self) { owner, result in
-                switch result {
-                case .success:
-                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
-                    owner.showToast(message: message)
-                case .failure(let error):
-                    owner.showToast(message: error.localizedDescription)
-                }
-            }
-            .disposed(by: disposeBag)
+        bindSaveOutput(output)
 
         output.shareImage
             .drive(with: self) { owner, image in
                 let itemSource = ShareActivityItemSource(image: image)
                 let activityVC = UIActivityViewController(activityItems: [itemSource], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
+                activityVC.popoverPresentationController?.sourceRect = owner.shareButton.bounds
                 owner.present(activityVC, animated: true)
             }
             .disposed(by: disposeBag)

@@ -111,7 +111,7 @@ final class PieChartView: UIView {
             textLayer.fontSize = 12
             textLayer.foregroundColor = UIColor.token(.textPrimary).cgColor
             textLayer.alignmentMode = .center
-            textLayer.contentsScale = UIScreen.main.scale
+            textLayer.contentsScale = window?.screen.scale ?? 2.0
 
             let textSize = (labelText as NSString).size(withAttributes: [.font: FontSystem.galmuriMono(size: 12)])
             textLayer.frame = CGRect(

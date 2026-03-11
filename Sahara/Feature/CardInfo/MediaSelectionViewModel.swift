@@ -56,7 +56,10 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.viewWillAppear
             .bind(with: self) { owner, _ in
-                owner.fetchPhotos(relay: photosRelay)
+                owner.handleInitialPhotoLoad(
+                    photosRelay: photosRelay,
+                    requestPhotoPermissionRelay: requestPhotoPermissionRelay
+                )
             }
             .disposed(by: disposeBag)
 
@@ -79,18 +82,12 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.libraryButtonTapped
             .bind(with: self) { owner, _ in
-                let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
-
-                switch status {
-                case .authorized:
-                    showPHPickerRelay.accept(())
-                case .limited:
-                    showLimitedLibraryPickerRelay.accept(())
-                case .denied:
-                    showPhotoPermissionAlertRelay.accept(())
-                case .notDetermined:
-                    requestPhotoPermissionRelay.accept(())
-                }
+                owner.handleLibraryButtonTapped(
+                    showPHPickerRelay: showPHPickerRelay,
+                    showPhotoPermissionAlertRelay: showPhotoPermissionAlertRelay,
+                    requestPhotoPermissionRelay: requestPhotoPermissionRelay,
+                    showLimitedLibraryPickerRelay: showLimitedLibraryPickerRelay
+                )
             }
             .disposed(by: disposeBag)
 
@@ -129,6 +126,50 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             requestCameraPermission: requestCameraPermissionRelay.asDriver(onErrorJustReturn: ()),
             showLimitedLibraryPicker: showLimitedLibraryPickerRelay.asDriver(onErrorJustReturn: ())
         )
+    }
+
+    private func handleInitialPhotoLoad(
+        photosRelay: BehaviorRelay<[PHAsset]>,
+        requestPhotoPermissionRelay: PublishRelay<Void>
+    ) {
+        #if targetEnvironment(macCatalyst)
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status == .notDetermined {
+            requestPhotoPermissionRelay.accept(())
+            return
+        }
+        #endif
+        fetchPhotos(relay: photosRelay)
+    }
+
+    private func handleLibraryButtonTapped(
+        showPHPickerRelay: PublishRelay<Void>,
+        showPhotoPermissionAlertRelay: PublishRelay<Void>,
+        requestPhotoPermissionRelay: PublishRelay<Void>,
+        showLimitedLibraryPickerRelay: PublishRelay<Void>
+    ) {
+        let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
+        #if targetEnvironment(macCatalyst)
+        switch status {
+        case .authorized:
+            showPHPickerRelay.accept(())
+        case .notDetermined:
+            requestPhotoPermissionRelay.accept(())
+        case .denied, .limited:
+            showPHPickerRelay.accept(())
+        }
+        #else
+        switch status {
+        case .authorized:
+            showPHPickerRelay.accept(())
+        case .limited:
+            showLimitedLibraryPickerRelay.accept(())
+        case .denied:
+            showPhotoPermissionAlertRelay.accept(())
+        case .notDetermined:
+            requestPhotoPermissionRelay.accept(())
+        }
+        #endif
     }
 
     private func fetchPhotos(relay: BehaviorRelay<[PHAsset]>) {

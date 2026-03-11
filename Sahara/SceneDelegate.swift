@@ -16,6 +16,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
         guard let scene = (scene as? UIWindowScene) else { return }
+
+        configureWindowSize(for: scene)
+
         window = UIWindow(windowScene: scene)
 
         if RealmManager.validateRealm() != nil {
@@ -63,35 +66,89 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func presentRealmErrorMail(on viewController: UIViewController) {
+        let email = "gageum0@gmail.com"
+        let subject = NSLocalizedString("realm_error.mail_subject", comment: "")
+        let body = generateRealmErrorMailBody()
+
+        #if targetEnvironment(macCatalyst)
+        openMailtoURL(to: email, subject: subject, body: body, fallbackPresenter: viewController)
+        #else
         guard MFMailComposeViewController.canSendMail() else {
-            UIPasteboard.general.string = "gageum0@gmail.com"
-            let fallback = UIAlertController(
-                title: NSLocalizedString("settings.mail_error_title", comment: ""),
-                message: NSLocalizedString("realm_error.email_copied", comment: ""),
-                preferredStyle: .alert
-            )
-            fallback.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
-            viewController.present(fallback, animated: true)
+            copyEmailFallback(email: email, presenter: viewController)
             return
         }
 
         let mailComposer = MFMailComposeViewController()
         mailComposer.mailComposeDelegate = self
-        mailComposer.setToRecipients(["gageum0@gmail.com"])
-        mailComposer.setSubject(NSLocalizedString("realm_error.mail_subject", comment: ""))
+        mailComposer.setToRecipients([email])
+        mailComposer.setSubject(subject)
+        mailComposer.setMessageBody(body, isHTML: false)
 
+        viewController.present(mailComposer, animated: true)
+        #endif
+    }
+
+    private func generateRealmErrorMailBody() -> String {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let iosVersion = UIDevice.current.systemVersion
-        let body = """
+        let osVersionLabel: String
+        let osVersion: String
+
+        #if targetEnvironment(macCatalyst)
+        osVersionLabel = NSLocalizedString("settings.macos_version", comment: "")
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        osVersion = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        #else
+        osVersionLabel = NSLocalizedString("settings.ios_version", comment: "")
+        osVersion = UIDevice.current.systemVersion
+        #endif
+
+        return """
         \(NSLocalizedString("realm_error.mail_body", comment: ""))
 
         ---
         \(NSLocalizedString("settings.app_version", comment: "")): \(appVersion)
-        \(NSLocalizedString("settings.ios_version", comment: "")): \(iosVersion)
+        \(osVersionLabel): \(osVersion)
         """
-        mailComposer.setMessageBody(body, isHTML: false)
+    }
 
-        viewController.present(mailComposer, animated: true)
+    private func openMailtoURL(to email: String, subject: String, body: String, fallbackPresenter: UIViewController) {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        guard let url = components.url else {
+            copyEmailFallback(email: email, presenter: fallbackPresenter)
+            return
+        }
+
+        UIApplication.shared.open(url) { [weak self] success in
+            if !success {
+                self?.copyEmailFallback(email: email, presenter: fallbackPresenter)
+            }
+        }
+    }
+
+    private func copyEmailFallback(email: String, presenter: UIViewController) {
+        UIPasteboard.general.string = email
+        let alert = UIAlertController(
+            title: NSLocalizedString("settings.mail_error_title", comment: ""),
+            message: NSLocalizedString("realm_error.email_copied", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        presenter.present(alert, animated: true)
+    }
+
+    private func configureWindowSize(for scene: UIWindowScene) {
+        #if targetEnvironment(macCatalyst)
+        scene.title = "Sahara"
+        scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+        scene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 900)
+        #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
