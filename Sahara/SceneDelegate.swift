@@ -17,10 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         guard let scene = (scene as? UIWindowScene) else { return }
 
-        #if targetEnvironment(macCatalyst)
-        scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
-        scene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 900)
-        #endif
+        configureWindowSize(for: scene)
 
         window = UIWindow(windowScene: scene)
 
@@ -98,6 +95,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         mailComposer.setMessageBody(body, isHTML: false)
 
         viewController.present(mailComposer, animated: true)
+    }
+
+    private func configureWindowSize(for scene: UIWindowScene) {
+        #if targetEnvironment(macCatalyst)
+        scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+        scene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 900)
+        #endif
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

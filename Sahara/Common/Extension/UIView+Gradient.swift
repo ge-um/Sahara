@@ -15,9 +15,7 @@ extension UIView {
 
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = bounds
-        #if targetEnvironment(macCatalyst)
-        gradientLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        #endif
+        configureLayerForResizableWindow(gradientLayer)
         gradientLayer.colors = gradient.colors
         gradientLayer.locations = gradient.locations
         gradientLayer.startPoint = gradient.startPoint
@@ -35,10 +33,14 @@ extension UIView {
         let patternLayer = CALayer()
         patternLayer.backgroundColor = UIColor(patternImage: patternImage).cgColor
         patternLayer.frame = bounds
-        #if targetEnvironment(macCatalyst)
-        patternLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        #endif
+        configureLayerForResizableWindow(patternLayer)
         layer.insertSublayer(patternLayer, at: 1)
+    }
+
+    private func configureLayerForResizableWindow(_ layer: CALayer) {
+        #if targetEnvironment(macCatalyst)
+        layer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        #endif
     }
 
     func applyGradientWithDots(_ gradient: DesignToken.Gradient, dotSize: CGFloat, spacing: CGFloat, dotColor: UIColor) {

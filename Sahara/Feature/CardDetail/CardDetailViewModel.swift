@@ -51,49 +51,11 @@ final class CardDetailViewModel: BaseViewModelProtocol {
 
         let cardImage = cardImageRelay.compactMap { $0 }.asObservable()
 
-        #if targetEnvironment(macCatalyst)
-        let saveResult: Driver<Result<Void, Error>> = .empty()
-        let saveFileURL = input.saveButtonTapped
-            .withLatestFrom(cardImage)
-            .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
-            .compactMap { imageData -> URL? in
-                let ext = ImageFormatHelper.detect(from: imageData)?.rawValue ?? "jpeg"
-                let fileName = "Sahara_Photo_\(UUID().uuidString).\(ext)"
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent(fileName)
-                do {
-                    try imageData.write(to: tempURL)
-                    return tempURL
-                } catch {
-                    return nil
-                }
-            }
-            .observe(on: MainScheduler.instance)
-            .asDriver(onErrorDriveWith: .empty())
-        #else
-        let saveFileURL: Driver<URL> = .empty()
-        let saveResult = input.saveButtonTapped
-            .withLatestFrom(cardImage)
-            .flatMap { imageData -> Observable<Result<Void, Error>> in
-                return Observable.create { observer in
-                    PHPhotoLibrary.shared().performChanges({
-                        let request = PHAssetCreationRequest.forAsset()
-                        request.addResource(with: .photo, data: imageData, options: nil)
-                    }) { success, error in
-                        if success {
-                            observer.onNext(.success(()))
-                        } else if let error = error {
-                            observer.onNext(.failure(error))
-                        } else {
-                            observer.onNext(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
-                        }
-                        observer.onCompleted()
-                    }
-                    return Disposables.create()
-                }
-            }
-            .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
-        #endif
+        let saveAction = configureSaveAction(
+            trigger: input.saveButtonTapped, imageData: cardImage
+        )
+        let saveResult = saveAction.saveResult
+        let saveFileURL = saveAction.saveFileURL
 
         let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
@@ -120,5 +82,55 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             shareImage: shareImage,
             deleteCompleted: deleteCompleted
         )
+    }
+
+    private func configureSaveAction(
+        trigger: Observable<Void>, imageData: Observable<Data>
+    ) -> (saveResult: Driver<Result<Void, Error>>, saveFileURL: Driver<URL>) {
+        #if targetEnvironment(macCatalyst)
+        let saveResult: Driver<Result<Void, Error>> = .empty()
+        let saveFileURL = trigger
+            .withLatestFrom(imageData)
+            .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
+            .compactMap { imageData -> URL? in
+                let ext = ImageFormatHelper.detect(from: imageData)?.rawValue ?? "jpeg"
+                let fileName = "Sahara_Photo_\(UUID().uuidString).\(ext)"
+                let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(fileName)
+                do {
+                    try imageData.write(to: tempURL)
+                    return tempURL
+                } catch {
+                    return nil
+                }
+            }
+            .observe(on: MainScheduler.instance)
+            .asDriver(onErrorDriveWith: .empty())
+        return (saveResult, saveFileURL)
+        #else
+        let saveFileURL: Driver<URL> = .empty()
+        let saveResult = trigger
+            .withLatestFrom(imageData)
+            .flatMap { imageData -> Observable<Result<Void, Error>> in
+                return Observable.create { observer in
+                    PHPhotoLibrary.shared().performChanges({
+                        let request = PHAssetCreationRequest.forAsset()
+                        request.addResource(with: .photo, data: imageData, options: nil)
+                    }) { success, error in
+                        if success {
+                            observer.onNext(.success(()))
+                        } else if let error = error {
+                            observer.onNext(.failure(error))
+                        } else {
+                            observer.onNext(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+                        }
+                        observer.onCompleted()
+                    }
+                    return Disposables.create()
+                }
+            }
+            .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+        return (saveResult, saveFileURL)
+        #endif
     }
 }

@@ -41,13 +41,15 @@ final class CameraViewController: UIViewController {
         return button
     }()
 
-    private var currentCamera: AVCaptureDevice.Position = {
+    private lazy var currentCamera: AVCaptureDevice.Position = defaultCameraPosition
+
+    private var defaultCameraPosition: AVCaptureDevice.Position {
         #if targetEnvironment(macCatalyst)
         return .front
         #else
         return .back
         #endif
-    }()
+    }
 
     var onPhotoCaptured: ((ImageSourceData) -> Void)?
 
