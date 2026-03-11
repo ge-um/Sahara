@@ -263,6 +263,7 @@ final class CardDetailViewController: UIViewController {
                 let itemSource = ShareActivityItemSource(image: image)
                 let activityVC = UIActivityViewController(activityItems: [itemSource], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
+                activityVC.popoverPresentationController?.sourceRect = owner.shareButton.bounds
                 owner.present(activityVC, animated: true)
             }
             .disposed(by: disposeBag)
