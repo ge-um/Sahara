@@ -240,7 +240,7 @@ final class MediaSelectionViewController: UIViewController {
     #endif
 
     private func presentPHPicker() {
-        var configuration = PHPickerConfiguration()
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
         configuration.selectionLimit = 1
         configuration.filter = .images
 
@@ -283,8 +283,14 @@ extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavig
         picker.dismiss(animated: true)
 
         if let image = info[.originalImage] as? UIImage {
+            let metadata: EXIFMetadata
+            if let mediaMetadata = info[.mediaMetadata] as? [String: Any] {
+                metadata = EXIFMetadataExtractor.extract(from: mediaMetadata)
+            } else {
+                metadata = EXIFMetadata(location: nil, date: nil)
+            }
             let imageSource = ImageSourceData(image: image)
-            imagePickerResultRelay.accept((imageSource, nil, nil, .camera))
+            imagePickerResultRelay.accept((imageSource, nil, metadata.date, .camera))
         }
     }
 
@@ -297,7 +303,14 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
-        guard let itemProvider = results.first?.itemProvider else { return }
+        guard let result = results.first else { return }
+        let itemProvider = result.itemProvider
+
+        let asset = result.assetIdentifier.flatMap { identifier in
+            PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
+        }
+        let assetDate = asset?.creationDate
+        let assetLocation = asset?.location
 
         let typeIdentifiers = itemProvider.registeredTypeIdentifiers
         let preferredType = typeIdentifiers.first ?? "public.image"
@@ -318,12 +331,17 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                 let format = ImageFormatHelper.detectFromUTI(preferredType)
                     ?? ImageFormatHelper.detect(from: data)
 
+                let exifMetadata = EXIFMetadataExtractor.extract(from: data)
+                let finalDate = assetDate ?? exifMetadata.date
+                let finalLocation = assetLocation ?? exifMetadata.location
+
                 DispatchQueue.main.async {
                     let imageSource = ImageSourceData(
                         image: image,
+                        originalData: data,
                         format: format
                     )
-                    self?.imagePickerResultRelay.accept((imageSource, nil, nil, .library))
+                    self?.imagePickerResultRelay.accept((imageSource, finalLocation, finalDate, .library))
                 }
             } catch {
                 self?.loadImageFallback(from: itemProvider)
