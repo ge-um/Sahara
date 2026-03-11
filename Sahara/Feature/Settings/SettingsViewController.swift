@@ -175,8 +175,11 @@ final class SettingsViewController: UIViewController {
     }
 
     private func presentMailComposer(to email: String) {
+        #if targetEnvironment(macCatalyst)
+        openMailtoURL(to: email, subject: NSLocalizedString("settings.inquiry_subject", comment: ""), body: generateEmailBody())
+        #else
         guard MFMailComposeViewController.canSendMail() else {
-            showMailError()
+            copyEmailFallback(email: email)
             return
         }
 
@@ -187,12 +190,55 @@ final class SettingsViewController: UIViewController {
         mailComposer.setMessageBody(generateEmailBody(), isHTML: false)
 
         present(mailComposer, animated: true)
+        #endif
+    }
+
+    private func openMailtoURL(to email: String, subject: String, body: String) {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        guard let url = components.url else {
+            copyEmailFallback(email: email)
+            return
+        }
+
+        UIApplication.shared.open(url) { [weak self] success in
+            if !success {
+                self?.copyEmailFallback(email: email)
+            }
+        }
+    }
+
+    private func copyEmailFallback(email: String) {
+        UIPasteboard.general.string = email
+        let alert = UIAlertController(
+            title: NSLocalizedString("settings.mail_error_title", comment: ""),
+            message: NSLocalizedString("realm_error.email_copied", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        present(alert, animated: true)
     }
 
     private func generateEmailBody() -> String {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let iosVersion = UIDevice.current.systemVersion
-        let deviceModel = getDeviceModel()
+        let osVersionLabel: String
+        let osVersion: String
+        let deviceModel = DeviceInfo.displayName
+
+        #if targetEnvironment(macCatalyst)
+        osVersionLabel = NSLocalizedString("settings.macos_version", comment: "")
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        osVersion = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        #else
+        osVersionLabel = NSLocalizedString("settings.ios_version", comment: "")
+        osVersion = UIDevice.current.systemVersion
+        #endif
 
         return """
         \(NSLocalizedString("settings.inquiry_message_placeholder", comment: ""))
@@ -200,47 +246,9 @@ final class SettingsViewController: UIViewController {
         ---
         \(NSLocalizedString("settings.device_info_title", comment: ""))
         - \(NSLocalizedString("settings.app_version", comment: "")): \(appVersion)
-        - \(NSLocalizedString("settings.ios_version", comment: "")): \(iosVersion)
+        - \(osVersionLabel): \(osVersion)
         - \(NSLocalizedString("settings.device_model", comment: "")): \(deviceModel)
         """
-    }
-
-    private func getDeviceModel() -> String {
-        let code = DeviceInfo.modelIdentifier
-
-        let deviceModelMap: [String: String] = [
-            "iPhone14,2": "iPhone 13 Pro",
-            "iPhone14,3": "iPhone 13 Pro Max",
-            "iPhone14,4": "iPhone 13 mini",
-            "iPhone14,5": "iPhone 13",
-            "iPhone14,6": "iPhone SE (3rd generation)",
-            "iPhone14,7": "iPhone 14",
-            "iPhone14,8": "iPhone 14 Plus",
-            "iPhone15,2": "iPhone 14 Pro",
-            "iPhone15,3": "iPhone 14 Pro Max",
-            "iPhone15,4": "iPhone 15",
-            "iPhone15,5": "iPhone 15 Plus",
-            "iPhone16,1": "iPhone 15 Pro",
-            "iPhone16,2": "iPhone 15 Pro Max",
-            "iPhone17,1": "iPhone 16 Pro",
-            "iPhone17,2": "iPhone 16 Pro Max",
-            "iPhone17,3": "iPhone 16",
-            "iPhone17,4": "iPhone 16 Plus",
-            "arm64": "Simulator",
-            "x86_64": "Simulator"
-        ]
-
-        return deviceModelMap[code] ?? code
-    }
-
-    private func showMailError() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("settings.mail_error_title", comment: ""),
-            message: NSLocalizedString("settings.mail_error_message", comment: ""),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
-        present(alert, animated: true)
     }
 
     private func handleToggleChanged(for item: SettingsMenuItem, isOn: Bool) {

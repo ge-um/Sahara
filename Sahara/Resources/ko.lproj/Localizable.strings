@@ -197,6 +197,7 @@
 "settings.device_info_title" = "기기 정보";
 "settings.app_version" = "앱 버전";
 "settings.ios_version" = "iOS 버전";
+"settings.macos_version" = "macOS 버전";
 "settings.device_model" = "기기 모델";
 "settings.section_data" = "데이터 관리";
 "settings.export_photos" = "사진 내보내기";
