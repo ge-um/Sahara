@@ -5,7 +5,6 @@
 //  Created by 금가경 on 10/1/25.
 //
 
-#if !targetEnvironment(macCatalyst)
 import AVFoundation
 import SnapKit
 import UIKit
@@ -33,7 +32,24 @@ final class CameraViewController: UIViewController {
         return button
     }()
 
-    private var currentCamera: AVCaptureDevice.Position = .back
+    private let cancelButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "xmark"), for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        button.layer.cornerRadius = 20
+        return button
+    }()
+
+    private var currentCamera: AVCaptureDevice.Position = {
+        #if targetEnvironment(macCatalyst)
+        return .front
+        #else
+        return .back
+        #endif
+    }()
+
+    var onPhotoCaptured: ((ImageSourceData) -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -57,7 +73,7 @@ final class CameraViewController: UIViewController {
 
         guard let captureSession = captureSession else { return }
 
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return }
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentCamera) else { return }
 
         do {
             let input = try AVCaptureDeviceInput(device: camera)
@@ -86,6 +102,7 @@ final class CameraViewController: UIViewController {
 
         view.addSubview(captureButton)
         view.addSubview(flipCameraButton)
+        view.addSubview(cancelButton)
 
         captureButton.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
@@ -99,8 +116,24 @@ final class CameraViewController: UIViewController {
             make.width.height.equalTo(50)
         }
 
+        cancelButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(30)
+            make.centerY.equalTo(captureButton)
+            make.width.height.equalTo(40)
+        }
+
         captureButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
         flipCameraButton.addTarget(self, action: #selector(flipCamera), for: .touchUpInside)
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+
+        let discoverySession = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera],
+            mediaType: .video,
+            position: .unspecified
+        )
+        if discoverySession.devices.count <= 1 {
+            flipCameraButton.isHidden = true
+        }
     }
 
     private func startSession() {
@@ -125,12 +158,10 @@ final class CameraViewController: UIViewController {
 
         captureSession.beginConfiguration()
 
-        // 현재 입력 제거
         if let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput {
             captureSession.removeInput(currentInput)
         }
 
-        // 카메라 전환
         currentCamera = currentCamera == .back ? .front : .back
 
         guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: currentCamera) else {
@@ -147,6 +178,10 @@ final class CameraViewController: UIViewController {
         }
 
         captureSession.commitConfiguration()
+    }
+
+    @objc private func cancelTapped() {
+        dismiss(animated: true)
     }
 
     override func viewDidLayoutSubviews() {
@@ -167,11 +202,8 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
             format: format
         )
 
-        let stickerViewModel = MediaEditorViewModel(imageSource: imageSource)
-        let stickerVC = MediaEditorViewController(viewModel: stickerViewModel)
-        let nav = UINavigationController(rootViewController: stickerVC)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        dismiss(animated: true) { [weak self] in
+            self?.onPhotoCaptured?(imageSource)
+        }
     }
 }
-#endif
