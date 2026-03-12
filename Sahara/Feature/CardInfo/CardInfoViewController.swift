@@ -125,10 +125,14 @@ final class CardInfoViewController: UIViewController {
 
         contentView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom)
-            make.centerX.equalToSuperview()
-            make.width.lessThanOrEqualTo(600)
-            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).priority(.medium)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            } else {
+                make.centerX.equalToSuperview()
+                make.width.lessThanOrEqualTo(600)
+                make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).priority(.medium)
+            }
         }
 
         contentView.scrollView.snp.remakeConstraints { make in
