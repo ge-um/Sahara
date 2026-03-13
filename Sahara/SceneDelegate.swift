@@ -6,6 +6,7 @@
 //
 
 import MessageUI
+import RealmSwift
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -35,14 +36,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window?.makeKeyAndVisible()
 
-        if let urlContext = connectionOptions.urlContexts.first {
-            handleBackupFileImport(url: urlContext.url)
+        if let url = connectionOptions.urlContexts.first?.url {
+            if url.scheme == AppGroupContainer.widgetURLScheme {
+                handleWidgetDeepLink(url: url)
+            } else {
+                handleBackupFileImport(url: url)
+            }
         }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        guard let urlContext = URLContexts.first else { return }
-        handleBackupFileImport(url: urlContext.url)
+        guard let url = URLContexts.first?.url else { return }
+
+        if url.scheme == AppGroupContainer.widgetURLScheme {
+            handleWidgetDeepLink(url: url)
+        } else {
+            handleBackupFileImport(url: url)
+        }
     }
 
     private func showRealmFailureAlert(on viewController: UIViewController) {
@@ -171,9 +181,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         UIApplication.shared.applicationIconBadgeNumber = 0
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        WidgetDataManager.shared.refreshWidgetData()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+    }
+
+    private func handleWidgetDeepLink(url: URL) {
+        guard url.host == "card",
+              let cardIdString = url.pathComponents.last,
+              let objectId = try? ObjectId(string: cardIdString) else { return }
+
+        guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
+        tabBarController.selectedIndex = 0
+
+        guard let navController = tabBarController.selectedViewController as? UINavigationController else { return }
+        navController.popToRootViewController(animated: false)
+
+        let detailVC = CardDetailViewController(cardId: objectId)
+        navController.pushViewController(detailVC, animated: true)
     }
 
     private func handleBackupFileImport(url: URL) {
@@ -228,6 +254,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                     }
                 }
                 DispatchQueue.main.async {
+                    WidgetDataManager.shared.refreshWidgetData()
                     progressAlert.alert.dismiss(animated: true) {
                         self?.showImportSuccess()
                     }
