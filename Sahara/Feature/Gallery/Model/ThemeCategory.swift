@@ -87,6 +87,27 @@ enum ThemeCategory: String, CaseIterable {
 
         return .others
     }
+
+    static func category(for tags: [VisionTag]) -> ThemeCategory {
+        let tagSet = Set(tags)
+
+        if !tagSet.isDisjoint(with: [.cat, .dog, .bird]) {
+            return .animals
+        }
+        if tagSet.contains(.person) {
+            return .people
+        }
+        if !tagSet.isDisjoint(with: [.food, .drink]) {
+            return .food
+        }
+        if !tagSet.isDisjoint(with: [.nature, .sky, .sunset, .flower, .tree, .ocean, .mountain]) {
+            return .nature
+        }
+        if !tagSet.isDisjoint(with: [.building, .landmark, .indoor, .outdoor]) {
+            return .buildings
+        }
+        return .others
+    }
 }
 
 import RealmSwift
