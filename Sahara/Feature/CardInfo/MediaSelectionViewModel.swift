@@ -17,6 +17,7 @@ import UIKit
 enum MediaSource {
     case camera
     case library
+    case filePicker
 }
 
 final class MediaSelectionViewModel: BaseViewModelProtocol {
@@ -26,6 +27,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let viewWillAppear: Observable<Void>
         let cameraButtonTapped: Observable<Void>
         let libraryButtonTapped: Observable<Void>
+        let filePickerButtonTapped: Observable<Void>
         let photoSelected: Observable<PHAsset>
         let imagePickerResult: Observable<(ImageSourceData, CLLocation?, Date?, MediaSource)>
     }
@@ -35,6 +37,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let showActionButtons: Driver<Bool>
         let showCamera: Driver<Void>
         let showPHPicker: Driver<Void>
+        let showFilePicker: Driver<Void>
         let showCameraPermissionAlert: Driver<Void>
         let showPhotoPermissionAlert: Driver<Void>
         let selectedMedia: Driver<(ImageSourceData, CLLocation?, Date?)>
@@ -53,6 +56,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         let requestPhotoPermissionRelay = PublishRelay<Void>()
         let requestCameraPermissionRelay = PublishRelay<Void>()
         let showLimitedLibraryPickerRelay = PublishRelay<Void>()
+        let showFilePickerRelay = PublishRelay<Void>()
 
         input.viewWillAppear
             .bind(with: self) { owner, _ in
@@ -91,6 +95,13 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             }
             .disposed(by: disposeBag)
 
+        input.filePickerButtonTapped
+            .do(onNext: { _ in
+                AnalyticsService.shared.logPhotoSourceSelected(source: "file_picker")
+            })
+            .bind(to: showFilePickerRelay)
+            .disposed(by: disposeBag)
+
         input.photoSelected
             .withUnretained(self)
             .do(onNext: { _ in
@@ -104,7 +115,12 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.imagePickerResult
             .do(onNext: { _, _, _, source in
-                let sourceString = source == .camera ? "camera" : "library"
+                let sourceString: String
+                switch source {
+                case .camera: sourceString = "camera"
+                case .library: sourceString = "library"
+                case .filePicker: sourceString = "file_picker"
+                }
                 AnalyticsService.shared.logPhotoSourceSelected(source: sourceString)
             })
             .map { imageSource, location, date, _ in (imageSource, location, date) }
@@ -119,6 +135,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             showActionButtons: showActionButtons,
             showCamera: showCameraRelay.asDriver(onErrorJustReturn: ()),
             showPHPicker: showPHPickerRelay.asDriver(onErrorJustReturn: ()),
+            showFilePicker: showFilePickerRelay.asDriver(onErrorJustReturn: ()),
             showCameraPermissionAlert: showCameraPermissionAlertRelay.asDriver(onErrorJustReturn: ()),
             showPhotoPermissionAlert: showPhotoPermissionAlertRelay.asDriver(onErrorJustReturn: ()),
             selectedMedia: selectedMediaRelay.asDriver(onErrorDriveWith: .empty()),

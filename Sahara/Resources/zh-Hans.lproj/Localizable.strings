@@ -89,6 +89,7 @@
 "media_selection.camera_permission_message" = "请在设置中允许相机权限";
 "media_selection.photo_permission_title" = "需要照片权限";
 "media_selection.photo_permission_message" = "请在设置中允许照片库权限";
+"media_selection.file" = "文件";
 "media_selection.go_to_settings" = "前往设置";
 
 /* Camera */

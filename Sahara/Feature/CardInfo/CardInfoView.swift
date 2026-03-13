@@ -172,6 +172,15 @@ final class CardInfoView: UIView {
         layoutIfNeeded()
     }
 
+    func addPhotoContainerInteraction(_ interaction: UIInteraction) {
+        photoContainer.addInteraction(interaction)
+    }
+
+    func setDropHighlight(_ highlighted: Bool) {
+        photoContainer.layer.borderWidth = highlighted ? 2 : 0
+        photoContainer.layer.borderColor = highlighted ? UIColor.token(.accent).cgColor : nil
+    }
+
     func applyGradients() {
         photoSelectButton.applyGradient(.tabBar)
         locationCard.searchButton.applyGradient(.fresh)
