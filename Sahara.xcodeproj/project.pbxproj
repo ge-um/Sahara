@@ -28,12 +28,12 @@
 		41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7F687188F77FC625DD9732CC /* Localizable.strings */; };
 		48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */; };
 		9716DC354EDCBBF970FC7B1C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5784B26A0B503F279A42BC75 /* Foundation.framework */; };
+		A1F0E7C3D8B24A9F10C3E002 /* Galmuri11-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */; };
+		A1F0E7C3D8B24A9F10C3E003 /* Galmuri14.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */; };
 		AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */; };
 		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
 		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
 		FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */; };
-		A1F0E7C3D8B24A9F10C3E002 /* Galmuri11-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */; };
-		A1F0E7C3D8B24A9F10C3E003 /* Galmuri14.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,12 +105,12 @@
 		5784B26A0B503F279A42BC75 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidget.swift; sourceTree = "<group>"; };
 		9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidgetBundle.swift; sourceTree = "<group>"; };
+		A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Galmuri11-Bold.ttf"; path = "Sahara/Resources/Fonts/Galmuri11-Bold.ttf"; sourceTree = SOURCE_ROOT; };
+		A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = Galmuri14.ttf; path = Sahara/Resources/Fonts/Galmuri14.ttf; sourceTree = SOURCE_ROOT; };
 		CE323ED067314EE13712B049 /* WidgetKit.framework */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetEntryView.swift; sourceTree = "<group>"; };
 		DDAE112A04E74E8EB5EDDB78 /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Galmuri11-Bold.ttf"; path = "Sahara/Resources/Fonts/Galmuri11-Bold.ttf"; sourceTree = SOURCE_ROOT; };
-		A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = Galmuri14.ttf; path = Sahara/Resources/Fonts/Galmuri14.ttf; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
