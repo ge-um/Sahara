@@ -60,7 +60,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
         input.searchText
             .do(onNext: { text in
                 if !text.isEmpty {
-                    AnalyticsManager.shared.logLocationSearchUsed()
+                    AnalyticsService.shared.logLocationSearchUsed()
                 }
             })
             .bind(with: self) { owner, text in
@@ -73,7 +73,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
             .do(onNext: { owner, _ in
                 let authStatus = owner.locationManager.authorizationStatus
                 if authStatus == .denied || authStatus == .restricted {
-                    AnalyticsManager.shared.logLocationPermissionDenied()
+                    AnalyticsService.shared.logLocationPermissionDenied()
                 }
             })
             .bind { owner, _ in
@@ -101,7 +101,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
         locationUpdateSubject
             .withUnretained(self)
             .do(onNext: { _ in
-                AnalyticsManager.shared.logLocationSaved(source: "current_location")
+                AnalyticsService.shared.logLocationSaved(source: "current_location")
             })
             .bind { owner, location in
                 owner.handleLocation(location, selectedRelay: selectedLocationRelay, loadingRelay: isLoadingRelay)
@@ -111,7 +111,7 @@ final class LocationSearchViewModel: NSObject, BaseViewModelProtocol, MKLocalSea
         input.locationSelected
             .withUnretained(self)
             .do(onNext: { _ in
-                AnalyticsManager.shared.logLocationSaved(source: "search")
+                AnalyticsService.shared.logLocationSaved(source: "search")
             })
             .flatMap { owner, completion -> Observable<(CLLocationCoordinate2D, String)> in
                 return owner.searchLocation(completion: completion)

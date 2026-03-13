@@ -75,7 +75,7 @@ final class ImagePrepareService: ImagePrepareServiceProtocol {
                 stickers: stickers,
                 editorViewSize: editorViewSize
             ) { compositedImage, _ in
-                let result = ImageFormatHelper.convertToFormat(
+                let result = ImageFormatConverter.convertToFormat(
                     editedImage: compositedImage,
                     targetFormat: sourceFormat
                 )
@@ -95,7 +95,7 @@ final class ImagePrepareService: ImagePrepareServiceProtocol {
         sourceFormat: ImageSourceData.ImageFormat?,
         originalData: Data?
     ) -> Observable<PreparedImageData> {
-        let result = ImageFormatHelper.convertToFormat(
+        let result = ImageFormatConverter.convertToFormat(
             editedImage: baseImage,
             targetFormat: sourceFormat
         )

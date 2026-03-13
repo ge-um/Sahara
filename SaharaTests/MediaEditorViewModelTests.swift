@@ -12,22 +12,22 @@ import RxCocoa
 
 final class MediaEditorViewModelTests: XCTestCase {
     private var sut: MediaEditorViewModel!
-    private var mockNetworkManager: MockNetworkManager!
+    private var mockNetworkService: MockNetworkService!
     private var disposeBag: DisposeBag!
     private var testImage: UIImage!
 
     override func setUp() {
         super.setUp()
-        mockNetworkManager = MockNetworkManager()
+        mockNetworkService = MockNetworkService()
         testImage = UIImage(systemName: "photo")!
         let imageSource = ImageSourceData(image: testImage, format: nil, stickers: [])
-        sut = MediaEditorViewModel(imageSource: imageSource, networkManager: mockNetworkManager)
+        sut = MediaEditorViewModel(imageSource: imageSource, networkManager: mockNetworkService)
         disposeBag = DisposeBag()
     }
 
     override func tearDown() {
         sut = nil
-        mockNetworkManager = nil
+        mockNetworkService = nil
         disposeBag = nil
         testImage = nil
         super.tearDown()
@@ -44,7 +44,7 @@ final class MediaEditorViewModelTests: XCTestCase {
                 hasNext: true
             )
         )
-        mockNetworkManager.mockResponse = mockResponse
+        mockNetworkService.mockResponse = mockResponse
 
         let viewWillAppear = PublishSubject<Void>()
         let input = MediaEditorViewModel.Input(
@@ -69,7 +69,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             .skip(1)
             .drive(onNext: { stickers in
                 XCTAssertEqual(stickers.count, 3)
-                XCTAssertEqual(self.mockNetworkManager.callCount, 1)
+                XCTAssertEqual(self.mockNetworkService.callCount, 1)
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
@@ -90,7 +90,7 @@ final class MediaEditorViewModelTests: XCTestCase {
                 hasNext: false
             )
         )
-        mockNetworkManager.mockResponse = mockResponse
+        mockNetworkService.mockResponse = mockResponse
 
         let searchQuery = PublishSubject<String>()
         let input = MediaEditorViewModel.Input(
@@ -115,7 +115,7 @@ final class MediaEditorViewModelTests: XCTestCase {
             .skip(1)
             .drive(onNext: { stickers in
                 XCTAssertEqual(stickers.count, 2)
-                XCTAssertEqual(self.mockNetworkManager.callCount, 1)
+                XCTAssertEqual(self.mockNetworkService.callCount, 1)
                 expectation.fulfill()
             })
             .disposed(by: disposeBag)
@@ -137,7 +137,7 @@ final class MediaEditorViewModelTests: XCTestCase {
                 hasNext: true
             )
         )
-        mockNetworkManager.mockResponse = mockResponse
+        mockNetworkService.mockResponse = mockResponse
 
         let searchQuery = PublishSubject<String>()
         let input = MediaEditorViewModel.Input(
@@ -223,25 +223,25 @@ final class MediaEditorViewModelTests: XCTestCase {
                 resultCount += 1
                 if resultCount == 1 {
                     XCTAssertEqual(stickers.count, 3)
-                    self.mockNetworkManager.mockResponse = secondResponse
+                    self.mockNetworkService.mockResponse = secondResponse
                     loadMore.onNext(())
                 } else if resultCount == 2 {
                     XCTAssertEqual(stickers.count, 5)
-                    XCTAssertEqual(self.mockNetworkManager.callCount, 2)
+                    XCTAssertEqual(self.mockNetworkService.callCount, 2)
                     expectation.fulfill()
                 }
             })
             .disposed(by: disposeBag)
 
-        mockNetworkManager.mockResponse = firstResponse
+        mockNetworkService.mockResponse = firstResponse
         viewWillAppear.onNext(())
 
         wait(for: [expectation], timeout: 3.0)
     }
 
     func test_networkError_shouldEmitErrorMessage() {
-        mockNetworkManager.shouldReturnError = true
-        mockNetworkManager.errorToReturn = NetworkError.notConnectedToInternet
+        mockNetworkService.shouldReturnError = true
+        mockNetworkService.errorToReturn = NetworkError.notConnectedToInternet
 
         let viewWillAppear = PublishSubject<Void>()
         let input = MediaEditorViewModel.Input(
@@ -286,7 +286,7 @@ final class MediaEditorViewModelTests: XCTestCase {
                 hasNext: false
             )
         )
-        mockNetworkManager.mockResponse = mockResponse
+        mockNetworkService.mockResponse = mockResponse
 
         let searchQuery = PublishSubject<String>()
         let input = MediaEditorViewModel.Input(
@@ -317,8 +317,8 @@ final class MediaEditorViewModelTests: XCTestCase {
             .disposed(by: disposeBag)
 
         searchQuery.onNext("")
-        mockNetworkManager.shouldReturnError = true
-        mockNetworkManager.errorToReturn = NetworkError.invalidURL
+        mockNetworkService.shouldReturnError = true
+        mockNetworkService.errorToReturn = NetworkError.invalidURL
         searchQuery.onNext("test")
 
         wait(for: [expectation], timeout: 2.0)

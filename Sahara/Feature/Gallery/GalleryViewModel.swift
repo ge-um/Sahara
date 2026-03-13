@@ -12,9 +12,9 @@ import RxSwift
 
 final class GalleryViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 
@@ -93,7 +93,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
                 let calendar = Calendar.current
                 let year = calendar.component(.year, from: month)
                 let monthValue = calendar.component(.month, from: month)
-                AnalyticsManager.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
+                AnalyticsService.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
             }
             .disposed(by: disposeBag)
         

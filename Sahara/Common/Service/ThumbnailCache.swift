@@ -59,7 +59,7 @@ final class ThumbnailCache {
             return image
         }
 
-        guard let originalData = RealmManager.shared.fetchImageData(for: cardId),
+        guard let originalData = RealmService.shared.fetchImageData(for: cardId),
               let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: size.maxPixelSize) else {
             return nil
         }
@@ -99,7 +99,7 @@ final class ThumbnailCache {
             if let (image, data) = self.loadFromDisk(key: key) {
                 cache.setObject(image, forKey: key as NSString, cost: data.count)
                 result = image
-            } else if let originalData = RealmManager.shared.fetchImageData(for: cardId),
+            } else if let originalData = RealmService.shared.fetchImageData(for: cardId),
                       let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: size.maxPixelSize) {
                 self.saveToDisk(thumbnail, key: key)
                 cache.setObject(thumbnail, forKey: key as NSString)
@@ -134,7 +134,7 @@ final class ThumbnailCache {
             }
         }
 
-        guard let originalData = RealmManager.shared.fetchImageData(for: cardId),
+        guard let originalData = RealmService.shared.fetchImageData(for: cardId),
               let imageSize = ImageDownsampler.imageSize(from: originalData),
               imageSize.width > 0 else {
             return nil

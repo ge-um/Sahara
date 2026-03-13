@@ -65,7 +65,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
         input.cameraButtonTapped
             .bind(with: self) { owner, _ in
-                let status = PermissionManager.shared.checkPermission(for: .camera)
+                let status = PermissionService.shared.checkPermission(for: .camera)
 
                 switch status {
                 case .authorized:
@@ -94,7 +94,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         input.photoSelected
             .withUnretained(self)
             .do(onNext: { _ in
-                AnalyticsManager.shared.logPhotoSourceSelected(source: "gallery")
+                AnalyticsService.shared.logPhotoSourceSelected(source: "gallery")
             })
             .flatMap { owner, asset -> Observable<(ImageSourceData, CLLocation?, Date?)> in
                 return owner.loadImage(from: asset)
@@ -105,7 +105,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         input.imagePickerResult
             .do(onNext: { _, _, _, source in
                 let sourceString = source == .camera ? "camera" : "library"
-                AnalyticsManager.shared.logPhotoSourceSelected(source: sourceString)
+                AnalyticsService.shared.logPhotoSourceSelected(source: sourceString)
             })
             .map { imageSource, location, date, _ in (imageSource, location, date) }
             .bind(to: selectedMediaRelay)
@@ -148,7 +148,7 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         requestPhotoPermissionRelay: PublishRelay<Void>,
         showLimitedLibraryPickerRelay: PublishRelay<Void>
     ) {
-        let status = PermissionManager.shared.checkPermission(for: .photoLibrary)
+        let status = PermissionService.shared.checkPermission(for: .photoLibrary)
         #if targetEnvironment(macCatalyst)
         switch status {
         case .authorized:
@@ -211,9 +211,9 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
 
                 let format: ImageSourceData.ImageFormat?
                 if let uti = uti {
-                    format = ImageFormatHelper.detectFromUTI(uti as String)
+                    format = ImageFormatConverter.detectFromUTI(uti as String)
                 } else {
-                    format = ImageFormatHelper.detect(from: data)
+                    format = ImageFormatConverter.detect(from: data)
                 }
 
                 let imageSource = ImageSourceData(

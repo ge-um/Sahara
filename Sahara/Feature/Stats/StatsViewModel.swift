@@ -39,7 +39,7 @@ struct MoodData {
 }
 
 final class StatsViewModel: BaseViewModelProtocol {
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -56,7 +56,7 @@ final class StatsViewModel: BaseViewModelProtocol {
         let thisMonthInsight: Driver<String>
     }
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 

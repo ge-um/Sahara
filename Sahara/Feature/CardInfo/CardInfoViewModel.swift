@@ -22,7 +22,7 @@ enum EditSourceType {
 
 final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let cardPostProcessor: CardPostProcessorProtocol
     private let imagePrepareService: ImagePrepareServiceProtocol
     private var editedImage: UIImage?
@@ -68,7 +68,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let shouldPopToListOnDelete: Driver<Bool>
     }
 
-    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(editedImage: UIImage?, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
@@ -77,7 +77,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = nil
     }
 
-    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
@@ -108,7 +108,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return ImageSourceData(image: editedImage, originalData: imageData, format: format)
     }
 
-    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
         self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
@@ -155,7 +155,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     }
 
     private func logCardSaveAnalytics(memo: String?, location: CLLocation?, isLocked: Bool) {
-        AnalyticsManager.shared.logCardSave(
+        AnalyticsService.shared.logCardSave(
             hasPhoto: editedImage != nil,
             hasMemo: !(memo?.isEmpty ?? true),
             hasLocation: location != nil,
@@ -202,7 +202,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
-                WidgetDataManager.shared.refreshWidgetData()
+                WidgetDataService.shared.refreshWidgetData()
             })
     }
 
@@ -248,7 +248,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
             .do(onNext: { _, _ in
-                AnalyticsManager.shared.logCardDelete()
+                AnalyticsService.shared.logCardDelete()
             })
             .flatMap { [weak self] _, _ -> Observable<Void> in
                 guard let self = self else { return .just(()) }
@@ -347,7 +347,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         card.imageFormat = imageData.imageFormat
 
         do {
-            let fileName = try ImageFileManager.shared.saveImageFile(
+            let fileName = try ImageFileService.shared.saveImageFile(
                 data: imageData.editedImageData,
                 cardId: card.id,
                 format: imageData.imageFormat
@@ -364,10 +364,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
     private func logSaveAnalytics(isFirstCard: Bool, hadLocationBefore: Bool, location: CLLocation?) {
         if isFirstCard {
-            AnalyticsManager.shared.logFirstCardCreated()
+            AnalyticsService.shared.logFirstCardCreated()
         }
         if !hadLocationBefore && location != nil {
-            AnalyticsManager.shared.logFirstLocationAdded()
+            AnalyticsService.shared.logFirstLocationAdded()
         }
     }
 
@@ -396,7 +396,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     .do(onNext: {
                         self.cardPostProcessor.process(cardId: card.id, imageData: imageData.editedImageData)
                         self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
-                        WidgetDataManager.shared.refreshWidgetData()
+                        WidgetDataService.shared.refreshWidgetData()
                     })
             }
     }
@@ -467,7 +467,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         var newImagePath: String?
         do {
-            newImagePath = try ImageFileManager.shared.saveImageFile(
+            newImagePath = try ImageFileService.shared.saveImageFile(
                 data: imageData.editedImageData,
                 cardId: cardId,
                 format: imageData.imageFormat
@@ -495,19 +495,19 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
         .do(onNext: {
             if let oldPath = oldImagePath, oldPath != newImagePath {
-                ImageFileManager.shared.deleteImageFile(at: oldPath)
+                ImageFileService.shared.deleteImageFile(at: oldPath)
             }
             ThumbnailCache.shared.invalidate(for: cardId)
-            WidgetDataManager.shared.refreshWidgetData()
+            WidgetDataService.shared.refreshWidgetData()
         })
     }
 
     private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
         if !editTypes.isEmpty {
-            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
+            AnalyticsService.shared.logCardEdit(editType: editTypes.joined(separator: ","))
         }
         if !hadLocationBefore && location != nil {
-            AnalyticsManager.shared.logFirstLocationAdded()
+            AnalyticsService.shared.logFirstLocationAdded()
         }
     }
 
@@ -619,10 +619,10 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         .map { ((), newCardId) }
         .do(onNext: { _ in
             if let oldPath = oldImagePath {
-                ImageFileManager.shared.deleteImageFile(at: oldPath)
+                ImageFileService.shared.deleteImageFile(at: oldPath)
             }
             ThumbnailCache.shared.invalidate(for: cardId)
-            WidgetDataManager.shared.refreshWidgetData()
+            WidgetDataService.shared.refreshWidgetData()
         })
     }
 

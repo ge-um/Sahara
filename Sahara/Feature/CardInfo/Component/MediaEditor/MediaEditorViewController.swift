@@ -389,7 +389,7 @@ final class MediaEditorViewController: UIViewController {
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .sticker else { return }
                 self.usedTools.insert("sticker")
-                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "sticker")
+                AnalyticsService.shared.logPhotoEditToolUsed(tool: "sticker")
             })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .sticker {
@@ -404,7 +404,7 @@ final class MediaEditorViewController: UIViewController {
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .drawing else { return }
                 self.usedTools.insert("drawing")
-                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "drawing")
+                AnalyticsService.shared.logPhotoEditToolUsed(tool: "drawing")
             })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .drawing {
@@ -419,7 +419,7 @@ final class MediaEditorViewController: UIViewController {
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .filter else { return }
                 self.usedTools.insert("filter")
-                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "filter")
+                AnalyticsService.shared.logPhotoEditToolUsed(tool: "filter")
             })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .filter {
@@ -434,7 +434,7 @@ final class MediaEditorViewController: UIViewController {
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .photo else { return }
                 self.usedTools.insert("photo")
-                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "photo")
+                AnalyticsService.shared.logPhotoEditToolUsed(tool: "photo")
             })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .photo {
@@ -449,7 +449,7 @@ final class MediaEditorViewController: UIViewController {
             .do(onNext: { [weak self] _ in
                 guard let self = self, self.currentMode.value != .crop else { return }
                 self.usedTools.insert("crop")
-                AnalyticsManager.shared.logPhotoEditToolUsed(tool: "crop")
+                AnalyticsService.shared.logPhotoEditToolUsed(tool: "crop")
             })
             .bind(with: self) { owner, _ in
                 if owner.currentMode.value == .crop {
@@ -574,7 +574,7 @@ final class MediaEditorViewController: UIViewController {
         output.navigateToMetadata
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
-                AnalyticsManager.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
+                AnalyticsService.shared.logPhotoEditComplete(toolsUsedCount: self.usedTools.count)
             })
             .drive(with: self) { owner, _ in
                 let (displayImage, metadata) = owner.prepareEditResult()

@@ -90,7 +90,7 @@ final class LanguageSelectionViewController: UIViewController {
                 cell.backgroundColor = .clear
                 cell.selectionStyle = .none
 
-                let currentLanguage = LanguageManager.shared.currentLanguage
+                let currentLanguage = LanguageService.shared.currentLanguage
                 if language == currentLanguage {
                     cell.accessoryType = .checkmark
                     cell.tintColor = .token(.info)

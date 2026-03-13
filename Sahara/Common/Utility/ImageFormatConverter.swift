@@ -1,5 +1,5 @@
 //
-//  ImageFormatHelper.swift
+//  ImageFormatConverter.swift
 //  Sahara
 //
 //  Created by 금가경 on 12/17/25.
@@ -8,7 +8,7 @@
 import OSLog
 import UIKit
 
-final class ImageFormatHelper {
+final class ImageFormatConverter {
     static func detect(from data: Data) -> ImageSourceData.ImageFormat? {
         guard data.count >= 12 else { return nil }
         let bytes = [UInt8](data.prefix(12))

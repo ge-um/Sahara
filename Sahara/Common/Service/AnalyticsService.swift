@@ -1,5 +1,5 @@
 //
-//  AnalyticsManager.swift
+//  AnalyticsService.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/6/25.
@@ -72,8 +72,8 @@ enum AnalyticsParameter: String {
     case tabName = "tab_name"
 }
 
-final class AnalyticsManager {
-    static let shared = AnalyticsManager()
+final class AnalyticsService {
+    static let shared = AnalyticsService()
 
     private init() {}
 

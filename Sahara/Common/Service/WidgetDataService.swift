@@ -1,5 +1,5 @@
 //
-//  WidgetDataManager.swift
+//  WidgetDataService.swift
 //  Sahara
 //
 //  Created by 금가경 on 3/11/26.
@@ -10,18 +10,18 @@ import OSLog
 import UIKit
 import WidgetKit
 
-final class WidgetDataManager {
-    static let shared = WidgetDataManager()
+final class WidgetDataService {
+    static let shared = WidgetDataService()
     static let thumbnailPoolSize = 10
 
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let widgetDirectory: URL?
     private let thumbnailsDirectory: URL?
     private let cardStoreURL: URL?
     private let queue = DispatchQueue(label: "com.sahara.widgetData", qos: .utility)
 
     init(
-        realmManager: RealmManagerProtocol = RealmManager.shared,
+        realmManager: RealmServiceProtocol = RealmService.shared,
         widgetDirectory: URL? = AppGroupContainer.widgetDirectory,
         thumbnailsDirectory: URL? = AppGroupContainer.thumbnailsDirectory,
         cardStoreURL: URL? = AppGroupContainer.cardStoreURL

@@ -23,7 +23,7 @@ final class CardPostProcessor: CardPostProcessorProtocol {
     private let queue = DispatchQueue(label: "com.sahara.postProcessor", qos: .utility)
 
     init(realmConfiguration: Realm.Configuration? = nil) {
-        self.realmConfiguration = realmConfiguration ?? RealmManager.shared.createConfiguration()
+        self.realmConfiguration = realmConfiguration ?? RealmService.shared.createConfiguration()
     }
 
     func process(cardId: ObjectId, imageData: Data) {

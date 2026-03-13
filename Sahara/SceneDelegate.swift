@@ -22,7 +22,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         window = UIWindow(windowScene: scene)
 
-        if RealmManager.validateRealm() != nil {
+        if RealmService.validateRealm() != nil {
             let errorVC = UIViewController()
             errorVC.view.backgroundColor = .white
             window?.rootViewController = errorVC
@@ -180,7 +180,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         UIApplication.shared.applicationIconBadgeNumber = 0
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        WidgetDataManager.shared.refreshWidgetData()
+        WidgetDataService.shared.refreshWidgetData()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
@@ -203,7 +203,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func handleBackupFileImport(url: URL) {
         do {
-            let (tempURL, metadata) = try BackupManager.shared.prepareForImport(from: url)
+            let (tempURL, metadata) = try BackupService.shared.prepareForImport(from: url)
             showImportConfirmation(metadata: metadata, fileURL: tempURL)
         } catch {
             showImportError(error)
@@ -247,13 +247,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
-                try BackupManager.shared.importBackup(from: url) { progress in
+                try BackupService.shared.importBackup(from: url) { progress in
                     DispatchQueue.main.async {
                         progressAlert.progressView.setProgress(Float(progress), animated: true)
                     }
                 }
                 DispatchQueue.main.async {
-                    WidgetDataManager.shared.refreshWidgetData()
+                    WidgetDataService.shared.refreshWidgetData()
                     progressAlert.alert.dismiss(animated: true) {
                         self?.showImportSuccess()
                     }
@@ -300,11 +300,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         switch type {
         case "weekly_report", "monthly_report":
             tabBarController.selectedIndex = 2
-            AnalyticsManager.shared.logNotificationOpened(type: type)
+            AnalyticsService.shared.logNotificationOpened(type: type)
 
         case "memory_reminder", "milestone":
             tabBarController.selectedIndex = 0
-            AnalyticsManager.shared.logNotificationOpened(type: type)
+            AnalyticsService.shared.logNotificationOpened(type: type)
 
         default:
             break

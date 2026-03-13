@@ -100,7 +100,7 @@ final class LocationSearchViewController: UIViewController {
 
         output.showPermissionAlert
             .drive(with: self) { owner, _ in
-                PermissionManager.shared.showPermissionAlert(for: .location, from: owner)
+                PermissionService.shared.showPermissionAlert(for: .location, from: owner)
             }
             .disposed(by: disposeBag)
 

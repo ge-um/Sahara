@@ -16,12 +16,12 @@ enum SearchEmptyState {
 }
 
 final class SearchViewModel: BaseViewModelProtocol {
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[SearchCardDTO]>(value: [])
     private let emptyStateRelay = BehaviorRelay<SearchEmptyState>(value: .initial)
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 

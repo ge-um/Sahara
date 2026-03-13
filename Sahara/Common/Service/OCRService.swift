@@ -1,5 +1,5 @@
 //
-//  OCRManager.swift
+//  OCRService.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/15/25.
@@ -9,12 +9,12 @@ import UIKit
 import Vision
 import RxSwift
 
-protocol OCRManagerProtocol {
+protocol OCRServiceProtocol {
     func recognizeText(from image: UIImage) -> Observable<String?>
 }
 
-final class OCRManager: OCRManagerProtocol {
-    static let shared = OCRManager()
+final class OCRService: OCRServiceProtocol {
+    static let shared = OCRService()
 
     private init() {}
 

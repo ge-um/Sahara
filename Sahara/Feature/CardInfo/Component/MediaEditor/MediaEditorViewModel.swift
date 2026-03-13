@@ -15,7 +15,7 @@ import UIKit
 final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let imageStateHandler: MediaEditorImageStateHandler
-    private let networkManager: NetworkManagerProtocol
+    private let networkManager: NetworkServiceProtocol
     private let filterHandler = MediaEditorFilterHandler()
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
@@ -64,7 +64,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
 
     private let originalImageSource: ImageSourceData
 
-    init(imageSource: ImageSourceData, networkManager: NetworkManagerProtocol = NetworkManager.shared) {
+    init(imageSource: ImageSourceData, networkManager: NetworkServiceProtocol = NetworkService.shared) {
         self.originalImageSource = imageSource
         self.imageStateHandler = MediaEditorImageStateHandler(originalImage: imageSource.image)
         self.networkManager = networkManager

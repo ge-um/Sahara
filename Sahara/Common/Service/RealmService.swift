@@ -1,5 +1,5 @@
 //
-//  RealmManager.swift
+//  RealmService.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -17,7 +17,7 @@ enum DatePeriod {
     case month(Date)
 }
 
-protocol RealmManagerProtocol {
+protocol RealmServiceProtocol {
     func add<T: Object>(_ object: T) -> Observable<Void>
     func fetch<T: Object>(_ type: T.Type, filter: String?, sortKey: String?, ascending: Bool) -> [T]
     func fetchObject<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> T?
@@ -36,14 +36,14 @@ protocol RealmManagerProtocol {
     func createConfiguration() -> Realm.Configuration
 }
 
-extension RealmManagerProtocol {
+extension RealmServiceProtocol {
     func fetch<T: Object>(_ type: T.Type) -> [T] {
         return fetch(type, filter: nil, sortKey: nil, ascending: true)
     }
 }
 
-final class RealmManager: RealmManagerProtocol {
-    static let shared = RealmManager()
+final class RealmService: RealmServiceProtocol {
+    static let shared = RealmService()
 
     private let configuration: Realm.Configuration
 
@@ -475,7 +475,7 @@ final class RealmManager: RealmManagerProtocol {
         DispatchQueue.global(qos: .utility).async { [weak self] in
             guard let self = self else { return }
             do {
-                let fileName = try ImageFileManager.shared.saveImageFile(data: dataCopy, cardId: cardId, format: format)
+                let fileName = try ImageFileService.shared.saveImageFile(data: dataCopy, cardId: cardId, format: format)
                 _ = self.update { realm in
                     guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
                     card.imagePath = fileName
@@ -496,7 +496,7 @@ final class RealmManager: RealmManagerProtocol {
         return delete(Card.self, forPrimaryKey: key)
             .do(onNext: {
                 if let imagePath = imagePath {
-                    ImageFileManager.shared.deleteImageFile(at: imagePath)
+                    ImageFileService.shared.deleteImageFile(at: imagePath)
                 }
                 ThumbnailCache.shared.invalidate(for: key)
             })
@@ -509,7 +509,7 @@ enum RealmError: Error {
     case configurationError
 }
 
-final class MockRealmManager: RealmManagerProtocol {
+final class MockRealmService: RealmServiceProtocol {
     var objects: [Object] = []
     var shouldThrowError = false
 
