@@ -41,14 +41,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
-        WidgetDataManager.shared.refreshWidgetData()
+        WidgetDataService.shared.refreshWidgetData()
 
         return true
     }
 
     private func configureRealm() {
-        RealmManager.migrateRealmFileIfNeeded()
-        let config = RealmManager.createConfiguration()
+        RealmService.migrateRealmFileIfNeeded()
+        let config = RealmService.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
     }
 

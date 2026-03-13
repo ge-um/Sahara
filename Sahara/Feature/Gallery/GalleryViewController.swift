@@ -93,12 +93,12 @@ final class GalleryViewController: UIViewController {
         return vc
     }()
 
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
     private let viewTypeRelay = BehaviorRelay<GalleryViewType>(value: .date)
 
-    init(viewModel: GalleryViewModel, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(viewModel: GalleryViewModel, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -297,7 +297,7 @@ final class GalleryViewController: UIViewController {
                 case .folder:
                     viewTypeString = "folder"
                 }
-                AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
+                AnalyticsService.shared.logGalleryViewChanged(viewType: viewTypeString)
             })
             .bind(with: self) { owner, viewType in
                 owner.updateButtonStyles(selectedType: viewType)
@@ -456,7 +456,7 @@ extension GalleryViewController: MKMapViewDelegate {
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
         let cardIds = cards.map { $0.id }
 
-        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
+        AnalyticsService.shared.logMapLocationViewed(cardsCount: photoCount)
 
         let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)

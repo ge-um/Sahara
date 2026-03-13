@@ -1,5 +1,5 @@
 //
-//  BiometricAuthManager.swift
+//  BiometricAuthService.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/6/25.
@@ -8,8 +8,8 @@
 import LocalAuthentication
 import UIKit
 
-final class BiometricAuthManager {
-    static let shared = BiometricAuthManager()
+final class BiometricAuthService {
+    static let shared = BiometricAuthService()
 
     private init() {}
 
@@ -40,7 +40,7 @@ final class BiometricAuthManager {
 
         if !canEvaluate {
             if let nsError = error, nsError.code == LAError.biometryNotAvailable.rawValue {
-                AnalyticsManager.shared.logBiometricPermissionDenied()
+                AnalyticsService.shared.logBiometricPermissionDenied()
             }
         }
 
@@ -57,7 +57,7 @@ final class BiometricAuthManager {
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
             if let nsError = error {
                 if nsError.code == LAError.biometryNotAvailable.rawValue {
-                    AnalyticsManager.shared.logBiometricPermissionDenied()
+                    AnalyticsService.shared.logBiometricPermissionDenied()
                     let permissionError = NSError(
                         domain: "BiometricPermissionError",
                         code: nsError.code,
@@ -79,7 +79,7 @@ final class BiometricAuthManager {
 
         context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, error in
             if success {
-                AnalyticsManager.shared.logBiometricAuthResult(success: true, feature: feature)
+                AnalyticsService.shared.logBiometricAuthResult(success: true, feature: feature)
                 DispatchQueue.main.async {
                     completion(true, nil)
                 }
@@ -88,7 +88,7 @@ final class BiometricAuthManager {
                 var error2: NSError?
 
                 guard context2.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error2) else {
-                    AnalyticsManager.shared.logBiometricAuthResult(success: false, feature: feature)
+                    AnalyticsService.shared.logBiometricAuthResult(success: false, feature: feature)
                     DispatchQueue.main.async {
                         completion(false, error)
                     }
@@ -96,7 +96,7 @@ final class BiometricAuthManager {
                 }
 
                 context2.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success2, error2 in
-                    AnalyticsManager.shared.logBiometricAuthResult(success: success2, feature: feature)
+                    AnalyticsService.shared.logBiometricAuthResult(success: success2, feature: feature)
                     DispatchQueue.main.async {
                         completion(success2, error2)
                     }

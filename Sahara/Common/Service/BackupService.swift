@@ -1,5 +1,5 @@
 //
-//  BackupManager.swift
+//  BackupService.swift
 //  Sahara
 //
 //  Created by 금가경 on 3/8/26.
@@ -38,25 +38,25 @@ enum BackupError: LocalizedError {
     }
 }
 
-protocol BackupManagerProtocol {
+protocol BackupServiceProtocol {
     func exportPhotosOnly(progress: @escaping (Double) -> Void) throws -> URL
     func exportBackup(progress: @escaping (Double) -> Void) throws -> URL
     func validateBackup(at url: URL) throws -> BackupMetadata
     func importBackup(from url: URL, progress: @escaping (Double) -> Void) throws
 }
 
-final class BackupManager: BackupManagerProtocol {
-    static let shared = BackupManager()
+final class BackupService: BackupServiceProtocol {
+    static let shared = BackupService()
 
     static let backupFileExtension = "sahara"
 
     private let fileManager = FileManager.default
-    private let realmManager: RealmManagerProtocol
-    private let imageFileManager: ImageFileManager
+    private let realmManager: RealmServiceProtocol
+    private let imageFileManager: ImageFileService
 
     init(
-        realmManager: RealmManagerProtocol = RealmManager.shared,
-        imageFileManager: ImageFileManager = .shared
+        realmManager: RealmServiceProtocol = RealmService.shared,
+        imageFileManager: ImageFileService = .shared
     ) {
         self.realmManager = realmManager
         self.imageFileManager = imageFileManager
@@ -169,10 +169,10 @@ final class BackupManager: BackupManagerProtocol {
         decoder.dateDecodingStrategy = .iso8601
         let metadata = try decoder.decode(BackupMetadata.self, from: metadataData)
 
-        if metadata.schemaVersion > RealmManager.currentSchemaVersion {
+        if metadata.schemaVersion > RealmService.currentSchemaVersion {
             throw BackupError.incompatibleSchemaVersion(
                 backup: metadata.schemaVersion,
-                current: RealmManager.currentSchemaVersion
+                current: RealmService.currentSchemaVersion
             )
         }
 
@@ -287,7 +287,7 @@ final class BackupManager: BackupManagerProtocol {
                 guard let imageData = card.editedImageData else { return }
                 let format = card.imageFormat ?? "jpeg"
                 do {
-                    let fileName = try ImageFileManager.shared.saveImageFile(data: imageData, cardId: card.id, format: format)
+                    let fileName = try ImageFileService.shared.saveImageFile(data: imageData, cardId: card.id, format: format)
                     try realm.write {
                         card.imagePath = fileName
                         card.editedImageData = nil

@@ -77,7 +77,7 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         titleLabel.text = group.category.localizedName
         countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cardIds.count)
 
-        let cards = group.cardIds.compactMap { RealmManager.shared.fetchObject(Card.self, forPrimaryKey: $0) }
+        let cards = group.cardIds.compactMap { RealmService.shared.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first {

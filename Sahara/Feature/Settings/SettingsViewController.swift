@@ -157,13 +157,13 @@ final class SettingsViewController: UIViewController {
 
         output.exportPhotos
             .drive(with: self) { owner, _ in
-                owner.performExport(using: BackupManager.shared.exportPhotosOnly)
+                owner.performExport(using: BackupService.shared.exportPhotosOnly)
             }
             .disposed(by: disposeBag)
 
         output.exportBackup
             .drive(with: self) { owner, _ in
-                owner.performExport(using: BackupManager.shared.exportBackup)
+                owner.performExport(using: BackupService.shared.exportBackup)
             }
             .disposed(by: disposeBag)
 
@@ -257,7 +257,7 @@ final class SettingsViewController: UIViewController {
                 NotificationSettings.shared.checkSystemNotificationPermission { [weak self] isAuthorized in
                     if isAuthorized {
                         NotificationSettings.shared.isServiceNewsEnabled = true
-                        AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: true)
+                        AnalyticsService.shared.logNotificationSettingChanged(type: "service_news", enabled: true)
                     } else {
                         NotificationSettings.shared.isServiceNewsEnabled = false
                         self?.showSettingsAlert()
@@ -266,7 +266,7 @@ final class SettingsViewController: UIViewController {
                 }
             } else {
                 NotificationSettings.shared.isServiceNewsEnabled = false
-                AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
+                AnalyticsService.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
             }
         }
     }
@@ -381,7 +381,7 @@ extension SettingsViewController: UIDocumentPickerDelegate {
         guard let url = urls.first else { return }
 
         do {
-            let (tempURL, metadata) = try BackupManager.shared.prepareForImport(from: url)
+            let (tempURL, metadata) = try BackupService.shared.prepareForImport(from: url)
             showImportConfirmation(metadata: metadata, fileURL: tempURL)
         } catch {
             showBackupError(title: NSLocalizedString("backup.import_failed", comment: ""), error: error)
@@ -415,7 +415,7 @@ extension SettingsViewController: UIDocumentPickerDelegate {
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
-                try BackupManager.shared.importBackup(from: url) { progress in
+                try BackupService.shared.importBackup(from: url) { progress in
                     DispatchQueue.main.async {
                         progressAlert.progressView.setProgress(Float(progress), animated: true)
                     }

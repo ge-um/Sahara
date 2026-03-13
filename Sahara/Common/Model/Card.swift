@@ -86,7 +86,7 @@ final class Card: Object {
 extension Card {
     func resolvedImageData() -> Data? {
         if let imagePath = imagePath,
-           let diskData = ImageFileManager.shared.loadImageFile(at: imagePath) {
+           let diskData = ImageFileService.shared.loadImageFile(at: imagePath) {
             return diskData
         }
         guard let data = editedImageData, !data.isEmpty else { return nil }

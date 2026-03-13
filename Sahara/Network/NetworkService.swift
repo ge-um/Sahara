@@ -1,5 +1,5 @@
 //
-//  NetworkManager.swift
+//  NetworkService.swift
 //  Sahara
 //
 //  Created by 금가경 on 9/26/25.
@@ -9,8 +9,8 @@ import Alamofire
 import Foundation
 import RxSwift
 
-final class NetworkManager: NetworkManagerProtocol {
-    static let shared = NetworkManager()
+final class NetworkService: NetworkServiceProtocol {
+    static let shared = NetworkService()
 
     private init() {}
 

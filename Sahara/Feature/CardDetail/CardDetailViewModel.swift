@@ -15,7 +15,7 @@ import UIKit
 
 final class CardDetailViewModel: BaseViewModelProtocol {
     let cardId: ObjectId
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -32,7 +32,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let deleteCompleted: Driver<Void>
     }
 
-    init(cardId: ObjectId, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardId: ObjectId, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.cardId = cardId
         self.realmManager = realmManager
     }
@@ -93,7 +93,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .withLatestFrom(imageData)
             .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
             .compactMap { imageData -> URL? in
-                let ext = ImageFormatHelper.detect(from: imageData)?.rawValue ?? "jpeg"
+                let ext = ImageFormatConverter.detect(from: imageData)?.rawValue ?? "jpeg"
                 let fileName = "Sahara_Photo_\(UUID().uuidString).\(ext)"
                 let tempURL = FileManager.default.temporaryDirectory
                     .appendingPathComponent(fileName)

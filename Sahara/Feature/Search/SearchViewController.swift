@@ -157,7 +157,7 @@ final class SearchViewController: UIViewController {
                 guard let card = owner.viewModel.getCard(by: cardId) else { return }
 
                 if card.isLocked {
-                    BiometricAuthManager.shared.authenticate { success, error in
+                    BiometricAuthService.shared.authenticate { success, error in
                         if success {
                             let detailVC = CardDetailViewController(cardId: cardId, sourceType: .searchView)
                             owner.navigationController?.pushViewController(detailVC, animated: true)

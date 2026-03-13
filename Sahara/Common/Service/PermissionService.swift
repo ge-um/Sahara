@@ -1,5 +1,5 @@
 //
-//  PermissionManager.swift
+//  PermissionService.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/4/25.
@@ -10,7 +10,7 @@ import CoreLocation
 import Photos
 import UIKit
 
-final class PermissionManager {
+final class PermissionService {
     enum PermissionType {
         case camera
         case photoLibrary
@@ -24,7 +24,7 @@ final class PermissionManager {
         case limited
     }
 
-    static let shared = PermissionManager()
+    static let shared = PermissionService()
 
     private init() {}
 

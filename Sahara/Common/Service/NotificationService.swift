@@ -1,5 +1,5 @@
 //
-//  NotificationManager.swift
+//  NotificationService.swift
 //  Sahara
 //
 
@@ -8,8 +8,8 @@ import FirebaseMessaging
 import UserNotifications
 import UIKit
 
-final class NotificationManager: NSObject {
-    static let shared = NotificationManager()
+final class NotificationService: NSObject {
+    static let shared = NotificationService()
 
     private let userDefaults = UserDefaults.standard
 

@@ -162,24 +162,24 @@ final class MediaSelectionViewController: UIViewController {
 
         output.showCameraPermissionAlert
             .drive(with: self) { owner, _ in
-                PermissionManager.shared.showPermissionAlert(for: .camera, from: owner)
+                PermissionService.shared.showPermissionAlert(for: .camera, from: owner)
             }
             .disposed(by: disposeBag)
 
         output.showPhotoPermissionAlert
             .drive(with: self) { owner, _ in
-                PermissionManager.shared.showPermissionAlert(for: .photoLibrary, from: owner)
+                PermissionService.shared.showPermissionAlert(for: .photoLibrary, from: owner)
             }
             .disposed(by: disposeBag)
 
         output.requestCameraPermission
             .drive(with: self) { owner, _ in
-                PermissionManager.shared.requestPermission(for: .camera, from: owner) { [weak owner] status in
+                PermissionService.shared.requestPermission(for: .camera, from: owner) { [weak owner] status in
                     guard let owner = owner else { return }
                     if status == .authorized {
                         owner.presentCamera()
                     } else {
-                        PermissionManager.shared.showPermissionAlert(for: .camera, from: owner)
+                        PermissionService.shared.showPermissionAlert(for: .camera, from: owner)
                     }
                 }
             }
@@ -187,7 +187,7 @@ final class MediaSelectionViewController: UIViewController {
 
         output.requestPhotoPermission
             .drive(with: self) { owner, _ in
-                PermissionManager.shared.requestPermission(for: .photoLibrary, from: owner) { [weak owner] status in
+                PermissionService.shared.requestPermission(for: .photoLibrary, from: owner) { [weak owner] status in
                     guard let owner = owner else { return }
                     owner.registerPhotoLibraryChangeObserverIfNeeded()
                     owner.viewWillAppearRelay.accept(())
@@ -287,8 +287,8 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                     return
                 }
 
-                let format = ImageFormatHelper.detectFromUTI(preferredType)
-                    ?? ImageFormatHelper.detect(from: data)
+                let format = ImageFormatConverter.detectFromUTI(preferredType)
+                    ?? ImageFormatConverter.detect(from: data)
 
                 let exifMetadata = EXIFMetadataExtractor.extract(from: data)
                 let finalDate = assetDate ?? exifMetadata.date

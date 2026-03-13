@@ -1,5 +1,5 @@
 //
-//  MockRealmManager.swift
+//  MockRealmService.swift
 //  SaharaTests
 //
 //  Created by 금가경 on 10/20/25.
@@ -10,7 +10,7 @@ import RealmSwift
 import RxSwift
 @testable import Sahara
 
-final class MockRealmManager: RealmManagerProtocol {
+final class MockRealmService: RealmServiceProtocol {
     var addCalled = false
     var fetchCalled = false
     var deleteCalled = false

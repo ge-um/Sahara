@@ -12,20 +12,20 @@ import XCTest
 
 final class CardInfoViewModelTests: XCTestCase {
     var sut: CardInfoViewModel!
-    var mockRealmManager: MockRealmManager!
+    var mockRealmService: MockRealmService!
     var mockCardPostProcessor: MockCardPostProcessor!
     var disposeBag: DisposeBag!
 
     override func setUp() {
         super.setUp()
         disposeBag = DisposeBag()
-        mockRealmManager = MockRealmManager()
+        mockRealmService = MockRealmService()
         mockCardPostProcessor = MockCardPostProcessor()
     }
 
     override func tearDown() {
         sut = nil
-        mockRealmManager = nil
+        mockRealmService = nil
         mockCardPostProcessor = nil
         disposeBag = nil
         super.tearDown()
@@ -43,9 +43,9 @@ final class CardInfoViewModelTests: XCTestCase {
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
 
-    func test_saveWithImage_shouldCallRealmManagerAdd() {
+    func test_saveWithImage_shouldCallRealmServiceAdd() {
         let testImage = createTestImage()
-        sut = CardInfoViewModel(editedImage: testImage, realmManager: mockRealmManager, cardPostProcessor: mockCardPostProcessor)
+        sut = CardInfoViewModel(editedImage: testImage, realmManager: mockRealmService, cardPostProcessor: mockCardPostProcessor)
 
         let saveButtonTapped = PublishSubject<Void>()
 
@@ -77,11 +77,11 @@ final class CardInfoViewModelTests: XCTestCase {
         saveButtonTapped.onNext(())
 
         wait(for: [expectation], timeout: 2.0)
-        XCTAssertTrue(mockRealmManager.addCalled)
+        XCTAssertTrue(mockRealmService.addCalled)
     }
 
     func test_cancelButton_shouldEmitDismiss() {
-        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmManager, cardPostProcessor: mockCardPostProcessor)
+        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmService, cardPostProcessor: mockCardPostProcessor)
 
         let cancelButtonTapped = PublishSubject<Void>()
 
@@ -114,7 +114,7 @@ final class CardInfoViewModelTests: XCTestCase {
     }
 
     func test_selectedImage_shouldUpdateHasImage() {
-        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmManager, cardPostProcessor: mockCardPostProcessor)
+        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmService, cardPostProcessor: mockCardPostProcessor)
 
         let selectedImage = BehaviorSubject<UIImage?>(value: nil)
 
@@ -151,7 +151,7 @@ final class CardInfoViewModelTests: XCTestCase {
 
     func test_saveWithImage_shouldTriggerPostProcessing() {
         let testImage = createTestImage()
-        sut = CardInfoViewModel(editedImage: testImage, realmManager: mockRealmManager, cardPostProcessor: mockCardPostProcessor)
+        sut = CardInfoViewModel(editedImage: testImage, realmManager: mockRealmService, cardPostProcessor: mockCardPostProcessor)
 
         let saveButtonTapped = PublishSubject<Void>()
 
@@ -189,7 +189,7 @@ final class CardInfoViewModelTests: XCTestCase {
     }
 
     func test_isEditMode_shouldBeFalseForNewCard() {
-        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmManager, cardPostProcessor: mockCardPostProcessor)
+        sut = CardInfoViewModel(editedImage: nil, realmManager: mockRealmService, cardPostProcessor: mockCardPostProcessor)
 
         let output = sut.transform(input: CardInfoViewModel.Input(
             selectedImage: .empty(),

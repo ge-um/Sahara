@@ -1,5 +1,5 @@
 //
-//  LanguageManager.swift
+//  LanguageService.swift
 //  Sahara
 //
 //  Created by 금가경 on 10/17/25.
@@ -27,8 +27,8 @@ enum Language: String, CaseIterable {
     }
 }
 
-final class LanguageManager {
-    static let shared = LanguageManager()
+final class LanguageService {
+    static let shared = LanguageService()
 
     private init() {}
 

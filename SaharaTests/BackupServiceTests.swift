@@ -3,11 +3,11 @@ import RealmSwift
 import ZIPFoundation
 @testable import Sahara
 
-final class BackupManagerTests: XCTestCase {
+final class BackupServiceTests: XCTestCase {
     var tempDir: URL!
     var testRealmURL: URL!
     var testImagesDir: URL!
-    var backupManager: BackupManager!
+    var backupManager: BackupService!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -38,13 +38,13 @@ final class BackupManagerTests: XCTestCase {
     /// schemaVersion, cardCount 등이 저장한 값과 일치해야 한다.
     func test_validateBackup_validFile_returnsMetadata() throws {
         let archiveURL = try createTestBackupArchive(
-            schemaVersion: RealmManager.currentSchemaVersion,
+            schemaVersion: RealmService.currentSchemaVersion,
             cardCount: 5
         )
 
-        let metadata = try BackupManager.shared.validateBackup(at: archiveURL)
+        let metadata = try BackupService.shared.validateBackup(at: archiveURL)
 
-        XCTAssertEqual(metadata.schemaVersion, RealmManager.currentSchemaVersion)
+        XCTAssertEqual(metadata.schemaVersion, RealmService.currentSchemaVersion)
         XCTAssertEqual(metadata.cardCount, 5)
         XCTAssertFalse(metadata.appVersion.isEmpty)
     }
@@ -60,7 +60,7 @@ final class BackupManagerTests: XCTestCase {
             dummyData.subdata(in: Int(position)..<Int(position)+size)
         }
 
-        XCTAssertThrowsError(try BackupManager.shared.validateBackup(at: archiveURL)) { error in
+        XCTAssertThrowsError(try BackupService.shared.validateBackup(at: archiveURL)) { error in
             guard let backupError = error as? BackupError else {
                 XCTFail("Expected BackupError, got \(error)")
                 return
@@ -76,20 +76,20 @@ final class BackupManagerTests: XCTestCase {
     /// 앱 다운그레이드 후 이전(상위 스키마) 백업을 복원하려 할 때 거부하는지 검증.
     /// Realm은 역마이그레이션을 지원하지 않으므로 상위 스키마 백업은 열 수 없다.
     func test_validateBackup_futureSchemaVersion_throwsError() throws {
-        let futureVersion = RealmManager.currentSchemaVersion + 10
+        let futureVersion = RealmService.currentSchemaVersion + 10
         let archiveURL = try createTestBackupArchive(
             schemaVersion: futureVersion,
             cardCount: 1
         )
 
-        XCTAssertThrowsError(try BackupManager.shared.validateBackup(at: archiveURL)) { error in
+        XCTAssertThrowsError(try BackupService.shared.validateBackup(at: archiveURL)) { error in
             guard let backupError = error as? BackupError else {
                 XCTFail("Expected BackupError, got \(error)")
                 return
             }
             if case .incompatibleSchemaVersion(let backup, let current) = backupError {
                 XCTAssertEqual(backup, futureVersion)
-                XCTAssertEqual(current, RealmManager.currentSchemaVersion)
+                XCTAssertEqual(current, RealmService.currentSchemaVersion)
             } else {
                 XCTFail("Expected incompatibleSchemaVersion, got \(backupError)")
             }
@@ -104,7 +104,7 @@ final class BackupManagerTests: XCTestCase {
 
         let metadata = BackupMetadata(
             appVersion: "1.0.0",
-            schemaVersion: RealmManager.currentSchemaVersion,
+            schemaVersion: RealmService.currentSchemaVersion,
             cardCount: 0,
             createdAt: Date(),
             deviceModel: "test"
@@ -117,7 +117,7 @@ final class BackupManagerTests: XCTestCase {
             metadataData.subdata(in: Int(position)..<Int(position)+size)
         }
 
-        XCTAssertThrowsError(try BackupManager.shared.validateBackup(at: archiveURL)) { error in
+        XCTAssertThrowsError(try BackupService.shared.validateBackup(at: archiveURL)) { error in
             guard let backupError = error as? BackupError else {
                 XCTFail("Expected BackupError, got \(error)")
                 return
@@ -135,7 +135,7 @@ final class BackupManagerTests: XCTestCase {
     func test_backupMetadata_create_capturesCurrentInfo() {
         let metadata = BackupMetadata.create(cardCount: 42)
 
-        XCTAssertEqual(metadata.schemaVersion, RealmManager.currentSchemaVersion)
+        XCTAssertEqual(metadata.schemaVersion, RealmService.currentSchemaVersion)
         XCTAssertEqual(metadata.cardCount, 42)
         XCTAssertFalse(metadata.deviceModel.isEmpty)
     }

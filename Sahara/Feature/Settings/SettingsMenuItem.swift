@@ -41,7 +41,7 @@ enum SettingsMenuItem: CaseIterable {
     var subtitle: String? {
         switch self {
         case .language:
-            return LanguageManager.shared.currentLanguageDescription
+            return LanguageService.shared.currentLanguageDescription
         case .serviceNews:
             return NSLocalizedString("settings.service_news_desc", comment: "")
         case .versionInfo:

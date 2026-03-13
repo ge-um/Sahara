@@ -224,7 +224,7 @@ final class CardListViewController: UIViewController {
         guard let item = getCard(by: cardId) else { return }
 
         if item.isLocked {
-            BiometricAuthManager.shared.authenticate { [weak self] success, error in
+            BiometricAuthService.shared.authenticate { [weak self] success, error in
                 guard let self = self else { return }
                 if success {
                     let detailVC = CardDetailViewController(cardId: cardId, sourceType: self.sourceType)

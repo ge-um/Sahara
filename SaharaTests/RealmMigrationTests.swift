@@ -31,7 +31,7 @@ final class RealmMigrationTests: XCTestCase {
         try Data().write(to: oldLockURL)
         try Data().write(to: oldManagementURL)
 
-        RealmManager.migrateRealmFileIfNeeded(
+        RealmService.migrateRealmFileIfNeeded(
             documentsDir: fakeDocuments,
             appSupportDir: fakeAppSupport
         )
@@ -56,7 +56,7 @@ final class RealmMigrationTests: XCTestCase {
             try? fm.removeItem(at: fakeAppSupport)
         }
 
-        RealmManager.migrateRealmFileIfNeeded(
+        RealmService.migrateRealmFileIfNeeded(
             documentsDir: fakeDocuments,
             appSupportDir: fakeAppSupport
         )
@@ -83,7 +83,7 @@ final class RealmMigrationTests: XCTestCase {
         try oldData.write(to: oldRealmURL)
         try newData.write(to: newRealmURL)
 
-        RealmManager.migrateRealmFileIfNeeded(
+        RealmService.migrateRealmFileIfNeeded(
             documentsDir: fakeDocuments,
             appSupportDir: fakeAppSupport
         )

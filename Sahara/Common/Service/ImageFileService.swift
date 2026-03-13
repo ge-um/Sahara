@@ -1,5 +1,5 @@
 //
-//  ImageFileManager.swift
+//  ImageFileService.swift
 //  Sahara
 //
 //  Created by 금가경 on 3/6/26.
@@ -9,15 +9,15 @@ import Foundation
 import OSLog
 import RealmSwift
 
-protocol ImageFileManagerProtocol {
+protocol ImageFileServiceProtocol {
     func saveImageFile(data: Data, cardId: ObjectId, format: String) throws -> String
     func loadImageFile(at relativePath: String) -> Data?
     func deleteImageFile(at relativePath: String)
     func imageFileURL(for relativePath: String) -> URL
 }
 
-final class ImageFileManager: ImageFileManagerProtocol {
-    static let shared = ImageFileManager()
+final class ImageFileService: ImageFileServiceProtocol {
+    static let shared = ImageFileService()
 
     private let baseDirectory: URL
     private let fileManager = FileManager.default

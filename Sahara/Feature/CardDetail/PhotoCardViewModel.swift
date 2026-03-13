@@ -15,7 +15,7 @@ import UIKit
 
 final class PhotoCardViewModel: BaseViewModelProtocol {
     private let cardId: ObjectId
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -33,7 +33,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
         let shouldFlipToFront: Driver<Void>
     }
 
-    init(cardId: ObjectId, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardId: ObjectId, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.cardId = cardId
         self.realmManager = realmManager
     }

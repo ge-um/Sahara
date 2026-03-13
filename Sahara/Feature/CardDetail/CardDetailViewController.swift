@@ -14,7 +14,7 @@ import UIKit
 final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
     private let photoCardViewModel: PhotoCardViewModel
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let sourceType: EditSourceType
 
@@ -75,7 +75,7 @@ final class CardDetailViewController: UIViewController {
     }()
 
 
-    init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
         self.viewModel = CardDetailViewModel(cardId: cardId, realmManager: realmManager)
         self.photoCardViewModel = PhotoCardViewModel(cardId: cardId, realmManager: realmManager)

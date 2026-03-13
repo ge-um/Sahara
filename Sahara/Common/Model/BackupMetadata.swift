@@ -18,7 +18,7 @@ struct BackupMetadata: Codable {
     static func create(cardCount: Int) -> BackupMetadata {
         BackupMetadata(
             appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown",
-            schemaVersion: RealmManager.currentSchemaVersion,
+            schemaVersion: RealmService.currentSchemaVersion,
             cardCount: cardCount,
             createdAt: Date(),
             deviceModel: DeviceInfo.displayName

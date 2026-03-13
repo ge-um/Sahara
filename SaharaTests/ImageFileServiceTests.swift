@@ -1,5 +1,5 @@
 //
-//  ImageFileManagerTests.swift
+//  ImageFileServiceTests.swift
 //  SaharaTests
 //
 //  Created by 금가경 on 3/6/26.
@@ -9,15 +9,15 @@ import XCTest
 import RealmSwift
 @testable import Sahara
 
-final class ImageFileManagerTests: XCTestCase {
-    var sut: ImageFileManager!
+final class ImageFileServiceTests: XCTestCase {
+    var sut: ImageFileService!
     var testDirectory: URL!
 
     override func setUp() {
         super.setUp()
         testDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ImageFileManagerTests-\(UUID().uuidString)")
-        sut = ImageFileManager(baseDirectory: testDirectory)
+            .appendingPathComponent("ImageFileServiceTests-\(UUID().uuidString)")
+        sut = ImageFileService(baseDirectory: testDirectory)
     }
 
     override func tearDown() {
