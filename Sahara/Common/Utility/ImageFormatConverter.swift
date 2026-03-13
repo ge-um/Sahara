@@ -9,6 +9,27 @@ import OSLog
 import UIKit
 
 final class ImageFormatConverter {
+    struct ImageSourceResult {
+        let imageSource: ImageSourceData
+        let metadata: EXIFMetadata
+    }
+
+    static func createImageSourceData(from data: Data, utiHint: String? = nil) -> ImageSourceResult? {
+        guard let image = UIImage(data: data) else { return nil }
+
+        let format: ImageSourceData.ImageFormat?
+        if let uti = utiHint {
+            format = detectFromUTI(uti) ?? detect(from: data)
+        } else {
+            format = detect(from: data)
+        }
+
+        let metadata = EXIFMetadataExtractor.extract(from: data)
+        let imageSource = ImageSourceData(image: image, originalData: data, format: format)
+
+        return ImageSourceResult(imageSource: imageSource, metadata: metadata)
+    }
+
     static func detect(from data: Data) -> ImageSourceData.ImageFormat? {
         guard data.count >= 12 else { return nil }
         let bytes = [UInt8](data.prefix(12))
