@@ -16,7 +16,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
     private let imageStateHandler: MediaEditorImageStateHandler
     private let networkManager: NetworkManagerProtocol
-    private let context = CIContext()
+    private let filterHandler = MediaEditorFilterHandler()
     private let currentPageRelay = BehaviorRelay<Int>(value: 1)
     private let hasNextRelay = BehaviorRelay<Bool>(value: true)
     private let currentQueryRelay = BehaviorRelay<String>(value: "")
@@ -78,6 +78,36 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let networkErrorRelay = PublishRelay<String>()
         let shouldShowStickerModalRelay = PublishRelay<Void>()
 
+        bindStickerSearch(
+            input: input,
+            stickersRelay: stickersRelay,
+            isLoadingMoreRelay: isLoadingMoreRelay,
+            errorRelay: errorRelay,
+            networkErrorRelay: networkErrorRelay,
+            shouldShowStickerModalRelay: shouldShowStickerModalRelay
+        )
+
+        bindImageEditing(input: input, filteredImageRelay: filteredImageRelay)
+
+        return buildOutput(
+            input: input,
+            stickersRelay: stickersRelay,
+            filteredImageRelay: filteredImageRelay,
+            isLoadingMoreRelay: isLoadingMoreRelay,
+            errorRelay: errorRelay,
+            networkErrorRelay: networkErrorRelay,
+            shouldShowStickerModalRelay: shouldShowStickerModalRelay
+        )
+    }
+
+    private func bindStickerSearch(
+        input: Input,
+        stickersRelay: BehaviorRelay<[KlipySticker]>,
+        isLoadingMoreRelay: BehaviorRelay<Bool>,
+        errorRelay: PublishRelay<String>,
+        networkErrorRelay: PublishRelay<String>,
+        shouldShowStickerModalRelay: PublishRelay<Void>
+    ) {
         input.stickerButtonTapped
             .withUnretained(self)
             .bind { owner, _ in
@@ -233,21 +263,16 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 stickersRelay.accept(currentStickers + newStickers)
             }
             .disposed(by: disposeBag)
+    }
 
+    private func bindImageEditing(input: Input, filteredImageRelay: BehaviorRelay<UIImage?>) {
         input.filterSelected
             .withUnretained(self)
             .bind { owner, data in
                 let (index, baseImage) = data
                 guard let baseImage = baseImage else { return }
 
-                if index == 0 {
-                    owner.imageStateHandler.applyFilter(baseImage)
-                    filteredImageRelay.accept(baseImage)
-                    return
-                }
-
-                guard let filter = owner.createFilter(at: index),
-                      let filteredImage = owner.applyFilter(filter, to: baseImage) else { return }
+                guard let filteredImage = owner.filterHandler.applyFilter(at: index, to: baseImage) else { return }
 
                 owner.imageStateHandler.applyFilter(filteredImage)
                 filteredImageRelay.accept(filteredImage)
@@ -279,7 +304,17 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
                 owner.addedStickersRelay.accept(currentStickers)
             }
             .disposed(by: disposeBag)
+    }
 
+    private func buildOutput(
+        input: Input,
+        stickersRelay: BehaviorRelay<[KlipySticker]>,
+        filteredImageRelay: BehaviorRelay<UIImage?>,
+        isLoadingMoreRelay: BehaviorRelay<Bool>,
+        errorRelay: PublishRelay<String>,
+        networkErrorRelay: PublishRelay<String>,
+        shouldShowStickerModalRelay: PublishRelay<Void>
+    ) -> Output {
         let selectedSticker = input.stickerSelected
             .asDriver(onErrorDriveWith: .empty())
 
@@ -318,37 +353,4 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         )
     }
 
-    private func createFilter(at index: Int) -> CIFilter? {
-        let filterNames = [
-            nil,
-            "CIPhotoEffectNoir",
-            "CISepiaTone",
-            "CIPhotoEffectInstant",
-            "CIPhotoEffectChrome",
-            "CIPhotoEffectFade",
-            "CIPhotoEffectMono",
-            "CIPhotoEffectProcess",
-            "CIPhotoEffectTransfer",
-            "CIPhotoEffectTonal"
-        ]
-
-        guard index < filterNames.count, let filterName = filterNames[index] else {
-            return nil
-        }
-
-        return CIFilter(name: filterName)
-    }
-
-    private func applyFilter(_ filter: CIFilter, to image: UIImage) -> UIImage? {
-        guard let ciImage = CIImage(image: image) else { return nil }
-
-        filter.setValue(ciImage, forKey: kCIInputImageKey)
-
-        guard let outputImage = filter.outputImage,
-              let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
-            return nil
-        }
-
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
-    }
 }
