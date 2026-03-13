@@ -202,6 +202,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
+                WidgetDataManager.shared.refreshWidgetData()
             })
     }
 
@@ -402,6 +403,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 return self.realmManager.add(card)
                     .do(onNext: {
                         self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
+                        WidgetDataManager.shared.refreshWidgetData()
                     })
             }
     }
@@ -503,6 +505,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 ImageFileManager.shared.deleteImageFile(at: oldPath)
             }
             ThumbnailCache.shared.invalidate(for: cardId)
+            WidgetDataManager.shared.refreshWidgetData()
         })
     }
 
@@ -627,6 +630,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 ImageFileManager.shared.deleteImageFile(at: oldPath)
             }
             ThumbnailCache.shared.invalidate(for: cardId)
+            WidgetDataManager.shared.refreshWidgetData()
         })
     }
 

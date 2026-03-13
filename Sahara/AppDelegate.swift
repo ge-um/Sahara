@@ -41,6 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
 
+        WidgetDataManager.shared.refreshWidgetData()
+
         return true
     }
 
