@@ -109,18 +109,12 @@ final class MediaSelectionViewController: UIViewController {
                 let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                 var actionItems: [MediaCollectionItem] = []
 
-                if status == .authorized {
-                    actionItems.append(.action(
-                        icon: "camera.fill",
-                        title: NSLocalizedString("media_selection.camera", comment: ""),
-                        type: .camera
-                    ))
-                } else {
-                    actionItems.append(.action(
-                        icon: "camera.fill",
-                        title: NSLocalizedString("media_selection.camera", comment: ""),
-                        type: .camera
-                    ))
+                actionItems.append(.action(
+                    icon: "camera.fill",
+                    title: NSLocalizedString("media_selection.camera", comment: ""),
+                    type: .camera
+                ))
+                if status != .authorized {
                     actionItems.append(.action(
                         icon: "photo.on.rectangle",
                         title: NSLocalizedString("media_selection.library", comment: ""),
@@ -217,16 +211,16 @@ final class MediaSelectionViewController: UIViewController {
     }
 
     private func presentCamera() {
-        guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
-
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.delegate = self
-        present(picker, animated: true)
+        let cameraVC = CameraViewController()
+        cameraVC.modalPresentationStyle = .fullScreen
+        cameraVC.onPhotoCaptured = { [weak self] imageSource in
+            self?.imagePickerResultRelay.accept((imageSource, nil, Date(), .camera))
+        }
+        present(cameraVC, animated: true)
     }
 
     private func presentPHPicker() {
-        var configuration = PHPickerConfiguration()
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
         configuration.selectionLimit = 1
         configuration.filter = .images
 
@@ -264,26 +258,18 @@ final class MediaSelectionViewController: UIViewController {
     }
 }
 
-extension MediaSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true)
-
-        if let image = info[.originalImage] as? UIImage {
-            let imageSource = ImageSourceData(image: image)
-            imagePickerResultRelay.accept((imageSource, nil, nil, .camera))
-        }
-    }
-
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
-    }
-}
-
 extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
-        guard let itemProvider = results.first?.itemProvider else { return }
+        guard let result = results.first else { return }
+        let itemProvider = result.itemProvider
+
+        let asset = result.assetIdentifier.flatMap { identifier in
+            PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject
+        }
+        let assetDate = asset?.creationDate
+        let assetLocation = asset?.location
 
         let typeIdentifiers = itemProvider.registeredTypeIdentifiers
         let preferredType = typeIdentifiers.first ?? "public.image"
@@ -304,12 +290,17 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
                 let format = ImageFormatHelper.detectFromUTI(preferredType)
                     ?? ImageFormatHelper.detect(from: data)
 
+                let exifMetadata = EXIFMetadataExtractor.extract(from: data)
+                let finalDate = assetDate ?? exifMetadata.date
+                let finalLocation = assetLocation ?? exifMetadata.location
+
                 DispatchQueue.main.async {
                     let imageSource = ImageSourceData(
                         image: image,
+                        originalData: data,
                         format: format
                     )
-                    self?.imagePickerResultRelay.accept((imageSource, nil, nil, .library))
+                    self?.imagePickerResultRelay.accept((imageSource, finalLocation, finalDate, .library))
                 }
             } catch {
                 self?.loadImageFallback(from: itemProvider)

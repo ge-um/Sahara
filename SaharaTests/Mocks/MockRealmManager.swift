@@ -40,7 +40,11 @@ final class MockRealmManager: RealmManagerProtocol {
 
     func fetch<T: Object>(_ type: T.Type, filter: String?, sortKey: String?, ascending: Bool) -> [T] {
         fetchCalled = true
-        return mockCards as? [T] ?? []
+        var cards = mockCards
+        if let filter = filter, filter.contains("isLocked == false") {
+            cards = cards.filter { !$0.isLocked }
+        }
+        return cards as? [T] ?? []
     }
 
     func fetchObject<T: Object>(_ type: T.Type, forPrimaryKey key: Any) -> T? {

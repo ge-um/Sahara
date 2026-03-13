@@ -91,6 +91,10 @@
 "media_selection.photo_permission_message" = "Please allow photo library access in Settings";
 "media_selection.go_to_settings" = "Go to Settings";
 
+/* Camera */
+"camera.unavailable_title" = "Camera Unavailable";
+"camera.unavailable_message" = "Camera is not available on this device.";
+
 /* Media Editor */
 "media_editor.title" = "Photo Editor";
 "media_editor.done" = "Done";
@@ -197,6 +201,7 @@
 "settings.device_info_title" = "Device Information";
 "settings.app_version" = "App Version";
 "settings.ios_version" = "iOS Version";
+"settings.macos_version" = "macOS Version";
 "settings.device_model" = "Device Model";
 "settings.section_data" = "Data Management";
 "settings.export_photos" = "Export Photos";

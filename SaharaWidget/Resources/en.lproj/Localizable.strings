@@ -1,0 +1,7 @@
+/* Widget */
+"widget.display_name" = "Sahara";
+"widget.description" = "Shows today's memory";
+"widget.on_this_day" = "On This Day";
+"widget.empty_message" = "Create your first card";
+"widget.placeholder_memo" = "Today's memory";
+"widget.date_format" = "MMMM d, yyyy";

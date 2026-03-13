@@ -69,10 +69,8 @@ final class PermissionManager {
         alert.addAction(UIAlertAction(
             title: NSLocalizedString("media_selection.go_to_settings", comment: ""),
             style: .default
-        ) { _ in
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
+        ) { [weak self] _ in
+            self?.openSettings(for: type)
         })
 
         alert.addAction(UIAlertAction(
@@ -81,6 +79,27 @@ final class PermissionManager {
         ))
 
         viewController.present(alert, animated: true)
+    }
+
+    private func openSettings(for type: PermissionType) {
+        #if targetEnvironment(macCatalyst)
+        let urlString: String
+        switch type {
+        case .photoLibrary:
+            urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_Photos"
+        case .camera:
+            urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera"
+        case .location:
+            urlString = "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices"
+        }
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
+        }
+        #else
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
+        #endif
     }
 
     private func checkCameraPermission() -> PermissionStatus {

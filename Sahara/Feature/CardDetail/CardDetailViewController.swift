@@ -37,7 +37,8 @@ final class CardDetailViewController: UIViewController {
     }()
 
     private lazy var photoCardView: PhotoCardView = {
-        let cardWidth = min(view.bounds.width - 64, 500)
+        let availableWidth = view.bounds.width - 64
+        let cardWidth = UIDevice.current.userInterfaceIdiom == .phone ? availableWidth : min(availableWidth, 500)
         return PhotoCardView(cardWidth: cardWidth)
     }()
 
@@ -157,9 +158,13 @@ final class CardDetailViewController: UIViewController {
 
         photoCardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(32)
-            make.centerX.equalToSuperview()
-            make.width.lessThanOrEqualTo(500)
-            make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                make.horizontalEdges.equalToSuperview().inset(32)
+            } else {
+                make.centerX.equalToSuperview()
+                make.width.lessThanOrEqualTo(500)
+                make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
+            }
         }
 
         buttonContainerView.snp.makeConstraints { make in
@@ -200,6 +205,29 @@ final class CardDetailViewController: UIViewController {
         present(navController, animated: true)
     }
 
+    private func bindSaveOutput(_ output: CardDetailViewModel.Output) {
+        #if targetEnvironment(macCatalyst)
+        output.saveFileURL
+            .drive(with: self) { owner, url in
+                let picker = UIDocumentPickerViewController(forExporting: [url])
+                owner.present(picker, animated: true)
+            }
+            .disposed(by: disposeBag)
+        #else
+        output.saveResult
+            .drive(with: self) { owner, result in
+                switch result {
+                case .success:
+                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
+                    owner.showToast(message: message)
+                case .failure(let error):
+                    owner.showToast(message: error.localizedDescription)
+                }
+            }
+            .disposed(by: disposeBag)
+        #endif
+    }
+
     private func bind() {
         photoCardView.deleteButtonTappedRelay
             .bind(with: self) { owner, _ in
@@ -233,23 +261,14 @@ final class CardDetailViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        output.saveResult
-            .drive(with: self) { owner, result in
-                switch result {
-                case .success:
-                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
-                    owner.showToast(message: message)
-                case .failure(let error):
-                    owner.showToast(message: error.localizedDescription)
-                }
-            }
-            .disposed(by: disposeBag)
+        bindSaveOutput(output)
 
         output.shareImage
             .drive(with: self) { owner, image in
                 let itemSource = ShareActivityItemSource(image: image)
                 let activityVC = UIActivityViewController(activityItems: [itemSource], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
+                activityVC.popoverPresentationController?.sourceRect = owner.shareButton.bounds
                 owner.present(activityVC, animated: true)
             }
             .disposed(by: disposeBag)

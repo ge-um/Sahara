@@ -46,7 +46,7 @@
 	<key>NSUserNotificationsUsageDescription</key>
 	<string></string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
+	<true/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -74,13 +74,24 @@
 			<key>CFBundleTypeName</key>
 			<string>Sahara Backup</string>
 			<key>CFBundleTypeRole</key>
-			<string>Owner</string>
+			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>com.miya.sahara.backup</string>
 			</array>
+		</dict>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>saharaapp</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.miya.Sahara.widget</string>
 		</dict>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
