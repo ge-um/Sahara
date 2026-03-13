@@ -66,7 +66,7 @@ final class ThemeViewModel: BaseViewModelProtocol {
     }
 
     private func observeAndAnalyzePhotos(themeGroupsRelay: BehaviorRelay<[ThemeGroup]>) -> Observable<Void> {
-        let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
+        let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .utility)
 
         return realmManager.observeAllCards()
             .map { cards in
