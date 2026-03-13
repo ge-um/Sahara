@@ -22,6 +22,18 @@
 		03E2B5DC2E866F3C00A8C8DA /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DB2E866F3C00A8C8DA /* RxSwift */; };
 		03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 03E2B5DE2E866F4B00A8C8DA /* Kingfisher */; };
 		03F1A0032EC3D00100B4C003 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 03F1A0022EC3D00100B4C002 /* ZIPFoundation */; };
+		11EAA4A28534A849B54F71B8 /* SaharaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */; };
+		35809AA4E121A6056CB56712 /* AppGroupContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */; };
+		40509515DF5217AEC51F227B /* SaharaWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7F687188F77FC625DD9732CC /* Localizable.strings */; };
+		48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */; };
+		9716DC354EDCBBF970FC7B1C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5784B26A0B503F279A42BC75 /* Foundation.framework */; };
+		AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */; };
+		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
+		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
+		FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */; };
+		A1F0E7C3D8B24A9F10C3E002 /* Galmuri11-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */; };
+		A1F0E7C3D8B24A9F10C3E003 /* Galmuri14.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +43,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 03E2B5B42E8664AB00A8C8DA;
 			remoteInfo = Sahara;
+		};
+		9F6C04DDB36FD24530F0AF49 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03E2B5AD2E8664AB00A8C8DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E45FD418C3D55D51C662192E;
+			remoteInfo = SaharaWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -57,12 +76,41 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0CF3CF22A2FCCC42E0636E51 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				40509515DF5217AEC51F227B /* SaharaWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		034694692EA127BF0003065C /* SaharaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SaharaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5B52E8664AB00A8C8DA /* Sahara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sahara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5CD2E8664E400A8C8DA /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetCardEntry.swift; path = Sahara/Common/Model/WidgetCardEntry.swift; sourceTree = SOURCE_ROOT; };
+		1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SaharaWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2248A9DE1AE24A3DFBF50CFE /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		2FFA727C3FD2CBCD02C8459C /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		42B47BDB082DFD3FB45AC439 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4301DA729761C01C60469C92 /* SaharaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = SaharaWidget.entitlements; sourceTree = "<group>"; };
+		44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnThisDaySelector.swift; path = Sahara/Common/Utility/OnThisDaySelector.swift; sourceTree = SOURCE_ROOT; };
+		47CD2822568FA817EC45BEE9 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppGroupContainer.swift; path = Sahara/Common/Utility/AppGroupContainer.swift; sourceTree = SOURCE_ROOT; };
+		5784B26A0B503F279A42BC75 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidget.swift; sourceTree = "<group>"; };
+		9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidgetBundle.swift; sourceTree = "<group>"; };
+		CE323ED067314EE13712B049 /* WidgetKit.framework */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetEntryView.swift; sourceTree = "<group>"; };
+		DDAE112A04E74E8EB5EDDB78 /* ko */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "Galmuri11-Bold.ttf"; path = "Sahara/Resources/Fonts/Galmuri11-Bold.ttf"; sourceTree = SOURCE_ROOT; };
+		A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = Galmuri14.ttf; path = Sahara/Resources/Fonts/Galmuri14.ttf; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -118,12 +166,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		99971638BA62160923E272A2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9716DC354EDCBBF970FC7B1C /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		032681792E9D5D6C00D44CC4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0F70D77D94F96D5BE854F814 /* iOS */,
+				CE323ED067314EE13712B049 /* WidgetKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -136,6 +194,8 @@
 				0346946A2EA127BF0003065C /* SaharaTests */,
 				032681792E9D5D6C00D44CC4 /* Frameworks */,
 				03E2B5B62E8664AB00A8C8DA /* Products */,
+				673E3F5E08351D0A78BD3671 /* SaharaWidget */,
+				C1BA6AAC55D437A4B615D5FB /* Sahara */,
 			);
 			sourceTree = "<group>";
 		};
@@ -144,8 +204,51 @@
 			children = (
 				03E2B5B52E8664AB00A8C8DA /* Sahara.app */,
 				034694692EA127BF0003065C /* SaharaTests.xctest */,
+				1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		060E2F6095A14C26C94BEAA0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7F687188F77FC625DD9732CC /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		0F70D77D94F96D5BE854F814 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				5784B26A0B503F279A42BC75 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		673E3F5E08351D0A78BD3671 /* SaharaWidget */ = {
+			isa = PBXGroup;
+			children = (
+				4301DA729761C01C60469C92 /* SaharaWidget.entitlements */,
+				42B47BDB082DFD3FB45AC439 /* Info.plist */,
+				FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */,
+				9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */,
+				9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */,
+				D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */,
+				060E2F6095A14C26C94BEAA0 /* Resources */,
+				4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */,
+				1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */,
+				44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */,
+				A1F0E7C3D8B24A9F10C3F002 /* Galmuri11-Bold.ttf */,
+				A1F0E7C3D8B24A9F10C3F003 /* Galmuri14.ttf */,
+			);
+			path = SaharaWidget;
+			sourceTree = "<group>";
+		};
+		C1BA6AAC55D437A4B615D5FB /* Sahara */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Sahara;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -185,10 +288,12 @@
 				03E2B5B32E8664AB00A8C8DA /* Resources */,
 				0397458C2E86DEDA00BDA511 /* Embed Frameworks */,
 				035A09452E90D48500221B3E /* ShellScript */,
+				0CF3CF22A2FCCC42E0636E51 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D25225EE73375F974FEA3678 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				03E2B5B72E8664AB00A8C8DA /* Sahara */,
@@ -210,6 +315,23 @@
 			productName = Sahara;
 			productReference = 03E2B5B52E8664AB00A8C8DA /* Sahara.app */;
 			productType = "com.apple.product-type.application";
+		};
+		E45FD418C3D55D51C662192E /* SaharaWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CB61CC5D02C375C634A66A57 /* Build configuration list for PBXNativeTarget "SaharaWidget" */;
+			buildPhases = (
+				934E7857321C41EB398AEEE6 /* Sources */,
+				99971638BA62160923E272A2 /* Frameworks */,
+				3FC3F5B1EE611E2B57CA2291 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SaharaWidget;
+			productName = SaharaWidget;
+			productReference = 1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -259,6 +381,7 @@
 			targets = (
 				03E2B5B42E8664AB00A8C8DA /* Sahara */,
 				034694682EA127BF0003065C /* SaharaTests */,
+				E45FD418C3D55D51C662192E /* SaharaWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -276,6 +399,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				03E2B5CE2E8664E400A8C8DA /* .gitignore in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FC3F5B1EE611E2B57CA2291 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */,
+				41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */,
+				A1F0E7C3D8B24A9F10C3E002 /* Galmuri11-Bold.ttf in Resources */,
+				A1F0E7C3D8B24A9F10C3E003 /* Galmuri14.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -322,6 +456,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		934E7857321C41EB398AEEE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */,
+				11EAA4A28534A849B54F71B8 /* SaharaWidget.swift in Sources */,
+				FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */,
+				35809AA4E121A6056CB56712 /* AppGroupContainer.swift in Sources */,
+				EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */,
+				AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -330,7 +477,27 @@
 			target = 03E2B5B42E8664AB00A8C8DA /* Sahara */;
 			targetProxy = 0346946D2EA127BF0003065C /* PBXContainerItemProxy */;
 		};
+		D25225EE73375F974FEA3678 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SaharaWidget;
+			target = E45FD418C3D55D51C662192E /* SaharaWidget */;
+			targetProxy = 9F6C04DDB36FD24530F0AF49 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		7F687188F77FC625DD9732CC /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DDAE112A04E74E8EB5EDDB78 /* ko */,
+				47CD2822568FA817EC45BEE9 /* en */,
+				2FFA727C3FD2CBCD02C8459C /* ja */,
+				2248A9DE1AE24A3DFBF50CFE /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		034694702EA127BF0003065C /* Debug */ = {
@@ -593,6 +760,67 @@
 			};
 			name = Release;
 		};
+		30D85514C2ABA88B1B791834 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SaharaWidget/SaharaWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SaharaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SaharaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.6.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.Sahara.dev.SaharaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		71432FE0BBF79E6C7B525E45 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = SaharaWidget/SaharaWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SaharaWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SaharaWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.6.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.Sahara.SaharaWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -619,6 +847,15 @@
 			buildConfigurations = (
 				03E2B5C92E8664AD00A8C8DA /* Debug */,
 				03E2B5CA2E8664AD00A8C8DA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CB61CC5D02C375C634A66A57 /* Build configuration list for PBXNativeTarget "SaharaWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71432FE0BBF79E6C7B525E45 /* Release */,
+				30D85514C2ABA88B1B791834 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
