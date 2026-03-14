@@ -260,6 +260,7 @@ final class GalleryViewController: UIViewController {
             make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().inset(112)
         }
+
     }
     
     private func bind() {
@@ -461,4 +462,5 @@ extension GalleryViewController: MKMapViewDelegate {
         let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
     }
+
 }

@@ -13,6 +13,7 @@ import RxCocoa
 import RxSwift
 import SnapKit
 import UIKit
+import UniformTypeIdentifiers
 
 final class CardInfoViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
@@ -54,6 +55,8 @@ final class CardInfoViewController: UIViewController {
     let selectedDateRelay = BehaviorRelay<Date>(value: Date())
     let deleteConfirmedRelay = PublishRelay<Void>()
     let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
+    private let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
+    private let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -72,6 +75,9 @@ final class CardInfoViewController: UIViewController {
         setupCustomNavigationBar()
         bind()
         setupKeyboardHandling()
+        #if targetEnvironment(macCatalyst)
+        setupDropInteraction()
+        #endif
     }
 
     override func viewDidLayoutSubviews() {
@@ -141,9 +147,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func bind() {
-        let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
         let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
-        let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
         let locationOutput = bindLocationCard(
             initialLocationRelay: initialLocationRelay,
@@ -506,6 +510,13 @@ extension CardInfoViewController {
             .disposed(by: disposeBag)
     }
 
+    #if targetEnvironment(macCatalyst)
+    private func setupDropInteraction() {
+        contentView.addPhotoContainerInteraction(UIDropInteraction(delegate: self))
+        contentView.photoSelectButton.addInteraction(UIDropInteraction(delegate: self))
+    }
+    #endif
+
     private func presentBiometricPermissionAlert() {
         let alert = UIAlertController(
             title: NSLocalizedString("biometric.permission_required", comment: ""),
@@ -519,5 +530,76 @@ extension CardInfoViewController {
         })
         alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
         present(alert, animated: true)
+    }
+}
+
+#if targetEnvironment(macCatalyst)
+extension CardInfoViewController: UIDropInteractionDelegate {
+    func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
+        session.canLoadObjects(ofClass: UIImage.self)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+        UIDropProposal(operation: .copy)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnter session: UIDropSession) {
+        contentView.setDropHighlight(true)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidExit session: UIDropSession) {
+        contentView.setDropHighlight(false)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, concludeDrop session: UIDropSession) {
+        contentView.setDropHighlight(false)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+        guard let item = session.items.first else { return }
+        let provider = item.itemProvider
+
+        let imageType = provider.registeredTypeIdentifiers
+            .compactMap { UTType($0) }
+            .first { $0.conforms(to: .image) }
+            ?? .image
+
+        _ = provider.loadDataRepresentation(for: imageType) { [weak self] data, error in
+            if let data, let result = ImageFormatConverter.createImageSourceData(from: data) {
+                DispatchQueue.main.async {
+                    self?.applyDroppedImage(result: result)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self?.loadDroppedImageFallback(from: session)
+                }
+            }
+        }
+    }
+
+    private func loadDroppedImageFallback(from session: UIDropSession) {
+        _ = session.loadObjects(ofClass: UIImage.self) { [weak self] images in
+            guard let image = images.first as? UIImage else { return }
+            DispatchQueue.main.async {
+                let imageSource = ImageSourceData(image: image)
+                self?.selectedImageSubject.onNext(image)
+                self?.imageSourceDataRelay.accept(imageSource)
+            }
+        }
+    }
+}
+#endif
+
+extension CardInfoViewController {
+    func applyDroppedImage(result: ImageFormatConverter.ImageSourceResult) {
+        selectedImageSubject.onNext(result.imageSource.image)
+        imageSourceDataRelay.accept(result.imageSource)
+
+        if let date = result.metadata.date {
+            selectedDateRelay.accept(date)
+        }
+        if let location = result.metadata.location {
+            initialLocationRelay.onNext(location)
+        }
     }
 }

@@ -89,6 +89,7 @@
 "media_selection.camera_permission_message" = "Please allow camera access in Settings";
 "media_selection.photo_permission_title" = "Photo Access Required";
 "media_selection.photo_permission_message" = "Please allow photo library access in Settings";
+"media_selection.file" = "File";
 "media_selection.go_to_settings" = "Go to Settings";
 
 /* Camera */

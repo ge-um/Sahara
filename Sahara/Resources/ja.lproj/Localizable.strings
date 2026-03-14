@@ -89,6 +89,7 @@
 "media_selection.camera_permission_message" = "設定でカメラアクセス権限を許可してください";
 "media_selection.photo_permission_title" = "写真アクセス権限が必要";
 "media_selection.photo_permission_message" = "設定でフォトライブラリアクセス権限を許可してください";
+"media_selection.file" = "ファイル";
 "media_selection.go_to_settings" = "設定に移動";
 
 /* Camera */

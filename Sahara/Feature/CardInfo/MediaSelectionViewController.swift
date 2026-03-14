@@ -13,6 +13,7 @@ import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
+import UniformTypeIdentifiers
 
 enum MediaCollectionItem {
     case action(icon: String, title: String, type: ActionType)
@@ -22,6 +23,7 @@ enum MediaCollectionItem {
 enum ActionType {
     case camera
     case library
+    case filePicker
 }
 
 final class MediaSelectionViewController: UIViewController {
@@ -31,6 +33,7 @@ final class MediaSelectionViewController: UIViewController {
     private let cameraButtonTappedRelay = PublishRelay<Void>()
     private let libraryButtonTappedRelay = PublishRelay<Void>()
     private let photoSelectedRelay = PublishRelay<PHAsset>()
+    private let filePickerButtonTappedRelay = PublishRelay<Void>()
     private let imagePickerResultRelay = PublishRelay<(ImageSourceData, CLLocation?, Date?, MediaSource)>()
 
     private lazy var collectionView: UICollectionView = {
@@ -79,6 +82,7 @@ final class MediaSelectionViewController: UIViewController {
             viewWillAppear: viewWillAppearRelay.asObservable(),
             cameraButtonTapped: cameraButtonTappedRelay.asObservable(),
             libraryButtonTapped: libraryButtonTappedRelay.asObservable(),
+            filePickerButtonTapped: filePickerButtonTappedRelay.asObservable(),
             photoSelected: photoSelectedRelay.asObservable(),
             imagePickerResult: imagePickerResultRelay.asObservable()
         )
@@ -122,6 +126,14 @@ final class MediaSelectionViewController: UIViewController {
                     ))
                 }
 
+                #if targetEnvironment(macCatalyst)
+                actionItems.append(.action(
+                    icon: "folder",
+                    title: NSLocalizedString("media_selection.file", comment: ""),
+                    type: .filePicker
+                ))
+                #endif
+
                 sections.append(SectionModel(model: "actions", items: actionItems))
 
                 let photoItems = photos.map { MediaCollectionItem.photo(asset: $0) }
@@ -141,6 +153,8 @@ final class MediaSelectionViewController: UIViewController {
                         owner.cameraButtonTappedRelay.accept(())
                     case .library:
                         owner.libraryButtonTappedRelay.accept(())
+                    case .filePicker:
+                        owner.filePickerButtonTappedRelay.accept(())
                     }
                 case .photo(let asset):
                     owner.photoSelectedRelay.accept(asset)
@@ -157,6 +171,12 @@ final class MediaSelectionViewController: UIViewController {
         output.showPHPicker
             .drive(with: self) { owner, _ in
                 owner.presentPHPicker()
+            }
+            .disposed(by: disposeBag)
+
+        output.showFilePicker
+            .drive(with: self) { owner, _ in
+                owner.presentFilePicker()
             }
             .disposed(by: disposeBag)
 
@@ -219,6 +239,13 @@ final class MediaSelectionViewController: UIViewController {
         present(cameraVC, animated: true)
     }
 
+    private func presentFilePicker() {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.image])
+        picker.delegate = self
+        picker.allowsMultipleSelection = false
+        present(picker, animated: true)
+    }
+
     private func presentPHPicker() {
         var configuration = PHPickerConfiguration(photoLibrary: .shared())
         configuration.selectionLimit = 1
@@ -258,6 +285,34 @@ final class MediaSelectionViewController: UIViewController {
     }
 }
 
+extension MediaSelectionViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+
+        let didAccess = url.startAccessingSecurityScopedResource()
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            defer {
+                if didAccess { url.stopAccessingSecurityScopedResource() }
+            }
+
+            guard let data = try? Data(contentsOf: url),
+                  let result = ImageFormatConverter.createImageSourceData(from: data) else {
+                return
+            }
+
+            DispatchQueue.main.async {
+                self?.imagePickerResultRelay.accept((
+                    result.imageSource,
+                    result.metadata.location,
+                    result.metadata.date,
+                    .filePicker
+                ))
+            }
+        }
+    }
+}
+
 extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
@@ -282,25 +337,16 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
 
             do {
                 let data = try Data(contentsOf: url)
-                guard let image = UIImage(data: data) else {
+                guard let result = ImageFormatConverter.createImageSourceData(from: data, utiHint: preferredType) else {
                     self?.loadImageFallback(from: itemProvider)
                     return
                 }
 
-                let format = ImageFormatConverter.detectFromUTI(preferredType)
-                    ?? ImageFormatConverter.detect(from: data)
-
-                let exifMetadata = EXIFMetadataExtractor.extract(from: data)
-                let finalDate = assetDate ?? exifMetadata.date
-                let finalLocation = assetLocation ?? exifMetadata.location
+                let finalDate = assetDate ?? result.metadata.date
+                let finalLocation = assetLocation ?? result.metadata.location
 
                 DispatchQueue.main.async {
-                    let imageSource = ImageSourceData(
-                        image: image,
-                        originalData: data,
-                        format: format
-                    )
-                    self?.imagePickerResultRelay.accept((imageSource, finalLocation, finalDate, .library))
+                    self?.imagePickerResultRelay.accept((result.imageSource, finalLocation, finalDate, .library))
                 }
             } catch {
                 self?.loadImageFallback(from: itemProvider)
