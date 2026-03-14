@@ -10,6 +10,7 @@ import RxSwift
 import RxCocoa
 import RxDataSources
 import SnapKit
+import UniformTypeIdentifiers
 
 final class CalendarViewController: UIViewController {
     private lazy var collectionView: UICollectionView = {
@@ -32,6 +33,10 @@ final class CalendarViewController: UIViewController {
     private let previousMonthRelay = PublishRelay<Void>()
     private let nextMonthRelay = PublishRelay<Void>()
     private var currentHeaderView: CalendarHeaderView?
+    private var currentItems: [DayItem] = []
+    #if targetEnvironment(macCatalyst)
+    private weak var highlightedCell: CalendarCell?
+    #endif
 
     init(viewModel: GalleryViewModel) {
         self.viewModel = viewModel
@@ -46,6 +51,9 @@ final class CalendarViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         bind()
+        #if targetEnvironment(macCatalyst)
+        setupDropInteraction()
+        #endif
     }
 
     override func viewDidLayoutSubviews() {
@@ -128,6 +136,9 @@ final class CalendarViewController: UIViewController {
         )
 
         output.calendarItems
+            .do(onNext: { [weak self] items in
+                self?.currentItems = items
+            })
             .map { [CalendarSection(items: $0)] }
             .drive(collectionView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
@@ -182,3 +193,115 @@ final class CalendarViewController: UIViewController {
         return layout
     }
 }
+
+#if targetEnvironment(macCatalyst)
+extension CalendarViewController: UICollectionViewDropDelegate {
+    func setupDropInteraction() {
+        collectionView.dropDelegate = self
+    }
+
+    func collectionView(_ collectionView: UICollectionView, canHandle session: UIDropSession) -> Bool {
+        session.canLoadObjects(ofClass: UIImage.self)
+    }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        dropSessionDidUpdate session: UIDropSession,
+        withDestinationIndexPath destinationIndexPath: IndexPath?
+    ) -> UICollectionViewDropProposal {
+        let point = session.location(in: collectionView)
+
+        guard let indexPath = collectionView.indexPathForItem(at: point),
+              indexPath.item < currentItems.count,
+              currentItems[indexPath.item].date != nil else {
+            clearDropHighlight()
+            return UICollectionViewDropProposal(operation: .cancel)
+        }
+
+        if let cell = collectionView.cellForItem(at: indexPath) as? CalendarCell, cell !== highlightedCell {
+            highlightedCell?.setDropHighlight(false)
+            cell.setDropHighlight(true)
+            highlightedCell = cell
+        }
+
+        return UICollectionViewDropProposal(operation: .copy)
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidExit session: UIDropSession) {
+        clearDropHighlight()
+    }
+
+    func collectionView(_ collectionView: UICollectionView, dropSessionDidEnd session: UIDropSession) {
+        clearDropHighlight()
+    }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        performDropWith coordinator: UICollectionViewDropCoordinator
+    ) {
+        clearDropHighlight()
+
+        let session = coordinator.session
+        let point = session.location(in: collectionView)
+        guard let indexPath = collectionView.indexPathForItem(at: point),
+              indexPath.item < currentItems.count,
+              let date = currentItems[indexPath.item].date else { return }
+
+        guard let item = session.items.first else { return }
+        let provider = item.itemProvider
+
+        let imageType = provider.registeredTypeIdentifiers
+            .compactMap { UTType($0) }
+            .first { $0.conforms(to: .image) }
+            ?? .image
+
+        _ = provider.loadDataRepresentation(for: imageType) { [weak self] data, _ in
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                if let data, let result = ImageFormatConverter.createImageSourceData(from: data) {
+                    self.presentCardInfo(date: date, imageResult: result)
+                } else {
+                    self.loadDroppedImageFallback(from: session, date: date)
+                }
+            }
+        }
+    }
+
+    private func clearDropHighlight() {
+        highlightedCell?.setDropHighlight(false)
+        highlightedCell = nil
+    }
+
+    private func presentCardInfo(date: Date, imageResult: ImageFormatConverter.ImageSourceResult) {
+        guard let galleryVC = parent as? GalleryViewController else { return }
+
+        let viewModel = CardInfoViewModel(initialDate: date, sourceType: .dateView)
+        let coordinator = CardInfoCoordinator(parentViewController: galleryVC)
+        let cardInfoVC = CardInfoViewController(viewModel: viewModel, coordinator: coordinator)
+        coordinator.cardInfoViewController = cardInfoVC
+
+        let navController = UINavigationController(rootViewController: cardInfoVC)
+        navController.modalPresentationStyle = .fullScreen
+        galleryVC.present(navController, animated: true) {
+            cardInfoVC.applyDroppedImage(result: imageResult)
+        }
+    }
+
+    private func loadDroppedImageFallback(from session: UIDropSession, date: Date) {
+        _ = session.loadObjects(ofClass: UIImage.self) { [weak self] images in
+            guard let image = images.first as? UIImage else { return }
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                let imageSource = ImageSourceData(image: image)
+                let result = ImageFormatConverter.ImageSourceResult(
+                    imageSource: imageSource,
+                    metadata: .init(location: nil, date: nil)
+                )
+                self.presentCardInfo(date: date, imageResult: result)
+            }
+        }
+    }
+}
+#endif
