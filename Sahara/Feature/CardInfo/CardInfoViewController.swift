@@ -587,8 +587,11 @@ extension CardInfoViewController: UIDropInteractionDelegate {
             }
         }
     }
+}
+#endif
 
-    private func applyDroppedImage(result: ImageFormatConverter.ImageSourceResult) {
+extension CardInfoViewController {
+    func applyDroppedImage(result: ImageFormatConverter.ImageSourceResult) {
         selectedImageSubject.onNext(result.imageSource.image)
         imageSourceDataRelay.accept(result.imageSource)
 
@@ -600,4 +603,3 @@ extension CardInfoViewController: UIDropInteractionDelegate {
         }
     }
 }
-#endif

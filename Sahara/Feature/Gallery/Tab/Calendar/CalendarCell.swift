@@ -296,6 +296,18 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         return BlurUtility.createBlurView()
     }
 
+    func setDropHighlight(_ highlighted: Bool) {
+        if highlighted {
+            containerView.layer.cornerRadius = 8
+            containerView.layer.borderColor = DesignToken.Gradient.ctaBlue.colors[0]
+            containerView.layer.borderWidth = 2
+        } else {
+            containerView.layer.cornerRadius = 0
+            containerView.layer.borderColor = nil
+            containerView.layer.borderWidth = 0
+        }
+    }
+
     override func prepareForReuse() {
         super.prepareForReuse()
         imageViews.forEach { $0.removeFromSuperview() }
