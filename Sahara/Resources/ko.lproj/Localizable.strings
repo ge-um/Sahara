@@ -209,6 +209,19 @@
 "settings.export_backup" = "앱 백업";
 "settings.import_backup" = "백업 가져오기";
 
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud 동기화";
+"settings.cloud_sync_desc" = "다른 기기와 카드를 동기화";
+"sync.confirm_title" = "iCloud 동기화";
+"sync.confirm_message" = "iCloud 저장 공간을 사용해요. 동기화를 시작하시겠어요?";
+"sync.account_unavailable_title" = "iCloud 로그인이 필요해요";
+"sync.account_unavailable_message" = "설정 > Apple ID에서 iCloud에 로그인해 주세요";
+"sync.error_quota" = "iCloud 저장 공간이 부족합니다";
+"sync.status_syncing" = "동기화 중...";
+"sync.status_up_to_date" = "최신 상태";
+"sync.status_error" = "동기화 오류";
+"sync.last_sync" = "마지막 동기화: %@";
+
 /* Backup */
 "backup.exporting" = "백업 생성 중...";
 "backup.importing" = "데이터 복원 중...";

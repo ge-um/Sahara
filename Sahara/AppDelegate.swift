@@ -14,9 +14,12 @@ import Kingfisher
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
+    private(set) var cloudSyncService: CloudSyncService?
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
         configureRealm()
+        configureCloudSync()
         configureKingfisher()
 
         UNUserNotificationCenter.current().delegate = self
@@ -50,6 +53,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         RealmService.migrateRealmFileIfNeeded()
         let config = RealmService.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
+    }
+
+    private func configureCloudSync() {
+        let syncService = CloudSyncService(
+            realmService: RealmService.shared,
+            imageFileService: ImageFileService.shared
+        )
+        self.cloudSyncService = syncService
+        RealmService.shared.syncService = syncService
+
+        if syncService.isEnabled {
+            syncService.startSync()
+        }
     }
 
     private func configureKingfisher() {

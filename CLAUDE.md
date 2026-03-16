@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Sahara is an iOS photo diary app built with UIKit that allows users to save photos with memos and view them in calendar or map views.
 
 **Tech Stack:**
-- Swift 5.0, iOS 15.0+ minimum deployment target
+- Swift 5.0, iOS 17.0+ minimum deployment target
 - UIKit (programmatic UI, NO Storyboards) with SnapKit
 - RxSwift/RxCocoa for reactive programming
 - RxDataSources for collection view data management
@@ -16,7 +16,7 @@ Sahara is an iOS photo diary app built with UIKit that allows users to save phot
 - Kingfisher for image loading
 
 **Target Configuration:**
-- Minimum iOS version: 15.0
+- Minimum iOS version: 17.0
 - Supported orientations: Portrait only
 - Appearance: Light mode only
 

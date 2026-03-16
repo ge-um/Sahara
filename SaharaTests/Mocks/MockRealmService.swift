@@ -139,6 +139,8 @@ final class MockRealmService: RealmServiceProtocol {
         return config
     }
 
+    func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {}
+
     func reset() {
         addCalled = false
         fetchCalled = false

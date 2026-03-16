@@ -209,6 +209,19 @@
 "settings.export_backup" = "App Backup";
 "settings.import_backup" = "Import Backup";
 
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud Sync";
+"settings.cloud_sync_desc" = "Sync cards across devices";
+"sync.confirm_title" = "iCloud Sync";
+"sync.confirm_message" = "This will use your iCloud storage. Would you like to start syncing?";
+"sync.account_unavailable_title" = "iCloud Sign-in Required";
+"sync.account_unavailable_message" = "Please sign in to iCloud in Settings > Apple ID.";
+"sync.error_quota" = "iCloud storage is full";
+"sync.status_syncing" = "Syncing...";
+"sync.status_up_to_date" = "Up to date";
+"sync.status_error" = "Sync error";
+"sync.last_sync" = "Last synced: %@";
+
 /* Backup */
 "backup.exporting" = "Creating backup...";
 "backup.importing" = "Restoring data...";

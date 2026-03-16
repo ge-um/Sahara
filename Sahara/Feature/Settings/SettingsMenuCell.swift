@@ -116,6 +116,9 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             if case .serviceNews = item {
                 toggleSwitch.setOn(NotificationSettings.shared.isServiceNewsEnabled, animated: false)
             }
+            if case .cloudSync = item {
+                toggleSwitch.setOn(CloudSyncService.current?.isEnabled ?? false, animated: false)
+            }
         } else {
             descriptionLabel.isHidden = true
             toggleSwitch.isHidden = true

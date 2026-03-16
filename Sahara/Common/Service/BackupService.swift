@@ -275,28 +275,7 @@ final class BackupService: BackupServiceProtocol {
     }()
 
     private func migrateAllLegacyImages() throws {
-        let realm = try Realm(configuration: realmManager.createConfiguration())
-        let legacyCards = realm.objects(Card.self).filter("imagePath == nil AND editedImageData != nil")
-
-        guard !legacyCards.isEmpty else { return }
-
-        logger.notice("Migrating \(legacyCards.count) legacy images to disk")
-
-        for card in legacyCards {
-            autoreleasepool {
-                guard let imageData = card.editedImageData else { return }
-                let format = card.imageFormat ?? "jpeg"
-                do {
-                    let fileName = try ImageFileService.shared.saveImageFile(data: imageData, cardId: card.id, format: format)
-                    try realm.write {
-                        card.imagePath = fileName
-                        card.editedImageData = nil
-                    }
-                } catch {
-                    logger.error("Legacy migration failed for card \(card.id): \(error.localizedDescription)")
-                }
-            }
-        }
+        try realmManager.migrateAllLegacyImagesToDisk(imageFileService: imageFileManager)
     }
 
     private func imageFilesInDirectory() throws -> [URL] {
