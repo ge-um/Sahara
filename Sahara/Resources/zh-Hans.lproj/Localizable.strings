@@ -203,6 +203,19 @@
 "settings.export_backup" = "应用备份";
 "settings.import_backup" = "导入备份";
 
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud同步";
+"settings.cloud_sync_desc" = "在不同设备间同步卡片";
+"sync.confirm_title" = "iCloud同步";
+"sync.confirm_message" = "将使用您的iCloud存储空间，是否开始同步？";
+"sync.account_unavailable_title" = "需要登录iCloud";
+"sync.account_unavailable_message" = "请在设置 > Apple ID中登录iCloud。";
+"sync.error_quota" = "iCloud存储空间已满";
+"sync.status_syncing" = "同步中...";
+"sync.status_up_to_date" = "已是最新";
+"sync.status_error" = "同步错误";
+"sync.last_sync" = "上次同步: %@";
+
 /* Backup */
 "backup.exporting" = "正在创建备份...";
 "backup.importing" = "正在恢复数据...";

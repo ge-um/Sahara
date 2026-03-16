@@ -30,7 +30,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
     func transform(input: Input) -> Output {
         let defaultSections = [
             SettingsSection(type: .general, items: [.language]),
-            SettingsSection(type: .dataManagement, items: [.exportPhotos, .exportBackup, .importBackup]),
+            SettingsSection(type: .dataManagement, items: [.exportPhotos, .exportBackup, .importBackup, .cloudSync]),
             SettingsSection(type: .notifications, items: [.serviceNews]),
             SettingsSection(type: .support, items: [.contactDeveloper]),
             SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])

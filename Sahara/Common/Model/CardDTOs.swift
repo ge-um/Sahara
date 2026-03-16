@@ -58,7 +58,7 @@ struct SearchCardDTO {
     }
 }
 
-struct CardCalendarItemDTO {
+struct CardCalendarItemDTO: Equatable {
     let id: ObjectId
     let date: Date
     let isLocked: Bool

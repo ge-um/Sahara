@@ -12,6 +12,7 @@ extension Logger {
         case imageProcessing
         case ui
         case database
+        case cloudSync
     }
 
     enum Category: String {
@@ -21,6 +22,9 @@ extension Logger {
         case realmManager
         case performance
         case postProcessor
+        case sync
+        case syncState
+        case syncImage
     }
 
     static func logger(subsystem: Subsystem, category: Category) -> Logger {
@@ -33,6 +37,9 @@ extension Logger {
     static let database = logger(subsystem: .database, category: .realmManager)
     static let performance = logger(subsystem: .ui, category: .performance)
     static let postProcessor = logger(subsystem: .imageProcessing, category: .postProcessor)
+    static let sync = logger(subsystem: .cloudSync, category: .sync)
+    static let syncState = logger(subsystem: .cloudSync, category: .syncState)
+    static let syncImage = logger(subsystem: .cloudSync, category: .syncImage)
 }
 
 extension Int? {

@@ -34,6 +34,7 @@ protocol RealmServiceProtocol {
     func fetchImageData(for cardId: ObjectId) -> Data?
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void>
     func createConfiguration() -> Realm.Configuration
+    func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws
 }
 
 extension RealmServiceProtocol {
@@ -46,6 +47,7 @@ final class RealmService: RealmServiceProtocol {
     static let shared = RealmService()
 
     private let configuration: Realm.Configuration
+    weak var syncService: CloudSyncServiceProtocol?
 
     static let currentSchemaVersion: UInt64 = 3
 
@@ -166,6 +168,9 @@ final class RealmService: RealmServiceProtocol {
                 let realm = try self.getRealm()
                 try realm.write {
                     realm.add(object)
+                }
+                if let card = object as? Card {
+                    self.syncService?.notifyChange(recordID: card.id.stringValue, type: .save)
                 }
                 observer.onNext(())
                 observer.onCompleted()
@@ -494,12 +499,38 @@ final class RealmService: RealmServiceProtocol {
         let imagePath = fetchObject(Card.self, forPrimaryKey: key)?.imagePath
 
         return delete(Card.self, forPrimaryKey: key)
-            .do(onNext: {
+            .do(onNext: { [weak self] in
                 if let imagePath = imagePath {
                     ImageFileService.shared.deleteImageFile(at: imagePath)
                 }
                 ThumbnailCache.shared.invalidate(for: key)
+                self?.syncService?.notifyChange(recordID: key.stringValue, type: .delete)
             })
+    }
+
+    func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {
+        let realm = try getRealm()
+        let legacyCards = realm.objects(Card.self).filter("imagePath == nil AND editedImageData != nil")
+
+        guard !legacyCards.isEmpty else { return }
+
+        logger.notice("Migrating \(legacyCards.count) legacy images to disk")
+
+        for card in legacyCards {
+            autoreleasepool {
+                guard let imageData = card.editedImageData else { return }
+                let format = card.imageFormat ?? "jpeg"
+                do {
+                    let fileName = try imageFileService.saveImageFile(data: imageData, cardId: card.id, format: format)
+                    try realm.write {
+                        card.imagePath = fileName
+                        card.editedImageData = nil
+                    }
+                } catch {
+                    logger.error("Legacy migration failed for card \(card.id): \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 
@@ -620,4 +651,6 @@ final class MockRealmService: RealmServiceProtocol {
         config.inMemoryIdentifier = "MockRealm"
         return config
     }
+
+    func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {}
 }

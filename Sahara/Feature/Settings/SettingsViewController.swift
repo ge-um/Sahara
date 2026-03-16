@@ -33,6 +33,8 @@ final class SettingsViewController: UIViewController {
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: SettingsSectionHeader.identifier
         )
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.contentInset.bottom = 80
         collectionView.delegate = self
         return collectionView
     }()
@@ -269,6 +271,71 @@ final class SettingsViewController: UIViewController {
                 AnalyticsService.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
             }
         }
+
+        if case .cloudSync = item {
+            if isOn {
+                showCloudSyncConfirmation()
+            } else {
+                CloudSyncService.current?.stopSync()
+                viewWillAppearRelay.accept(())
+            }
+        }
+    }
+
+    // MARK: - Cloud Sync
+
+    private func showCloudSyncConfirmation() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("sync.confirm_title", comment: ""),
+            message: NSLocalizedString("sync.confirm_message", comment: ""),
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ) { [weak self] _ in
+            self?.startCloudSync()
+        })
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ) { [weak self] _ in
+            self?.viewWillAppearRelay.accept(())
+        })
+
+        present(alert, animated: true)
+    }
+
+    private func startCloudSync() {
+        guard let syncService = CloudSyncService.current else { return }
+
+        syncService.checkAccountStatus { [weak self] isAvailable in
+            guard let self else { return }
+
+            if isAvailable {
+                syncService.startSync()
+                syncService.triggerFullSync()
+                self.viewWillAppearRelay.accept(())
+            } else {
+                self.showCloudAccountUnavailableAlert()
+                self.viewWillAppearRelay.accept(())
+            }
+        }
+    }
+
+    private func showCloudAccountUnavailableAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("sync.account_unavailable_title", comment: ""),
+            message: NSLocalizedString("sync.account_unavailable_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ))
+        present(alert, animated: true)
     }
 
     // MARK: - Backup & Restore
@@ -413,6 +480,8 @@ extension SettingsViewController: UIDocumentPickerDelegate {
         let progressAlert = createProgressAlert(title: NSLocalizedString("backup.importing", comment: ""))
         present(progressAlert.alert, animated: true)
 
+        CloudSyncService.current?.stopSyncForBackupRestore()
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
                 try BackupService.shared.importBackup(from: url) { progress in
@@ -421,6 +490,9 @@ extension SettingsViewController: UIDocumentPickerDelegate {
                     }
                 }
                 DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
                     progressAlert.alert.dismiss(animated: true) {
                         guard let self else { return }
                         let alert = UIAlertController(
@@ -437,6 +509,9 @@ extension SettingsViewController: UIDocumentPickerDelegate {
                 }
             } catch {
                 DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
                     progressAlert.alert.dismiss(animated: true) {
                         self?.showBackupError(
                             title: NSLocalizedString("backup.import_failed", comment: ""),

@@ -170,6 +170,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func sceneDidBecomeActive(_ scene: UIScene) {
         CardPostProcessor.shared.processUntaggedCards()
+
+        if let syncService = CloudSyncService.current,
+           syncService.isEnabled {
+            syncService.fetchChangesIfNeeded()
+        }
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -178,7 +183,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        UIApplication.shared.applicationIconBadgeNumber = 0
+        UNUserNotificationCenter.current().setBadgeCount(0)
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         WidgetDataService.shared.refreshWidgetData()
     }
@@ -245,6 +250,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let presenter = rootVC.presentedViewController ?? rootVC
         presenter.present(progressAlert.alert, animated: true)
 
+        CloudSyncService.current?.stopSyncForBackupRestore()
+
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
                 try BackupService.shared.importBackup(from: url) { progress in
@@ -254,12 +261,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 }
                 DispatchQueue.main.async {
                     WidgetDataService.shared.refreshWidgetData()
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
                     progressAlert.alert.dismiss(animated: true) {
                         self?.showImportSuccess()
                     }
                 }
             } catch {
                 DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
                     progressAlert.alert.dismiss(animated: true) {
                         self?.showImportError(error)
                     }

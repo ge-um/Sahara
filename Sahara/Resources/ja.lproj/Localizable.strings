@@ -209,6 +209,19 @@
 "settings.export_backup" = "アプリバックアップ";
 "settings.import_backup" = "バックアップをインポート";
 
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud同期";
+"settings.cloud_sync_desc" = "他のデバイスとカードを同期";
+"sync.confirm_title" = "iCloud同期";
+"sync.confirm_message" = "iCloudのストレージを使用します。同期を開始しますか？";
+"sync.account_unavailable_title" = "iCloudへのログインが必要です";
+"sync.account_unavailable_message" = "設定 > Apple IDからiCloudにログインしてください。";
+"sync.error_quota" = "iCloudの空き容量が不足しています";
+"sync.status_syncing" = "同期中...";
+"sync.status_up_to_date" = "最新の状態";
+"sync.status_error" = "同期エラー";
+"sync.last_sync" = "最終同期: %@";
+
 /* Backup */
 "backup.exporting" = "バックアップ作成中...";
 "backup.importing" = "データ復元中...";

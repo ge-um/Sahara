@@ -8,7 +8,6 @@
 import UIKit
 import RxSwift
 import RxCocoa
-import RxDataSources
 import SnapKit
 import UniformTypeIdentifiers
 
@@ -33,7 +32,7 @@ final class CalendarViewController: UIViewController {
     private let previousMonthRelay = PublishRelay<Void>()
     private let nextMonthRelay = PublishRelay<Void>()
     private var currentHeaderView: CalendarHeaderView?
-    private var currentItems: [DayItem] = []
+    private lazy var dataSource = makeDataSource()
     #if targetEnvironment(macCatalyst)
     private weak var highlightedCell: CalendarCell?
     #endif
@@ -91,6 +90,39 @@ final class CalendarViewController: UIViewController {
         previousMonthRelay.accept(())
     }
 
+    private func makeDataSource() -> UICollectionViewDiffableDataSource<Int, DayItem> {
+        let ds = UICollectionViewDiffableDataSource<Int, DayItem>(
+            collectionView: collectionView
+        ) { collectionView, indexPath, item in
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: CalendarCell.identifier,
+                for: indexPath
+            ) as? CalendarCell else {
+                return UICollectionViewCell()
+            }
+            cell.configure(with: item)
+            return cell
+        }
+
+        ds.supplementaryViewProvider = { [weak self] collectionView, kind, indexPath in
+            guard let self,
+                  kind == UICollectionView.elementKindSectionHeader,
+                  let header = collectionView.dequeueReusableSupplementaryView(
+                      ofKind: kind,
+                      withReuseIdentifier: CalendarHeaderView.identifier,
+                      for: indexPath
+                  ) as? CalendarHeaderView else {
+                return UICollectionReusableView()
+            }
+            self.currentHeaderView = header
+            header.onPreviousMonthTapped = { [weak self] in self?.previousMonthRelay.accept(()) }
+            header.onNextMonthTapped = { [weak self] in self?.nextMonthRelay.accept(()) }
+            return header
+        }
+
+        return ds
+    }
+
     private func bind() {
         let input = GalleryViewModel.Input(
             addButtonTapped: Observable.never(),
@@ -101,46 +133,10 @@ final class CalendarViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        let dataSource = RxCollectionViewSectionedReloadDataSource<CalendarSection>(
-            configureCell: { _, collectionView, indexPath, item in
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: CalendarCell.identifier,
-                    for: indexPath
-                ) as? CalendarCell else {
-                    return UICollectionViewCell()
-                }
-                cell.configure(with: item)
-                return cell
-            },
-            configureSupplementaryView: { [weak self] _, collectionView, kind, indexPath in
-                guard let self = self,
-                      kind == UICollectionView.elementKindSectionHeader,
-                      let header = collectionView.dequeueReusableSupplementaryView(
-                        ofKind: kind,
-                        withReuseIdentifier: CalendarHeaderView.identifier,
-                        for: indexPath
-                      ) as? CalendarHeaderView else {
-                    return UICollectionReusableView()
-                }
-
-                self.currentHeaderView = header
-                header.onPreviousMonthTapped = { [weak self] in
-                    self?.previousMonthRelay.accept(())
-                }
-                header.onNextMonthTapped = { [weak self] in
-                    self?.nextMonthRelay.accept(())
-                }
-
-                return header
-            }
-        )
-
         output.calendarItems
-            .do(onNext: { [weak self] items in
-                self?.currentItems = items
-            })
-            .map { [CalendarSection(items: $0)] }
-            .drive(collectionView.rx.items(dataSource: dataSource))
+            .drive(with: self) { owner, items in
+                owner.applySnapshot(items: items)
+            }
             .disposed(by: disposeBag)
 
         output.currentMonthTitle
@@ -149,7 +145,8 @@ final class CalendarViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        collectionView.rx.modelSelected(DayItem.self)
+        collectionView.rx.itemSelected
+            .compactMap { [weak self] indexPath in self?.dataSource.itemIdentifier(for: indexPath) }
             .bind(with: self) { owner, item in
                 guard let date = item.date else { return }
 
@@ -171,6 +168,23 @@ final class CalendarViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+    }
+
+    private func applySnapshot(items: [DayItem]) {
+        let oldItems = dataSource.snapshot().itemIdentifiers
+        let oldMap = Dictionary(uniqueKeysWithValues: oldItems.map { ($0, $0.cards) })
+
+        var snapshot = NSDiffableDataSourceSnapshot<Int, DayItem>()
+        snapshot.appendSections([0])
+        snapshot.appendItems(items)
+
+        let toReconfigure = items.filter { item in
+            guard let oldCards = oldMap[item] else { return false }
+            return oldCards != item.cards
+        }
+        snapshot.reconfigureItems(toReconfigure)
+
+        dataSource.apply(snapshot, animatingDifferences: false)
     }
 
     private func createLayout() -> UICollectionViewLayout {
@@ -212,8 +226,8 @@ extension CalendarViewController: UICollectionViewDropDelegate {
         let point = session.location(in: collectionView)
 
         guard let indexPath = collectionView.indexPathForItem(at: point),
-              indexPath.item < currentItems.count,
-              currentItems[indexPath.item].date != nil else {
+              let item = dataSource.itemIdentifier(for: indexPath),
+              item.date != nil else {
             clearDropHighlight()
             return UICollectionViewDropProposal(operation: .cancel)
         }
@@ -244,8 +258,7 @@ extension CalendarViewController: UICollectionViewDropDelegate {
         let session = coordinator.session
         let point = session.location(in: collectionView)
         guard let indexPath = collectionView.indexPathForItem(at: point),
-              indexPath.item < currentItems.count,
-              let date = currentItems[indexPath.item].date else { return }
+              let date = dataSource.itemIdentifier(for: indexPath)?.date else { return }
 
         guard let item = session.items.first else { return }
         let provider = item.itemProvider
