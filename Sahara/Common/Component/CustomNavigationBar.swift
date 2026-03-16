@@ -49,15 +49,6 @@ final class CustomNavigationBar: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if let gradientLayer = containerView.layer.sublayers?.first as? CAGradientLayer {
-            gradientLayer.frame = containerView.bounds
-        } else {
-            containerView.applyGradient(.tabBar)
-        }
-    }
-
     override func didMoveToWindow() {
         super.didMoveToWindow()
         enableSwipeBackGesture()
@@ -79,6 +70,7 @@ final class CustomNavigationBar: UIView {
         backgroundColor = .clear
 
         addSubview(containerView)
+        containerView.applyGradient(.tabBar)
         containerView.addSubview(leftButton)
         containerView.addSubview(titleLabel)
         containerView.addSubview(rightStackView)

@@ -300,7 +300,6 @@ final class MediaEditorViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        toolBarContainer.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = toolBarContainer.bounds
         doneButton.applyGradient(.ctaPink)
         cropApplyButton.applyGradient(.ctaPink)
         updateStarPositions()

@@ -128,11 +128,6 @@ final class MainTabBarController: UIViewController {
         }
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        customTabBar.layer.sublayers?.first(where: { $0 is CAGradientLayer })?.frame = customTabBar.bounds
-    }
-
     private func setupViewControllers() {
         let galleryVM = GalleryViewModel()
         let galleryVC = GalleryViewController(viewModel: galleryVM)

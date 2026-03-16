@@ -7,40 +7,52 @@
 
 import UIKit
 
-extension UIView {
-    func applyGradient(_ gradient: DesignToken.Gradient, removeExisting: Bool = false) {
-        if removeExisting {
-            layer.sublayers?.filter { $0 is CAGradientLayer }.forEach { $0.removeFromSuperlayer() }
-        }
+private final class GradientBackgroundView: UIView {
+    override class var layerClass: AnyClass { CAGradientLayer.self }
 
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = bounds
-        configureLayerForResizableWindow(gradientLayer)
-        gradientLayer.colors = gradient.colors
-        gradientLayer.locations = gradient.locations
-        gradientLayer.startPoint = gradient.startPoint
-        gradientLayer.endPoint = gradient.endPoint
-        layer.insertSublayer(gradientLayer, at: 0)
+    func configure(_ gradient: DesignToken.Gradient) {
+        let gl = layer as! CAGradientLayer
+        gl.colors = gradient.colors
+        gl.locations = gradient.locations
+        gl.startPoint = gradient.startPoint
+        gl.endPoint = gradient.endPoint
     }
+}
 
-    func applyDotPattern(dotSize: CGFloat, spacing: CGFloat, color: UIColor) {
+private final class DotPatternBackgroundView: UIView {
+    func configure(dotSize: CGFloat, spacing: CGFloat, color: UIColor) {
         let tileSize = CGSize(width: spacing, height: spacing)
         let renderer = UIGraphicsImageRenderer(size: tileSize)
         let patternImage = renderer.image { ctx in
             ctx.cgContext.setFillColor(color.cgColor)
             ctx.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: dotSize, height: dotSize))
         }
-        let patternLayer = CALayer()
-        patternLayer.backgroundColor = UIColor(patternImage: patternImage).cgColor
-        patternLayer.frame = bounds
-        configureLayerForResizableWindow(patternLayer)
-        layer.insertSublayer(patternLayer, at: 1)
+        backgroundColor = UIColor(patternImage: patternImage)
+    }
+}
+
+extension UIView {
+    func applyGradient(_ gradient: DesignToken.Gradient, removeExisting: Bool = false) {
+        if let existing = subviews.first(where: { $0 is GradientBackgroundView }) as? GradientBackgroundView {
+            existing.configure(gradient)
+            return
+        }
+
+        let bgView = GradientBackgroundView()
+        bgView.configure(gradient)
+        bgView.isUserInteractionEnabled = false
+        insertSubview(bgView, at: 0)
+        bgView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
 
-    private func configureLayerForResizableWindow(_ layer: CALayer) {
-        #if targetEnvironment(macCatalyst)
-        layer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
-        #endif
+    func applyDotPattern(dotSize: CGFloat, spacing: CGFloat, color: UIColor) {
+        if subviews.contains(where: { $0 is DotPatternBackgroundView }) { return }
+
+        let bgView = DotPatternBackgroundView()
+        bgView.configure(dotSize: dotSize, spacing: spacing, color: color)
+        bgView.isUserInteractionEnabled = false
+        insertSubview(bgView, at: 1)
+        bgView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
 
     func applyGradientWithDots(_ gradient: DesignToken.Gradient, dotSize: CGFloat, spacing: CGFloat, dotColor: UIColor) {
