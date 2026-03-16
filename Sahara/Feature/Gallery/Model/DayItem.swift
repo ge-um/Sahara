@@ -8,12 +8,21 @@
 import Foundation
 import RealmSwift
 
-struct DayItem {
+struct DayItem: Hashable {
     let date: Date?
     let cards: [CardCalendarItemDTO]
     let isCurrentMonth: Bool
 
     var hasCards: Bool {
         return !cards.isEmpty
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(date)
+        hasher.combine(isCurrentMonth)
+    }
+
+    static func == (lhs: DayItem, rhs: DayItem) -> Bool {
+        lhs.date == rhs.date && lhs.isCurrentMonth == rhs.isCurrentMonth
     }
 }
