@@ -38,11 +38,19 @@ final class CustomNavigationBar: UIView {
         return stackView
     }()
 
+    let contentLeadingGuide = UILayoutGuide()
+
     var onLeftButtonTapped: (() -> Void)?
+    private var contentLeadingConstraint: Constraint?
+    private var titleCenterXConstraint: Constraint?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(floatingWindowStateChanged),
+            name: .floatingWindowStateDidChange, object: nil
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -52,6 +60,19 @@ final class CustomNavigationBar: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         enableSwipeBackGesture()
+        updateLeadingForWindowControls(isFloating: isInFloatingWindow)
+    }
+
+    @objc private func floatingWindowStateChanged() {
+        updateLeadingForWindowControls(isFloating: isInFloatingWindow)
+    }
+
+    private func updateLeadingForWindowControls(isFloating: Bool) {
+        // 76: macOS 윈도우 컨트롤(신호등) 너비 + 여백
+        let leading: CGFloat = isFloating ? 76 : 16
+        contentLeadingConstraint?.update(offset: leading)
+        let titleOffset: CGFloat = (leading - 16) / 2
+        titleCenterXConstraint?.update(offset: titleOffset)
     }
 
     private func enableSwipeBackGesture() {
@@ -69,6 +90,7 @@ final class CustomNavigationBar: UIView {
     private func setupUI() {
         backgroundColor = .clear
 
+        addLayoutGuide(contentLeadingGuide)
         addSubview(containerView)
         containerView.applyGradient(.tabBar)
         containerView.addSubview(leftButton)
@@ -79,14 +101,21 @@ final class CustomNavigationBar: UIView {
             make.edges.equalToSuperview()
         }
 
+        contentLeadingGuide.snp.makeConstraints { make in
+            contentLeadingConstraint = make.leading.equalToSuperview().offset(16).constraint
+            make.top.bottom.equalToSuperview()
+            make.width.equalTo(0)
+        }
+
         leftButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalTo(contentLeadingGuide.snp.trailing)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(44)
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            titleCenterXConstraint = make.centerX.equalToSuperview().constraint
+            make.centerY.equalToSuperview()
         }
 
         rightStackView.snp.makeConstraints { make in

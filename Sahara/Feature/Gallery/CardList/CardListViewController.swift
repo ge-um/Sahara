@@ -115,7 +115,7 @@ final class CardListViewController: UIViewController {
             view.addSubview(closeButton)
 
             closeButton.snp.makeConstraints { make in
-                make.leading.equalTo(customNavigationBar).offset(8)
+                make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
                 make.centerY.equalTo(customNavigationBar)
                 make.width.equalTo(44)
                 make.height.equalTo(44)
