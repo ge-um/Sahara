@@ -12,6 +12,7 @@ extension DesignToken {
     enum Gradient {
         case primary
         case tabBar
+        case sidebar
         case ctaPink
         case ctaBlue
         case subtle
@@ -29,8 +30,13 @@ extension DesignToken {
                 ]
             case .tabBar:
                 return [
-                    UIColor(hex: "#E8EAFF").cgColor,
-                    UIColor(hex: "#BDBCBD").cgColor
+                    UIColor(hex: "#F3F2FF").cgColor,
+                    UIColor(hex: "#D2D1EC").cgColor
+                ]
+            case .sidebar:
+                return [
+                    UIColor(hex: "#F3F2FF").cgColor,
+                    UIColor(hex: "#D2D1EC").cgColor
                 ]
             case .ctaPink:
                 return [
@@ -70,7 +76,7 @@ extension DesignToken {
             switch self {
             case .primary, .warm:
                 return [0.0, 0.5, 1.0]
-            case .tabBar:
+            case .tabBar, .sidebar:
                 return [0.22, 1.0]
             case .ctaPink, .ctaBlue, .subtle, .fresh, .highlight:
                 return [0.0, 1.0]
@@ -78,11 +84,21 @@ extension DesignToken {
         }
 
         var startPoint: CGPoint {
-            CGPoint(x: 0.5, y: 0.0)
+            switch self {
+            case .sidebar:
+                return CGPoint(x: 1.0, y: 0.5)
+            default:
+                return CGPoint(x: 0.5, y: 0.0)
+            }
         }
 
         var endPoint: CGPoint {
-            CGPoint(x: 0.5, y: 1.0)
+            switch self {
+            case .sidebar:
+                return CGPoint(x: 0.0, y: 0.5)
+            default:
+                return CGPoint(x: 0.5, y: 1.0)
+            }
         }
     }
 }
