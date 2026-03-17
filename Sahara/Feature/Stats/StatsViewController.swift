@@ -134,7 +134,19 @@ final class StatsViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("stats.title", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
+    }
+
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
     }
 
     private func configureUI() {
@@ -175,7 +187,7 @@ final class StatsViewController: UIViewController {
         scrollView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom)
             make.horizontalEdges.equalToSuperview()
-            make.bottom.equalToSuperview().inset(90)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         contentStackView.snp.makeConstraints { make in
@@ -281,6 +293,14 @@ final class StatsViewController: UIViewController {
 //                owner.moodChartView.configure(labels: labels, values: values)
 //            }
 //            .disposed(by: disposeBag)
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension StatsViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
     }
 }
 

@@ -136,6 +136,10 @@ final class CustomNavigationBar: UIView {
         leftButton.isHidden = true
     }
 
+    func showLeftButton() {
+        leftButton.isHidden = false
+    }
+
     func setLeftButtonImage(_ image: UIImage?) {
         var config = leftButton.configuration
         config?.image = image
