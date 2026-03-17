@@ -136,7 +136,7 @@ final class GalleryViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("common.app_name", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
 
         customNavigationBar.addRightButton(title: "+") { [weak self] in
             self?.addButtonTapped()
@@ -240,25 +240,25 @@ final class GalleryViewController: UIViewController {
         calendarContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         themeContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         folderContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
     }
@@ -463,4 +463,23 @@ extension GalleryViewController: MKMapViewDelegate {
         navigationController?.pushViewController(galleryVC, animated: true)
     }
 
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension GalleryViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
+    }
 }

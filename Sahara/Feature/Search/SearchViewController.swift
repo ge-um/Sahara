@@ -67,7 +67,19 @@ final class SearchViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("tab.search", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
+    }
+
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
     }
 
     private func setupKeyboardDismiss() {
@@ -103,7 +115,7 @@ final class SearchViewController: UIViewController {
         collectionView.snp.makeConstraints { make in
             make.top.equalTo(searchBar.snp.bottom).offset(16)
             make.horizontalEdges.equalToSuperview().inset(24)
-            make.bottom.equalToSuperview().inset(90)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
 
         emptyStateLabel.snp.makeConstraints { make in
@@ -192,5 +204,13 @@ extension SearchViewController: PinterestLayoutDelegate {
         let aspectRatio = size.height / size.width
         let cellWidth = collectionView.bounds.width / CGFloat(pinterestLayout.columnCount) - 8
         return cellWidth * aspectRatio
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension SearchViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
     }
 }
