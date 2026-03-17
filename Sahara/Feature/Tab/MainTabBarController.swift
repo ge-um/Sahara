@@ -45,6 +45,7 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
 
     private(set) var isSidebarMode = false
     private var isSidebarExpanded = true
+    private var wasFloating: Bool?
 
     private var shouldShowSidebar: Bool {
         #if targetEnvironment(macCatalyst)
@@ -92,10 +93,29 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
         setupViewControllers()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        checkFloatingWindowState()
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { _ in
+            self.checkFloatingWindowState()
+        }
+    }
+
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         guard previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass else { return }
         transitionNavigationUI()
+    }
+
+    private func checkFloatingWindowState() {
+        let floating = view.isInFloatingWindow
+        guard floating != wasFloating else { return }
+        wasFloating = floating
+        NotificationCenter.default.post(name: .floatingWindowStateDidChange, object: nil)
     }
 
     // MARK: - Navigation UI
