@@ -42,7 +42,6 @@ final class CustomNavigationBar: UIView {
 
     var onLeftButtonTapped: (() -> Void)?
     private var contentLeadingConstraint: Constraint?
-    private var titleCenterXConstraint: Constraint?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -71,8 +70,6 @@ final class CustomNavigationBar: UIView {
         // 76: macOS 윈도우 컨트롤(신호등) 너비 + 여백
         let leading: CGFloat = isFloating ? 76 : 16
         contentLeadingConstraint?.update(offset: leading)
-        let titleOffset: CGFloat = (leading - 16) / 2
-        titleCenterXConstraint?.update(offset: titleOffset)
     }
 
     private func enableSwipeBackGesture() {
@@ -114,8 +111,7 @@ final class CustomNavigationBar: UIView {
         }
 
         titleLabel.snp.makeConstraints { make in
-            titleCenterXConstraint = make.centerX.equalToSuperview().constraint
-            make.centerY.equalToSuperview()
+            make.center.equalToSuperview()
         }
 
         rightStackView.snp.makeConstraints { make in
