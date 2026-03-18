@@ -101,7 +101,7 @@ final class CardInfoViewController: UIViewController {
         view.addSubview(saveButton)
 
         cancelButton.snp.makeConstraints { make in
-            make.leading.equalTo(customNavigationBar).offset(16)
+            make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
             make.width.equalTo(48)
             make.height.equalTo(44)
