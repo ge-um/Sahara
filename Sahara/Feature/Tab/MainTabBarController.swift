@@ -91,6 +91,9 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
         super.viewDidLoad()
         setupNavigationUI()
         setupViewControllers()
+        registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+            self.transitionNavigationUI()
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -103,12 +106,6 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
         coordinator.animate(alongsideTransition: nil) { _ in
             self.checkFloatingWindowState()
         }
-    }
-
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        guard previousTraitCollection?.horizontalSizeClass != traitCollection.horizontalSizeClass else { return }
-        transitionNavigationUI()
     }
 
     private func checkFloatingWindowState() {
