@@ -267,10 +267,10 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(imageView1)
         containerView.addSubview(imageView2)
 
-        ThumbnailCache.shared.loadThumbnail(for: photo1.id, size: .small) { [weak imageView1] image in
+        ThumbnailCache.shared.loadThumbnail(for: photo1.id, maxPixelSize: thumbnailPixelSize) { [weak imageView1] image in
             imageView1?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: photo2.id, size: .small) { [weak imageView2] image in
+        ThumbnailCache.shared.loadThumbnail(for: photo2.id, maxPixelSize: thumbnailPixelSize) { [weak imageView2] image in
             imageView2?.image = image
         }
 
@@ -366,13 +366,13 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         containerView.addSubview(topRightImageView)
         containerView.addSubview(bottomRightImageView)
 
-        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, size: .small) { [weak leftImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, maxPixelSize: thumbnailPixelSize) { [weak leftImageView] image in
             leftImageView?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, size: .small) { [weak topRightImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, maxPixelSize: thumbnailPixelSize) { [weak topRightImageView] image in
             topRightImageView?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, size: .small) { [weak bottomRightImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, maxPixelSize: thumbnailPixelSize) { [weak bottomRightImageView] image in
             bottomRightImageView?.image = image
         }
 
@@ -428,7 +428,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
         for (index, card) in cards.prefix(4).enumerated() {
             let imageView = views[index]
-            ThumbnailCache.shared.loadThumbnail(for: card.id, size: .small) { [weak imageView] image in
+            ThumbnailCache.shared.loadThumbnail(for: card.id, maxPixelSize: thumbnailPixelSize) { [weak imageView] image in
                 imageView?.image = image
             }
         }
