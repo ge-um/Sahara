@@ -82,7 +82,8 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
         if let firstPhoto = sortedPhotos.first {
             blurEffectView.isHidden = !firstPhoto.isLocked
-            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, size: .small) { [weak self] image in
+            let pixelSize = 80 * max(traitCollection.displayScale, 1)
+            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, maxPixelSize: pixelSize) { [weak self] image in
                 self?.thumbnailImageView.image = image
             }
         }

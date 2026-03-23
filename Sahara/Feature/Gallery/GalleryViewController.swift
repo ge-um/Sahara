@@ -403,7 +403,8 @@ extension GalleryViewController: MKMapViewDelegate {
             let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
 
             if let firstPhoto = sortedPhotos.first {
-                representativeImage = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small)
+                let annotationPixelSize = 50 * max(view.traitCollection.displayScale, 1)
+                representativeImage = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, maxPixelSize: annotationPixelSize)
                 isLocked = firstPhoto.isLocked
             }
 
@@ -426,9 +427,11 @@ extension GalleryViewController: MKMapViewDelegate {
         let photos = photoAnnotation.cardIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
 
-        if let firstPhoto = sortedPhotos.first,
-           let image = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small) {
-            annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
+        if let firstPhoto = sortedPhotos.first {
+            let annotationPixelSize = 50 * max(view.traitCollection.displayScale, 1)
+            if let image = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, maxPixelSize: annotationPixelSize) {
+                annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
+            }
         }
 
         return annotationView
