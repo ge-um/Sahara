@@ -11,26 +11,15 @@ import RealmSwift
 final class ThumbnailCache {
     static let shared = ThumbnailCache()
 
-    enum ThumbnailSize: String {
-        case small
-        case medium
-
-        var maxPixelSize: CGFloat {
-            switch self {
-            case .small: return 200
-            case .medium: return 600
-            }
-        }
-    }
-
     private let cacheDirectory: URL
     private let smallCache = NSCache<NSString, UIImage>()
-    private let mediumCache = NSCache<NSString, UIImage>()
+    private let largeCache = NSCache<NSString, UIImage>()
     private let serialQueue = DispatchQueue(label: "com.sahara.thumbnailCache.serial")
     private let loadQueue = DispatchQueue(label: "com.sahara.thumbnailCache.load", qos: .userInitiated, attributes: .concurrent)
 
     private var inFlightRequests: [String: [(UIImage?) -> Void]] = [:]
     private var aspectRatioCache: [ObjectId: CGFloat] = [:]
+    private var cachedKeys: [ObjectId: Set<String>] = [:]
 
     private init() {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -40,15 +29,26 @@ final class ThumbnailCache {
         smallCache.countLimit = 300
         smallCache.totalCostLimit = 50 * 1024 * 1024
 
-        mediumCache.countLimit = 100
-        mediumCache.totalCostLimit = 100 * 1024 * 1024
+        largeCache.countLimit = 100
+        largeCache.totalCostLimit = 100 * 1024 * 1024
+    }
+
+    // MARK: - Public Helpers
+
+    static func bucket(_ pixelSize: CGFloat) -> Int {
+        max(Int(ceil(pixelSize / 100)) * 100, 100)
+    }
+
+    static func maxPixelSize(for pointSize: CGSize, scale: CGFloat) -> CGFloat {
+        max(pointSize.width, pointSize.height) * max(scale, 1)
     }
 
     // MARK: - Sync (memory → disk → Realm)
 
-    func thumbnail(for cardId: ObjectId, size: ThumbnailSize) -> UIImage? {
-        let key = cacheKey(cardId: cardId, size: size)
-        let cache = memoryCache(for: size)
+    func thumbnail(for cardId: ObjectId, maxPixelSize: CGFloat) -> UIImage? {
+        let bucketValue = Self.bucket(maxPixelSize)
+        let key = cacheKey(cardId: cardId, bucket: bucketValue)
+        let cache = memoryCache(forBucket: bucketValue)
 
         if let cached = cache.object(forKey: key as NSString) {
             return cached
@@ -56,24 +56,39 @@ final class ThumbnailCache {
 
         if let (image, data) = loadFromDisk(key: key) {
             cache.setObject(image, forKey: key as NSString, cost: data.count)
+            trackKey(key, for: cardId)
             return image
         }
 
-        guard let originalData = RealmService.shared.fetchImageData(for: cardId),
-              let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: size.maxPixelSize) else {
+        guard let originalData = RealmService.shared.fetchImageData(for: cardId) else {
+            return nil
+        }
+
+        var effectiveDimension = CGFloat(bucketValue)
+        if let imageSize = ImageDownsampler.imageSize(from: originalData),
+           imageSize.width > 0, imageSize.height > 0 {
+            let longSide = max(imageSize.width, imageSize.height)
+            let shortSide = min(imageSize.width, imageSize.height)
+            let aspectMultiplier = min(longSide / shortSide, 2.0)
+            effectiveDimension = CGFloat(bucketValue) * aspectMultiplier
+        }
+
+        guard let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: effectiveDimension) else {
             return nil
         }
 
         saveToDisk(thumbnail, key: key)
         cache.setObject(thumbnail, forKey: key as NSString)
+        trackKey(key, for: cardId)
         return thumbnail
     }
 
     // MARK: - Async (background, deduplicated)
 
-    func loadThumbnail(for cardId: ObjectId, size: ThumbnailSize, completion: @escaping (UIImage?) -> Void) {
-        let key = cacheKey(cardId: cardId, size: size)
-        let cache = memoryCache(for: size)
+    func loadThumbnail(for cardId: ObjectId, maxPixelSize: CGFloat, completion: @escaping (UIImage?) -> Void) {
+        let bucketValue = Self.bucket(maxPixelSize)
+        let key = cacheKey(cardId: cardId, bucket: bucketValue)
+        let cache = memoryCache(forBucket: bucketValue)
 
         if let cached = cache.object(forKey: key as NSString) {
             completion(cached)
@@ -98,12 +113,24 @@ final class ThumbnailCache {
 
             if let (image, data) = self.loadFromDisk(key: key) {
                 cache.setObject(image, forKey: key as NSString, cost: data.count)
+                self.trackKey(key, for: cardId)
                 result = image
-            } else if let originalData = RealmService.shared.fetchImageData(for: cardId),
-                      let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: size.maxPixelSize) {
-                self.saveToDisk(thumbnail, key: key)
-                cache.setObject(thumbnail, forKey: key as NSString)
-                result = thumbnail
+            } else if let originalData = RealmService.shared.fetchImageData(for: cardId) {
+                var effectiveDimension = CGFloat(bucketValue)
+                if let imageSize = ImageDownsampler.imageSize(from: originalData),
+                   imageSize.width > 0, imageSize.height > 0 {
+                    let longSide = max(imageSize.width, imageSize.height)
+                    let shortSide = min(imageSize.width, imageSize.height)
+                    let aspectMultiplier = min(longSide / shortSide, 2.0)
+                    effectiveDimension = CGFloat(bucketValue) * aspectMultiplier
+                }
+
+                if let thumbnail = ImageDownsampler.downsample(data: originalData, maxDimension: effectiveDimension) {
+                    self.saveToDisk(thumbnail, key: key)
+                    cache.setObject(thumbnail, forKey: key as NSString)
+                    self.trackKey(key, for: cardId)
+                    result = thumbnail
+                }
             }
 
             let completions: [(UIImage?) -> Void] = self.serialQueue.sync {
@@ -123,14 +150,27 @@ final class ThumbnailCache {
             return cached
         }
 
-        for size in [ThumbnailSize.medium, .small] {
-            let key = cacheKey(cardId: cardId, size: size)
+        let keys: Set<String> = serialQueue.sync { cachedKeys[cardId] ?? [] }
+        for key in keys.sorted().reversed() {
             if let diskData = loadRawDataFromDisk(key: key),
                let imageSize = ImageDownsampler.imageSize(from: diskData),
                imageSize.width > 0 {
                 let ratio = imageSize.height / imageSize.width
                 serialQueue.sync { aspectRatioCache[cardId] = ratio }
                 return ratio
+            }
+        }
+
+        let prefix = cardId.stringValue
+        if let files = try? FileManager.default.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil) {
+            for file in files where file.deletingPathExtension().lastPathComponent.hasPrefix(prefix) {
+                if let diskData = try? Data(contentsOf: file),
+                   let imageSize = ImageDownsampler.imageSize(from: diskData),
+                   imageSize.width > 0 {
+                    let ratio = imageSize.height / imageSize.width
+                    serialQueue.sync { aspectRatioCache[cardId] = ratio }
+                    return ratio
+                }
             }
         }
 
@@ -149,19 +189,24 @@ final class ThumbnailCache {
 
     func clearAll() {
         smallCache.removeAllObjects()
-        mediumCache.removeAllObjects()
+        largeCache.removeAllObjects()
         serialQueue.sync {
             inFlightRequests.removeAll()
             aspectRatioCache.removeAll()
+            cachedKeys.removeAll()
         }
         try? FileManager.default.removeItem(at: cacheDirectory)
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 
     func invalidate(for cardId: ObjectId) {
-        for size in [ThumbnailSize.small, .medium] {
-            let key = cacheKey(cardId: cardId, size: size)
-            memoryCache(for: size).removeObject(forKey: key as NSString)
+        let keys: Set<String> = serialQueue.sync {
+            cachedKeys.removeValue(forKey: cardId) ?? []
+        }
+
+        for key in keys {
+            smallCache.removeObject(forKey: key as NSString)
+            largeCache.removeObject(forKey: key as NSString)
         }
 
         serialQueue.sync { aspectRatioCache[cardId] = nil }
@@ -176,15 +221,18 @@ final class ThumbnailCache {
 
     // MARK: - Private
 
-    private func memoryCache(for size: ThumbnailSize) -> NSCache<NSString, UIImage> {
-        switch size {
-        case .small: return smallCache
-        case .medium: return mediumCache
-        }
+    private func memoryCache(forBucket bucket: Int) -> NSCache<NSString, UIImage> {
+        bucket <= 400 ? smallCache : largeCache
     }
 
-    private func cacheKey(cardId: ObjectId, size: ThumbnailSize) -> String {
-        "\(cardId.stringValue)_\(size.rawValue)"
+    private func cacheKey(cardId: ObjectId, bucket: Int) -> String {
+        "\(cardId.stringValue)_\(bucket)"
+    }
+
+    private func trackKey(_ key: String, for cardId: ObjectId) {
+        serialQueue.async(flags: .barrier) {
+            self.cachedKeys[cardId, default: []].insert(key)
+        }
     }
 
     private func diskURL(for key: String, ext: String) -> URL {
@@ -220,7 +268,7 @@ final class ThumbnailCache {
                 try? data.write(to: diskURL(for: key, ext: "png"))
             }
         } else {
-            if let data = image.jpegData(compressionQuality: 0.7) {
+            if let data = image.jpegData(compressionQuality: 0.85) {
                 try? data.write(to: diskURL(for: key, ext: "jpg"))
             }
         }
