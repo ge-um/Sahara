@@ -131,8 +131,8 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        previousMonthButton.applyGradient(.subtle, removeExisting: true)
-        nextMonthButton.applyGradient(.subtle, removeExisting: true)
+        previousMonthButton.applyGradient(.tabBar, removeExisting: true)
+        nextMonthButton.applyGradient(.tabBar, removeExisting: true)
     }
 
     func configure(monthTitle: String) {

@@ -96,6 +96,7 @@ extension MediaEditorViewController {
         view.addSubview(cropOverlayView)
         view.addSubview(cropApplyButton)
         view.addSubview(cropCancelButton)
+        view.addSubview(drawingToolStrip)
         view.addSubview(undoButton)
         view.addSubview(redoButton)
 
@@ -170,6 +171,13 @@ extension MediaEditorViewController {
         cropDimOverlay.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        drawingToolStrip.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-8)
+            make.height.equalTo(88)
+        }
+        drawingToolStrip.isHidden = true
 
         undoButton.snp.makeConstraints { make in
             make.trailing.equalTo(view.snp.centerX).offset(-4)

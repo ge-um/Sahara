@@ -110,6 +110,15 @@
 "media_editor.sticker_modal_title" = "스티커";
 "media_editor.undo" = "실행 취소";
 "media_editor.redo" = "다시 실행";
+"media_editor.tool.pen" = "펜";
+"media_editor.tool.pencil" = "연필";
+"media_editor.tool.marker" = "마커";
+"media_editor.tool.fountain_pen" = "만년필";
+"media_editor.tool.watercolor" = "수채화";
+"media_editor.tool.crayon" = "크레용";
+"media_editor.tool.monoline" = "모노라인";
+"media_editor.tool.eraser" = "지우개";
+"media_editor.tool.lasso" = "선택";
 "media_editor.network_error" = "네트워크에 연결할 수 없어요";
 
 /* Filters */

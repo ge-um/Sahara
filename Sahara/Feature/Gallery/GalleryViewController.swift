@@ -350,7 +350,7 @@ final class GalleryViewController: UIViewController {
             if type == selectedType {
                 button.setGradient(.ctaBlue, isSelected: true)
             } else {
-                button.setGradient(.subtle, isSelected: false)
+                button.setGradient(.tabBar, isSelected: false)
             }
         }
     }

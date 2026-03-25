@@ -249,7 +249,7 @@ final class MediaEditorViewController: UIViewController {
     private let disposeBag = DisposeBag()
 
     let currentMode = BehaviorRelay<EditMode?>(value: nil)
-    let toolPicker = PKToolPicker()
+    let drawingToolStrip = DrawingToolStrip()
 
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
@@ -313,13 +313,29 @@ final class MediaEditorViewController: UIViewController {
     private func setupPencilKit() {
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
         canvasView.delegate = self
+        setupDrawingToolStrip()
+    }
 
-        toolPicker.setVisible(false, forFirstResponder: canvasView)
-        toolPicker.addObserver(canvasView)
-        canvasView.becomeFirstResponder()
+    private func setupDrawingToolStrip() {
+        drawingToolStrip.onToolChanged = { [weak self] tool in
+            self?.canvasView.tool = tool
+        }
 
-        if let window = view.window {
-            toolPicker.frameObscured(in: window)
+        drawingToolStrip.onCustomColorRequested = { [weak self] in
+            let picker = UIColorPickerViewController()
+            picker.delegate = self
+            picker.supportsAlpha = false
+            self?.present(picker, animated: true)
+        }
+
+        drawingToolStrip.onUndoTapped = { [weak self] in
+            self?.canvasView.undoManager?.undo()
+            self?.updateUndoRedoButtons()
+        }
+
+        drawingToolStrip.onRedoTapped = { [weak self] in
+            self?.canvasView.undoManager?.redo()
+            self?.updateUndoRedoButtons()
         }
     }
 
@@ -719,11 +735,9 @@ final class MediaEditorViewController: UIViewController {
     func updateUndoRedoButtons() {
         guard currentMode.value == .drawing else { return }
 
-        undoButton.isEnabled = canvasView.undoManager?.canUndo ?? false
-        redoButton.isEnabled = canvasView.undoManager?.canRedo ?? false
-
-        undoButton.alpha = undoButton.isEnabled ? 1.0 : 0.5
-        redoButton.alpha = redoButton.isEnabled ? 1.0 : 0.5
+        let canUndo = canvasView.undoManager?.canUndo ?? false
+        let canRedo = canvasView.undoManager?.canRedo ?? false
+        drawingToolStrip.updateUndoRedoState(canUndo: canUndo, canRedo: canRedo)
     }
 
     private func selectView(_ view: BaseGestureView) {
@@ -1002,5 +1016,12 @@ extension MediaEditorViewController: PKCanvasViewDelegate {
 extension MediaEditorViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
+    }
+}
+
+extension MediaEditorViewController: UIColorPickerViewControllerDelegate {
+    func colorPickerViewController(_ viewController: UIColorPickerViewController, didSelect color: UIColor, continuously: Bool) {
+        guard !continuously else { return }
+        drawingToolStrip.updateColor(color)
     }
 }
