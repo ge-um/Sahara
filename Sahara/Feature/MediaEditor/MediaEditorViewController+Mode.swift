@@ -11,8 +11,8 @@ import UIKit
 extension MediaEditorViewController {
     func updateEditMode(mode: EditMode?) {
         filterCollectionView.isHidden = true
+        drawingToolStrip.isHidden = true
         canvasView.isUserInteractionEnabled = false
-        toolPicker.setVisible(false, forFirstResponder: canvasView)
         photoImageView.isUserInteractionEnabled = false
         stickerContainerView.isUserInteractionEnabled = true
         cropOverlayView.isHidden = true
@@ -66,29 +66,13 @@ extension MediaEditorViewController {
             break
         case .drawing:
             canvasView.isUserInteractionEnabled = true
-            undoButton.isHidden = false
-            redoButton.isHidden = false
-
-            toolBarContainer.snp.remakeConstraints { make in
-                make.leading.trailing.equalToSuperview()
-                make.height.equalTo(88)
-                make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-75)
+            canvasView.becomeFirstResponder()
+            drawingToolStrip.alpha = 0
+            drawingToolStrip.isHidden = false
+            UIView.animate(withDuration: 0.25) {
+                self.drawingToolStrip.alpha = 1
             }
-
-            photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(customNavigationBar.snp.bottom).offset(66)
-                make.horizontalEdges.equalToSuperview().inset(40)
-                make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
-            }
-
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-                self.updateUndoRedoButtons()
-            })
-
-            toolPicker.setVisible(true, forFirstResponder: canvasView)
+            updateUndoRedoButtons()
         case .filter:
             photoImageView.snp.remakeConstraints { make in
                 make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
