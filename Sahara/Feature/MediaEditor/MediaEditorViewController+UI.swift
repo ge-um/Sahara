@@ -89,7 +89,8 @@ extension MediaEditorViewController {
         view.addSubview(stickerContainerView)
         view.addSubview(canvasView)
         view.addSubview(toolBarContainer)
-        view.addSubview(filterCollectionView)
+        view.addSubview(filterContainerView)
+        filterContainerView.addSubview(filterCollectionView)
         view.addSubview(trashIconView)
         view.addSubview(leftStarImageView)
         view.addSubview(rightStarImageView)
@@ -127,9 +128,9 @@ extension MediaEditorViewController {
         }
 
         photoImageView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
+            make.bottom.equalTo(drawingToolStrip.snp.top).offset(-20)
         }
 
 
@@ -141,10 +142,14 @@ extension MediaEditorViewController {
             make.edges.equalTo(photoImageView)
         }
 
-        filterCollectionView.snp.makeConstraints { make in
+        filterContainerView.applyGradient(.tabBar)
+        filterContainerView.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(16)
             make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
-            make.horizontalEdges.equalToSuperview().inset(40)
             make.height.equalTo(144)
+        }
+        filterCollectionView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         trashIconView.snp.makeConstraints { make in
@@ -173,9 +178,9 @@ extension MediaEditorViewController {
         }
 
         drawingToolStrip.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-8)
-            make.height.equalTo(88)
+            make.horizontalEdges.equalToSuperview().inset(16)
+            make.bottom.equalTo(toolBarContainer.snp.top).offset(-28)
+            make.height.equalTo(144)
         }
         drawingToolStrip.isHidden = true
 
