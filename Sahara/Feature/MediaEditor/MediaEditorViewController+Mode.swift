@@ -28,32 +28,6 @@ extension MediaEditorViewController {
         undoButton.isHidden = true
         redoButton.isHidden = true
 
-        photoImageView.snp.remakeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.bottom.equalTo(toolBarContainer.snp.top).offset(-48)
-        }
-
-        stickerContainerView.snp.remakeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        canvasView.snp.remakeConstraints { make in
-            make.edges.equalTo(photoImageView)
-        }
-
-        toolBarContainer.snp.remakeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
-            make.height.equalTo(88)
-        }
-
-        UIView.animate(withDuration: 0.3, animations: {
-            self.view.layoutIfNeeded()
-        }, completion: { _ in
-            self.adjustStickerPositions()
-        })
-
         guard let mode = mode else {
             doneButton.isHidden = false
             doneButton.isEnabled = true
@@ -74,21 +48,8 @@ extension MediaEditorViewController {
             }
             updateUndoRedoButtons()
         case .filter:
-            photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(customNavigationBar.snp.bottom).offset(40)
-                make.horizontalEdges.equalToSuperview().inset(40)
-                make.bottom.equalTo(filterCollectionView.snp.top).offset(-16)
-            }
-
             filterCollectionView.isHidden = false
-
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-                self.filterCollectionView.reloadData()
-                self.filterCollectionView.layoutIfNeeded()
-            })
+            filterCollectionView.reloadData()
         case .photo:
             presentPhotoSelectionModal()
         case .crop:
@@ -100,26 +61,6 @@ extension MediaEditorViewController {
             cancelButton.isHidden = true
             doneButton.isHidden = true
 
-            cropCancelButton.snp.remakeConstraints { make in
-                make.leading.equalToSuperview().inset(20)
-                make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
-                make.width.greaterThanOrEqualTo(80)
-                make.height.equalTo(44)
-            }
-
-            cropApplyButton.snp.remakeConstraints { make in
-                make.trailing.equalToSuperview().inset(20)
-                make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
-                make.width.greaterThanOrEqualTo(80)
-                make.height.equalTo(44)
-            }
-
-            photoImageView.snp.remakeConstraints { make in
-                make.top.equalTo(cropCancelButton.snp.bottom).offset(40)
-                make.horizontalEdges.equalToSuperview().inset(20)
-                make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
-            }
-
             cropOverlayView.isHidden = false
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
@@ -127,12 +68,8 @@ extension MediaEditorViewController {
             guard let uncropped = cachedUncroppedOriginalImage else { return }
             photoImageView.image = uncropped
 
-            UIView.animate(withDuration: 0.3, animations: {
-                self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.adjustStickerPositions()
-                self.setupCropOverlay()
-            })
+            view.layoutIfNeeded()
+            setupCropOverlay()
         }
     }
 

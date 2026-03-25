@@ -254,7 +254,6 @@ final class MediaEditorViewController: UIViewController {
     private var stickerViews: [DraggableStickerView] = []
     private var photoViews: [DraggableImageView] = []
     private var selectedView: BaseGestureView?
-    private var lastContainerSize: CGSize = .zero
 
     var cachedUncroppedOriginalImage: UIImage?
     var lastCropRect: CGRect?
@@ -672,53 +671,6 @@ final class MediaEditorViewController: UIViewController {
 
         photoViews.append(imageView)
         selectView(imageView)
-    }
-
-    func adjustStickerPositions() {
-        view.layoutIfNeeded()
-
-        guard lastContainerSize.width > 0, lastContainerSize.height > 0,
-              stickerContainerView.bounds.width > 0, stickerContainerView.bounds.height > 0 else {
-            lastContainerSize = stickerContainerView.bounds.size
-            return
-        }
-
-        let scaleX = stickerContainerView.bounds.width / lastContainerSize.width
-        let scaleY = stickerContainerView.bounds.height / lastContainerSize.height
-
-        guard scaleX != 1.0 || scaleY != 1.0 else {
-            return
-        }
-
-        adjustViewsWithScale(scaleX: scaleX, scaleY: scaleY)
-        adjustDrawingWithScale(scaleX: scaleX, scaleY: scaleY)
-
-        lastContainerSize = stickerContainerView.bounds.size
-    }
-
-    private func adjustViewsWithScale(scaleX: CGFloat, scaleY: CGFloat) {
-        UIView.animate(withDuration: 0.3) {
-            self.stickerViews.forEach { view in
-                view.center = CGPoint(
-                    x: view.center.x * scaleX,
-                    y: view.center.y * scaleY
-                )
-            }
-
-            self.photoViews.forEach { view in
-                view.center = CGPoint(
-                    x: view.center.x * scaleX,
-                    y: view.center.y * scaleY
-                )
-            }
-        }
-    }
-
-    private func adjustDrawingWithScale(scaleX: CGFloat, scaleY: CGFloat) {
-        guard !canvasView.drawing.strokes.isEmpty else { return }
-
-        let scaleTransform = CGAffineTransform(scaleX: scaleX, y: scaleY)
-        canvasView.drawing = canvasView.drawing.transformed(using: scaleTransform)
     }
 
     private func generateFinalImage() -> UIImage {
