@@ -110,6 +110,15 @@
 "media_editor.sticker_modal_title" = "贴纸";
 "media_editor.undo" = "撤销";
 "media_editor.redo" = "重做";
+"media_editor.tool.pen" = "钢笔";
+"media_editor.tool.pencil" = "铅笔";
+"media_editor.tool.marker" = "马克笔";
+"media_editor.tool.fountain_pen" = "钢笔";
+"media_editor.tool.watercolor" = "水彩";
+"media_editor.tool.crayon" = "蜡笔";
+"media_editor.tool.monoline" = "等线笔";
+"media_editor.tool.eraser" = "橡皮擦";
+"media_editor.tool.lasso" = "套索";
 "media_editor.network_error" = "无法连接到网络";
 
 /* Filters */

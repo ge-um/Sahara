@@ -110,6 +110,15 @@
 "media_editor.sticker_modal_title" = "ステッカー";
 "media_editor.undo" = "元に戻す";
 "media_editor.redo" = "やり直し";
+"media_editor.tool.pen" = "ペン";
+"media_editor.tool.pencil" = "鉛筆";
+"media_editor.tool.marker" = "マーカー";
+"media_editor.tool.fountain_pen" = "万年筆";
+"media_editor.tool.watercolor" = "水彩";
+"media_editor.tool.crayon" = "クレヨン";
+"media_editor.tool.monoline" = "モノライン";
+"media_editor.tool.eraser" = "消しゴム";
+"media_editor.tool.lasso" = "選択";
 "media_editor.network_error" = "ネットワークに接続できません";
 
 /* Filters */

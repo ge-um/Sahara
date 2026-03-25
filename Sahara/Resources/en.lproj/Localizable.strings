@@ -110,6 +110,15 @@
 "media_editor.sticker_modal_title" = "Stickers";
 "media_editor.undo" = "Undo";
 "media_editor.redo" = "Redo";
+"media_editor.tool.pen" = "Pen";
+"media_editor.tool.pencil" = "Pencil";
+"media_editor.tool.marker" = "Marker";
+"media_editor.tool.fountain_pen" = "Fountain Pen";
+"media_editor.tool.watercolor" = "Watercolor";
+"media_editor.tool.crayon" = "Crayon";
+"media_editor.tool.monoline" = "Monoline";
+"media_editor.tool.eraser" = "Eraser";
+"media_editor.tool.lasso" = "Lasso";
 "media_editor.network_error" = "Unable to connect to network";
 
 /* Filters */
