@@ -194,6 +194,14 @@ final class MediaEditorViewController: UIViewController {
         return button
     }()
 
+    let filterContainerView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = DesignToken.CornerRadius.card
+        view.clipsToBounds = true
+        view.isHidden = true
+        return view
+    }()
+
     lazy var filterCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -202,12 +210,10 @@ final class MediaEditorViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .token(.backgroundCard)
+        collectionView.backgroundColor = .clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.register(FilterCell.self, forCellWithReuseIdentifier: FilterCell.identifier)
         collectionView.dataSource = self
-        collectionView.layer.cornerRadius = 12
-        collectionView.clipsToBounds = true
         return collectionView
     }()
 

@@ -10,7 +10,7 @@ import UIKit
 
 extension MediaEditorViewController {
     func updateEditMode(mode: EditMode?) {
-        filterCollectionView.isHidden = true
+        filterContainerView.isHidden = true
         drawingToolStrip.isHidden = true
         canvasView.isUserInteractionEnabled = false
         photoImageView.isUserInteractionEnabled = false
@@ -48,7 +48,7 @@ extension MediaEditorViewController {
             }
             updateUndoRedoButtons()
         case .filter:
-            filterCollectionView.isHidden = false
+            filterContainerView.isHidden = false
             filterCollectionView.reloadData()
         case .photo:
             presentPhotoSelectionModal()
