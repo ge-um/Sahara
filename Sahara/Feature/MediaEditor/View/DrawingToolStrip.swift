@@ -136,6 +136,19 @@ final class DrawingToolStrip: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         applyGradient(.tabBar)
+
+        let contentWidth = bottomScrollView.contentSize.width
+        let scrollWidth = bottomScrollView.bounds.width
+        let newInset: UIEdgeInsets
+        if contentWidth > 0, contentWidth < scrollWidth {
+            let horizontal = (scrollWidth - contentWidth) / 2
+            newInset = UIEdgeInsets(top: 0, left: horizontal, bottom: 0, right: horizontal)
+        } else {
+            newInset = .zero
+        }
+        if bottomScrollView.contentInset != newInset {
+            bottomScrollView.contentInset = newInset
+        }
     }
 
     private func setupUI() {
@@ -145,10 +158,12 @@ final class DrawingToolStrip: UIView {
         let rootStack = UIStackView()
         rootStack.axis = .vertical
         rootStack.spacing = 6
+        rootStack.alignment = .center
 
         addSubview(rootStack)
         rootStack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12))
+            make.horizontalEdges.equalToSuperview().inset(12)
+            make.centerY.equalToSuperview()
         }
 
         setupTopRow()
@@ -156,6 +171,10 @@ final class DrawingToolStrip: UIView {
 
         rootStack.addArrangedSubview(topRowStack)
         rootStack.addArrangedSubview(bottomScrollView)
+
+        bottomScrollView.snp.makeConstraints { make in
+            make.width.equalTo(rootStack)
+        }
     }
 
     // MARK: - Top Row (Colors)
@@ -184,8 +203,6 @@ final class DrawingToolStrip: UIView {
         customButton.addTarget(self, action: #selector(customColorTapped), for: .touchUpInside)
         topRowStack.addArrangedSubview(customButton)
 
-        let spacer = UIView()
-        topRowStack.addArrangedSubview(spacer)
     }
 
     // MARK: - Bottom Row (Undo/Redo + Slider + Tools)
