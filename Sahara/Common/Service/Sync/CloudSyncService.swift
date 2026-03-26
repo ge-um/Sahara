@@ -219,7 +219,9 @@ final class CloudSyncService: CloudSyncServiceProtocol {
                 for index in insertions {
                     let card = collection[index]
                     let cardId = card.id.stringValue
-                    if !self.removeRemoteModifiedId(cardId) {
+                    if self.removeRemoteModifiedId(cardId) {
+                        self.logger.debug("Skipped echo-back for inserted \(cardId)")
+                    } else {
                         self.notifyChange(recordID: cardId, type: .save)
                     }
                 }
