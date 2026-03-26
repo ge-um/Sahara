@@ -281,6 +281,8 @@ final class MediaEditorViewController: UIViewController {
     private let stickerAddedRelay = PublishRelay<(sticker: KlipySticker, position: CGPoint, scale: CGFloat)>()
     private let drawingChangedRelay = PublishRelay<Void>()
 
+    private var hasInitialized = false
+
     private var usedTools: Set<String> = []
 
     init(viewModel: MediaEditorViewModel) {
@@ -313,6 +315,36 @@ final class MediaEditorViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewWillAppearRelay.accept(())
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        guard let image = photoImageView.image else { return }
+        let oldViewSize = photoImageView.bounds.size
+        guard oldViewSize.width > 0, oldViewSize.height > 0 else { return }
+
+        let savedPositions = captureOverlayPositions(imageSize: image.size, viewSize: oldViewSize)
+        let oldDisplayRect = ImageCoordinateSpace.displayRect(imageSize: image.size, in: oldViewSize)
+        let shouldTransformDrawing = !canvasView.drawing.strokes.isEmpty
+
+        coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+            guard let self = self, let currentImage = self.photoImageView.image else { return }
+            let newViewSize = self.photoImageView.bounds.size
+            guard newViewSize != oldViewSize else { return }
+
+            let newDisplayRect = ImageCoordinateSpace.displayRect(imageSize: currentImage.size, in: newViewSize)
+            let scaleRatio = newDisplayRect.width / oldDisplayRect.width
+            self.restoreOverlayPositions(savedPositions, imageSize: currentImage.size, viewSize: newViewSize, scaleRatio: scaleRatio)
+
+            if shouldTransformDrawing {
+                self.transformDrawing(from: oldDisplayRect, to: newDisplayRect)
+            }
+
+            if self.currentMode.value == .crop {
+                self.setupCropOverlay()
+            }
+        }
     }
 
     private func setupPencilKit() {
@@ -527,7 +559,7 @@ final class MediaEditorViewController: UIViewController {
             stickerSelected: .empty(),
             stickerAdded: stickerAddedRelay.asObservable(),
             filterSelected: filterSelectedRelay.asObservable(),
-            cropApplied: Observable.just((UIImage(), CGRect.zero, CGRect.zero)),
+            cropApplied: .never(),
             drawingChanged: drawingChangedRelay.asObservable(),
             photoSelected: photoSelectedRelay.asObservable(),
             doneButtonTapped: doneButton.rx.tap.asObservable().map { [weak self] in
@@ -543,6 +575,10 @@ final class MediaEditorViewController: UIViewController {
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
                 owner.cachedOriginalImageForFilter = image
+
+                guard !owner.hasInitialized else { return }
+                owner.hasInitialized = true
+
                 owner.initialImageFormat = output.initialImageFormat
                 owner.initialOriginalData = output.initialOriginalData
 
@@ -634,12 +670,9 @@ final class MediaEditorViewController: UIViewController {
 
         filterCollectionView.rx.itemSelected
             .withUnretained(self)
-            .withLatestFrom(output.croppedImage) { ($0.0, $0.1, $1) }
-            .withLatestFrom(output.originalImage) { (owner: $0.0, indexPath: $0.1, croppedImage: $0.2, originalImage: $1) }
-            .map { data -> (Int, UIImage?) in
-                let baseImage = data.croppedImage ?? data.originalImage
-                data.owner.currentFilterIndex = data.indexPath.item
-                return (data.indexPath.item, baseImage)
+            .map { owner, indexPath -> (Int, UIImage?) in
+                owner.currentFilterIndex = indexPath.item
+                return (indexPath.item, owner.cachedOriginalImageForFilter)
             }
             .bind(to: filterSelectedRelay)
             .disposed(by: disposeBag)
@@ -688,6 +721,125 @@ final class MediaEditorViewController: UIViewController {
         )
         toolBarContainer.isHidden = false
         return image
+    }
+
+    private func transformOverlaysForCrop(
+        fromImageSize oldImageSize: CGSize,
+        toImageSize newImageSize: CGSize,
+        pixelOffset: CGPoint
+    ) {
+        let viewSize = photoImageView.bounds.size
+        let oldDisplayRect = ImageCoordinateSpace.displayRect(imageSize: oldImageSize, in: viewSize)
+        let newDisplayRect = ImageCoordinateSpace.displayRect(imageSize: newImageSize, in: viewSize)
+
+        let oldPointsPerPixel = oldDisplayRect.width / oldImageSize.width
+        let newPointsPerPixel = newDisplayRect.width / newImageSize.width
+        let scaleRatio = newPointsPerPixel / oldPointsPerPixel
+
+        func reposition(_ view: BaseGestureView) {
+            let oldPixels = ImageCoordinateSpace.toImagePixels(
+                displayCenter: view.center,
+                imageSize: oldImageSize,
+                displayRect: oldDisplayRect
+            )
+            let newPixels = CGPoint(x: oldPixels.x + pixelOffset.x, y: oldPixels.y + pixelOffset.y)
+            view.center = ImageCoordinateSpace.toDisplayCenter(
+                imagePixels: newPixels,
+                imageSize: newImageSize,
+                displayRect: newDisplayRect
+            )
+            if scaleRatio != 1.0 {
+                view.transform = view.transform.scaledBy(x: scaleRatio, y: scaleRatio)
+            }
+        }
+
+        stickerViews.forEach { reposition($0) }
+        photoViews.forEach { reposition($0) }
+
+        guard !canvasView.drawing.strokes.isEmpty else { return }
+
+        let drawingTransform = CGAffineTransform(translationX: -oldDisplayRect.origin.x, y: -oldDisplayRect.origin.y)
+            .concatenating(CGAffineTransform(
+                scaleX: oldImageSize.width / oldDisplayRect.width,
+                y: oldImageSize.height / oldDisplayRect.height
+            ))
+            .concatenating(CGAffineTransform(translationX: pixelOffset.x, y: pixelOffset.y))
+            .concatenating(CGAffineTransform(
+                scaleX: newDisplayRect.width / newImageSize.width,
+                y: newDisplayRect.height / newImageSize.height
+            ))
+            .concatenating(CGAffineTransform(translationX: newDisplayRect.origin.x, y: newDisplayRect.origin.y))
+
+        canvasView.drawing = canvasView.drawing.transformed(using: drawingTransform)
+    }
+
+    func applyCroppedImage(from uncropped: UIImage, cropRect: CGRect) {
+        guard let croppedImage = MediaEditorImageHandler.cropImage(uncropped, to: cropRect) else { return }
+
+        let offset = CGPoint(x: -cropRect.origin.x, y: -cropRect.origin.y)
+        transformOverlaysForCrop(fromImageSize: uncropped.size, toImageSize: croppedImage.size, pixelOffset: offset)
+
+        if currentFilterIndex > 0,
+           let filtered = filterHandler.applyFilter(at: currentFilterIndex, to: croppedImage) {
+            photoImageView.image = filtered
+        } else {
+            photoImageView.image = croppedImage
+        }
+        cachedOriginalImageForFilter = croppedImage
+    }
+
+    func expandToUncropped() {
+        guard let uncropped = cachedUncroppedOriginalImage,
+              let cropRect = lastCropRect,
+              let currentImage = photoImageView.image else { return }
+
+        let offset = CGPoint(x: cropRect.origin.x, y: cropRect.origin.y)
+        transformOverlaysForCrop(fromImageSize: currentImage.size, toImageSize: uncropped.size, pixelOffset: offset)
+
+        if currentFilterIndex > 0,
+           let filteredUncropped = filterHandler.applyFilter(at: currentFilterIndex, to: uncropped) {
+            photoImageView.image = filteredUncropped
+        } else {
+            photoImageView.image = uncropped
+        }
+    }
+
+    private func captureOverlayPositions(imageSize: CGSize, viewSize: CGSize) -> [(BaseGestureView, CGPoint)] {
+        let displayRect = ImageCoordinateSpace.displayRect(imageSize: imageSize, in: viewSize)
+        guard displayRect.width > 0, displayRect.height > 0 else { return [] }
+
+        return (stickerViews as [BaseGestureView] + photoViews).map { view in
+            let pixels = ImageCoordinateSpace.toImagePixels(
+                displayCenter: view.center,
+                imageSize: imageSize,
+                displayRect: displayRect
+            )
+            return (view, pixels)
+        }
+    }
+
+    private func restoreOverlayPositions(_ positions: [(BaseGestureView, CGPoint)], imageSize: CGSize, viewSize: CGSize, scaleRatio: CGFloat = 1.0) {
+        let displayRect = ImageCoordinateSpace.displayRect(imageSize: imageSize, in: viewSize)
+        guard displayRect.width > 0, displayRect.height > 0 else { return }
+
+        for (view, pixels) in positions {
+            view.center = ImageCoordinateSpace.toDisplayCenter(
+                imagePixels: pixels,
+                imageSize: imageSize,
+                displayRect: displayRect
+            )
+            if scaleRatio != 1.0 {
+                view.transform = view.transform.scaledBy(x: scaleRatio, y: scaleRatio)
+            }
+        }
+    }
+
+    private func transformDrawing(from oldRect: CGRect, to newRect: CGRect) {
+        let transform = CGAffineTransform(translationX: -oldRect.origin.x, y: -oldRect.origin.y)
+            .concatenating(CGAffineTransform(scaleX: newRect.width / oldRect.width,
+                                             y: newRect.height / oldRect.height))
+            .concatenating(CGAffineTransform(translationX: newRect.origin.x, y: newRect.origin.y))
+        canvasView.drawing = canvasView.drawing.transformed(using: transform)
     }
 
     func updateUndoRedoButtons() {
@@ -755,18 +907,18 @@ final class MediaEditorViewController: UIViewController {
     private func restoreInitialStickers(_ stickers: [StickerDTO], on image: UIImage) {
         guard !stickers.isEmpty else { return }
 
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+        let displayRect = ImageCoordinateSpace.displayRect(
             imageSize: image.size,
             in: photoImageView.bounds.size
         )
 
-        guard imageRect.width > 0, imageRect.height > 0 else { return }
+        guard displayRect.width > 0, displayRect.height > 0 else { return }
 
         for stickerDTO in stickers {
             if stickerDTO.sourceType == .kilpy {
-                restoreKlipySticker(stickerDTO, imageSize: image.size, displayRect: imageRect)
+                restoreKlipySticker(stickerDTO, imageSize: image.size, displayRect: displayRect)
             } else if stickerDTO.sourceType == .photo {
-                restorePhotoSticker(stickerDTO, imageSize: image.size, displayRect: imageRect)
+                restorePhotoSticker(stickerDTO, imageSize: image.size, displayRect: displayRect)
             }
         }
 
@@ -780,13 +932,16 @@ final class MediaEditorViewController: UIViewController {
 
         stickerContainerView.addSubview(stickerView)
 
-        let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
-        let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
+        let center = ImageCoordinateSpace.toDisplayCenter(
+            imagePixels: CGPoint(x: stickerDTO.x, y: stickerDTO.y),
+            imageSize: imageSize,
+            displayRect: displayRect
+        )
         let baseStickerSize: CGFloat = 100
 
         stickerView.frame = CGRect(
-            x: centerX - baseStickerSize / 2,
-            y: centerY - baseStickerSize / 2,
+            x: center.x - baseStickerSize / 2,
+            y: center.y - baseStickerSize / 2,
             width: baseStickerSize,
             height: baseStickerSize
         )
@@ -808,13 +963,16 @@ final class MediaEditorViewController: UIViewController {
 
         stickerContainerView.addSubview(imageView)
 
-        let centerX = displayRect.origin.x + (stickerDTO.x * displayRect.width)
-        let centerY = displayRect.origin.y + (stickerDTO.y * displayRect.height)
+        let center = ImageCoordinateSpace.toDisplayCenter(
+            imagePixels: CGPoint(x: stickerDTO.x, y: stickerDTO.y),
+            imageSize: imageSize,
+            displayRect: displayRect
+        )
         let baseStickerSize: CGFloat = 100
 
         imageView.frame = CGRect(
-            x: centerX - baseStickerSize / 2,
-            y: centerY - baseStickerSize / 2,
+            x: center.x - baseStickerSize / 2,
+            y: center.y - baseStickerSize / 2,
             width: baseStickerSize,
             height: baseStickerSize
         )
@@ -854,43 +1012,40 @@ final class MediaEditorViewController: UIViewController {
     private func convertStickersToDTO() -> [StickerDTO] {
         guard let image = photoImageView.image else { return [] }
 
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+        let displayRect = ImageCoordinateSpace.displayRect(
             imageSize: image.size,
             in: photoImageView.bounds.size
         )
-        guard imageRect.width > 0, imageRect.height > 0 else { return [] }
+        guard displayRect.width > 0, displayRect.height > 0 else { return [] }
 
         var allStickers: [StickerDTO] = []
         var currentZIndex = 0
 
         for stickerView in stickerViews {
-            allStickers.append(convertStickerViewToDTO(stickerView, image: image, imageRect: imageRect, zIndex: currentZIndex))
+            allStickers.append(convertStickerViewToDTO(stickerView, imageSize: image.size, displayRect: displayRect, zIndex: currentZIndex))
             currentZIndex += 1
         }
 
         for photoView in photoViews {
-            allStickers.append(convertPhotoViewToDTO(photoView, image: image, imageRect: imageRect, zIndex: currentZIndex))
+            allStickers.append(convertPhotoViewToDTO(photoView, imageSize: image.size, displayRect: displayRect, zIndex: currentZIndex))
             currentZIndex += 1
         }
 
         return allStickers
     }
 
-    private func convertStickerViewToDTO(_ stickerView: DraggableStickerView, image: UIImage, imageRect: CGRect, zIndex: Int) -> StickerDTO {
-        let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
-            centerX: stickerView.center.x,
-            centerY: stickerView.center.y,
-            scale: stickerView.transform.extractedScale,
-            rotation: stickerView.transform.extractedRotation,
-            baseImageSize: image.size,
-            displayRect: imageRect
+    private func convertStickerViewToDTO(_ stickerView: DraggableStickerView, imageSize: CGSize, displayRect: CGRect, zIndex: Int) -> StickerDTO {
+        let imagePixels = ImageCoordinateSpace.toImagePixels(
+            displayCenter: stickerView.center,
+            imageSize: imageSize,
+            displayRect: displayRect
         )
 
         return StickerDTO(
-            x: normalized.x,
-            y: normalized.y,
-            scale: normalized.scale,
-            rotation: normalized.rotation,
+            x: imagePixels.x,
+            y: imagePixels.y,
+            scale: Double(stickerView.transform.extractedScale),
+            rotation: Double(stickerView.transform.extractedRotation),
             zIndex: zIndex,
             sourceType: .kilpy,
             resourceUrl: stickerView.stickerURL?.absoluteString,
@@ -900,14 +1055,11 @@ final class MediaEditorViewController: UIViewController {
         )
     }
 
-    private func convertPhotoViewToDTO(_ photoView: DraggableImageView, image: UIImage, imageRect: CGRect, zIndex: Int) -> StickerDTO {
-        let normalized = MediaEditorCropHandler.normalizeStickerToImageSpace(
-            centerX: photoView.center.x,
-            centerY: photoView.center.y,
-            scale: photoView.transform.extractedScale,
-            rotation: photoView.transform.extractedRotation,
-            baseImageSize: image.size,
-            displayRect: imageRect
+    private func convertPhotoViewToDTO(_ photoView: DraggableImageView, imageSize: CGSize, displayRect: CGRect, zIndex: Int) -> StickerDTO {
+        let imagePixels = ImageCoordinateSpace.toImagePixels(
+            displayCenter: photoView.center,
+            imageSize: imageSize,
+            displayRect: displayRect
         )
 
         var localFilePath: String?
@@ -923,10 +1075,10 @@ final class MediaEditorViewController: UIViewController {
         }
 
         return StickerDTO(
-            x: normalized.x,
-            y: normalized.y,
-            scale: normalized.scale,
-            rotation: normalized.rotation,
+            x: imagePixels.x,
+            y: imagePixels.y,
+            scale: Double(photoView.transform.extractedScale),
+            rotation: Double(photoView.transform.extractedRotation),
             zIndex: zIndex,
             sourceType: .photo,
             resourceUrl: nil,

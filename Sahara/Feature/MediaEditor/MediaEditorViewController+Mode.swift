@@ -29,6 +29,12 @@ extension MediaEditorViewController {
         redoButton.isHidden = true
 
         guard let mode = mode else {
+            if let cropRect = lastCropRect,
+               let uncropped = cachedUncroppedOriginalImage,
+               let currentImage = photoImageView.image,
+               currentImage.size == uncropped.size {
+                applyCroppedImage(from: uncropped, cropRect: cropRect)
+            }
             doneButton.isHidden = false
             doneButton.isEnabled = true
             doneButton.alpha = 1.0
@@ -65,8 +71,7 @@ extension MediaEditorViewController {
             cropApplyButton.isHidden = false
             cropCancelButton.isHidden = false
 
-            guard let uncropped = cachedUncroppedOriginalImage else { return }
-            photoImageView.image = uncropped
+            expandToUncropped()
 
             view.layoutIfNeeded()
             setupCropOverlay()

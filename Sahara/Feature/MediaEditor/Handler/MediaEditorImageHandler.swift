@@ -19,7 +19,7 @@ final class MediaEditorImageHandler {
             return UIImage()
         }
 
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+        let imageRect = ImageCoordinateSpace.displayRect(
             imageSize: baseImage.size,
             in: photoImageView.bounds.size
         )
@@ -118,7 +118,7 @@ final class MediaEditorImageHandler {
                 let standardCardWidth = min(screenWidth - 64, 400)
                 viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
             }
-            let displayRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+            let displayRect = ImageCoordinateSpace.displayRect(
                 imageSize: imageSize,
                 in: viewSize
             )
@@ -158,8 +158,8 @@ final class MediaEditorImageHandler {
                         width = stickerFrameSize * stickerAspect
                         height = stickerFrameSize
                     }
-                    let centerX = sticker.x * imageSize.width
-                    let centerY = sticker.y * imageSize.height
+                    let centerX = sticker.x
+                    let centerY = sticker.y
 
                     let rect = CGRect(
                         x: centerX - width / 2,
@@ -184,42 +184,32 @@ final class MediaEditorImageHandler {
         }
     }
 
-    static func applyCropToImage(_ uncropped: UIImage, cropRect: CGRect, imageRect: CGRect) -> UIImage? {
-        let relativeX = cropRect.origin.x - imageRect.origin.x
-        let relativeY = cropRect.origin.y - imageRect.origin.y
-        let relativeWidth = cropRect.width
-        let relativeHeight = cropRect.height
-
-        let scale = uncropped.size.width / imageRect.width
-
-        let cropRectInImage = CGRect(
-            x: relativeX * scale,
-            y: relativeY * scale,
-            width: relativeWidth * scale,
-            height: relativeHeight * scale
-        )
-
+    static func cropImage(
+        _ image: UIImage,
+        to cropRect: CGRect
+    ) -> UIImage? {
         let normalizedImage: UIImage
-        if uncropped.imageOrientation != .up {
-            UIGraphicsBeginImageContextWithOptions(uncropped.size, false, uncropped.scale)
-            uncropped.draw(in: CGRect(origin: .zero, size: uncropped.size))
-            normalizedImage = UIGraphicsGetImageFromCurrentImageContext() ?? uncropped
+        if image.imageOrientation != .up {
+            UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale)
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+            normalizedImage = UIGraphicsGetImageFromCurrentImageContext() ?? image
             UIGraphicsEndImageContext()
         } else {
-            normalizedImage = uncropped
+            normalizedImage = image
         }
 
-        guard let normalizedCGImage = normalizedImage.cgImage,
-              let croppedCGImage = normalizedCGImage.cropping(to: cropRectInImage) else {
+        let scale = normalizedImage.scale
+        let pixelCropRect = CGRect(
+            x: cropRect.origin.x * scale,
+            y: cropRect.origin.y * scale,
+            width: cropRect.width * scale,
+            height: cropRect.height * scale
+        )
+
+        guard let cgImage = normalizedImage.cgImage?.cropping(to: pixelCropRect) else {
             return nil
         }
 
-        let croppedImage = UIImage(
-            cgImage: croppedCGImage,
-            scale: normalizedImage.scale,
-            orientation: .up
-        )
-
-        return croppedImage
+        return UIImage(cgImage: cgImage, scale: scale, orientation: .up)
     }
 }
