@@ -181,13 +181,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             let shouldPop = shouldPopToList(newDate: date, newLocation: location)
             shouldPopToListRelay.accept(shouldPop)
 
-            if shouldPop {
-                return replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                    .map { true }
-            } else {
-                return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                    .map { true }
-            }
+            return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                .map { true }
         } else {
             shouldPopToListRelay.accept(false)
             return saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
@@ -492,6 +487,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.latitude = location?.coordinate.latitude
             card.longitude = location?.coordinate.longitude
             card.ocrText = ocrText
+            card.modifiedDate = Date()
         }
         .do(onNext: {
             if let oldPath = oldImagePath, oldPath != newImagePath {
@@ -527,6 +523,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.isLocked = isLocked
             card.latitude = location?.coordinate.latitude
             card.longitude = location?.coordinate.longitude
+            card.modifiedDate = Date()
         }
     }
 
@@ -583,91 +580,4 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             }
     }
 
-    private func createNewCardAndReplaceOld(
-        cardId: ObjectId,
-        date: Date,
-        imageData: PreparedImageData,
-        ocrText: String?,
-        visionTags: [VisionTag],
-        memoText: String?,
-        folderText: String?,
-        location: CLLocation?,
-        isLocked: Bool
-    ) -> Observable<(Void, ObjectId)> {
-        let oldImagePath = realmManager.fetchObject(Card.self, forPrimaryKey: cardId)?.imagePath
-
-        let newCard = createCard(
-            date: date,
-            imageData: imageData,
-            ocrText: ocrText,
-            memo: memoText,
-            customFolder: folderText,
-            location: location,
-            isLocked: isLocked
-        )
-        newCard.visionTags.append(objectsIn: visionTags)
-        let newCardId = newCard.id
-
-        Logger.database.notice("Replaced card")
-
-        return realmManager.update { realm in
-            realm.add(newCard)
-            if let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) {
-                realm.delete(cardToDelete)
-            }
-        }
-        .map { ((), newCardId) }
-        .do(onNext: { _ in
-            if let oldPath = oldImagePath {
-                ImageFileService.shared.deleteImageFile(at: oldPath)
-            }
-            ThumbnailCache.shared.invalidate(for: cardId)
-            WidgetDataService.shared.refreshWidgetData()
-        })
-    }
-
-    private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage else { return .empty() }
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
-
-        let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
-
-        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
-        let editTypes = trackEditTypes(
-            memoText: sanitizedFields.memo,
-            folderText: sanitizedFields.customFolder,
-            oldLocation: oldLocation,
-            newLocation: location,
-            isLocked: isLocked
-        )
-
-        let existingOcrText = imageChanged ? nil : card.ocrText
-        let existingVisionTags = imageChanged ? [] : Array(card.visionTags)
-
-        return prepareImage(from: editedImage)
-            .observe(on: MainScheduler.instance)
-            .flatMap { [weak self] imageData -> Observable<Void> in
-                guard let self = self else { return .empty() }
-
-                return self.createNewCardAndReplaceOld(
-                    cardId: cardId,
-                    date: date,
-                    imageData: imageData,
-                    ocrText: existingOcrText,
-                    visionTags: existingVisionTags,
-                    memoText: sanitizedFields.memo,
-                    folderText: sanitizedFields.customFolder,
-                    location: location,
-                    isLocked: isLocked
-                )
-                .do(onNext: { _, newCardId in
-                    if self.imageChanged {
-                        self.cardPostProcessor.process(cardId: newCardId, imageData: imageData.editedImageData)
-                    }
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
-                })
-                .map { _, _ in () }
-            }
-    }
 }
