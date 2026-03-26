@@ -215,7 +215,14 @@ final class CloudSyncService: CloudSyncServiceProtocol {
             guard let self else { return }
 
             switch changes {
-            case .update(let collection, _, _, let modifications):
+            case .update(let collection, let deletions, let insertions, let modifications):
+                for index in insertions {
+                    let card = collection[index]
+                    let cardId = card.id.stringValue
+                    if !self.removeRemoteModifiedId(cardId) {
+                        self.notifyChange(recordID: cardId, type: .save)
+                    }
+                }
                 for index in modifications {
                     let card = collection[index]
                     let cardId = card.id.stringValue
@@ -224,6 +231,9 @@ final class CloudSyncService: CloudSyncServiceProtocol {
                     } else {
                         self.notifyChange(recordID: cardId, type: .save)
                     }
+                }
+                if !deletions.isEmpty {
+                    self.logger.warning("Realm observer: \(deletions.count) deletion(s) without explicit sync")
                 }
             case .initial, .error:
                 break
