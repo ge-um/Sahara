@@ -200,7 +200,7 @@ extension MediaEditorViewController {
     func updateStarPositions() {
         guard let image = photoImageView.image else { return }
 
-        let imageRect = MediaEditorCropHandler.calculateDisplayedImageRect(
+        let imageRect = ImageCoordinateSpace.displayRect(
             imageSize: image.size,
             in: photoImageView.bounds.size
         )

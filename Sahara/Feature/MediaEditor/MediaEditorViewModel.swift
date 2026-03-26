@@ -283,13 +283,13 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .compactMap { owner, data -> UIImage? in
                 let (image, cropRect, displayedRect) = data
-                let scaledCropRect = MediaEditorCropHandler.convertCropRectToImageCoordinates(
-                    cropRect: cropRect,
+                let scaledCropRect = ImageCoordinateSpace.cropRectToImagePixels(
+                    displayCropRect: cropRect,
                     imageSize: image.size,
-                    displayedImageRect: displayedRect
+                    displayRect: displayedRect
                 )
 
-                return MediaEditorCropHandler.cropImage(image, to: scaledCropRect)
+                return MediaEditorImageHandler.cropImage(image, to: scaledCropRect)
             }
             .bind(with: self) { owner, croppedImage in
                 owner.imageStateHandler.applyCrop(croppedImage)
