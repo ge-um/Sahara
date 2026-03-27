@@ -43,11 +43,11 @@ final class GradientButton: UIButton {
         layer.masksToBounds = true
     }
 
-    func setGradient(_ gradient: DesignToken.Gradient, isSelected: Bool = true) {
+    func setGradient(_ gradient: DesignToken.Gradient, isSelected: Bool = true, textColor: UIColor? = nil) {
         currentGradient = gradient
 
         var config = configuration
-        let color: UIColor = isSelected ? .token(.textOnAccent) : .token(.navigationText)
+        let color: UIColor = textColor ?? (isSelected ? .token(.textOnAccent) : .token(.navigationText))
         let attributedTitle = AttributedString(
             titleText,
             attributes: AttributeContainer([

@@ -9,7 +9,7 @@ import UIKit
 
 extension DesignToken {
 
-    enum Gradient {
+    enum Gradient: String, CaseIterable {
         case primary
         case tabBar
         case sidebar
@@ -19,6 +19,10 @@ extension DesignToken {
         case warm
         case fresh
         case highlight
+
+        static let backgroundPresets: [Gradient] = [
+            .primary, .warm, .fresh, .subtle, .ctaPink, .ctaBlue, .tabBar, .highlight
+        ]
 
         var colors: [CGColor] {
             switch self {
