@@ -16,6 +16,7 @@ struct SaharaWidgetEntry: TimelineEntry {
     let thumbnailImage: UIImage?
     let isOnThisDay: Bool
     let isEmpty: Bool
+    let navigableCardCount: Int
 }
 
 struct SaharaWidgetProvider: TimelineProvider {
@@ -27,7 +28,8 @@ struct SaharaWidgetProvider: TimelineProvider {
             memo: NSLocalizedString("widget.placeholder_memo", comment: ""),
             thumbnailImage: nil,
             isOnThisDay: false,
-            isEmpty: false
+            isEmpty: false,
+            navigableCardCount: 0
         )
     }
 
@@ -45,8 +47,10 @@ struct SaharaWidgetProvider: TimelineProvider {
 
     private func loadEntry() -> SaharaWidgetEntry {
         let entries = loadCardEntries()
+        let navigableCards = entries.filter { $0.thumbnailFileName != nil }
+        let navigableCount = navigableCards.count
 
-        guard let selected = OnThisDaySelector.select(from: entries) else {
+        guard let pinnedId = AppGroupContainer.pinnedCardId else {
             return SaharaWidgetEntry(
                 date: Date(),
                 cardId: nil,
@@ -54,46 +58,46 @@ struct SaharaWidgetProvider: TimelineProvider {
                 memo: nil,
                 thumbnailImage: nil,
                 isOnThisDay: false,
-                isEmpty: true
+                isEmpty: true,
+                navigableCardCount: navigableCount
             )
         }
 
-        if let fileName = selected.entry.thumbnailFileName,
-           let thumbnail = loadThumbnail(fileName: fileName) {
+        let targetEntry: WidgetCardEntry
+        if let pinned = entries.first(where: { $0.cardId == pinnedId }) {
+            targetEntry = pinned
+        } else if let fallback = navigableCards.first {
+            AppGroupContainer.pinnedCardId = fallback.cardId
+            targetEntry = fallback
+        } else {
             return SaharaWidgetEntry(
                 date: Date(),
-                cardId: selected.entry.cardId,
-                cardDate: selected.entry.date,
-                memo: selected.entry.memo,
-                thumbnailImage: thumbnail,
-                isOnThisDay: selected.isOnThisDay,
-                isEmpty: false
+                cardId: nil,
+                cardDate: nil,
+                memo: nil,
+                thumbnailImage: nil,
+                isOnThisDay: false,
+                isEmpty: true,
+                navigableCardCount: navigableCount
             )
         }
 
-        let entriesWithThumbnails = entries.filter { $0.thumbnailFileName != nil }
-        if let fallback = OnThisDaySelector.select(from: entriesWithThumbnails),
-           let fileName = fallback.entry.thumbnailFileName,
-           let thumbnail = loadThumbnail(fileName: fileName) {
-            return SaharaWidgetEntry(
-                date: Date(),
-                cardId: fallback.entry.cardId,
-                cardDate: fallback.entry.date,
-                memo: fallback.entry.memo,
-                thumbnailImage: thumbnail,
-                isOnThisDay: fallback.isOnThisDay,
-                isEmpty: false
-            )
+        let thumbnail: UIImage?
+        if let fileName = targetEntry.thumbnailFileName {
+            thumbnail = loadThumbnail(fileName: fileName)
+        } else {
+            thumbnail = nil
         }
 
         return SaharaWidgetEntry(
             date: Date(),
-            cardId: selected.entry.cardId,
-            cardDate: selected.entry.date,
-            memo: selected.entry.memo,
-            thumbnailImage: nil,
-            isOnThisDay: selected.isOnThisDay,
-            isEmpty: false
+            cardId: targetEntry.cardId,
+            cardDate: targetEntry.date,
+            memo: targetEntry.memo,
+            thumbnailImage: thumbnail,
+            isOnThisDay: false,
+            isEmpty: false,
+            navigableCardCount: navigableCount
         )
     }
 

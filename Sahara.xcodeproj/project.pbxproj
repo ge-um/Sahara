@@ -34,6 +34,7 @@
 		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
 		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
 		FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */; };
+		B7A3E1F2C4D5A6B8E9F01234 /* NavigateWidgetPhotoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -100,6 +101,7 @@
 		42B47BDB082DFD3FB45AC439 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4301DA729761C01C60469C92 /* SaharaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = SaharaWidget.entitlements; sourceTree = "<group>"; };
 		44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnThisDaySelector.swift; path = Sahara/Common/Utility/OnThisDaySelector.swift; sourceTree = SOURCE_ROOT; };
+		B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NavigateWidgetPhotoIntent.swift; sourceTree = "<group>"; };
 		47CD2822568FA817EC45BEE9 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppGroupContainer.swift; path = Sahara/Common/Utility/AppGroupContainer.swift; sourceTree = SOURCE_ROOT; };
 		5784B26A0B503F279A42BC75 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -234,6 +236,7 @@
 				9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */,
 				9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */,
 				D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */,
+				B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */,
 				060E2F6095A14C26C94BEAA0 /* Resources */,
 				4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */,
 				1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */,
@@ -471,6 +474,7 @@
 				35809AA4E121A6056CB56712 /* AppGroupContainer.swift in Sources */,
 				EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */,
 				AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */,
+				B7A3E1F2C4D5A6B8E9F01234 /* NavigateWidgetPhotoIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
