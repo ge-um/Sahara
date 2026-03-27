@@ -21,11 +21,7 @@ final class SettingsViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
     private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 0
-        layout.minimumInteritemSpacing = 0
-
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: SettingsGroupedLayout())
         collectionView.backgroundColor = .clear
         collectionView.register(SettingsMenuCell.self, forCellWithReuseIdentifier: SettingsMenuCell.identifier)
         collectionView.register(
@@ -101,7 +97,7 @@ final class SettingsViewController: UIViewController {
 
     private func bind() {
         let dataSource = RxCollectionViewSectionedReloadDataSource<SettingsSection>(
-            configureCell: { [weak self] _, collectionView, indexPath, item in
+            configureCell: { [weak self] dataSource, collectionView, indexPath, item in
                 guard let cell = collectionView.dequeueReusableCell(
                     withReuseIdentifier: SettingsMenuCell.identifier,
                     for: indexPath
@@ -109,6 +105,9 @@ final class SettingsViewController: UIViewController {
                     return UICollectionViewCell()
                 }
                 cell.configure(with: item)
+
+                let isLastItem = indexPath.item == dataSource[indexPath.section].items.count - 1
+                cell.setSeparatorHidden(isLastItem)
 
                 cell.onToggleChanged = { [weak self] isOn in
                     self?.handleToggleChanged(for: item, isOn: isOn)
