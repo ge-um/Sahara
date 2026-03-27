@@ -190,6 +190,7 @@
 "settings.section_about" = "关于";
 "settings.language" = "语言";
 "settings.language_desc" = "简体中文";
+"settings.background_theme" = "背景主题";
 "settings.service_news" = "服务动态";
 "settings.service_news_desc" = "新功能和更新消息";
 "settings.monthly_report" = "每月报告";
@@ -294,3 +295,15 @@
 "release_note.1.1.0.1" = "添加了卡片锁定功能";
 "release_note.1.1.0.2" = "位置编辑更加简便";
 "release_note.1.1.0.3" = "应用更加稳定";
+
+/* Background Theme */
+"background.title" = "背景主题";
+"background.solid_color" = "纯色";
+"background.gradient" = "渐变";
+"background.photo" = "照片";
+"background.dot_pattern" = "点状图案";
+"background.preview" = "预览";
+"background.select_photo" = "从相册选择";
+"background.apply" = "应用";
+"background.gradient_start" = "起始颜色";
+"background.gradient_end" = "结束颜色";

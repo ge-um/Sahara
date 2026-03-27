@@ -190,6 +190,7 @@
 "settings.section_about" = "About";
 "settings.language" = "Language";
 "settings.language_desc" = "English";
+"settings.background_theme" = "Background Theme";
 "settings.service_news" = "Service News";
 "settings.service_news_desc" = "New features and updates";
 "settings.monthly_report" = "Monthly Report";
@@ -300,3 +301,15 @@
 "release_note.1.1.0.1" = "Card lock feature added";
 "release_note.1.1.0.2" = "Easier location editing";
 "release_note.1.1.0.3" = "Improved app stability";
+
+/* Background Theme */
+"background.title" = "Background Theme";
+"background.solid_color" = "Solid Color";
+"background.gradient" = "Gradient";
+"background.photo" = "Photo";
+"background.dot_pattern" = "Dot Pattern";
+"background.preview" = "Preview";
+"background.select_photo" = "Select from Album";
+"background.apply" = "Apply";
+"background.gradient_start" = "Start Color";
+"background.gradient_end" = "End Color";

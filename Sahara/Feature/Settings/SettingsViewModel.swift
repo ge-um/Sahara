@@ -20,6 +20,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
     struct Output {
         let sections: Driver<[SettingsSection]>
         let openLanguageSelection: Driver<Void>
+        let openBackgroundTheme: Driver<Void>
         let openMailComposer: Driver<String>
         let openReleaseNotes: Driver<Void>
         let exportPhotos: Driver<Void>
@@ -29,7 +30,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let defaultSections = [
-            SettingsSection(type: .general, items: [.language]),
+            SettingsSection(type: .general, items: [.language, .backgroundTheme]),
             SettingsSection(type: .dataManagement, items: [.exportPhotos, .exportBackup, .importBackup, .cloudSync]),
             SettingsSection(type: .notifications, items: [.serviceNews]),
             SettingsSection(type: .support, items: [.contactDeveloper]),
@@ -41,6 +42,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
             .asDriver(onErrorJustReturn: defaultSections)
 
         let openLanguageSelection = input.itemSelected.whenSelected(.language)
+        let openBackgroundTheme = input.itemSelected.whenSelected(.backgroundTheme)
         let openMailComposer = input.itemSelected
             .compactMap { $0 == .contactDeveloper ? DeveloperConfig.developerEmail : nil }
             .asDriver(onErrorDriveWith: .empty())
@@ -52,6 +54,7 @@ final class SettingsViewModel: BaseViewModelProtocol {
         return Output(
             sections: sections,
             openLanguageSelection: openLanguageSelection,
+            openBackgroundTheme: openBackgroundTheme,
             openMailComposer: openMailComposer,
             openReleaseNotes: openReleaseNotes,
             exportPhotos: exportPhotos,
