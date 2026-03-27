@@ -12,6 +12,7 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 import UIKit
+import WidgetKit
 
 final class CardDetailViewModel: BaseViewModelProtocol {
     let cardId: ObjectId
@@ -23,6 +24,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let saveButtonTapped: Observable<Void>
         let shareButtonTapped: Observable<Void>
         let deleteConfirmed: Observable<Void>
+        let widgetToggleTapped: Observable<Void>
     }
 
     struct Output {
@@ -30,6 +32,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let saveFileURL: Driver<URL>
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
+        let isWidgetPinned: Driver<Bool>
     }
 
     init(cardId: ObjectId, realmManager: RealmServiceProtocol = RealmService.shared) {
@@ -76,11 +79,36 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             }
             .asDriver(onErrorJustReturn: ())
 
+        let cardIdString = cardId.stringValue
+        let isWidgetPinnedRelay = BehaviorRelay<Bool>(
+            value: AppGroupContainer.pinnedCardId == cardIdString
+        )
+
+        input.widgetToggleTapped
+            .subscribe(onNext: { [weak self] in
+                guard let self else { return }
+                let isPinned = AppGroupContainer.pinnedCardId == self.cardId.stringValue
+                if isPinned {
+                    AppGroupContainer.pinnedCardId = nil
+                } else {
+                    AppGroupContainer.pinnedCardId = self.cardId.stringValue
+                }
+                isWidgetPinnedRelay.accept(!isPinned)
+                WidgetDataService.shared.refreshWidgetData()
+            })
+            .disposed(by: disposeBag)
+
+        input.viewDidLoad
+            .map { AppGroupContainer.pinnedCardId == cardIdString }
+            .bind(to: isWidgetPinnedRelay)
+            .disposed(by: disposeBag)
+
         return Output(
             saveResult: saveResult,
             saveFileURL: saveFileURL,
             shareImage: shareImage,
-            deleteCompleted: deleteCompleted
+            deleteCompleted: deleteCompleted,
+            isWidgetPinned: isWidgetPinnedRelay.asDriver()
         )
     }
 

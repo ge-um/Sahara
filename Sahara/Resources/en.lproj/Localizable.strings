@@ -319,3 +319,7 @@
 "background.apply" = "Apply";
 "background.gradient_start" = "Start Color";
 "background.gradient_end" = "End Color";
+
+/* Widget */
+"widget.add_to_widget" = "Add to Widget";
+"widget.added_to_widget" = "Added to Widget";

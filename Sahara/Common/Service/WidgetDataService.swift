@@ -12,7 +12,6 @@ import WidgetKit
 
 final class WidgetDataService {
     static let shared = WidgetDataService()
-    static let thumbnailPoolSize = 10
 
     private let realmManager: RealmServiceProtocol
     private let widgetDirectory: URL?
@@ -55,15 +54,7 @@ final class WidgetDataService {
         let cards = realmManager.fetch(Card.self, filter: "isLocked == false", sortKey: "date", ascending: false)
 
         let calendar = Calendar.current
-        let today = Date()
-        let todayComponents = calendar.dateComponents([.year, .month, .day], from: today)
-        let todayMonth = todayComponents.month
-        let todayDay = todayComponents.day
-        let todayYear = todayComponents.year
-
         var allEntries: [WidgetCardEntry] = []
-        var onThisDayCardIds: Set<String> = []
-        var otherCardIds: [String] = []
         var cardLookup: [String: Card] = [:]
 
         for card in cards {
@@ -79,44 +70,47 @@ final class WidgetDataService {
                 thumbnailFileName: nil
             ))
             cardLookup[cardId] = card
-
-            let cardYear = calendar.component(.year, from: card.date)
-            if month == todayMonth && day == todayDay && cardYear != todayYear {
-                onThisDayCardIds.insert(cardId)
-            } else {
-                otherCardIds.append(cardId)
-            }
         }
-
-        let randomPool = otherCardIds.shuffled().prefix(Self.thumbnailPoolSize)
-        let thumbnailTargetIds = onThisDayCardIds.union(randomPool)
 
         var validFileNames: Set<String> = []
 
-        for i in 0..<allEntries.count {
-            let entry = allEntries[i]
-            guard thumbnailTargetIds.contains(entry.cardId),
-                  let card = cardLookup[entry.cardId] else { continue }
-
+        if let pinnedId = AppGroupContainer.pinnedCardId,
+           let card = cardLookup[pinnedId],
+           let index = allEntries.firstIndex(where: { $0.cardId == pinnedId }) {
+            let entry = allEntries[index]
             let fileName: String
-            if let cached = existingThumbnailFileName(cardId: entry.cardId, directory: thumbsDir) {
+            if let cached = existingThumbnailFileName(cardId: pinnedId, directory: thumbsDir) {
                 fileName = cached
-            } else {
-                guard let imageData = card.resolvedImageData(),
-                      let generated = generateThumbnail(cardId: entry.cardId, imageData: imageData, directory: thumbsDir) else {
-                    continue
-                }
+            } else if let imageData = card.resolvedImageData(),
+                      let generated = generateThumbnail(cardId: pinnedId, imageData: imageData, directory: thumbsDir) {
                 fileName = generated
+            } else {
+                fileName = ""
             }
 
-            validFileNames.insert(fileName)
-            allEntries[i] = WidgetCardEntry(
-                cardId: entry.cardId,
-                date: entry.date,
-                memo: entry.memo,
-                monthDay: entry.monthDay,
-                thumbnailFileName: fileName
-            )
+            if !fileName.isEmpty {
+                validFileNames.insert(fileName)
+                allEntries[index] = WidgetCardEntry(
+                    cardId: entry.cardId,
+                    date: entry.date,
+                    memo: entry.memo,
+                    monthDay: entry.monthDay,
+                    thumbnailFileName: fileName
+                )
+            }
+        }
+
+        for (index, entry) in allEntries.enumerated() where entry.thumbnailFileName == nil {
+            if let cached = existingThumbnailFileName(cardId: entry.cardId, directory: thumbsDir) {
+                validFileNames.insert(cached)
+                allEntries[index] = WidgetCardEntry(
+                    cardId: entry.cardId,
+                    date: entry.date,
+                    memo: entry.memo,
+                    monthDay: entry.monthDay,
+                    thumbnailFileName: cached
+                )
+            }
         }
 
         let encoder = JSONEncoder()

@@ -192,8 +192,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func handleWidgetDeepLink(url: URL) {
         guard url.host == "card",
-              let cardIdString = url.pathComponents.last,
-              let objectId = try? ObjectId(string: cardIdString) else { return }
+              let cardIdString = url.pathComponents.last else { return }
 
         guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
         tabBarController.selectedIndex = 0
@@ -201,6 +200,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let navController = tabBarController.selectedViewController as? UINavigationController else { return }
         navController.popToRootViewController(animated: false)
 
+        if cardIdString == "random" {
+            let cards = RealmService.shared.fetch(Card.self, filter: "isLocked == false", sortKey: "date", ascending: false)
+            guard let randomCard = cards.randomElement() else { return }
+            let detailVC = CardDetailViewController(cardId: randomCard.id)
+            navController.pushViewController(detailVC, animated: true)
+            return
+        }
+
+        guard let objectId = try? ObjectId(string: cardIdString) else { return }
         let detailVC = CardDetailViewController(cardId: objectId)
         navController.pushViewController(detailVC, animated: true)
     }

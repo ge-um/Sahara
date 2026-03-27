@@ -313,3 +313,7 @@
 "background.apply" = "应用";
 "background.gradient_start" = "起始颜色";
 "background.gradient_end" = "结束颜色";
+
+/* Widget */
+"widget.add_to_widget" = "添加到小组件";
+"widget.added_to_widget" = "已添加到小组件";
