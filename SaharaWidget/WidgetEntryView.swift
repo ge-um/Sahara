@@ -63,7 +63,7 @@ struct WidgetEntryView: View {
                 .font(.system(size: family == .systemLarge ? 40 : 28))
                 .foregroundColor(.secondary)
             Text(NSLocalizedString("widget.select_photo", comment: ""))
-                .font(.custom("Galmuri11-Bold", size: family == .systemLarge ? 16 : 12))
+                .font(.custom("Galmuri14", size: family == .systemLarge ? 16 : 12))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -74,11 +74,12 @@ struct WidgetEntryView: View {
     private var cardView: some View {
         GeometryReader { geometry in
             if let image = entry.thumbnailImage {
-                Image(uiImage: image)
+                image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
+                    .unredacted()
             }
         }
     }

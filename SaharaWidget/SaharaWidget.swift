@@ -13,7 +13,7 @@ struct SaharaWidgetEntry: TimelineEntry {
     let cardId: String?
     let cardDate: Date?
     let memo: String?
-    let thumbnailImage: UIImage?
+    let thumbnailImage: Image?
     let isOnThisDay: Bool
     let isEmpty: Bool
     let navigableCardCount: Int
@@ -34,8 +34,19 @@ struct SaharaWidgetProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SaharaWidgetEntry) -> Void) {
-        let entry = loadEntry()
-        completion(entry)
+        let imageName = context.family == .systemLarge ? "WidgetPreview2" : "WidgetPreview1"
+
+        let previewEntry = SaharaWidgetEntry(
+            date: Date(),
+            cardId: nil,
+            cardDate: nil,
+            memo: nil,
+            thumbnailImage: loadPreviewImage(named: imageName),
+            isOnThisDay: false,
+            isEmpty: false,
+            navigableCardCount: 0
+        )
+        completion(previewEntry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SaharaWidgetEntry>) -> Void) {
@@ -82,9 +93,10 @@ struct SaharaWidgetProvider: TimelineProvider {
             )
         }
 
-        let thumbnail: UIImage?
-        if let fileName = targetEntry.thumbnailFileName {
-            thumbnail = loadThumbnail(fileName: fileName)
+        let thumbnail: Image?
+        if let fileName = targetEntry.thumbnailFileName,
+           let uiImage = loadThumbnail(fileName: fileName) {
+            thumbnail = Image(uiImage: uiImage)
         } else {
             thumbnail = nil
         }
@@ -117,6 +129,10 @@ struct SaharaWidgetProvider: TimelineProvider {
         let url = thumbsDir.appendingPathComponent(fileName)
         guard let data = try? Data(contentsOf: url) else { return nil }
         return UIImage(data: data)
+    }
+
+    private func loadPreviewImage(named name: String) -> Image {
+        Image(name)
     }
 }
 
