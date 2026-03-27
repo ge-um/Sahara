@@ -5,3 +5,4 @@
 "widget.empty_message" = "Create your first card";
 "widget.placeholder_memo" = "Today's memory";
 "widget.date_format" = "MMMM d, yyyy";
+"widget.select_photo" = "Select a photo";

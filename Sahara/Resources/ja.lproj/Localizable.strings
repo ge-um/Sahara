@@ -319,3 +319,7 @@
 "background.apply" = "適用する";
 "background.gradient_start" = "開始色";
 "background.gradient_end" = "終了色";
+
+/* Widget */
+"widget.add_to_widget" = "ウィジェットに追加";
+"widget.added_to_widget" = "ウィジェットに追加済み";

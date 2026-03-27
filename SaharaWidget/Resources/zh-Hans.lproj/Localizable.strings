@@ -5,3 +5,4 @@
 "widget.empty_message" = "创建你的第一张卡片";
 "widget.placeholder_memo" = "今日的记忆";
 "widget.date_format" = "yyyy年MM月dd日";
+"widget.select_photo" = "请选择照片";
