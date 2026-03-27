@@ -79,7 +79,7 @@ final class SettingsViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(collectionView)
@@ -159,6 +159,13 @@ final class SettingsViewController: UIViewController {
             .drive(with: self) { owner, _ in
                 let languageVC = LanguageSelectionViewController()
                 owner.navigationController?.pushViewController(languageVC, animated: true)
+            }
+            .disposed(by: disposeBag)
+
+        output.openBackgroundTheme
+            .drive(with: self) { owner, _ in
+                let bgVC = BackgroundThemeViewController()
+                owner.navigationController?.pushViewController(bgVC, animated: true)
             }
             .disposed(by: disposeBag)
 

@@ -128,7 +128,7 @@ final class CardDetailViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)

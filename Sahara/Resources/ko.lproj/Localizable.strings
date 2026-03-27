@@ -190,6 +190,7 @@
 "settings.section_about" = "정보";
 "settings.language" = "언어";
 "settings.language_desc" = "한국어";
+"settings.background_theme" = "배경 테마";
 "settings.service_news" = "서비스 소식";
 "settings.service_news_desc" = "새로운 기능과 업데이트 소식";
 "settings.monthly_report" = "월간 리포트";
@@ -300,3 +301,15 @@
 "release_note.1.1.0.1" = "카드 잠금 기능이 추가되었어요";
 "release_note.1.1.0.2" = "위치 정보 수정이 더 쉬워졌어요";
 "release_note.1.1.0.3" = "앱이 더 안정적으로 작동해요";
+
+/* Background Theme */
+"background.title" = "배경 테마";
+"background.solid_color" = "단색";
+"background.gradient" = "그라데이션";
+"background.photo" = "사진";
+"background.dot_pattern" = "도트 패턴";
+"background.preview" = "미리보기";
+"background.select_photo" = "앨범에서 사진 선택";
+"background.apply" = "적용하기";
+"background.gradient_start" = "시작 색상";
+"background.gradient_end" = "끝 색상";

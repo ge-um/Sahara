@@ -81,7 +81,7 @@ extension MediaEditorViewController {
     }
 
     func configureUI() {
-        view.applyGradient(.warm)
+        view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(cropDimOverlay)
         view.addSubview(customNavigationBar)

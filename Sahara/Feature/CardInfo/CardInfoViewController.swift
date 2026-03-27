@@ -118,7 +118,7 @@ final class CardInfoViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.warm)
+        view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(customNavigationBar)
         view.addSubview(contentView)

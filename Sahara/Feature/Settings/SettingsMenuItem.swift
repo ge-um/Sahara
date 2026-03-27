@@ -9,6 +9,7 @@ import Foundation
 
 enum SettingsMenuItem: CaseIterable {
     case language
+    case backgroundTheme
     case cloudSync
     case exportPhotos
     case exportBackup
@@ -22,6 +23,8 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return NSLocalizedString("settings.language", comment: "")
+        case .backgroundTheme:
+            return NSLocalizedString("settings.background_theme", comment: "")
         case .cloudSync:
             return NSLocalizedString("settings.cloud_sync", comment: "")
         case .exportPhotos:
@@ -45,6 +48,8 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return LanguageService.shared.currentLanguageDescription
+        case .backgroundTheme:
+            return nil
         case .cloudSync:
             return NSLocalizedString("settings.cloud_sync_desc", comment: "")
         case .serviceNews:
@@ -58,7 +63,7 @@ enum SettingsMenuItem: CaseIterable {
 
     var isSelectable: Bool {
         switch self {
-        case .language, .contactDeveloper, .releaseNotes, .exportPhotos, .exportBackup, .importBackup:
+        case .language, .backgroundTheme, .contactDeveloper, .releaseNotes, .exportPhotos, .exportBackup, .importBackup:
             return true
         case .cloudSync, .serviceNews, .versionInfo:
             return false
