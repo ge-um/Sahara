@@ -26,4 +26,15 @@ enum AppGroupContainer {
     static var cardStoreURL: URL? {
         widgetDirectory?.appendingPathComponent("WidgetCardStore.json")
     }
+
+    private static var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: groupIdentifier)
+    }
+
+    static var pinnedCardId: String? {
+        get { sharedDefaults?.string(forKey: "pinnedCardId") }
+        set {
+            sharedDefaults?.set(newValue, forKey: "pinnedCardId")
+        }
+    }
 }
