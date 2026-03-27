@@ -150,7 +150,7 @@ final class StatsViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.primary, dotSize: 5, spacing: 32, dotColor: .token(.textOnAccent))
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         timeChartView.setBarGradient(.highlight)
         weekdayChartView.setBarGradient(.highlight)
