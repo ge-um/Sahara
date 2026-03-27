@@ -35,6 +35,82 @@ final class MediaSelectionViewController: UIViewController {
     private let photoSelectedRelay = PublishRelay<PHAsset>()
     private let filePickerButtonTappedRelay = PublishRelay<Void>()
     private let imagePickerResultRelay = PublishRelay<(ImageSourceData, CLLocation?, Date?, MediaSource)>()
+    private let albumSelectedRelay = PublishRelay<Int>()
+
+    // MARK: - Album Selector Bar
+
+    private let albumSelectorBar: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private let albumTitleButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.baseForegroundColor = .label
+        config.image = UIImage(systemName: "chevron.down")
+        config.imagePlacement = .trailing
+        config.imagePadding = 4
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+        config.contentInsets = .zero
+        let button = UIButton(configuration: config)
+        return button
+    }()
+
+    private let albumCountLabel: UILabel = {
+        let label = UILabel()
+        label.font = FontSystem.galmuriMono(size: 12)
+        label.textColor = .token(.textSecondary)
+        return label
+    }()
+
+    // MARK: - Limited Banner
+
+    private let limitedBannerContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .token(.info).withAlphaComponent(0.1)
+        view.isHidden = true
+        return view
+    }()
+
+    private let bannerInfoIcon: UIImageView = {
+        let iv = UIImageView(image: UIImage(systemName: "info.circle"))
+        iv.tintColor = .token(.info)
+        iv.contentMode = .scaleAspectFit
+        return iv
+    }()
+
+    private let bannerLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("media_selection.limited_banner", comment: "")
+        label.font = FontSystem.galmuriMono(size: 11)
+        label.textColor = .token(.textSecondary)
+        label.numberOfLines = 0
+        return label
+    }()
+
+    private let settingsLinkButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle(NSLocalizedString("media_selection.allow_all_photos", comment: ""), for: .normal)
+        button.titleLabel?.font = FontSystem.galmuriMono(size: 11)
+        button.setTitleColor(.token(.accent), for: .normal)
+        button.contentHorizontalAlignment = .center
+        return button
+    }()
+
+    // MARK: - Album Overlay
+
+    private let dimView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.alpha = 0
+        view.isHidden = true
+        return view
+    }()
+
+    private let albumListOverlay = AlbumListOverlayView()
+
+    // MARK: - Collection View
 
     private lazy var collectionView: UICollectionView = {
         let layout = GridLayout(numberOfColumns: 3, cellSpacing: 2, minColumnWidth: 110)
@@ -51,6 +127,8 @@ final class MediaSelectionViewController: UIViewController {
     var onMediaSelected: ((ImageSourceData, CLLocation?, Date?) -> Void)?
     private let imageManager = PHCachingImageManager()
     private var isObserverRegistered = false
+    private var isAlbumListVisible = false
+    private var currentSelectedAlbumIndex = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,6 +155,8 @@ final class MediaSelectionViewController: UIViewController {
         isObserverRegistered = true
     }
 
+    // MARK: - Bind
+
     private func bind() {
         let input = MediaSelectionViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
@@ -84,7 +164,8 @@ final class MediaSelectionViewController: UIViewController {
             libraryButtonTapped: libraryButtonTappedRelay.asObservable(),
             filePickerButtonTapped: filePickerButtonTappedRelay.asObservable(),
             photoSelected: photoSelectedRelay.asObservable(),
-            imagePickerResult: imagePickerResultRelay.asObservable()
+            imagePickerResult: imagePickerResultRelay.asObservable(),
+            albumSelected: albumSelectedRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -106,11 +187,14 @@ final class MediaSelectionViewController: UIViewController {
             }
         )
 
-        Observable.combineLatest(output.showActionButtons.asObservable(), output.photos.asObservable())
-            .map { showButtons, photos -> [SectionModel<String, MediaCollectionItem>] in
+        Observable.combineLatest(
+            output.showActionButtons.asObservable(),
+            output.photos.asObservable(),
+            output.permissionStatus.asObservable()
+        )
+            .map { showButtons, photos, status -> [SectionModel<String, MediaCollectionItem>] in
                 var sections: [SectionModel<String, MediaCollectionItem>] = []
 
-                let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
                 var actionItems: [MediaCollectionItem] = []
 
                 actionItems.append(.action(
@@ -118,21 +202,20 @@ final class MediaSelectionViewController: UIViewController {
                     title: NSLocalizedString("media_selection.camera", comment: ""),
                     type: .camera
                 ))
-                if status != .authorized {
+
+                if status == .limited {
                     actionItems.append(.action(
                         icon: "photo.on.rectangle",
-                        title: NSLocalizedString("media_selection.library", comment: ""),
+                        title: NSLocalizedString("media_selection.add_photos", comment: ""),
                         type: .library
                     ))
                 }
 
-                #if targetEnvironment(macCatalyst)
                 actionItems.append(.action(
                     icon: "folder",
                     title: NSLocalizedString("media_selection.file", comment: ""),
                     type: .filePicker
                 ))
-                #endif
 
                 sections.append(SectionModel(model: "actions", items: actionItems))
 
@@ -162,6 +245,87 @@ final class MediaSelectionViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        // Album title & count
+        output.currentAlbumTitle
+            .drive(with: self) { owner, title in
+                var attributed = AttributedString(title)
+                attributed.font = FontSystem.galmuriMono(size: 14)
+                owner.albumTitleButton.configuration?.attributedTitle = attributed
+            }
+            .disposed(by: disposeBag)
+
+        output.currentAlbumCount
+            .drive(with: self) { owner, count in
+                owner.albumCountLabel.text = String(
+                    format: NSLocalizedString("media_selection.photo_count", comment: ""),
+                    count
+                )
+            }
+            .disposed(by: disposeBag)
+
+        // Permission-based limited banner
+        output.permissionStatus
+            .drive(with: self) { owner, status in
+                owner.limitedBannerContainer.isHidden = status != .limited
+            }
+            .disposed(by: disposeBag)
+
+        // Album list overlay — bind albums to tableView
+        output.albums
+            .drive(with: self) { owner, albums in
+                owner.albumListOverlay.updateHeight(for: albums.count)
+            }
+            .disposed(by: disposeBag)
+
+        output.albums
+            .drive(albumListOverlay.tableView.rx.items(
+                cellIdentifier: AlbumListCell.identifier,
+                cellType: AlbumListCell.self
+            )) { [weak self] index, album, cell in
+                guard let self = self else { return }
+                cell.configure(
+                    with: album,
+                    isSelected: index == self.currentSelectedAlbumIndex,
+                    imageManager: self.imageManager
+                )
+            }
+            .disposed(by: disposeBag)
+
+        albumListOverlay.tableView.rx.itemSelected
+            .bind(with: self) { owner, indexPath in
+                owner.currentSelectedAlbumIndex = indexPath.row
+                owner.albumSelectedRelay.accept(indexPath.row)
+                owner.toggleAlbumList()
+            }
+            .disposed(by: disposeBag)
+
+        // Album selector button tap
+        albumTitleButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.toggleAlbumList()
+            }
+            .disposed(by: disposeBag)
+
+        // Dim view tap → close
+        let dimTap = UITapGestureRecognizer()
+        dimView.addGestureRecognizer(dimTap)
+        dimTap.rx.event
+            .bind(with: self) { owner, _ in
+                if owner.isAlbumListVisible {
+                    owner.toggleAlbumList()
+                }
+            }
+            .disposed(by: disposeBag)
+
+        // Settings link button
+        settingsLinkButton.rx.tap
+            .bind(with: self) { _, _ in
+                guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                UIApplication.shared.open(url)
+            }
+            .disposed(by: disposeBag)
+
+        // Standard outputs
         output.showCamera
             .drive(with: self) { owner, _ in
                 owner.presentCamera()
@@ -230,6 +394,36 @@ final class MediaSelectionViewController: UIViewController {
             .disposed(by: disposeBag)
     }
 
+    // MARK: - Album List Toggle
+
+    private func toggleAlbumList() {
+        isAlbumListVisible.toggle()
+
+        if isAlbumListVisible {
+            dimView.isHidden = false
+            albumListOverlay.isHidden = false
+        }
+
+        UIView.animate(withDuration: 0.25, animations: { [weak self] in
+            guard let self = self else { return }
+            self.dimView.alpha = self.isAlbumListVisible ? 1 : 0
+            self.albumListOverlay.alpha = self.isAlbumListVisible ? 1 : 0
+
+            let rotation: CGAffineTransform = self.isAlbumListVisible
+                ? CGAffineTransform(rotationAngle: .pi)
+                : .identity
+            self.albumTitleButton.imageView?.transform = rotation
+        }, completion: { [weak self] _ in
+            guard let self = self else { return }
+            if !self.isAlbumListVisible {
+                self.dimView.isHidden = true
+                self.albumListOverlay.isHidden = true
+            }
+        })
+    }
+
+    // MARK: - Present Helpers
+
     private func presentCamera() {
         let cameraVC = CameraViewController()
         cameraVC.modalPresentationStyle = .fullScreen
@@ -256,6 +450,8 @@ final class MediaSelectionViewController: UIViewController {
         present(picker, animated: true)
     }
 
+    // MARK: - Configure UI
+
     private func configureUI() {
         view.applyGradient(.subtle)
 
@@ -274,9 +470,73 @@ final class MediaSelectionViewController: UIViewController {
         closeButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .normal)
         navigationItem.leftBarButtonItem = closeButton
 
-        view.addSubview(collectionView)
-        collectionView.snp.makeConstraints { make in
+        // Album selector bar
+        let albumBarStack = UIStackView(arrangedSubviews: [albumTitleButton, albumCountLabel])
+        albumBarStack.axis = .horizontal
+        albumBarStack.spacing = 8
+        albumBarStack.alignment = .center
+
+        albumSelectorBar.addSubview(albumBarStack)
+        albumBarStack.snp.makeConstraints { make in
+            make.leading.equalToSuperview().inset(16)
+            make.centerY.equalToSuperview()
+        }
+
+        // Limited banner — centered layout
+        let bannerTopRow = UIStackView(arrangedSubviews: [bannerInfoIcon, bannerLabel])
+        bannerTopRow.axis = .horizontal
+        bannerTopRow.spacing = 6
+        bannerTopRow.alignment = .center
+
+        bannerInfoIcon.snp.makeConstraints { make in
+            make.width.height.equalTo(16)
+        }
+
+        let bannerStack = UIStackView(arrangedSubviews: [bannerTopRow, settingsLinkButton])
+        bannerStack.axis = .vertical
+        bannerStack.spacing = 0
+        bannerStack.alignment = .center
+
+        limitedBannerContainer.addSubview(bannerStack)
+        bannerStack.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+            make.top.greaterThanOrEqualToSuperview().inset(10)
+            make.bottom.lessThanOrEqualToSuperview().inset(10)
+            make.leading.greaterThanOrEqualToSuperview().inset(16)
+            make.trailing.lessThanOrEqualToSuperview().inset(16)
+        }
+
+        // Main stack: albumSelectorBar + limitedBanner + collectionView
+        let contentStack = UIStackView(arrangedSubviews: [
+            albumSelectorBar, limitedBannerContainer, collectionView
+        ])
+        contentStack.axis = .vertical
+
+        albumSelectorBar.snp.makeConstraints { make in
+            make.height.equalTo(44)
+        }
+
+        limitedBannerContainer.snp.makeConstraints { make in
+            make.height.equalTo(52)
+        }
+
+        view.addSubview(contentStack)
+        contentStack.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        // Dim + overlay (above everything)
+        view.addSubview(dimView)
+        dimView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+
+        albumListOverlay.alpha = 0
+        albumListOverlay.isHidden = true
+        view.addSubview(albumListOverlay)
+        albumListOverlay.snp.makeConstraints { make in
+            make.top.equalTo(albumSelectorBar.snp.bottom)
+            make.leading.trailing.equalToSuperview()
         }
     }
 
@@ -284,6 +544,8 @@ final class MediaSelectionViewController: UIViewController {
         dismiss(animated: true)
     }
 }
+
+// MARK: - UIDocumentPickerDelegate
 
 extension MediaSelectionViewController: UIDocumentPickerDelegate {
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -312,6 +574,8 @@ extension MediaSelectionViewController: UIDocumentPickerDelegate {
         }
     }
 }
+
+// MARK: - PHPickerViewControllerDelegate
 
 extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
@@ -368,6 +632,8 @@ extension MediaSelectionViewController: PHPickerViewControllerDelegate {
     }
 }
 
+// MARK: - PHPhotoLibraryChangeObserver
+
 extension MediaSelectionViewController: PHPhotoLibraryChangeObserver {
     func photoLibraryDidChange(_ changeInstance: PHChange) {
         DispatchQueue.main.async { [weak self] in
@@ -375,6 +641,8 @@ extension MediaSelectionViewController: PHPhotoLibraryChangeObserver {
         }
     }
 }
+
+// MARK: - ActionCell
 
 final class ActionCell: UICollectionViewCell {
     private let iconImageView: UIImageView = {
@@ -423,4 +691,3 @@ final class ActionCell: UICollectionViewCell {
         titleLabel.text = title
     }
 }
-
