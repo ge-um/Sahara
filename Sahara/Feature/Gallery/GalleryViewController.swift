@@ -223,7 +223,7 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(56)
+            make.height.equalTo(54)
         }
 
         emptyStateView.snp.makeConstraints { make in
