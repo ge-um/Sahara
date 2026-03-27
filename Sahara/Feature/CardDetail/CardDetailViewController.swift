@@ -74,6 +74,28 @@ final class CardDetailViewController: UIViewController {
         return button
     }()
 
+    private let widgetToggleButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.cornerStyle = .capsule
+        config.buttonSize = .small
+        config.image = UIImage(systemName: "plus")
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 13)
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+        config.baseForegroundColor = UIColor(red: 142/255, green: 142/255, blue: 147/255, alpha: 1)
+        config.title = NSLocalizedString("widget.add_to_widget", comment: "")
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = FontSystem.galmuriMono(size: 12)
+            return outgoing
+        }
+        let button = UIButton(configuration: config)
+        button.clipsToBounds = true
+        button.backgroundColor = UIColor(red: 242/255, green: 242/255, blue: 247/255, alpha: 1)
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor(red: 209/255, green: 209/255, blue: 214/255, alpha: 1).cgColor
+        return button
+    }()
 
     init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
@@ -99,12 +121,6 @@ final class CardDetailViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewDidLoadRelay.accept(())
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.highlight)
-        shareButton.applyGradient(.highlight)
     }
 
     private func setupCustomNavigationBar() {
@@ -139,6 +155,7 @@ final class CardDetailViewController: UIViewController {
 
         buttonContainerView.addSubview(saveButton)
         buttonContainerView.addSubview(shareButton)
+        contentView.addSubview(widgetToggleButton)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -171,8 +188,14 @@ final class CardDetailViewController: UIViewController {
             make.top.equalTo(photoCardView.snp.bottom).offset(32)
             make.centerX.equalToSuperview()
             make.height.equalTo(70)
+        }
+
+        widgetToggleButton.snp.makeConstraints { make in
+            make.top.equalTo(buttonContainerView.snp.bottom).offset(16)
+            make.centerX.equalTo(buttonContainerView)
             make.bottom.equalToSuperview().offset(-88)
         }
+
 
         saveButton.snp.makeConstraints { make in
             make.leading.equalToSuperview()
@@ -256,7 +279,8 @@ final class CardDetailViewController: UIViewController {
             viewDidLoad: viewDidLoadRelay.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             shareButtonTapped: shareButton.rx.tap.asObservable(),
-            deleteConfirmed: deleteConfirmedRelay.asObservable()
+            deleteConfirmed: deleteConfirmedRelay.asObservable(),
+            widgetToggleTapped: widgetToggleButton.rx.tap.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -282,5 +306,80 @@ final class CardDetailViewController: UIViewController {
                 }
             }
             .disposed(by: disposeBag)
+
+        output.isWidgetPinned
+            .drive(with: self) { owner, isPinned in
+                owner.updateWidgetToggleAppearance(isPinned: isPinned)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func updateWidgetToggleAppearance(isPinned: Bool) {
+        widgetToggleButton.layer.sublayers?
+            .filter { $0 is CAGradientLayer }
+            .forEach { $0.removeFromSuperlayer() }
+
+        var config = UIButton.Configuration.plain()
+        config.cornerStyle = .capsule
+        config.buttonSize = .small
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 13)
+
+        if isPinned {
+            config.image = UIImage(systemName: "checkmark")
+            config.baseForegroundColor = .white
+            config.title = NSLocalizedString("widget.added_to_widget", comment: "")
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = FontSystem.galmuriMono(size: 12)
+                return outgoing
+            }
+        } else {
+            config.image = UIImage(systemName: "plus")
+            config.baseForegroundColor = UIColor(red: 142/255, green: 142/255, blue: 147/255, alpha: 1)
+            config.title = NSLocalizedString("widget.add_to_widget", comment: "")
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = FontSystem.galmuriMono(size: 12)
+                return outgoing
+            }
+        }
+
+        widgetToggleButton.configuration = config
+        widgetToggleButton.layoutIfNeeded()
+
+        if isPinned {
+            widgetToggleButton.backgroundColor = nil
+            widgetToggleButton.layer.borderWidth = 0
+
+            let gradient = CAGradientLayer()
+            gradient.colors = [
+                UIColor(red: 79/255, green: 123/255, blue: 254/255, alpha: 1).cgColor,
+                UIColor(red: 2/255, green: 19/255, blue: 204/255, alpha: 1).cgColor
+            ]
+            gradient.startPoint = CGPoint(x: 0.5, y: 0)
+            gradient.endPoint = CGPoint(x: 0.5, y: 1)
+            gradient.frame = widgetToggleButton.bounds
+            gradient.cornerRadius = widgetToggleButton.bounds.height / 2
+            widgetToggleButton.layer.insertSublayer(gradient, at: 0)
+        } else {
+            widgetToggleButton.backgroundColor = UIColor(red: 242/255, green: 242/255, blue: 247/255, alpha: 1)
+            widgetToggleButton.layer.borderWidth = 1
+            widgetToggleButton.layer.borderColor = UIColor(red: 209/255, green: 209/255, blue: 214/255, alpha: 1).cgColor
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        saveButton.applyGradient(.highlight)
+        shareButton.applyGradient(.highlight)
+
+        let h = widgetToggleButton.bounds.height
+        widgetToggleButton.layer.cornerRadius = h / 2
+        for layer in widgetToggleButton.layer.sublayers ?? [] where layer is CAGradientLayer {
+            layer.frame = widgetToggleButton.bounds
+            layer.cornerRadius = h / 2
+        }
     }
 }
