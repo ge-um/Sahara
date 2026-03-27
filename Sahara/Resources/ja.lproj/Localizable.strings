@@ -91,6 +91,12 @@
 "media_selection.photo_permission_message" = "設定でフォトライブラリアクセス権限を許可してください";
 "media_selection.file" = "ファイル";
 "media_selection.go_to_settings" = "設定に移動";
+"media_selection.all_photos" = "すべての写真";
+"media_selection.allowed_photos" = "許可された写真";
+"media_selection.add_photos" = "写真を追加";
+"media_selection.limited_banner" = "一部の写真のみアクセスが許可されています";
+"media_selection.allow_all_photos" = "設定ですべての写真を許可する";
+"media_selection.photo_count" = "%d枚";
 
 /* Camera */
 "camera.unavailable_title" = "カメラを使用できません";
