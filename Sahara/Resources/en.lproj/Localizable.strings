@@ -91,6 +91,12 @@
 "media_selection.photo_permission_message" = "Please allow photo library access in Settings";
 "media_selection.file" = "File";
 "media_selection.go_to_settings" = "Go to Settings";
+"media_selection.all_photos" = "All Photos";
+"media_selection.allowed_photos" = "Allowed Photos";
+"media_selection.add_photos" = "Add Photos";
+"media_selection.limited_banner" = "You have granted access to selected photos only";
+"media_selection.allow_all_photos" = "Allow access to all photos in Settings";
+"media_selection.photo_count" = "%d";
 
 /* Camera */
 "camera.unavailable_title" = "Camera Unavailable";

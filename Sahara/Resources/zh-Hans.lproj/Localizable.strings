@@ -91,6 +91,12 @@
 "media_selection.photo_permission_message" = "请在设置中允许照片库权限";
 "media_selection.file" = "文件";
 "media_selection.go_to_settings" = "前往设置";
+"media_selection.all_photos" = "所有照片";
+"media_selection.allowed_photos" = "已允许的照片";
+"media_selection.add_photos" = "添加照片";
+"media_selection.limited_banner" = "仅允许访问部分照片";
+"media_selection.allow_all_photos" = "在设置中允许访问所有照片";
+"media_selection.photo_count" = "%d张";
 
 /* Camera */
 "camera.unavailable_title" = "无法使用相机";

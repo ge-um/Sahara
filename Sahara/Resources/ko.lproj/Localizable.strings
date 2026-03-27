@@ -91,6 +91,12 @@
 "media_selection.photo_permission_message" = "사진을 선택하려면 설정에서 사진 라이브러리 권한을 허용해요";
 "media_selection.file" = "파일";
 "media_selection.go_to_settings" = "설정으로 이동";
+"media_selection.all_photos" = "모든 사진";
+"media_selection.allowed_photos" = "허용된 사진";
+"media_selection.add_photos" = "사진 추가";
+"media_selection.limited_banner" = "일부 사진에만 접근이 허용되었습니다";
+"media_selection.allow_all_photos" = "설정에서 모든 사진 허용하기";
+"media_selection.photo_count" = "%d장";
 
 /* Camera */
 "camera.unavailable_title" = "카메라를 사용할 수 없어요";
