@@ -29,7 +29,7 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.font = .typography(.label)
-        label.textColor = .token(.textPrimary)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
