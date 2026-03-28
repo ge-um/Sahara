@@ -128,8 +128,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0346946A2EA127BF0003065C /* SaharaTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = SaharaTests;
 			sourceTree = "<group>";
 		};

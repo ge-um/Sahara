@@ -54,27 +54,63 @@ enum DesignToken {
     // MARK: - Typography Tokens
 
     enum Typography {
+        case display
+        case emphasis
         case title
-        case headline
         case body
+        case label
         case caption
+        case tiny
         case small
 
         var font: UIFont {
             switch self {
-            case .title:    return FontSystem.galmuri14(size: 16)
-            case .headline: return FontSystem.galmuriBold(size: 15)
+            case .display:  return FontSystem.galmuriMono(size: 20)
+            case .emphasis: return FontSystem.galmuriMono(size: 18)
+            case .title:    return FontSystem.galmuriMono(size: 16)
             case .body:     return FontSystem.galmuriMono(size: 14)
+            case .label:    return FontSystem.galmuriMono(size: 13)
             case .caption:  return FontSystem.galmuriMono(size: 12)
+            case .tiny:     return FontSystem.galmuriMono(size: 11)
             case .small:    return FontSystem.galmuriMono(size: 10)
+            }
+        }
+
+        var boldFont: UIFont {
+            switch self {
+            case .display:  return FontSystem.galmuriBold(size: 20)
+            case .emphasis: return FontSystem.galmuriBold(size: 18)
+            case .title:    return FontSystem.galmuriBold(size: 16)
+            case .body:     return FontSystem.galmuriBold(size: 14)
+            case .label:    return FontSystem.galmuriBold(size: 13)
+            case .caption:  return FontSystem.galmuriBold(size: 12)
+            case .tiny:     return FontSystem.galmuriBold(size: 11)
+            case .small:    return FontSystem.galmuriBold(size: 10)
+            }
+        }
+
+        var wideFont: UIFont {
+            switch self {
+            case .display:  return FontSystem.galmuri14(size: 20)
+            case .emphasis: return FontSystem.galmuri14(size: 18)
+            case .title:    return FontSystem.galmuri14(size: 16)
+            case .body:     return FontSystem.galmuri14(size: 14)
+            case .label:    return FontSystem.galmuri14(size: 13)
+            case .caption:  return FontSystem.galmuri14(size: 12)
+            case .tiny:     return FontSystem.galmuri14(size: 11)
+            case .small:    return FontSystem.galmuri14(size: 10)
             }
         }
 
         var letterSpacing: CGFloat {
             switch self {
-            case .title, .headline: return 0
-            case .body, .caption, .small: return -0.6
+            case .display, .emphasis, .title: return 0
+            case .body, .label, .caption, .tiny, .small: return -0.6
             }
+        }
+
+        func attributedString(_ text: String, color: UIColor) -> NSAttributedString {
+            text.attributedString(font: font, letterSpacing: letterSpacing, color: color)
         }
     }
 

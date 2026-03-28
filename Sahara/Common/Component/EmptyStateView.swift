@@ -83,10 +83,10 @@ final class EmptyStateView: UIView {
     }
 
     func configure(message: String, buttonTitle: String) {
-        messageLabel.attributedText = FontSystem.TextStyle.emptyStateMessage.attributedString(message, color: .black)
+        messageLabel.attributedText = DesignToken.Typography.body.attributedString(message, color: .black)
 
         var config = actionButton.configuration ?? UIButton.Configuration.plain()
-        config.attributedTitle = AttributedString(FontSystem.TextStyle.buttonTitle.attributedString(buttonTitle, color: .white))
+        config.attributedTitle = AttributedString(DesignToken.Typography.body.attributedString(buttonTitle, color: .white))
         actionButton.configuration = config
         actionButton.sizeToFit()
     }
