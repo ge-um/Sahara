@@ -138,7 +138,7 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.configure(title: NSLocalizedString("common.app_name", comment: ""))
         updateLeftButtonForCurrentMode()
 
-        customNavigationBar.addRightButton(title: "+") { [weak self] in
+        customNavigationBar.addRightButton(image: UIImage(named: "plus")) { [weak self] in
             self?.addButtonTapped()
         }
 
