@@ -85,7 +85,7 @@ final class SimpleBarChartView: UIView {
         let adjustedMaxValue = CGFloat(((maxInt / yAxisStep) + (maxInt % yAxisStep == 0 ? 0 : 1)) * yAxisStep)
 
         let labelAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.typography(.small),
+            .font: DesignToken.Typography.small.numericFont,
             .foregroundColor: UIColor.black.withAlphaComponent(0.6)
         ]
 
@@ -110,7 +110,7 @@ final class SimpleBarChartView: UIView {
 
             let labelText = label as NSString
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.typography(.caption),
+                .font: DesignToken.Typography.caption.numericFont,
                 .foregroundColor: UIColor.token(.textPrimary)
             ]
             let labelSize = labelText.size(withAttributes: attributes)

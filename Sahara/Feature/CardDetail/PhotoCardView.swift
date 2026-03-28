@@ -90,7 +90,7 @@ final class PhotoCardView: UIView {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.emphasis)
+        label.font = DesignToken.Typography.emphasis.numericFont
         label.textColor = .white
         return label
     }()

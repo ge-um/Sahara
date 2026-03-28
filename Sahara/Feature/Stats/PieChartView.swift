@@ -107,13 +107,13 @@ final class PieChartView: UIView {
             let labelText = "\(labels[index])\n\(Int(percent * 100))%"
             let textLayer = CATextLayer()
             textLayer.string = labelText
-            textLayer.font = UIFont.typography(.caption)
+            textLayer.font = DesignToken.Typography.caption.numericFont
             textLayer.fontSize = 12
             textLayer.foregroundColor = UIColor.token(.textPrimary).cgColor
             textLayer.alignmentMode = .center
             textLayer.contentsScale = window?.screen.scale ?? 2.0
 
-            let textSize = (labelText as NSString).size(withAttributes: [.font: UIFont.typography(.caption)])
+            let textSize = (labelText as NSString).size(withAttributes: [.font: DesignToken.Typography.caption.numericFont])
             textLayer.frame = CGRect(
                 x: labelX - textSize.width / 2,
                 y: labelY - textSize.height / 2,

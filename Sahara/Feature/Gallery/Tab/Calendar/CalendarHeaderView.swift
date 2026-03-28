@@ -13,7 +13,7 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     private let monthLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.caption)
+        label.font = DesignToken.Typography.caption.numericFont
         label.textColor = .token(.textPrimary)
         label.textAlignment = .left
         return label
@@ -69,22 +69,21 @@ final class CalendarHeaderView: UICollectionReusableView {
         addSubview(nextMonthButton)
         addSubview(weekdayStackView)
 
-        monthLabel.snp.makeConstraints { make in
+        nextMonthButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
-            make.leading.equalToSuperview().offset(20)
-            make.height.equalTo(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.size.equalTo(28)
         }
 
         previousMonthButton.snp.makeConstraints { make in
-            make.centerY.equalTo(monthLabel)
+            make.centerY.equalTo(nextMonthButton)
             make.trailing.equalTo(nextMonthButton.snp.leading).offset(-8)
             make.size.equalTo(28)
         }
 
-        nextMonthButton.snp.makeConstraints { make in
-            make.centerY.equalTo(monthLabel)
-            make.trailing.equalToSuperview().offset(-20)
-            make.size.equalTo(28)
+        monthLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(nextMonthButton)
+            make.leading.equalToSuperview().offset(20)
         }
 
         weekdayStackView.snp.makeConstraints { make in

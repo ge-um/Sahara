@@ -30,7 +30,7 @@ final class AlbumListCell: UITableViewCell {
 
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.caption)
+        label.font = DesignToken.Typography.caption.numericFont
         label.textColor = .secondaryLabel
         return label
     }()

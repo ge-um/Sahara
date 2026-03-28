@@ -19,7 +19,7 @@ final class StatCardView: UIView {
 
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.display)
+        label.font = DesignToken.Typography.display.numericFont
         label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label

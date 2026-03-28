@@ -32,7 +32,7 @@ class BaseMediaAnnotationView: MKAnnotationView {
         let label = UILabel()
         label.textAlignment = .center
         label.textColor = .white
-        label.font = .typography(.title)
+        label.font = DesignToken.Typography.caption.numericFont
         return label
     }()
 

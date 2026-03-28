@@ -89,6 +89,19 @@ enum DesignToken {
             }
         }
 
+        var numericFont: UIFont {
+            switch self {
+            case .display:  return FontSystem.galmuri11(size: 20)
+            case .emphasis: return FontSystem.galmuri11(size: 18)
+            case .title:    return FontSystem.galmuri11(size: 16)
+            case .body:     return FontSystem.galmuri11(size: 14)
+            case .label:    return FontSystem.galmuri11(size: 13)
+            case .caption:  return FontSystem.galmuri11(size: 12)
+            case .tiny:     return FontSystem.galmuri11(size: 11)
+            case .small:    return FontSystem.galmuri11(size: 10)
+            }
+        }
+
         var wideFont: UIFont {
             switch self {
             case .display:  return FontSystem.galmuri14(size: 20)

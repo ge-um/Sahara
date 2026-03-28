@@ -49,14 +49,14 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var dayLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuri11(size: 12)
+        label.font = DesignToken.Typography.caption.numericFont
         return label
     }()
 
     private let addButton: UILabel = {
         let label = UILabel()
         label.text = "+"
-        label.font = .typography(.emphasis)
+        label.font = DesignToken.Typography.emphasis.numericFont
         label.textColor = .token(.border)
         label.textAlignment = .center
         label.isHidden = true
