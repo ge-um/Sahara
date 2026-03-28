@@ -15,7 +15,7 @@ final class SimpleBarChartView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .token(.backgroundOverlay)
+        backgroundColor = .token(.backgroundGlass)
         layer.cornerRadius = 12
         clipsToBounds = true
     }

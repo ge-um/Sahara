@@ -11,7 +11,7 @@ import UIKit
 final class StatCardView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = FontSystem.galmuriMono(size: 12)
         label.textColor = .token(.textTertiary)
         label.textAlignment = .center
         return label
@@ -43,7 +43,7 @@ final class StatCardView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = UIColor.token(.tabBackground).withAlphaComponent(0.3)
+        backgroundColor = .token(.backgroundGlass)
         layer.cornerRadius = 12
         clipsToBounds = true
 

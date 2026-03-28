@@ -27,7 +27,7 @@ final class ListItemView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = .token(.backgroundOverlay)
+        backgroundColor = .token(.backgroundGlass)
         layer.cornerRadius = 12
         clipsToBounds = true
 
