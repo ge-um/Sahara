@@ -48,7 +48,7 @@ final class LocationSelectionCard: BaseCard {
         config.imagePlacement = .leading
         config.imagePadding = 8
         config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 

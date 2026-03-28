@@ -54,7 +54,7 @@ final class SearchViewController: UIViewController {
         let label = UILabel()
         label.textAlignment = .center
         label.font = .typography(.body)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.isHidden = true
         return label
     }()

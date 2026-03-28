@@ -52,14 +52,14 @@ extension MediaEditorViewController {
                 imageView.image = originalImage.withRenderingMode(.alwaysTemplate)
             }
             imageView.contentMode = .scaleAspectFit
-            imageView.tintColor = .black
+            imageView.tintColor = .token(.textPrimary)
 
             let label = UILabel()
             let text = NSLocalizedString(config.titleKey, comment: "")
             let attributedString = text.attributedString(
                 font: UIFont.typography(.caption),
                 letterSpacing: -6,
-                color: .black
+                color: .token(.textPrimary)
             )
             label.attributedText = attributedString
             label.textAlignment = .center

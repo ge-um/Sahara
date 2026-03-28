@@ -23,7 +23,7 @@ final class FilterCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .typography(.caption)
         label.textAlignment = .center
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 

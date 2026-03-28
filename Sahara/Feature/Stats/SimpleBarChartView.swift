@@ -111,7 +111,7 @@ final class SimpleBarChartView: UIView {
             let labelText = label as NSString
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont.typography(.caption),
-                .foregroundColor: UIColor.black
+                .foregroundColor: UIColor.token(.textPrimary)
             ]
             let labelSize = labelText.size(withAttributes: attributes)
             let labelX = x + (width - labelSize.width) / 2

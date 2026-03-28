@@ -56,7 +56,7 @@ final class CardDetailViewController: UIViewController {
 
         let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.save", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
@@ -69,7 +69,7 @@ final class CardDetailViewController: UIViewController {
 
         let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.share", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
@@ -138,7 +138,7 @@ final class CardDetailViewController: UIViewController {
             }
         }
 
-        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .black) { [weak self] in
+        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .token(.textPrimary)) { [weak self] in
             self?.openEditView()
         }
     }

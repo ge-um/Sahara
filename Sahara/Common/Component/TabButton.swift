@@ -29,14 +29,14 @@ final class TabButton: UIView {
     private let iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .black
+        imageView.tintColor = .token(.textPrimary)
         return imageView
     }()
 
     private let label: UILabel = {
         let label = UILabel()
         label.font = .typography(.tiny)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 

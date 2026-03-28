@@ -14,7 +14,7 @@ final class CalendarHeaderView: UICollectionReusableView {
     private let monthLabel: UILabel = {
         let label = UILabel()
         label.font = .typography(.caption)
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .left
         return label
     }()

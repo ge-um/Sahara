@@ -17,7 +17,7 @@ final class CustomNavigationBar: UIView {
     private let leftButton: UIButton = {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "chevron.left")
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8)
         let button = UIButton(configuration: config)
         return button
@@ -25,7 +25,7 @@ final class CustomNavigationBar: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
     }()
@@ -131,7 +131,7 @@ final class CustomNavigationBar: UIView {
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .black, action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), action: @escaping () -> Void) {
         let button = UIButton()
 
         if let title = title {

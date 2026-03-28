@@ -42,7 +42,7 @@ final class CardInfoViewController: UIViewController {
         var config = UIButton.Configuration.filled()
         config.image = UIImage(named: "xmark")
         config.baseBackgroundColor = .white
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
         button.configuration = config
         return button
