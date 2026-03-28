@@ -49,7 +49,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var dayLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.title)
+        label.font = FontSystem.galmuri11(size: 12)
         return label
     }()
 

@@ -22,22 +22,22 @@ final class CalendarHeaderView: UICollectionReusableView {
     private let previousMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
         button.setTitleColor(.token(.navigationText), for: .normal)
-        button.titleLabel?.font = .typography(.caption)
+        button.titleLabel?.font = .typography(.body)
         return button
     }()
 
     private let nextMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
         button.setTitleColor(.token(.navigationText), for: .normal)
-        button.titleLabel?.font = .typography(.caption)
+        button.titleLabel?.font = .typography(.body)
         return button
     }()
 
@@ -78,15 +78,13 @@ final class CalendarHeaderView: UICollectionReusableView {
         previousMonthButton.snp.makeConstraints { make in
             make.centerY.equalTo(monthLabel)
             make.trailing.equalTo(nextMonthButton.snp.leading).offset(-8)
-            make.width.equalTo(40)
-            make.height.equalTo(28)
+            make.size.equalTo(28)
         }
 
         nextMonthButton.snp.makeConstraints { make in
             make.centerY.equalTo(monthLabel)
             make.trailing.equalToSuperview().offset(-20)
-            make.width.equalTo(40)
-            make.height.equalTo(28)
+            make.size.equalTo(28)
         }
 
         weekdayStackView.snp.makeConstraints { make in
@@ -105,13 +103,18 @@ final class CalendarHeaderView: UICollectionReusableView {
             let weekdayText = NSLocalizedString(key, comment: "")
 
             // Galmuri14, font size 10, letter spacing -6%
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.firstLineHeadIndent = 8
+
             let attributedString = weekdayText.attributedString(
                 font: UIFont.typography(.small),
                 letterSpacing: -6,
                 color: index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             )
-            label.attributedText = attributedString
-            label.textAlignment = .center
+            let mutable = NSMutableAttributedString(attributedString: attributedString)
+            mutable.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: mutable.length))
+            label.attributedText = mutable
+            label.textAlignment = .left
             weekdayStackView.addArrangedSubview(label)
         }
     }
