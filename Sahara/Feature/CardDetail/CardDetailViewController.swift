@@ -127,7 +127,6 @@ final class CardDetailViewController: UIViewController {
         customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
 
         if navigationController != nil && presentingViewController == nil {
-            customNavigationBar.setLeftButtonImage(UIImage(named: "chevronLeft"))
             customNavigationBar.onLeftButtonTapped = { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             }
