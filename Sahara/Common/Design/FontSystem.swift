@@ -16,12 +16,5 @@ enum FontSystem {
         return UIFont(name: "GalmuriMono11", size: size) ?? .systemFont(ofSize: size)
     }
 
-    static func galmuriBold(size: CGFloat) -> UIFont {
-        return UIFont(name: "Galmuri11-Bold", size: size) ?? .systemFont(ofSize: size, weight: .bold)
-    }
-
-    static func galmuri14(size: CGFloat) -> UIFont {
-        return UIFont(name: "Galmuri14", size: size) ?? .systemFont(ofSize: size)
-    }
 
 }

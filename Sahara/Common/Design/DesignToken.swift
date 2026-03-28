@@ -76,19 +76,6 @@ enum DesignToken {
             }
         }
 
-        var boldFont: UIFont {
-            switch self {
-            case .display:  return FontSystem.galmuriBold(size: 20)
-            case .emphasis: return FontSystem.galmuriBold(size: 18)
-            case .title:    return FontSystem.galmuriBold(size: 16)
-            case .body:     return FontSystem.galmuriBold(size: 14)
-            case .label:    return FontSystem.galmuriBold(size: 13)
-            case .caption:  return FontSystem.galmuriBold(size: 12)
-            case .tiny:     return FontSystem.galmuriBold(size: 11)
-            case .small:    return FontSystem.galmuriBold(size: 10)
-            }
-        }
-
         var numericFont: UIFont {
             switch self {
             case .display:  return FontSystem.galmuri11(size: 20)
@@ -99,19 +86,6 @@ enum DesignToken {
             case .caption:  return FontSystem.galmuri11(size: 12)
             case .tiny:     return FontSystem.galmuri11(size: 11)
             case .small:    return FontSystem.galmuri11(size: 10)
-            }
-        }
-
-        var wideFont: UIFont {
-            switch self {
-            case .display:  return FontSystem.galmuri14(size: 20)
-            case .emphasis: return FontSystem.galmuri14(size: 18)
-            case .title:    return FontSystem.galmuri14(size: 16)
-            case .body:     return FontSystem.galmuri14(size: 14)
-            case .label:    return FontSystem.galmuri14(size: 13)
-            case .caption:  return FontSystem.galmuri14(size: 12)
-            case .tiny:     return FontSystem.galmuri14(size: 11)
-            case .small:    return FontSystem.galmuri14(size: 10)
             }
         }
 
