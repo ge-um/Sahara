@@ -23,9 +23,13 @@ final class SearchViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         searchBar.backgroundColor = .clear
+        searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
 
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
             textField.font = FontSystem.galmuriMono(size: 14)
+            textField.backgroundColor = .backgroundGlass
+            textField.layer.cornerRadius = 10
+            textField.clipsToBounds = true
         }
 
         return searchBar
@@ -107,15 +111,15 @@ final class SearchViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(8)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(48)
+            make.height.equalTo(36)
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(24)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(searchBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         emptyStateLabel.snp.makeConstraints { make in

@@ -20,7 +20,7 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 16)
+        label.font = FontSystem.galmuriMono(size: 14)
         return label
     }()
 
