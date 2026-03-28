@@ -58,7 +58,7 @@ final class GradientPickerViewController: UIViewController {
         var titleAttr = AttributeContainer()
         titleAttr.font = UIFont.typography(.body)
         config.attributedTitle = AttributedString(
-            NSLocalizedString("background.apply", comment: ""),
+            NSLocalizedString("common.save", comment: ""),
             attributes: titleAttr
         )
 

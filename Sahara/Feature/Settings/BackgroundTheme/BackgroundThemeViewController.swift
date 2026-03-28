@@ -79,25 +79,7 @@ final class BackgroundThemeViewController: UIViewController {
         return label
     }()
 
-    private let applyButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .token(.textPrimary)
-        config.cornerStyle = .capsule
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
-
-        var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.body)
-        config.attributedTitle = AttributedString(
-            NSLocalizedString("background.apply", comment: ""),
-            attributes: titleAttr
-        )
-
-        button.configuration = config
-        button.clipsToBounds = true
-        return button
-    }()
+    private let saveButton: UIButton = .makeSaveButton()
 
     private var colorCells: [UIView] = []
     private var gradientCells: [UIView] = []
@@ -119,7 +101,7 @@ final class BackgroundThemeViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        applyButton.applyGradient(.fresh, removeExisting: true)
+        saveButton.applyGradient(.ctaPink, removeExisting: true)
     }
 
     private func setupCustomNavigationBar() {
@@ -133,6 +115,7 @@ final class BackgroundThemeViewController: UIViewController {
         view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(customNavigationBar)
+        view.addSubview(saveButton)
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
 
@@ -140,6 +123,13 @@ final class BackgroundThemeViewController: UIViewController {
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(54)
+        }
+
+        saveButton.snp.makeConstraints { make in
+            make.trailing.equalTo(customNavigationBar).inset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
 
         scrollView.snp.makeConstraints { make in
@@ -156,7 +146,7 @@ final class BackgroundThemeViewController: UIViewController {
         setupSegmentedControl()
         setupSelectionViews()
         setupDotPatternToggle()
-        setupApplyButton()
+        setupContentBottom()
     }
 
     private func setupPreview() {
@@ -213,10 +203,10 @@ final class BackgroundThemeViewController: UIViewController {
 
     private func setupPhotoButton() {
         let addButton = UIButton(type: .system)
-        addButton.setImage(UIImage(systemName: "photo.badge.plus"), for: .normal)
+        addButton.setImage(UIImage(named: "image"), for: .normal)
         addButton.tintColor = .token(.textSecondary)
         addButton.setTitle("  " + NSLocalizedString("background.select_photo", comment: ""), for: .normal)
-        addButton.titleLabel?.font = DesignToken.Typography.body.font
+        addButton.titleLabel?.font = DesignToken.Typography.caption.font
         addButton.setTitleColor(.token(.textSecondary), for: .normal)
         addButton.backgroundColor = .token(.backgroundCard)
         addButton.layer.cornerRadius = DesignToken.CornerRadius.card
@@ -257,12 +247,8 @@ final class BackgroundThemeViewController: UIViewController {
         }
     }
 
-    private func setupApplyButton() {
-        contentView.addSubview(applyButton)
-        applyButton.snp.makeConstraints { make in
-            make.top.equalTo(dotPatternSwitch.snp.bottom).offset(32)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.height.equalTo(50)
+    private func setupContentBottom() {
+        dotPatternContainerView.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-40)
         }
     }
@@ -283,7 +269,7 @@ final class BackgroundThemeViewController: UIViewController {
             .bind(to: dotPatternRelay)
             .disposed(by: disposeBag)
 
-        applyButton.rx.tap
+        saveButton.rx.tap
             .bind(to: applyRelay)
             .disposed(by: disposeBag)
 

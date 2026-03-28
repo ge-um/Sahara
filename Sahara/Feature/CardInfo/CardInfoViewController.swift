@@ -18,32 +18,18 @@ import UniformTypeIdentifiers
 final class CardInfoViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
-    let saveButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("common.save", comment: "")
-        config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-
-        var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.body)
-        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
-
-        button.configuration = config
-        button.layer.cornerRadius = 8
-        button.clipsToBounds = true
-        return button
-    }()
+    let saveButton: UIButton = .makeSaveButton()
 
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")
+        config.image = UIImage(named: "xmark")?.withConfiguration(
+            UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
+        )
         config.baseBackgroundColor = .white
         config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
         button.configuration = config
         return button
     }()
@@ -103,15 +89,15 @@ final class CardInfoViewController: UIViewController {
         cancelButton.snp.makeConstraints { make in
             make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
+            make.width.equalTo(36)
+            make.height.equalTo(36)
         }
 
         saveButton.snp.makeConstraints { make in
             make.trailing.equalTo(customNavigationBar).inset(16)
             make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
 
         customNavigationBar.hideLeftButton()
