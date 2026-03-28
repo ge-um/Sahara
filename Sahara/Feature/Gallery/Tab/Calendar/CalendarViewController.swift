@@ -115,6 +115,10 @@ final class CalendarViewController: UIViewController {
                 return UICollectionReusableView()
             }
             self.currentHeaderView = header
+            let formatter = DateFormatter()
+            formatter.locale = Locale.current
+            formatter.dateFormat = NSLocalizedString("gallery.month_format", comment: "")
+            header.configure(monthTitle: formatter.string(from: Date()))
             header.onPreviousMonthTapped = { [weak self] in self?.previousMonthRelay.accept(()) }
             header.onNextMonthTapped = { [weak self] in self?.nextMonthRelay.accept(()) }
             return header
