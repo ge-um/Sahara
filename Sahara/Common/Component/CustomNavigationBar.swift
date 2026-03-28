@@ -127,7 +127,7 @@ final class CustomNavigationBar: UIView {
     }
 
     func configure(title: String) {
-        titleLabel.font = FontSystem.galmuriMono(size: 14)
+        titleLabel.font = .typography(.body)
         titleLabel.text = title
     }
 
@@ -136,7 +136,7 @@ final class CustomNavigationBar: UIView {
 
         if let title = title {
             button.setTitle(title, for: .normal)
-            button.titleLabel?.font = FontSystem.galmuriMono(size: 16)
+            button.titleLabel?.font = .typography(.title)
             button.setTitleColor(tintColor, for: .normal)
         }
 

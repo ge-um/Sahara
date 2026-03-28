@@ -13,14 +13,14 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.label)
         label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 10)
+        label.font = .typography(.small)
         label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
         return label
@@ -28,7 +28,7 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.label)
         label.textColor = .token(.textPrimary)
         return label
     }()

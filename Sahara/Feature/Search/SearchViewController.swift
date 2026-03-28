@@ -26,7 +26,7 @@ final class SearchViewController: UIViewController {
         searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
 
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.label)
             textField.backgroundColor = .backgroundGlass
             textField.layer.cornerRadius = 10
             textField.clipsToBounds = true
@@ -53,7 +53,7 @@ final class SearchViewController: UIViewController {
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .black
         label.isHidden = true
         return label

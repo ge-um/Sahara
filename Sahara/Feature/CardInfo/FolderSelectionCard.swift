@@ -23,7 +23,7 @@ final class FolderSelectionCard: BaseCard {
     let textField: UITextField = {
         let textField = UITextField()
         textField.placeholder = NSLocalizedString("folder.default", comment: "")
-        textField.font = FontSystem.galmuriMono(size: 14)
+        textField.font = .typography(.body)
         textField.textColor = .token(.textSecondary)
         textField.returnKeyType = .done
         return textField
@@ -140,7 +140,7 @@ final class FolderSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 13)
+        titleAttr.font = UIFont.typography(.caption)
         config.attributedTitle = AttributedString(title, attributes: titleAttr)
 
         button.configuration = config

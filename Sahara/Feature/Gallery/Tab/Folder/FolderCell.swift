@@ -26,7 +26,7 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
 
     private let folderNameLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.label)
         label.textColor = .token(.textSecondary)
         return label
     }()

@@ -59,7 +59,7 @@ final class MediaSelectionViewController: UIViewController {
 
     private let albumCountLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textSecondary)
         return label
     }()
@@ -83,7 +83,7 @@ final class MediaSelectionViewController: UIViewController {
     private let bannerLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("media_selection.limited_banner", comment: "")
-        label.font = FontSystem.galmuriMono(size: 11)
+        label.font = .typography(.caption)
         label.textColor = .token(.textSecondary)
         label.numberOfLines = 0
         return label
@@ -92,7 +92,7 @@ final class MediaSelectionViewController: UIViewController {
     private let settingsLinkButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("media_selection.allow_all_photos", comment: ""), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuriMono(size: 11)
+        button.titleLabel?.font = .typography(.caption)
         button.setTitleColor(.token(.accent), for: .normal)
         button.contentHorizontalAlignment = .center
         return button
@@ -249,7 +249,7 @@ final class MediaSelectionViewController: UIViewController {
         output.currentAlbumTitle
             .drive(with: self) { owner, title in
                 var attributed = AttributedString(title)
-                attributed.font = FontSystem.galmuriMono(size: 14)
+                attributed.font = UIFont.typography(.body)
                 owner.albumTitleButton.configuration?.attributedTitle = attributed
             }
             .disposed(by: disposeBag)
@@ -457,7 +457,7 @@ final class MediaSelectionViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
-        titleLabel.font = FontSystem.galmuriMono(size: 16)
+        titleLabel.font = .typography(.body)
         titleLabel.textColor = .label
         navigationItem.titleView = titleLabel
 
@@ -467,7 +467,7 @@ final class MediaSelectionViewController: UIViewController {
             target: self,
             action: #selector(closeTapped)
         )
-        closeButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .normal)
+        closeButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .normal)
         navigationItem.leftBarButtonItem = closeButton
 
         // Album selector bar
@@ -654,7 +654,7 @@ final class ActionCell: UICollectionViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textAlignment = .center
         label.textColor = .label
         return label

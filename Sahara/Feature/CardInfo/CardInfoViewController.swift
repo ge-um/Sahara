@@ -28,7 +28,7 @@ final class CardInfoViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = UIFont.typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -88,7 +88,7 @@ final class CardInfoViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 14),
+            .font: UIFont.typography(.body),
             .kern: -0.84
         ]
         let attributedTitle = NSAttributedString(

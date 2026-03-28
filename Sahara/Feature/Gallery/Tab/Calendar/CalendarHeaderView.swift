@@ -13,7 +13,7 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     private let monthLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuri14(size: 14)
+        label.font = .typography(.caption)
         label.textColor = .black
         label.textAlignment = .left
         return label
@@ -26,7 +26,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
         button.setTitleColor(.token(.navigationText), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        button.titleLabel?.font = .typography(.caption)
         return button
     }()
 
@@ -37,7 +37,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
         button.setTitleColor(.token(.navigationText), for: .normal)
-        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        button.titleLabel?.font = .typography(.caption)
         return button
     }()
 
@@ -106,7 +106,7 @@ final class CalendarHeaderView: UICollectionReusableView {
 
             // Galmuri14, font size 10, letter spacing -6%
             let attributedString = weekdayText.attributedString(
-                font: FontSystem.galmuri14(size: 10),
+                font: UIFont.typography(.small),
                 letterSpacing: -6,
                 color: index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             )

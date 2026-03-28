@@ -14,7 +14,7 @@ final class DatePickerViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "날짜 선택"
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = .typography(.emphasis)
         label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
@@ -38,7 +38,7 @@ final class DatePickerViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = UIFont.typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config

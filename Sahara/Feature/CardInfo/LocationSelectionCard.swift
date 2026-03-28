@@ -15,8 +15,8 @@ import UIKit
 final class LocationSelectionCard: BaseCard {
     let locationLabel: UILabel = {
         let label = UILabel()
-        label.text = NSLocalizedString("card_info.location_placeholder", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.text = ""
+        label.font = .typography(.body)
         label.textColor = .token(.textSecondary)
         label.numberOfLines = 2
         return label
@@ -32,7 +32,7 @@ final class LocationSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 13)
+        titleAttr.font = UIFont.typography(.caption)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -53,7 +53,7 @@ final class LocationSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 13)
+        titleAttr.font = UIFont.typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config

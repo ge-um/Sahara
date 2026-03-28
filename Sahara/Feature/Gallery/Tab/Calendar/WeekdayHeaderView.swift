@@ -37,7 +37,7 @@ final class WeekdayHeaderView: UICollectionReusableView, IsIdentifiable {
             let label = UILabel()
             label.text = NSLocalizedString(key, comment: "")
             label.textAlignment = .center
-            label.font = .systemFont(ofSize: 14, weight: .semibold)
+            label.font = .typography(.body)
             label.textColor = index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             stackView.addArrangedSubview(label)
         }

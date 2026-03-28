@@ -86,7 +86,7 @@ final class LanguageSelectionViewController: UIViewController {
         output.languages
             .drive(tableView.rx.items(cellIdentifier: "LanguageCell")) { _, language, cell in
                 cell.textLabel?.text = language.localizedDescription
-                cell.textLabel?.font = FontSystem.galmuriMono(size: 16)
+                cell.textLabel?.font = .typography(.title)
                 cell.backgroundColor = .clear
                 cell.selectionStyle = .none
 

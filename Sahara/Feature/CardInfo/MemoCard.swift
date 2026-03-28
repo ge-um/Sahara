@@ -13,7 +13,7 @@ import UIKit
 final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
-        textView.font = FontSystem.galmuriMono(size: 14)
+        textView.font = .typography(.body)
         textView.textColor = .token(.textPrimary)
         textView.backgroundColor = .clear
         textView.textContainerInset = .zero
@@ -24,7 +24,7 @@ final class MemoCard: BaseCard {
     let characterCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0"
-        label.font = FontSystem.galmuriMono(size: 13)
+        label.font = .typography(.caption)
         label.textColor = .token(.textSecondary)
         label.textAlignment = .right
         return label
@@ -98,7 +98,7 @@ final class MemoCard: BaseCard {
             string: placeholderText,
             attributes: [
                 .foregroundColor: UIColor.token(.textSecondary),
-                .font: FontSystem.galmuriMono(size: 14)
+                .font: UIFont.typography(.body)
             ]
         )
         characterCountLabel.text = "0"

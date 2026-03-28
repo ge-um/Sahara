@@ -35,7 +35,7 @@ final class TabButton: UIView {
 
     private let label: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 10)
+        label.font = .typography(.tiny)
         label.textColor = .black
         return label
     }()

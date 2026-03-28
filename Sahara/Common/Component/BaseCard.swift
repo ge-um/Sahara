@@ -18,7 +18,7 @@ class BaseCard: UIView {
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 15)
+        label.font = .typography(.body)
         label.textColor = .token(.textPrimary)
         return label
     }()

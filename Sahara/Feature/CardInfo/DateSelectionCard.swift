@@ -25,7 +25,7 @@ final class DateSelectionCard: BaseCard {
         formatter.locale = Locale.current
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .token(.textSecondary)
         return label
     }()

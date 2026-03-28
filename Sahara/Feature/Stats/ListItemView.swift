@@ -43,14 +43,14 @@ final class ListItemView: UIView {
         if items.isEmpty {
             let label = UILabel()
             label.text = NSLocalizedString("stats.no_data", comment: "")
-            label.font = FontSystem.galmuriMono(size: 12)
+            label.font = .typography(.caption)
             label.textColor = .token(.textTertiary)
             stackView.addArrangedSubview(label)
         } else {
             for item in items {
                 let label = UILabel()
                 label.text = "• \(item)"
-                label.font = FontSystem.galmuriMono(size: 12)
+                label.font = .typography(.caption)
                 label.textColor = .token(.textPrimary)
                 stackView.addArrangedSubview(label)
             }

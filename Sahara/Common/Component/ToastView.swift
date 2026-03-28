@@ -18,7 +18,7 @@ final class ToastView: UIView {
 
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 0

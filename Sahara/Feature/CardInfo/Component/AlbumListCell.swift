@@ -23,21 +23,21 @@ final class AlbumListCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .label
         return label
     }()
 
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .secondaryLabel
         return label
     }()
 
     private let checkmarkLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
+        label.font = .typography(.title)
         label.textColor = .token(.accent)
         label.text = "✓"
         label.isHidden = true

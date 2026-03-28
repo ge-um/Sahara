@@ -45,12 +45,12 @@ final class StatsViewController: UIViewController {
     private let patternHeaderView: UIStackView = {
         let iconLabel = UILabel()
         iconLabel.text = "📊"
-        iconLabel.font = .systemFont(ofSize: 14)
+        iconLabel.font = .typography(.body)
         iconLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         let textLabel = UILabel()
         textLabel.text = NSLocalizedString("stats.my_pattern_header", comment: "")
-        textLabel.font = FontSystem.galmuriMono(size: 14)
+        textLabel.font = .typography(.body)
         textLabel.textColor = .token(.textPrimary)
 
         let stack = UIStackView(arrangedSubviews: [iconLabel, textLabel])
@@ -71,7 +71,7 @@ final class StatsViewController: UIViewController {
     private let timeChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.time_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -79,7 +79,7 @@ final class StatsViewController: UIViewController {
     private let weekdayChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -87,7 +87,7 @@ final class StatsViewController: UIViewController {
     private let monthlyChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.monthly_chart", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -99,7 +99,7 @@ final class StatsViewController: UIViewController {
     private let moodTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.mood_distribution", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -120,14 +120,14 @@ final class StatsViewController: UIViewController {
         container.layer.cornerRadius = 12
         container.clipsToBounds = true
 
-        textLabel.font = FontSystem.galmuriMono(size: 12)
+        textLabel.font = .typography(.caption)
         textLabel.textColor = .token(.textPrimary)
         textLabel.numberOfLines = 0
 
         if let icon {
             let iconLabel = UILabel()
             iconLabel.text = icon
-            iconLabel.font = .systemFont(ofSize: 14)
+            iconLabel.font = .typography(.body)
             iconLabel.setContentHuggingPriority(.required, for: .horizontal)
             iconLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 

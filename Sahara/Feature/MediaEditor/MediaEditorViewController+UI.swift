@@ -57,7 +57,7 @@ extension MediaEditorViewController {
             let label = UILabel()
             let text = NSLocalizedString(config.titleKey, comment: "")
             let attributedString = text.attributedString(
-                font: FontSystem.galmuriMono(size: 12),
+                font: UIFont.typography(.caption),
                 letterSpacing: -6,
                 color: .black
             )

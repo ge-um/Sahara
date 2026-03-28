@@ -16,7 +16,7 @@ final class StickerModalViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("media_editor.sticker_search_placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.body)
         }
         return searchBar
     }()
@@ -143,7 +143,7 @@ final class StickerModalViewController: UIViewController {
         navigationController?.navigationBar.isTranslucent = true
 
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 16)
+            .font: UIFont.typography(.title)
         ]
         navigationController?.navigationBar.titleTextAttributes = titleAttributes
 

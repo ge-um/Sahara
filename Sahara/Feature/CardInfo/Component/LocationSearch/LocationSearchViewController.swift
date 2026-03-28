@@ -22,7 +22,7 @@ final class LocationSearchViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.body)
         }
         return searchBar
     }()
@@ -51,7 +51,7 @@ final class LocationSearchViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = UIFont.typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -140,7 +140,7 @@ final class LocationSearchViewController: UIViewController {
         navigationController?.navigationBar.isTranslucent = true
 
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 16)
+            .font: UIFont.typography(.title)
         ]
         navigationController?.navigationBar.titleTextAttributes = titleAttributes
         navigationItem.title = NSLocalizedString("location_search.title", comment: "")
@@ -150,8 +150,8 @@ final class LocationSearchViewController: UIViewController {
             target: self,
             action: #selector(cancelTapped)
         )
-        cancelButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .normal)
-        cancelButton.setTitleTextAttributes([.font: FontSystem.galmuriMono(size: 14)], for: .highlighted)
+        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .normal)
+        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .highlighted)
         navigationItem.leftBarButtonItem = cancelButton
 
         view.addSubview(searchBar)
