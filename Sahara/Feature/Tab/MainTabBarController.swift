@@ -26,7 +26,7 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
     // MARK: - Properties
 
     private var childNavigationControllers: [UINavigationController] = []
-    private let tabBarContentHeight: CGFloat = 60
+    private let tabBarContentHeight: CGFloat = 64
 
     var selectedIndex: Int = 0 {
         didSet {
@@ -164,13 +164,13 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
             make.centerX.equalToSuperview()
             make.width.lessThanOrEqualTo(400)
             make.horizontalEdges.equalToSuperview().inset(48).priority(.medium)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-8)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
         }
 
         customTabBar.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.top.equalTo(tabButtonStackView.snp.top).offset(-8)
+            make.top.equalTo(tabButtonStackView.snp.top).offset(-10)
         }
 
         updateTabSelection()
