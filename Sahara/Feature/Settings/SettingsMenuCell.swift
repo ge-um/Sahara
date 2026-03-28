@@ -48,12 +48,6 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
         return toggle
     }()
 
-    private let separatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.08)
-        return view
-    }()
-
     private var labelStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -104,16 +98,6 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             make.centerY.equalToSuperview()
         }
 
-        contentView.addSubview(separatorView)
-        separatorView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.bottom.equalToSuperview()
-            make.height.equalTo(0.5)
-        }
-    }
-
-    func setSeparatorHidden(_ hidden: Bool) {
-        separatorView.isHidden = hidden
     }
 
     @objc private func toggleChanged() {

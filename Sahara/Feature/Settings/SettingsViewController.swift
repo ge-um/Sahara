@@ -106,9 +106,6 @@ final class SettingsViewController: UIViewController {
                 }
                 cell.configure(with: item)
 
-                let isLastItem = indexPath.item == dataSource[indexPath.section].items.count - 1
-                cell.setSeparatorHidden(isLastItem)
-
                 cell.onToggleChanged = { [weak self] isOn in
                     self?.handleToggleChanged(for: item, isOn: isOn)
                 }
@@ -451,7 +448,7 @@ extension SettingsViewController: UICollectionViewDelegateFlowLayout {
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 40)
+        return CGSize(width: collectionView.frame.width, height: 32)
     }
 }
 

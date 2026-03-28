@@ -32,7 +32,7 @@ final class SettingsSectionHeader: UICollectionReusableView, IsIdentifiable {
 
         titleLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
-            make.bottom.equalToSuperview().offset(-8)
+            make.centerY.equalToSuperview()
         }
     }
 

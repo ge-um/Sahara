@@ -14,6 +14,7 @@ final class SettingsGroupedLayout: UICollectionViewFlowLayout {
         super.init()
         minimumLineSpacing = 0
         minimumInteritemSpacing = 0
+        sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 24, right: 0)
         register(
             SettingsSectionBackgroundView.self,
             forDecorationViewOfKind: SettingsSectionBackgroundView.elementKind
