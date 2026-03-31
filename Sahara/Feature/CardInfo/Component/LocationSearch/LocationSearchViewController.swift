@@ -83,7 +83,8 @@ final class LocationSearchViewController: UIViewController {
 
     private func setupNavigation() {
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.typography(.body)
+            .font: UIFont.typography(.body),
+            .foregroundColor: UIColor.token(.textPrimary)
         ]
         navigationController?.navigationBar.titleTextAttributes = titleAttributes
         navigationItem.title = NSLocalizedString("location_search.title", comment: "")
@@ -169,14 +170,14 @@ final class LocationSearchViewController: UIViewController {
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview().inset(20)
+            make.horizontalEdges.equalToSuperview().inset(12)
             make.height.equalTo(36)
         }
 
         currentLocationButton.snp.makeConstraints { make in
             make.top.equalTo(searchBar.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(36)
+            make.height.equalTo(44)
         }
 
         tableView.snp.makeConstraints { make in
