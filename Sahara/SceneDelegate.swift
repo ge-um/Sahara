@@ -156,7 +156,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #if targetEnvironment(macCatalyst)
         scene.title = "Sahara"
         scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
-        scene.sizeRestrictions?.maximumSize = CGSize(width: 1200, height: 900)
         #endif
     }
 

@@ -67,8 +67,11 @@ final class CustomNavigationBar: UIView {
     }
 
     private func updateLeadingForWindowControls(isFloating: Bool) {
-        // 76: macOS 윈도우 컨트롤(신호등) 너비 + 여백
+        #if targetEnvironment(macCatalyst)
+        let leading: CGFloat = 16
+        #else
         let leading: CGFloat = isFloating ? 76 : 16
+        #endif
         contentLeadingConstraint?.update(offset: leading)
     }
 
