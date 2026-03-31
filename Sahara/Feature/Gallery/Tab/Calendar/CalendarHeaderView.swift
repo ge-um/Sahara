@@ -88,7 +88,7 @@ final class CalendarHeaderView: UICollectionReusableView {
 
         weekdayStackView.snp.makeConstraints { make in
             make.top.equalTo(monthLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(8)
             make.bottom.equalToSuperview()
         }
 

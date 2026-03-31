@@ -145,7 +145,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             } else if weekday == 1 {
                 dayLabel.textColor = .token(.destructive)
             } else if weekday == 7 {
-                dayLabel.textColor = .token(.textSecondary)
+                dayLabel.textColor = .systemBlue
             } else {
                 dayLabel.textColor = .token(.textPrimary)
             }

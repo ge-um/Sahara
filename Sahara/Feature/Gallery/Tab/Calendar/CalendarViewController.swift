@@ -193,16 +193,16 @@ final class CalendarViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 1
         layout.minimumLineSpacing = 1
-        let sectionTopInset: CGFloat = 8
-        layout.sectionInset = UIEdgeInsets(top: sectionTopInset, left: 0, bottom: 0, right: 0)
+        let padding: CGFloat = 8
+        layout.sectionInset = UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding)
 
         let headerHeight: CGFloat = 72
         layout.headerReferenceSize = CGSize(width: collectionView.bounds.width, height: headerHeight)
 
         let collectionViewWidth = collectionView.bounds.width
-        let itemWidth = ((collectionViewWidth - 6) / 7).rounded(.down)
+        let itemWidth = ((collectionViewWidth - padding * 2 - 6) / 7).rounded(.down)
 
-        let collectionViewHeight = collectionView.bounds.height - headerHeight - sectionTopInset
+        let collectionViewHeight = collectionView.bounds.height - headerHeight - padding * 2
         let itemHeight = ((collectionViewHeight - 5) / 6).rounded(.down)
 
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
