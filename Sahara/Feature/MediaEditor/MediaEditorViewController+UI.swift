@@ -19,15 +19,15 @@ extension MediaEditorViewController {
         cancelButton.snp.makeConstraints { make in
             make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
+            make.width.equalTo(36)
+            make.height.equalTo(36)
         }
 
         doneButton.snp.makeConstraints { make in
             make.trailing.equalTo(customNavigationBar).inset(16)
             make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
     }
 
