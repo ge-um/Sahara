@@ -25,7 +25,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
-        button.setTitleColor(.token(.navigationText), for: .normal)
+        button.setTitleColor(.token(.textSecondary), for: .normal)
         button.titleLabel?.font = .typography(.body)
         return button
     }()
@@ -36,7 +36,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
-        button.setTitleColor(.token(.navigationText), for: .normal)
+        button.setTitleColor(.token(.textSecondary), for: .normal)
         button.titleLabel?.font = .typography(.body)
         return button
     }()
@@ -103,7 +103,7 @@ final class CalendarHeaderView: UICollectionReusableView {
 
             // Galmuri14, font size 10, letter spacing -6%
             let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.firstLineHeadIndent = 8
+            paragraphStyle.firstLineHeadIndent = 4
 
             let attributedString = weekdayText.attributedString(
                 font: UIFont.typography(.small),

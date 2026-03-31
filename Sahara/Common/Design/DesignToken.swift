@@ -30,13 +30,9 @@ enum DesignToken {
 
         // Functional
         case destructive
-        case info
-        case border
 
         // Component-specific
         case tabBackground
-        case iconTint
-        case navigationText
 
         var uiColor: UIColor {
             guard let color = UIColor(named: rawValue) else {

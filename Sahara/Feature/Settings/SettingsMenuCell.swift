@@ -36,7 +36,7 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = .token(.iconTint)
+        imageView.tintColor = .token(.textSecondary)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()

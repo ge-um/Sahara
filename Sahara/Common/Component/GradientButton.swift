@@ -47,7 +47,7 @@ final class GradientButton: UIButton {
         currentGradient = gradient
 
         var config = configuration
-        let color: UIColor = textColor ?? (isSelected ? .token(.textOnAccent) : .token(.navigationText))
+        let color: UIColor = textColor ?? (isSelected ? .token(.textOnAccent) : .token(.textSecondary))
         let attributedTitle = AttributedString(
             titleText,
             attributes: AttributeContainer([
