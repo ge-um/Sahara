@@ -11,7 +11,7 @@ import UIKit
 final class SettingsSectionHeader: UICollectionReusableView, IsIdentifiable {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .token(.textTertiary)
         return label
     }()
@@ -32,7 +32,7 @@ final class SettingsSectionHeader: UICollectionReusableView, IsIdentifiable {
 
         titleLabel.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
-            make.bottom.equalToSuperview().offset(-8)
+            make.centerY.equalToSuperview()
         }
     }
 

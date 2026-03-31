@@ -206,13 +206,11 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
         selectedAlbumIndexRelay: BehaviorRelay<Int>,
         requestPhotoPermissionRelay: PublishRelay<Void>
     ) {
-        #if targetEnvironment(macCatalyst)
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         if status == .notDetermined {
             requestPhotoPermissionRelay.accept(())
             return
         }
-        #endif
         fetchAlbums(albumsRelay: albumsRelay)
         selectedAlbumIndexRelay.accept(0)
         fetchPhotosForAlbum(at: 0, albumsRelay: albumsRelay, photosRelay: photosRelay)

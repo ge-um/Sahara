@@ -15,7 +15,7 @@ final class FolderSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder")
-        imageView.tintColor = .token(.iconTint)
+        imageView.tintColor = .token(.textSecondary)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -23,7 +23,7 @@ final class FolderSelectionCard: BaseCard {
     let textField: UITextField = {
         let textField = UITextField()
         textField.placeholder = NSLocalizedString("folder.default", comment: "")
-        textField.font = FontSystem.galmuriMono(size: 14)
+        textField.font = .typography(.caption)
         textField.textColor = .token(.textSecondary)
         textField.returnKeyType = .done
         return textField
@@ -64,18 +64,20 @@ final class FolderSelectionCard: BaseCard {
         tagScrollView.addSubview(tagStackView)
 
         iconImageView.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.leading.equalToSuperview()
+            make.top.equalToSuperview()
+            make.bottom.lessThanOrEqualToSuperview()
+            make.width.height.equalTo(16)
         }
 
         textField.snp.makeConstraints { make in
-            make.leading.equalTo(iconImageView.snp.trailing).offset(8)
             make.centerY.equalTo(iconImageView)
+            make.leading.equalTo(iconImageView.snp.trailing).offset(8)
             make.trailing.equalToSuperview()
         }
 
         tagScrollView.snp.makeConstraints { make in
-            make.top.equalTo(iconImageView.snp.bottom).offset(12)
+            make.top.equalTo(iconImageView.snp.bottom).offset(8)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(32)
             make.bottom.equalToSuperview()
@@ -87,6 +89,10 @@ final class FolderSelectionCard: BaseCard {
         }
 
         addContentView(container)
+
+        contentContainer.snp.updateConstraints { make in
+            make.bottom.equalToSuperview().inset(12)
+        }
     }
 
     private func setupBinding() {
@@ -134,13 +140,13 @@ final class FolderSelectionCard: BaseCard {
     private func createTagButton(title: String) -> UIButton {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .token(.backgroundPrimary).withAlphaComponent(0.3)
+        config.baseBackgroundColor = UIColor(hex: "#FBFBFB")
         config.baseForegroundColor = .token(.textSecondary)
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 13)
+        titleAttr.font = UIFont.typography(.tiny)
         config.attributedTitle = AttributedString(title, attributes: titleAttr)
 
         button.configuration = config

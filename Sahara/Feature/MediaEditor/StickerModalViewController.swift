@@ -15,9 +15,14 @@ final class StickerModalViewController: UIViewController {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("media_editor.sticker_search_placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
+        searchBar.backgroundColor = .clear
+        searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
+
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.label)
+            textField.applyGlassCardStyle(cornerRadius: 10)
         }
+
         return searchBar
     }()
 
@@ -135,24 +140,15 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradient(.subtle)
-
-        navigationController?.view.applyGradient(.subtle)
-        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
-        navigationController?.navigationBar.shadowImage = UIImage()
-        navigationController?.navigationBar.isTranslucent = true
-
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 16)
-        ]
-        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+        view.applyGradient(.tabBar)
 
         view.addSubview(searchBar)
         view.addSubview(stickerCollectionView)
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(36)
         }
 
         stickerCollectionView.snp.makeConstraints { make in
@@ -162,21 +158,24 @@ final class StickerModalViewController: UIViewController {
     }
 
     private func configureNavigation() {
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.typography(.body)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
         navigationItem.title = NSLocalizedString("media_editor.sticker_modal_title", comment: "")
 
-        let closeButton = UIBarButtonItem(
-            image: UIImage(systemName: "xmark"),
-            style: .plain,
-            target: nil,
-            action: nil
-        )
-        closeButton.tintColor = .label
+        let iconSize = CGSize(width: 20, height: 20)
+        let xmarkImage = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        let closeButton = UIBarButtonItem(image: xmarkImage, style: .plain, target: self, action: #selector(closeTapped))
+        closeButton.tintColor = .token(.textPrimary)
         navigationItem.leftBarButtonItem = closeButton
+    }
 
-        closeButton.rx.tap
-            .bind(with: self) { owner, _ in
-                owner.dismiss(animated: true)
-            }
-            .disposed(by: disposeBag)
+    @objc private func closeTapped() {
+        dismiss(animated: true)
     }
 }

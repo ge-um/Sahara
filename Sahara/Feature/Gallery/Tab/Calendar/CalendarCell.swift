@@ -49,15 +49,15 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private var dayLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 16)
+        label.font = DesignToken.Typography.tiny.numericFont
         return label
     }()
 
     private let addButton: UILabel = {
         let label = UILabel()
         label.text = "+"
-        label.font = FontSystem.galmuriMono(size: 18)
-        label.textColor = .token(.border)
+        label.font = DesignToken.Typography.emphasis.numericFont
+        label.textColor = UIColor(hex: "#6D6D6D")
         label.textAlignment = .center
         label.isHidden = true
         return label
@@ -110,8 +110,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
 
         dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(8)
-            make.leading.equalToSuperview().offset(8)
+            make.top.equalToSuperview().offset(4)
+            make.leading.equalToSuperview().offset(4)
         }
 
         addButton.snp.makeConstraints { make in
@@ -145,7 +145,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
             } else if weekday == 1 {
                 dayLabel.textColor = .token(.destructive)
             } else if weekday == 7 {
-                dayLabel.textColor = .token(.info)
+                dayLabel.textColor = .systemBlue
             } else {
                 dayLabel.textColor = .token(.textPrimary)
             }
@@ -155,7 +155,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             let shouldShowBorder = isTodayDate && sortedCards.isEmpty
 
-            contentView.layer.borderColor = shouldShowBorder ? UIColor.token(.border).cgColor : nil
+            contentView.layer.borderColor = shouldShowBorder ? UIColor(hex: "#6D6D6D").cgColor : nil
             contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
 
             if sortedCards.isEmpty {

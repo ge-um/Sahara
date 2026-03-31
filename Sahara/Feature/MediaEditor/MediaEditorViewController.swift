@@ -87,7 +87,7 @@ final class MediaEditorViewController: UIViewController {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
         config.image = UIImage(named: "cornerUpLeft")?.withRenderingMode(.alwaysTemplate)
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
 
         button.configuration = config
@@ -104,7 +104,7 @@ final class MediaEditorViewController: UIViewController {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
         config.image = UIImage(named: "cornerUpRight")?.withRenderingMode(.alwaysTemplate)
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
 
         button.configuration = config
@@ -120,10 +120,16 @@ final class MediaEditorViewController: UIViewController {
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseBackgroundColor = .white
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
         return button
     }()
@@ -135,10 +141,10 @@ final class MediaEditorViewController: UIViewController {
         config.baseBackgroundColor = .clear
         config.baseForegroundColor = .white
         config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = UIFont.typography(.label)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -164,7 +170,7 @@ final class MediaEditorViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = .typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -179,12 +185,12 @@ final class MediaEditorViewController: UIViewController {
         var config = UIButton.Configuration.filled()
         config.title = NSLocalizedString("media_editor.cancel", comment: "")
         config.baseBackgroundColor = .white
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
+        titleAttr.font = .typography(.body)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config

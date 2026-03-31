@@ -42,71 +42,43 @@ final class StatsViewController: UIViewController {
     private let totalCardView = StatCardView()
     private let thisMonthView = StatCardView()
 
-    private let patternHeaderLabel: UILabel = {
+    private let patternHeaderView: UILabel = {
         let label = UILabel()
-        label.text = "📊 " + NSLocalizedString("stats.my_pattern_header", comment: "")
-        label.font = FontSystem.galmuriMono(size: 16)
-        label.textColor = .token(.textPrimary)
+        label.text = NSLocalizedString("stats.my_pattern_header", comment: "")
+        label.font = .typography(.body)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
-    private lazy var weekdayInsightLabel: PaddedLabel = {
-        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
-        label.numberOfLines = 0
-        label.backgroundColor = .token(.backgroundGlass)
-        label.layer.cornerRadius = 12
-        label.clipsToBounds = true
-        label.textAlignment = .left
-        return label
-    }()
+    private let weekdayInsightTextLabel = UILabel()
+    private let timeInsightTextLabel = UILabel()
+    private let thisMonthInsightTextLabel = UILabel()
 
-    private lazy var timeInsightLabel: PaddedLabel = {
-        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
-        label.numberOfLines = 0
-        label.backgroundColor = .token(.backgroundGlass)
-        label.layer.cornerRadius = 12
-        label.clipsToBounds = true
-        label.textAlignment = .left
-        return label
-    }()
-
-    private lazy var thisMonthInsightLabel: PaddedLabel = {
-        let label = PaddedLabel(padding: UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
-        label.numberOfLines = 0
-        label.backgroundColor = .token(.backgroundGlass)
-        label.layer.cornerRadius = 12
-        label.clipsToBounds = true
-        label.textAlignment = .left
-        return label
-    }()
+    private lazy var weekdayInsightView = makeInsightView(textLabel: weekdayInsightTextLabel)
+    private lazy var timeInsightView = makeInsightView(textLabel: timeInsightTextLabel)
+    private lazy var thisMonthInsightView = makeInsightView(textLabel: thisMonthInsightTextLabel)
 
     private let timeChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.time_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let weekdayChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let monthlyChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.monthly_chart", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -117,7 +89,7 @@ final class StatsViewController: UIViewController {
     private let moodTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.mood_distribution", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.caption)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -130,6 +102,22 @@ final class StatsViewController: UIViewController {
         configureUI()
         setupCustomNavigationBar()
         bind()
+    }
+
+    private func makeInsightView(textLabel: UILabel) -> UIView {
+        let container = UIView()
+        container.applyGlassCardStyle()
+
+        textLabel.font = .typography(.caption)
+        textLabel.textColor = .token(.textSecondary)
+        textLabel.numberOfLines = 0
+
+        container.addSubview(textLabel)
+        textLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+        }
+
+        return container
     }
 
     private func setupCustomNavigationBar() {
@@ -155,16 +143,17 @@ final class StatsViewController: UIViewController {
         timeChartView.setBarGradient(.highlight)
         weekdayChartView.setBarGradient(.highlight)
         monthlyChartView.setBarGradient(.highlight)
+        monthlyChartView.setUseNumericFont(true)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
         scrollView.addSubview(contentStackView)
 
         contentStackView.addArrangedSubview(basicStatsStackView)
-        contentStackView.addArrangedSubview(patternHeaderLabel)
-        contentStackView.addArrangedSubview(weekdayInsightLabel)
-        contentStackView.addArrangedSubview(timeInsightLabel)
-        contentStackView.addArrangedSubview(thisMonthInsightLabel)
+        contentStackView.addArrangedSubview(patternHeaderView)
+        contentStackView.addArrangedSubview(weekdayInsightView)
+        contentStackView.addArrangedSubview(timeInsightView)
+        contentStackView.addArrangedSubview(thisMonthInsightView)
         contentStackView.addArrangedSubview(timeChartTitleLabel)
         contentStackView.addArrangedSubview(timeChartView)
         contentStackView.addArrangedSubview(weekdayChartTitleLabel)
@@ -173,6 +162,13 @@ final class StatsViewController: UIViewController {
         contentStackView.addArrangedSubview(monthlyChartView)
 //        contentStackView.addArrangedSubview(moodTitleLabel)
 //        contentStackView.addArrangedSubview(moodChartView)
+
+        contentStackView.setCustomSpacing(32, after: basicStatsStackView)
+        contentStackView.setCustomSpacing(8, after: weekdayInsightView)
+        contentStackView.setCustomSpacing(8, after: timeInsightView)
+        contentStackView.setCustomSpacing(32, after: thisMonthInsightView)
+        contentStackView.setCustomSpacing(32, after: timeChartView)
+        contentStackView.setCustomSpacing(32, after: weekdayChartView)
 
         basicStatsStackView.addArrangedSubview(streakView)
         basicStatsStackView.addArrangedSubview(totalCardView)
@@ -198,7 +194,7 @@ final class StatsViewController: UIViewController {
         }
 
         basicStatsStackView.snp.makeConstraints { make in
-            make.height.equalTo(120)
+            make.height.equalTo(108)
         }
 
         monthlyChartView.snp.makeConstraints { make in
@@ -270,19 +266,19 @@ final class StatsViewController: UIViewController {
 
         output.weekdayInsight
             .drive(with: self) { owner, insight in
-                owner.weekdayInsightLabel.text = "🗓️ " + insight
+                owner.weekdayInsightTextLabel.text = insight
             }
             .disposed(by: disposeBag)
 
         output.timeInsight
             .drive(with: self) { owner, insight in
-                owner.timeInsightLabel.text = insight
+                owner.timeInsightTextLabel.text = insight
             }
             .disposed(by: disposeBag)
 
         output.thisMonthInsight
             .drive(with: self) { owner, insight in
-                owner.thisMonthInsightLabel.text = "📈 " + insight
+                owner.thisMonthInsightTextLabel.text = insight
             }
             .disposed(by: disposeBag)
 
@@ -301,30 +297,5 @@ final class StatsViewController: UIViewController {
 extension StatsViewController: SidebarModeObserver {
     func sidebarModeDidChange() {
         updateLeftButtonForCurrentMode()
-    }
-}
-
-final class PaddedLabel: UILabel {
-    private var padding: UIEdgeInsets
-
-    init(padding: UIEdgeInsets) {
-        self.padding = padding
-        super.init(frame: .zero)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func drawText(in rect: CGRect) {
-        super.drawText(in: rect.inset(by: padding))
-    }
-
-    override var intrinsicContentSize: CGSize {
-        let size = super.intrinsicContentSize
-        return CGSize(
-            width: size.width + padding.left + padding.right,
-            height: size.height + padding.top + padding.bottom
-        )
     }
 }

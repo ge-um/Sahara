@@ -19,15 +19,15 @@ extension MediaEditorViewController {
         cancelButton.snp.makeConstraints { make in
             make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
+            make.width.equalTo(36)
+            make.height.equalTo(36)
         }
 
         doneButton.snp.makeConstraints { make in
             make.trailing.equalTo(customNavigationBar).inset(16)
             make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
     }
 
@@ -52,14 +52,14 @@ extension MediaEditorViewController {
                 imageView.image = originalImage.withRenderingMode(.alwaysTemplate)
             }
             imageView.contentMode = .scaleAspectFit
-            imageView.tintColor = .black
+            imageView.tintColor = .token(.textPrimary)
 
             let label = UILabel()
             let text = NSLocalizedString(config.titleKey, comment: "")
             let attributedString = text.attributedString(
-                font: FontSystem.galmuriMono(size: 12),
+                font: UIFont.typography(.caption),
                 letterSpacing: -6,
-                color: .black
+                color: .token(.textPrimary)
             )
             label.attributedText = attributedString
             label.textAlignment = .center

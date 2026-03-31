@@ -16,8 +16,8 @@ final class CustomNavigationBar: UIView {
 
     private let leftButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "chevron.left")
-        config.baseForegroundColor = .black
+        config.image = UIImage(named: "chevronLeft")
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8)
         let button = UIButton(configuration: config)
         return button
@@ -25,7 +25,7 @@ final class CustomNavigationBar: UIView {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
     }()
@@ -67,8 +67,11 @@ final class CustomNavigationBar: UIView {
     }
 
     private func updateLeadingForWindowControls(isFloating: Bool) {
-        // 76: macOS 윈도우 컨트롤(신호등) 너비 + 여백
+        #if targetEnvironment(macCatalyst)
+        let leading: CGFloat = 16
+        #else
         let leading: CGFloat = isFloating ? 76 : 16
+        #endif
         contentLeadingConstraint?.update(offset: leading)
     }
 
@@ -127,16 +130,16 @@ final class CustomNavigationBar: UIView {
     }
 
     func configure(title: String) {
-        titleLabel.font = FontSystem.galmuriMono(size: 14)
+        titleLabel.font = .typography(.body)
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .black, action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), action: @escaping () -> Void) {
         let button = UIButton()
 
         if let title = title {
             button.setTitle(title, for: .normal)
-            button.titleLabel?.font = FontSystem.galmuriMono(size: 16)
+            button.titleLabel?.font = FontSystem.galmuri11(size: 28)
             button.setTitleColor(tintColor, for: .normal)
         }
 
@@ -144,6 +147,7 @@ final class CustomNavigationBar: UIView {
             var config = UIButton.Configuration.plain()
             config.image = image
             config.baseForegroundColor = tintColor
+            config.contentInsets = .zero
             button.configuration = config
         }
 

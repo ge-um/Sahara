@@ -18,32 +18,21 @@ import UniformTypeIdentifiers
 final class CardInfoViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
-    let saveButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("common.save", comment: "")
-        config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-
-        var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
-        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
-
-        button.configuration = config
-        button.layer.cornerRadius = 8
-        button.clipsToBounds = true
-        return button
-    }()
+    let saveButton: UIButton = .makeSaveButton()
 
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseBackgroundColor = .white
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
         return button
     }()
@@ -52,7 +41,7 @@ final class CardInfoViewController: UIViewController {
     let coordinator: CardInfoCoordinatorProtocol
     let viewModel: CardInfoViewModel
     let disposeBag = DisposeBag()
-    let selectedDateRelay = BehaviorRelay<Date>(value: Date())
+    let selectedDateRelay = BehaviorRelay<(date: Date, source: DateSource)>(value: (Date(), .initial))
     let deleteConfirmedRelay = PublishRelay<Void>()
     let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
     private let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
@@ -88,7 +77,7 @@ final class CardInfoViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 14),
+            .font: UIFont.typography(.body),
             .kern: -0.84
         ]
         let attributedTitle = NSAttributedString(
@@ -103,15 +92,15 @@ final class CardInfoViewController: UIViewController {
         cancelButton.snp.makeConstraints { make in
             make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
+            make.width.equalTo(36)
+            make.height.equalTo(36)
         }
 
         saveButton.snp.makeConstraints { make in
             make.trailing.equalTo(customNavigationBar).inset(16)
             make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
 
         customNavigationBar.hideLeftButton()
@@ -279,8 +268,8 @@ extension CardInfoViewController {
     private func bindDateCard() {
         contentView.dateCard.selectButton.rx.tap
             .subscribe(with: self) { owner, _ in
-                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
-                    owner.selectedDateRelay.accept(date)
+                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value.date) { date in
+                    owner.selectedDateRelay.accept((date, .userPicked))
                 }
             }
             .disposed(by: disposeBag)
@@ -307,7 +296,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -348,7 +337,7 @@ extension CardInfoViewController {
         return CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             imageSourceData: imageSourceDataRelay.asObservable(),
-            date: selectedDateRelay.asObservable(),
+            date: selectedDateRelay.map(\.date).asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
                 .map { owner, text in
@@ -371,7 +360,7 @@ extension CardInfoViewController {
         _ output: CardInfoViewModel.Output,
         initialLocationRelay: BehaviorSubject<CLLocation?>
     ) {
-        selectedDateRelay.accept(output.initialDate)
+        selectedDateRelay.accept((output.initialDate, .initial))
         contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
 
         if output.isEditMode {
@@ -487,7 +476,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -596,7 +585,7 @@ extension CardInfoViewController {
         imageSourceDataRelay.accept(result.imageSource)
 
         if let date = result.metadata.date {
-            selectedDateRelay.accept(date)
+            selectedDateRelay.accept((date, .exif))
         }
         if let location = result.metadata.location {
             initialLocationRelay.onNext(location)

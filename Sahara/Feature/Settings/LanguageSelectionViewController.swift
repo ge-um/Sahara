@@ -86,14 +86,19 @@ final class LanguageSelectionViewController: UIViewController {
         output.languages
             .drive(tableView.rx.items(cellIdentifier: "LanguageCell")) { _, language, cell in
                 cell.textLabel?.text = language.localizedDescription
-                cell.textLabel?.font = FontSystem.galmuriMono(size: 16)
-                cell.backgroundColor = .clear
+                cell.textLabel?.font = .typography(.label)
                 cell.selectionStyle = .none
+
+                var bgConfig = UIBackgroundConfiguration.listGroupedCell()
+                bgConfig.backgroundColor = .token(.backgroundGlass)
+                bgConfig.strokeColor = UIColor.black.withAlphaComponent(0.06)
+                bgConfig.strokeWidth = 0.5
+                cell.backgroundConfiguration = bgConfig
 
                 let currentLanguage = LanguageService.shared.currentLanguage
                 if language == currentLanguage {
                     cell.accessoryType = .checkmark
-                    cell.tintColor = .token(.info)
+                    cell.tintColor = .token(.textSecondary)
                 } else {
                     cell.accessoryType = .none
                 }

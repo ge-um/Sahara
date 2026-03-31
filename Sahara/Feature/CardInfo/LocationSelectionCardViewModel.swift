@@ -32,7 +32,7 @@ final class LocationSelectionCardViewModel: BaseViewModelProtocol {
 
     func transform(input: Input) -> Output {
         let locationRelay = BehaviorRelay<CLLocation?>(value: nil)
-        let locationTextRelay = BehaviorRelay<String>(value: NSLocalizedString("card_info.location_placeholder", comment: ""))
+        let locationTextRelay = BehaviorRelay<String>(value: "")
         let locationTextColorRelay = BehaviorRelay<UIColor>(value: .token(.textSecondary))
         let mapCoordinateRelay = BehaviorRelay<CLLocationCoordinate2D?>(value: nil)
 
@@ -50,7 +50,7 @@ final class LocationSelectionCardViewModel: BaseViewModelProtocol {
             }
             .bind { location, address in
                 locationRelay.accept(location)
-                locationTextRelay.accept(address.isEmpty ? NSLocalizedString("card_info.location_placeholder", comment: "") : address)
+                locationTextRelay.accept(address.isEmpty ? "" : address)
                 locationTextColorRelay.accept(.token(.textPrimary))
                 mapCoordinateRelay.accept(location.coordinate)
             }
@@ -69,7 +69,7 @@ final class LocationSelectionCardViewModel: BaseViewModelProtocol {
         input.removeButtonTapped
             .bind(with: self) { owner, _ in
                 locationRelay.accept(nil)
-                locationTextRelay.accept(NSLocalizedString("card_info.location_placeholder", comment: ""))
+                locationTextRelay.accept("")
                 locationTextColorRelay.accept(.token(.textSecondary))
                 mapCoordinateRelay.accept(nil)
             }

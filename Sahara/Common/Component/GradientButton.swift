@@ -28,7 +28,7 @@ final class GradientButton: UIButton {
         let attributedTitle = AttributedString(
             title,
             attributes: AttributeContainer([
-                .font: FontSystem.galmuri14(size: 13),
+                .font: UIFont.typography(.caption),
                 .kern: -6.0 / 10,
                 .foregroundColor: UIColor.white
             ])
@@ -47,11 +47,11 @@ final class GradientButton: UIButton {
         currentGradient = gradient
 
         var config = configuration
-        let color: UIColor = textColor ?? (isSelected ? .token(.textOnAccent) : .token(.navigationText))
+        let color: UIColor = textColor ?? (isSelected ? .token(.textOnAccent) : .token(.textSecondary))
         let attributedTitle = AttributedString(
             titleText,
             attributes: AttributeContainer([
-                .font: FontSystem.galmuri14(size: 13),
+                .font: UIFont.typography(.caption),
                 .kern: -6.0 / 10,
                 .foregroundColor: color
             ])

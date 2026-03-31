@@ -28,7 +28,7 @@ final class CardListViewController: UIViewController {
         let button = UIButton()
         var config = UIButton.Configuration.plain()
         config.image = UIImage(named: "chevronLeft")
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         button.configuration = config
         return button
     }()

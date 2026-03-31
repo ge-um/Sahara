@@ -138,7 +138,8 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.configure(title: NSLocalizedString("common.app_name", comment: ""))
         updateLeftButtonForCurrentMode()
 
-        customNavigationBar.addRightButton(title: "+") { [weak self] in
+        let plusImage = UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(pointSize: 13, weight: .medium))
+        customNavigationBar.addRightButton(image: plusImage, tintColor: .token(.textPrimary)) { [weak self] in
             self?.addButtonTapped()
         }
 
@@ -223,7 +224,7 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(56)
+            make.height.equalTo(54)
         }
 
         emptyStateView.snp.makeConstraints { make in
@@ -240,25 +241,25 @@ final class GalleryViewController: UIViewController {
         calendarContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         themeContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         folderContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
     }

@@ -20,10 +20,8 @@ final class CalendarViewController: UIViewController {
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: CalendarHeaderView.identifier
         )
-        collectionView.backgroundColor = .token(.backgroundGlass)
+        collectionView.applyGlassCardStyle()
         collectionView.isScrollEnabled = false
-        collectionView.layer.cornerRadius = 12
-        collectionView.clipsToBounds = true
         return collectionView
     }()
 
@@ -115,6 +113,10 @@ final class CalendarViewController: UIViewController {
                 return UICollectionReusableView()
             }
             self.currentHeaderView = header
+            let formatter = DateFormatter()
+            formatter.locale = Locale.current
+            formatter.dateFormat = NSLocalizedString("gallery.month_format", comment: "")
+            header.configure(monthTitle: formatter.string(from: Date()))
             header.onPreviousMonthTapped = { [weak self] in self?.previousMonthRelay.accept(()) }
             header.onNextMonthTapped = { [weak self] in self?.nextMonthRelay.accept(()) }
             return header
@@ -191,15 +193,16 @@ final class CalendarViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 1
         layout.minimumLineSpacing = 1
-        layout.sectionInset = .zero
+        let padding: CGFloat = 8
+        layout.sectionInset = UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding)
 
         let headerHeight: CGFloat = 72
         layout.headerReferenceSize = CGSize(width: collectionView.bounds.width, height: headerHeight)
 
         let collectionViewWidth = collectionView.bounds.width
-        let itemWidth = ((collectionViewWidth - 6) / 7).rounded(.down)
+        let itemWidth = ((collectionViewWidth - padding * 2 - 6) / 7).rounded(.down)
 
-        let collectionViewHeight = collectionView.bounds.height - headerHeight
+        let collectionViewHeight = collectionView.bounds.height - headerHeight - padding * 2
         let itemHeight = ((collectionViewHeight - 5) / 6).rounded(.down)
 
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)

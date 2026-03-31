@@ -23,9 +23,11 @@ final class SearchViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         searchBar.backgroundColor = .clear
+        searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
 
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.label)
+            textField.applyGlassCardStyle(cornerRadius: 10)
         }
 
         return searchBar
@@ -49,8 +51,8 @@ final class SearchViewController: UIViewController {
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.font = .typography(.body)
+        label.textColor = .token(.textPrimary)
         label.isHidden = true
         return label
     }()
@@ -107,15 +109,15 @@ final class SearchViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(48)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(12)
+            make.height.equalTo(36)
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(24)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(searchBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         emptyStateLabel.snp.makeConstraints { make in

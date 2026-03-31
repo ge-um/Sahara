@@ -17,6 +17,7 @@ private enum WidgetDesignToken {
 
     enum TextColor {
         static let navigationButton = Color(red: 80/255, green: 78/255, blue: 120/255)
+        static let placeholder = Color(red: 120/255, green: 118/255, blue: 150/255)
     }
 
     static var tabBarGradient: LinearGradient {
@@ -59,12 +60,15 @@ struct WidgetEntryView: View {
 
     private var emptyView: some View {
         VStack(spacing: family == .systemLarge ? 12 : 8) {
-            Image(systemName: "photo")
-                .font(.system(size: family == .systemLarge ? 40 : 28))
-                .foregroundColor(.secondary)
+            Image("image")
+                .resizable()
+                .scaledToFit()
+                .frame(width: family == .systemLarge ? 40 : 28,
+                       height: family == .systemLarge ? 40 : 28)
+                .foregroundColor(WidgetDesignToken.TextColor.placeholder)
             Text(NSLocalizedString("widget.select_photo", comment: ""))
-                .font(.custom("Galmuri14", size: family == .systemLarge ? 16 : 12))
-                .foregroundColor(.secondary)
+                .font(.custom("Galmuri11", size: family == .systemLarge ? 13 : 10))
+                .foregroundColor(WidgetDesignToken.TextColor.placeholder)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -107,7 +111,7 @@ struct WidgetEntryView: View {
 
     private func navigationButtonLabel(_ symbol: String, size: CGFloat) -> some View {
         Text(symbol)
-            .font(.custom("Galmuri14", size: size * 0.7))
+            .font(.custom("Galmuri11", size: size * 0.7))
             .foregroundColor(WidgetDesignToken.TextColor.navigationButton)
             .offset(x: symbol == "<" ? -size * 0.03 : size * 0.03)
             .frame(width: size, height: size)

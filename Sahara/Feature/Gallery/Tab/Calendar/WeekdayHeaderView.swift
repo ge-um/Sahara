@@ -29,7 +29,8 @@ final class WeekdayHeaderView: UICollectionReusableView, IsIdentifiable {
         addSubview(stackView)
 
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.bottom.trailing.equalToSuperview()
+            make.leading.equalToSuperview().offset(4)
         }
 
         let weekdayKeys = ["weekday.sunday", "weekday.monday", "weekday.tuesday", "weekday.wednesday", "weekday.thursday", "weekday.friday", "weekday.saturday"]
@@ -37,7 +38,7 @@ final class WeekdayHeaderView: UICollectionReusableView, IsIdentifiable {
             let label = UILabel()
             label.text = NSLocalizedString(key, comment: "")
             label.textAlignment = .center
-            label.font = .systemFont(ofSize: 14, weight: .semibold)
+            label.font = .typography(.body)
             label.textColor = index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             stackView.addArrangedSubview(label)
         }

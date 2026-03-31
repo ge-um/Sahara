@@ -16,9 +16,9 @@ enum TabItem: Int, CaseIterable {
     var icon: UIImage? {
         switch self {
         case .gallery: return UIImage(named: "gallery")
-        case .search: return UIImage(systemName: "magnifyingglass")
-        case .stats: return UIImage(systemName: "chart.bar.fill")
-        case .settings: return UIImage(systemName: "gearshape.fill")
+        case .search: return UIImage(named: "search")
+        case .stats: return UIImage(named: "chart")
+        case .settings: return UIImage(named: "gear")
         }
     }
 

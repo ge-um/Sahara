@@ -21,9 +21,9 @@ final class FilterCell: UICollectionViewCell {
 
     private let nameLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textAlignment = .center
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         return label
     }()
 

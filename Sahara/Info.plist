@@ -8,9 +8,8 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Galmuri11.ttf</string>
 		<string>GalmuriMono11.ttf</string>
-		<string>Galmuri11-Bold.ttf</string>
-		<string>Galmuri14.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

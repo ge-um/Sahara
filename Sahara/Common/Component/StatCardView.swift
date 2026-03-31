@@ -11,7 +11,7 @@ import UIKit
 final class StatCardView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.caption)
         label.textColor = .token(.textTertiary)
         label.textAlignment = .center
         return label
@@ -19,7 +19,7 @@ final class StatCardView: UIView {
 
     private let valueLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 28)
+        label.font = DesignToken.Typography.emphasis.numericFont
         label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
@@ -27,7 +27,7 @@ final class StatCardView: UIView {
 
     private let unitLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .token(.textTertiary)
         label.textAlignment = .center
         return label
@@ -43,28 +43,17 @@ final class StatCardView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = UIColor.token(.tabBackground).withAlphaComponent(0.3)
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
 
-        addSubview(titleLabel)
-        addSubview(valueLabel)
-        addSubview(unitLabel)
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, valueLabel, unitLabel])
+        stackView.axis = .vertical
+        stackView.spacing = 8
+        stackView.alignment = .center
 
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(16)
+        addSubview(stackView)
+        stackView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
             make.horizontalEdges.equalToSuperview().inset(8)
-        }
-
-        valueLabel.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(8)
-        }
-
-        unitLabel.snp.makeConstraints { make in
-            make.top.equalTo(valueLabel.snp.bottom).offset(4)
-            make.horizontalEdges.equalToSuperview().inset(8)
-            make.bottom.equalToSuperview().offset(-16)
         }
     }
 

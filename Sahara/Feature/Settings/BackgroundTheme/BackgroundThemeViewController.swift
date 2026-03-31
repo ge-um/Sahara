@@ -62,7 +62,11 @@ final class BackgroundThemeViewController: UIViewController {
     private let colorGridView = UIView()
     private let gradientGridView = UIView()
     private let photoSelectionView = UIView()
-    private let dotPatternContainerView = UIView()
+    private let dotPatternContainerView: UIView = {
+        let v = UIView()
+        v.applyGlassCardStyle()
+        return v
+    }()
     private var dotPatternTopConstraints: [Constraint] = []
 
     private let dotPatternSwitch: UISwitch = {
@@ -74,30 +78,12 @@ final class BackgroundThemeViewController: UIViewController {
     private let dotPatternLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("background.dot_pattern", comment: "")
-        label.font = DesignToken.Typography.body.font
+        label.font = DesignToken.Typography.caption.font
         label.textColor = .token(.textPrimary)
         return label
     }()
 
-    private let applyButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .token(.textPrimary)
-        config.cornerStyle = .capsule
-        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
-
-        var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
-        config.attributedTitle = AttributedString(
-            NSLocalizedString("background.apply", comment: ""),
-            attributes: titleAttr
-        )
-
-        button.configuration = config
-        button.clipsToBounds = true
-        return button
-    }()
+    private let saveButton: UIButton = .makeSaveButton()
 
     private var colorCells: [UIView] = []
     private var gradientCells: [UIView] = []
@@ -119,7 +105,7 @@ final class BackgroundThemeViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        applyButton.applyGradient(.fresh, removeExisting: true)
+        saveButton.applyGradient(.ctaPink, removeExisting: true)
     }
 
     private func setupCustomNavigationBar() {
@@ -133,6 +119,7 @@ final class BackgroundThemeViewController: UIViewController {
         view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(customNavigationBar)
+        view.addSubview(saveButton)
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
 
@@ -140,6 +127,13 @@ final class BackgroundThemeViewController: UIViewController {
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(54)
+        }
+
+        saveButton.snp.makeConstraints { make in
+            make.trailing.equalTo(customNavigationBar).inset(16)
+            make.centerY.equalTo(customNavigationBar)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
 
         scrollView.snp.makeConstraints { make in
@@ -156,7 +150,7 @@ final class BackgroundThemeViewController: UIViewController {
         setupSegmentedControl()
         setupSelectionViews()
         setupDotPatternToggle()
-        setupApplyButton()
+        setupContentBottom()
     }
 
     private func setupPreview() {
@@ -213,10 +207,10 @@ final class BackgroundThemeViewController: UIViewController {
 
     private func setupPhotoButton() {
         let addButton = UIButton(type: .system)
-        addButton.setImage(UIImage(systemName: "photo.badge.plus"), for: .normal)
+        addButton.setImage(UIImage(named: "image"), for: .normal)
         addButton.tintColor = .token(.textSecondary)
         addButton.setTitle("  " + NSLocalizedString("background.select_photo", comment: ""), for: .normal)
-        addButton.titleLabel?.font = DesignToken.Typography.body.font
+        addButton.titleLabel?.font = DesignToken.Typography.caption.font
         addButton.setTitleColor(.token(.textSecondary), for: .normal)
         addButton.backgroundColor = .token(.backgroundCard)
         addButton.layer.cornerRadius = DesignToken.CornerRadius.card
@@ -238,9 +232,9 @@ final class BackgroundThemeViewController: UIViewController {
         dotPatternContainerView.addSubview(dotPatternSwitch)
 
         dotPatternContainerView.snp.makeConstraints { make in
-            let c0 = make.top.equalTo(colorGridView.snp.bottom).offset(24).constraint
-            let c1 = make.top.equalTo(gradientGridView.snp.bottom).offset(24).constraint
-            let c2 = make.top.equalTo(photoSelectionView.snp.bottom).offset(24).constraint
+            let c0 = make.top.equalTo(colorGridView.snp.bottom).offset(20).constraint
+            let c1 = make.top.equalTo(gradientGridView.snp.bottom).offset(20).constraint
+            let c2 = make.top.equalTo(photoSelectionView.snp.bottom).offset(20).constraint
             dotPatternTopConstraints = [c0, c1, c2]
             c1.deactivate()
             c2.deactivate()
@@ -249,20 +243,18 @@ final class BackgroundThemeViewController: UIViewController {
         }
 
         dotPatternLabel.snp.makeConstraints { make in
-            make.leading.centerY.equalToSuperview()
+            make.leading.equalToSuperview().inset(16)
+            make.centerY.equalToSuperview()
         }
 
         dotPatternSwitch.snp.makeConstraints { make in
-            make.trailing.centerY.equalToSuperview()
+            make.trailing.equalToSuperview().inset(16)
+            make.centerY.equalToSuperview()
         }
     }
 
-    private func setupApplyButton() {
-        contentView.addSubview(applyButton)
-        applyButton.snp.makeConstraints { make in
-            make.top.equalTo(dotPatternSwitch.snp.bottom).offset(32)
-            make.horizontalEdges.equalToSuperview().inset(40)
-            make.height.equalTo(50)
+    private func setupContentBottom() {
+        dotPatternContainerView.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-40)
         }
     }
@@ -283,7 +275,7 @@ final class BackgroundThemeViewController: UIViewController {
             .bind(to: dotPatternRelay)
             .disposed(by: disposeBag)
 
-        applyButton.rx.tap
+        saveButton.rx.tap
             .bind(to: applyRelay)
             .disposed(by: disposeBag)
 
@@ -339,7 +331,7 @@ final class BackgroundThemeViewController: UIViewController {
             if isPickerButton {
                 cell.backgroundColor = .token(.backgroundCard)
                 cell.layer.borderWidth = 1
-                cell.layer.borderColor = UIColor.token(.border).cgColor
+                cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 let icon = UIImageView(image: UIImage(systemName: "plus"))
                 icon.tintColor = .token(.textSecondary)
                 icon.contentMode = .scaleAspectFit
@@ -358,7 +350,7 @@ final class BackgroundThemeViewController: UIViewController {
 
                 if hex == "#FFFFFF" || hex == "#F9FFFF" || hex == "#FFFFC5" {
                     cell.layer.borderWidth = 1
-                    cell.layer.borderColor = UIColor.token(.border).cgColor
+                    cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 }
 
                 let tap = UITapGestureRecognizer()
@@ -412,7 +404,7 @@ final class BackgroundThemeViewController: UIViewController {
             if isPickerButton {
                 cell.backgroundColor = .token(.backgroundCard)
                 cell.layer.borderWidth = 1
-                cell.layer.borderColor = UIColor.token(.border).cgColor
+                cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 let icon = UIImageView(image: UIImage(systemName: "plus"))
                 icon.tintColor = .token(.textSecondary)
                 icon.contentMode = .scaleAspectFit

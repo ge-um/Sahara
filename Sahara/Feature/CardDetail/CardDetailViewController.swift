@@ -54,9 +54,9 @@ final class CardDetailViewController: UIViewController {
         button.layer.cornerRadius = 35
         button.clipsToBounds = true
 
-        let font = FontSystem.galmuriMono(size: 12)
+        let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.save", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
@@ -67,9 +67,9 @@ final class CardDetailViewController: UIViewController {
         button.layer.cornerRadius = 35
         button.clipsToBounds = true
 
-        let font = FontSystem.galmuriMono(size: 12)
+        let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.share", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
@@ -86,7 +86,7 @@ final class CardDetailViewController: UIViewController {
         config.title = NSLocalizedString("widget.add_to_widget", comment: "")
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
-            outgoing.font = FontSystem.galmuriMono(size: 12)
+            outgoing.font = UIFont.typography(.caption)
             return outgoing
         }
         let button = UIButton(configuration: config)
@@ -127,7 +127,6 @@ final class CardDetailViewController: UIViewController {
         customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
 
         if navigationController != nil && presentingViewController == nil {
-            customNavigationBar.setLeftButtonImage(UIImage(named: "chevronLeft"))
             customNavigationBar.onLeftButtonTapped = { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             }
@@ -138,7 +137,13 @@ final class CardDetailViewController: UIViewController {
             }
         }
 
-        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .black) { [weak self] in
+        let editIconSize = CGSize(width: 20, height: 20)
+        let editIcon = UIImage(named: "editBox").flatMap { original in
+            UIGraphicsImageRenderer(size: editIconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: editIconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary)) { [weak self] in
             self?.openEditView()
         }
     }
@@ -332,7 +337,7 @@ final class CardDetailViewController: UIViewController {
             config.title = NSLocalizedString("widget.added_to_widget", comment: "")
             config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
-                outgoing.font = FontSystem.galmuriMono(size: 12)
+                outgoing.font = UIFont.typography(.caption)
                 return outgoing
             }
         } else {
@@ -341,7 +346,7 @@ final class CardDetailViewController: UIViewController {
             config.title = NSLocalizedString("widget.add_to_widget", comment: "")
             config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
-                outgoing.font = FontSystem.galmuriMono(size: 12)
+                outgoing.font = UIFont.typography(.caption)
                 return outgoing
             }
         }

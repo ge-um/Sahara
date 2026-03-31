@@ -67,7 +67,12 @@ final class PhotoCardView: UIView {
         button.clipsToBounds = true
 
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(named: "xmark")
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
@@ -90,14 +95,14 @@ final class PhotoCardView: UIView {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = DesignToken.Typography.body.numericFont
         label.textColor = .white
         return label
     }()
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .white
         label.numberOfLines = 2
         return label
@@ -106,7 +111,7 @@ final class PhotoCardView: UIView {
     private lazy var swipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .white.withAlphaComponent(0.8)
         label.textAlignment = .right
         return label
@@ -122,7 +127,7 @@ final class PhotoCardView: UIView {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = .typography(.body)
         label.textColor = .label
         label.numberOfLines = 0
         label.textAlignment = .left
@@ -132,7 +137,7 @@ final class PhotoCardView: UIView {
     private lazy var backSwipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .secondaryLabel
         label.textAlignment = .right
         return label

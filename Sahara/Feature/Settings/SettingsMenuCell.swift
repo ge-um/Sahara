@@ -13,14 +13,14 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.label)
         label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 10)
+        label.font = .typography(.small)
         label.textColor = .token(.textPrimary)
         label.numberOfLines = 0
         return label
@@ -28,15 +28,15 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .token(.textPrimary)
+        label.font = .typography(.label)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let chevronImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "chevron.right")
-        imageView.tintColor = .token(.iconTint)
+        imageView.tintColor = .token(.textSecondary)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -46,12 +46,6 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
         toggle.onTintColor = .token(.accent)
         toggle.addTarget(self, action: #selector(toggleChanged), for: .valueChanged)
         return toggle
-    }()
-
-    private let separatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.08)
-        return view
     }()
 
     private var labelStackView: UIStackView = {
@@ -104,16 +98,6 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             make.centerY.equalToSuperview()
         }
 
-        contentView.addSubview(separatorView)
-        separatorView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.bottom.equalToSuperview()
-            make.height.equalTo(0.5)
-        }
-    }
-
-    func setSeparatorHidden(_ hidden: Bool) {
-        separatorView.isHidden = hidden
     }
 
     @objc private func toggleChanged() {

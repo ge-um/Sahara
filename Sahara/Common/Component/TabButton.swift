@@ -29,14 +29,14 @@ final class TabButton: UIView {
     private let iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .black
+        imageView.tintColor = .token(.textPrimary)
         return imageView
     }()
 
     private let label: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 10)
-        label.textColor = .black
+        label.font = .typography(.caption)
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
@@ -112,6 +112,7 @@ final class TabButton: UIView {
     func setSelected(_ isSelected: Bool) {
         UIView.animate(withDuration: 0.2) {
             self.backgroundView.alpha = isSelected ? 1 : 0
+            self.stackView.alpha = isSelected ? 1.0 : 0.5
         }
     }
 }

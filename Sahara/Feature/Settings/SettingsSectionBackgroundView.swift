@@ -12,10 +12,7 @@ final class SettingsSectionBackgroundView: UICollectionReusableView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .token(.backgroundGlass)
-        layer.cornerRadius = DesignToken.CornerRadius.card
-        layer.borderWidth = 0.5
-        layer.borderColor = UIColor.black.withAlphaComponent(0.06).cgColor
+        applyGlassCardStyle()
     }
 
     required init?(coder: NSCoder) {
