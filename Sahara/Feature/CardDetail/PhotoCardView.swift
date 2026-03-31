@@ -67,7 +67,12 @@ final class PhotoCardView: UIView {
         button.clipsToBounds = true
 
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(named: "xmark")
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
@@ -90,7 +95,7 @@ final class PhotoCardView: UIView {
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = DesignToken.Typography.emphasis.numericFont
+        label.font = DesignToken.Typography.body.numericFont
         label.textColor = .white
         return label
     }()
@@ -122,7 +127,7 @@ final class PhotoCardView: UIView {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.emphasis)
+        label.font = .typography(.body)
         label.textColor = .label
         label.numberOfLines = 0
         label.textAlignment = .left

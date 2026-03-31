@@ -137,7 +137,13 @@ final class CardDetailViewController: UIViewController {
             }
         }
 
-        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .token(.textPrimary)) { [weak self] in
+        let editIconSize = CGSize(width: 20, height: 20)
+        let editIcon = UIImage(named: "editBox").flatMap { original in
+            UIGraphicsImageRenderer(size: editIconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: editIconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary)) { [weak self] in
             self?.openEditView()
         }
     }

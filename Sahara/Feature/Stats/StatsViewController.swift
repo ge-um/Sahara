@@ -42,37 +42,27 @@ final class StatsViewController: UIViewController {
     private let totalCardView = StatCardView()
     private let thisMonthView = StatCardView()
 
-    private let patternHeaderView: UIStackView = {
-        let iconLabel = UILabel()
-        iconLabel.text = "📊"
-        iconLabel.font = .typography(.body)
-        iconLabel.setContentHuggingPriority(.required, for: .horizontal)
-
-        let textLabel = UILabel()
-        textLabel.text = NSLocalizedString("stats.my_pattern_header", comment: "")
-        textLabel.font = .typography(.body)
-        textLabel.textColor = .token(.textPrimary)
-
-        let stack = UIStackView(arrangedSubviews: [iconLabel, textLabel])
-        stack.axis = .horizontal
-        stack.spacing = 6
-        stack.alignment = .center
-        return stack
+    private let patternHeaderView: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("stats.my_pattern_header", comment: "")
+        label.font = .typography(.body)
+        label.textColor = .token(.textSecondary)
+        return label
     }()
 
     private let weekdayInsightTextLabel = UILabel()
     private let timeInsightTextLabel = UILabel()
     private let thisMonthInsightTextLabel = UILabel()
 
-    private lazy var weekdayInsightView = makeInsightView(icon: "🗓️", textLabel: weekdayInsightTextLabel)
-    private lazy var timeInsightView = makeInsightView(icon: nil, textLabel: timeInsightTextLabel)
-    private lazy var thisMonthInsightView = makeInsightView(icon: "📈", textLabel: thisMonthInsightTextLabel)
+    private lazy var weekdayInsightView = makeInsightView(textLabel: weekdayInsightTextLabel)
+    private lazy var timeInsightView = makeInsightView(textLabel: timeInsightTextLabel)
+    private lazy var thisMonthInsightView = makeInsightView(textLabel: thisMonthInsightTextLabel)
 
     private let timeChartTitleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("stats.time_pattern", comment: "")
         label.font = .typography(.caption)
-        label.textColor = .token(.textPrimary)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -80,7 +70,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.weekday_pattern", comment: "")
         label.font = .typography(.caption)
-        label.textColor = .token(.textPrimary)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -88,7 +78,7 @@ final class StatsViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("stats.monthly_chart", comment: "")
         label.font = .typography(.caption)
-        label.textColor = .token(.textPrimary)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -114,37 +104,17 @@ final class StatsViewController: UIViewController {
         bind()
     }
 
-    private func makeInsightView(icon: String?, textLabel: UILabel) -> UIView {
+    private func makeInsightView(textLabel: UILabel) -> UIView {
         let container = UIView()
-        container.backgroundColor = .token(.backgroundGlass)
-        container.layer.cornerRadius = 12
-        container.clipsToBounds = true
+        container.applyGlassCardStyle()
 
         textLabel.font = .typography(.caption)
-        textLabel.textColor = .token(.textPrimary)
+        textLabel.textColor = .token(.textSecondary)
         textLabel.numberOfLines = 0
 
-        if let icon {
-            let iconLabel = UILabel()
-            iconLabel.text = icon
-            iconLabel.font = .typography(.body)
-            iconLabel.setContentHuggingPriority(.required, for: .horizontal)
-            iconLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-
-            let stack = UIStackView(arrangedSubviews: [iconLabel, textLabel])
-            stack.axis = .horizontal
-            stack.spacing = 8
-            stack.alignment = .center
-
-            container.addSubview(stack)
-            stack.snp.makeConstraints { make in
-                make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
-            }
-        } else {
-            container.addSubview(textLabel)
-            textLabel.snp.makeConstraints { make in
-                make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
-            }
+        container.addSubview(textLabel)
+        textLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
         }
 
         return container
@@ -173,6 +143,7 @@ final class StatsViewController: UIViewController {
         timeChartView.setBarGradient(.highlight)
         weekdayChartView.setBarGradient(.highlight)
         monthlyChartView.setBarGradient(.highlight)
+        monthlyChartView.setUseNumericFont(true)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
@@ -193,6 +164,8 @@ final class StatsViewController: UIViewController {
 //        contentStackView.addArrangedSubview(moodChartView)
 
         contentStackView.setCustomSpacing(32, after: basicStatsStackView)
+        contentStackView.setCustomSpacing(8, after: weekdayInsightView)
+        contentStackView.setCustomSpacing(8, after: timeInsightView)
         contentStackView.setCustomSpacing(32, after: thisMonthInsightView)
         contentStackView.setCustomSpacing(32, after: timeChartView)
         contentStackView.setCustomSpacing(32, after: weekdayChartView)
@@ -221,7 +194,7 @@ final class StatsViewController: UIViewController {
         }
 
         basicStatsStackView.snp.makeConstraints { make in
-            make.height.equalTo(120)
+            make.height.equalTo(108)
         }
 
         monthlyChartView.snp.makeConstraints { make in
