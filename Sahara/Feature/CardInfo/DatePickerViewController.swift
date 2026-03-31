@@ -38,7 +38,7 @@ final class DatePickerViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.body)
+        titleAttr.font = UIFont.typography(.label)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config

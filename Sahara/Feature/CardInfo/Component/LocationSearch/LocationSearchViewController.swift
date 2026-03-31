@@ -22,7 +22,7 @@ final class LocationSearchViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = .typography(.body)
+            textField.font = .typography(.label)
         }
         return searchBar
     }()
@@ -51,7 +51,7 @@ final class LocationSearchViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.body)
+        titleAttr.font = UIFont.typography(.label)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -150,8 +150,8 @@ final class LocationSearchViewController: UIViewController {
             target: self,
             action: #selector(cancelTapped)
         )
-        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .normal)
-        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .highlighted)
+        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .normal)
+        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .highlighted)
         navigationItem.leftBarButtonItem = cancelButton
 
         view.addSubview(searchBar)

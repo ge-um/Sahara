@@ -13,7 +13,7 @@ import UIKit
 final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
-        textView.font = .typography(.body)
+        textView.font = .typography(.caption)
         textView.textColor = .token(.textPrimary)
         textView.backgroundColor = .clear
         textView.textContainerInset = .zero
@@ -24,7 +24,7 @@ final class MemoCard: BaseCard {
     let characterCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0"
-        label.font = .typography(.caption)
+        label.font = FontSystem.galmuri11(size: 10)
         label.textColor = .token(.textSecondary)
         label.textAlignment = .right
         return label
@@ -66,7 +66,7 @@ final class MemoCard: BaseCard {
         textView.rx.didBeginEditing
             .withUnretained(self)
             .bind { owner, _ in
-                if owner.textView.textColor == .token(.textSecondary) {
+                if owner.textView.textColor == .token(.textTertiary) {
                     owner.textView.text = ""
                     owner.textView.textColor = .token(.textPrimary)
                 }
@@ -86,7 +86,7 @@ final class MemoCard: BaseCard {
             .orEmpty
             .withUnretained(self)
             .bind { owner, text in
-                let count = owner.textView.textColor == .token(.textSecondary) ? 0 : text.count
+                let count = owner.textView.textColor == .token(.textTertiary) ? 0 : text.count
                 owner.characterCountLabel.text = "\(count)"
                 owner.characterCountLabel.textColor = .token(.textSecondary)
             }
@@ -97,8 +97,8 @@ final class MemoCard: BaseCard {
         textView.attributedText = NSAttributedString(
             string: placeholderText,
             attributes: [
-                .foregroundColor: UIColor.token(.textSecondary),
-                .font: UIFont.typography(.body)
+                .foregroundColor: UIColor.token(.textTertiary),
+                .font: UIFont.typography(.caption)
             ]
         )
         characterCountLabel.text = "0"

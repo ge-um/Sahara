@@ -13,10 +13,11 @@ import SnapKit
 import UIKit
 
 final class LocationSelectionCard: BaseCard {
+    private let locationHeaderView = UIView()
+
     let locationLabel: UILabel = {
         let label = UILabel()
-        label.text = ""
-        label.font = .typography(.body)
+        label.font = .typography(.caption)
         label.textColor = .token(.textSecondary)
         label.numberOfLines = 2
         return label
@@ -32,7 +33,7 @@ final class LocationSelectionCard: BaseCard {
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.caption)
+        titleAttr.font = UIFont.typography(.small)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -44,16 +45,16 @@ final class LocationSelectionCard: BaseCard {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.title = NSLocalizedString("card_info.search_location", comment: "")
-        config.image = UIImage(systemName: "magnifyingglass")
+        config.image = UIImage(systemName: "magnifyingglass")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 14))
         config.imagePlacement = .leading
         config.imagePadding = 8
         config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .token(.textPrimary)
+        config.baseForegroundColor = .token(.textSecondary)
         config.cornerStyle = .medium
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
         var titleAttr = AttributeContainer()
-        titleAttr.font = UIFont.typography(.body)
+        titleAttr.font = UIFont.typography(.caption)
         config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
 
         button.configuration = config
@@ -84,14 +85,12 @@ final class LocationSelectionCard: BaseCard {
     }
 
     private func configureContent() {
-        let container = UIView()
-        container.addSubview(locationLabel)
-        container.addSubview(removeButton)
-        container.addSubview(searchButton)
-        container.addSubview(mapView)
+        locationHeaderView.addSubview(locationLabel)
+        locationHeaderView.addSubview(removeButton)
+        locationHeaderView.isHidden = true
 
         locationLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
+            make.verticalEdges.leading.equalToSuperview()
             make.trailing.equalTo(removeButton.snp.leading).offset(-8)
         }
 
@@ -102,19 +101,22 @@ final class LocationSelectionCard: BaseCard {
         }
 
         searchButton.snp.makeConstraints { make in
-            make.top.equalTo(locationLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview()
             make.height.equalTo(44)
         }
 
         mapView.snp.makeConstraints { make in
-            make.top.equalTo(searchButton.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview()
             mapViewHeightConstraint = make.height.equalTo(0).constraint
-            make.bottom.equalToSuperview()
         }
 
-        addContentView(container)
+        let stackView = UIStackView(arrangedSubviews: [
+            locationHeaderView,
+            searchButton,
+            mapView
+        ])
+        stackView.axis = .vertical
+        stackView.spacing = 8
+
+        addContentView(stackView)
     }
 
     func updateMapView(with coordinate: CLLocationCoordinate2D) {
@@ -159,6 +161,11 @@ final class LocationSelectionCard: BaseCard {
 
         output.locationText
             .drive(locationLabel.rx.text)
+            .disposed(by: disposeBag)
+
+        output.locationText
+            .map { $0.isEmpty }
+            .drive(locationHeaderView.rx.isHidden)
             .disposed(by: disposeBag)
 
         output.locationTextColor

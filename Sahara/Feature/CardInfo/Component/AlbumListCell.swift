@@ -23,7 +23,7 @@ final class AlbumListCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.body)
+        label.font = .typography(.label)
         label.textColor = .label
         return label
     }()

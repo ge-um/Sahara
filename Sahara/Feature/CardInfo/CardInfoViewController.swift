@@ -23,13 +23,16 @@ final class CardInfoViewController: UIViewController {
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")?.withConfiguration(
-            UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
-        )
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseBackgroundColor = .white
         config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
         return button
     }()
@@ -38,7 +41,7 @@ final class CardInfoViewController: UIViewController {
     let coordinator: CardInfoCoordinatorProtocol
     let viewModel: CardInfoViewModel
     let disposeBag = DisposeBag()
-    let selectedDateRelay = BehaviorRelay<Date>(value: Date())
+    let selectedDateRelay = BehaviorRelay<(date: Date, source: DateSource)>(value: (Date(), .initial))
     let deleteConfirmedRelay = PublishRelay<Void>()
     let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
     private let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
@@ -265,8 +268,8 @@ extension CardInfoViewController {
     private func bindDateCard() {
         contentView.dateCard.selectButton.rx.tap
             .subscribe(with: self) { owner, _ in
-                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
-                    owner.selectedDateRelay.accept(date)
+                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value.date) { date in
+                    owner.selectedDateRelay.accept((date, .userPicked))
                 }
             }
             .disposed(by: disposeBag)
@@ -293,7 +296,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -334,7 +337,7 @@ extension CardInfoViewController {
         return CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             imageSourceData: imageSourceDataRelay.asObservable(),
-            date: selectedDateRelay.asObservable(),
+            date: selectedDateRelay.map(\.date).asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
                 .map { owner, text in
@@ -357,7 +360,7 @@ extension CardInfoViewController {
         _ output: CardInfoViewModel.Output,
         initialLocationRelay: BehaviorSubject<CLLocation?>
     ) {
-        selectedDateRelay.accept(output.initialDate)
+        selectedDateRelay.accept((output.initialDate, .initial))
         contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
 
         if output.isEditMode {
@@ -473,7 +476,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -582,7 +585,7 @@ extension CardInfoViewController {
         imageSourceDataRelay.accept(result.imageSource)
 
         if let date = result.metadata.date {
-            selectedDateRelay.accept(date)
+            selectedDateRelay.accept((date, .exif))
         }
         if let location = result.metadata.location {
             initialLocationRelay.onNext(location)

@@ -68,14 +68,14 @@ final class MediaSelectionViewController: UIViewController {
 
     private let limitedBannerContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .token(.info).withAlphaComponent(0.1)
+        view.backgroundColor = .token(.textSecondary).withAlphaComponent(0.1)
         view.isHidden = true
         return view
     }()
 
     private let bannerInfoIcon: UIImageView = {
         let iv = UIImageView(image: UIImage(systemName: "info.circle"))
-        iv.tintColor = .token(.info)
+        iv.tintColor = .token(.textSecondary)
         iv.contentMode = .scaleAspectFit
         return iv
     }()
@@ -249,7 +249,7 @@ final class MediaSelectionViewController: UIViewController {
         output.currentAlbumTitle
             .drive(with: self) { owner, title in
                 var attributed = AttributedString(title)
-                attributed.font = UIFont.typography(.body)
+                attributed.font = UIFont.typography(.label)
                 owner.albumTitleButton.configuration?.attributedTitle = attributed
             }
             .disposed(by: disposeBag)
@@ -457,7 +457,7 @@ final class MediaSelectionViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
-        titleLabel.font = .typography(.body)
+        titleLabel.font = .typography(.label)
         titleLabel.textColor = .label
         navigationItem.titleView = titleLabel
 
@@ -467,7 +467,7 @@ final class MediaSelectionViewController: UIViewController {
             target: self,
             action: #selector(closeTapped)
         )
-        closeButton.setTitleTextAttributes([.font: UIFont.typography(.body)], for: .normal)
+        closeButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .normal)
         navigationItem.leftBarButtonItem = closeButton
 
         // Album selector bar
