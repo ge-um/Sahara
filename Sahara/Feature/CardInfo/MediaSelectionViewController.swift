@@ -52,7 +52,7 @@ final class MediaSelectionViewController: UIViewController {
         config.imagePlacement = .trailing
         config.imagePadding = 4
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 10, weight: .medium)
-        config.contentInsets = .zero
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 2, bottom: 0, trailing: 0)
         let button = UIButton(configuration: config)
         return button
     }()
@@ -453,21 +453,22 @@ final class MediaSelectionViewController: UIViewController {
     // MARK: - Configure UI
 
     private func configureUI() {
-        view.applyGradient(.subtle)
+        view.applyGradient(.tabBar)
 
-        let titleLabel = UILabel()
-        titleLabel.text = NSLocalizedString("media_selection.title", comment: "")
-        titleLabel.font = .typography(.label)
-        titleLabel.textColor = .label
-        navigationItem.titleView = titleLabel
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.typography(.body)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+        navigationItem.title = NSLocalizedString("media_selection.title", comment: "")
 
-        let closeButton = UIBarButtonItem(
-            title: NSLocalizedString("common.cancel", comment: ""),
-            style: .plain,
-            target: self,
-            action: #selector(closeTapped)
-        )
-        closeButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .normal)
+        let iconSize = CGSize(width: 20, height: 20)
+        let xmarkImage = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        let closeButton = UIBarButtonItem(image: xmarkImage, style: .plain, target: self, action: #selector(closeTapped))
+        closeButton.tintColor = .token(.textPrimary)
         navigationItem.leftBarButtonItem = closeButton
 
         // Album selector bar

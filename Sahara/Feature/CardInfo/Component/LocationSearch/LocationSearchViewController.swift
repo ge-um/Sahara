@@ -21,9 +21,14 @@ final class LocationSearchViewController: UIViewController {
         let searchBar = UISearchBar()
         searchBar.placeholder = NSLocalizedString("location_search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
+        searchBar.backgroundColor = .clear
+        searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
+
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
             textField.font = .typography(.label)
+            textField.applyGlassCardStyle(cornerRadius: 10)
         }
+
         return searchBar
     }()
 
@@ -65,6 +70,7 @@ final class LocationSearchViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        setupNavigation()
         bind()
         currentLocationButton.applyGradient(.ctaBlue)
         viewDidLoadRelay.accept(())
@@ -73,6 +79,24 @@ final class LocationSearchViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         currentLocationButton.applyGradient(.ctaBlue)
+    }
+
+    private func setupNavigation() {
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.typography(.body)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+        navigationItem.title = NSLocalizedString("location_search.title", comment: "")
+
+        let iconSize = CGSize(width: 20, height: 20)
+        let xmarkImage = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        let closeButton = UIBarButtonItem(image: xmarkImage, style: .plain, target: self, action: #selector(closeTapped))
+        closeButton.tintColor = .token(.textPrimary)
+        navigationItem.leftBarButtonItem = closeButton
     }
 
     private func bind() {
@@ -139,34 +163,20 @@ final class LocationSearchViewController: UIViewController {
         navigationController?.navigationBar.shadowImage = UIImage()
         navigationController?.navigationBar.isTranslucent = true
 
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.typography(.title)
-        ]
-        navigationController?.navigationBar.titleTextAttributes = titleAttributes
-        navigationItem.title = NSLocalizedString("location_search.title", comment: "")
-
-        let cancelButton = UIBarButtonItem(
-            barButtonSystemItem: .cancel,
-            target: self,
-            action: #selector(cancelTapped)
-        )
-        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .normal)
-        cancelButton.setTitleTextAttributes([.font: UIFont.typography(.label)], for: .highlighted)
-        navigationItem.leftBarButtonItem = cancelButton
-
         view.addSubview(searchBar)
         view.addSubview(currentLocationButton)
         view.addSubview(tableView)
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.height.equalTo(36)
         }
 
         currentLocationButton.snp.makeConstraints { make in
             make.top.equalTo(searchBar.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(50)
+            make.height.equalTo(36)
         }
 
         tableView.snp.makeConstraints { make in
@@ -175,7 +185,7 @@ final class LocationSearchViewController: UIViewController {
         }
     }
 
-    @objc private func cancelTapped() {
+    @objc private func closeTapped() {
         dismiss(animated: true)
     }
 }
