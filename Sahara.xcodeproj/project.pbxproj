@@ -30,6 +30,7 @@
 		9716DC354EDCBBF970FC7B1C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5784B26A0B503F279A42BC75 /* Foundation.framework */; };
 		AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */; };
 		B7A3E1F2C4D5A6B8E9F01234 /* NavigateWidgetPhotoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */; };
+		BD5C855FC80B0130F8B96F44 /* Galmuri11.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6B566651E1BE2AE209E010CA /* Galmuri11.ttf */; };
 		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
 		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
 		FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */; };
@@ -102,6 +103,7 @@
 		47CD2822568FA817EC45BEE9 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppGroupContainer.swift; path = Sahara/Common/Utility/AppGroupContainer.swift; sourceTree = SOURCE_ROOT; };
 		5784B26A0B503F279A42BC75 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		6B566651E1BE2AE209E010CA /* Galmuri11.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = Galmuri11.ttf; sourceTree = "<group>"; };
 		9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidget.swift; sourceTree = "<group>"; };
 		9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidgetBundle.swift; sourceTree = "<group>"; };
 		B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NavigateWidgetPhotoIntent.swift; sourceTree = "<group>"; };
@@ -124,6 +126,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0346946A2EA127BF0003065C /* SaharaTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = SaharaTests;
 			sourceTree = "<group>";
 		};
@@ -211,6 +215,7 @@
 			isa = PBXGroup;
 			children = (
 				7F687188F77FC625DD9732CC /* Localizable.strings */,
+				66BFA9100BCCC1BAD489022F /* Fonts */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -221,6 +226,15 @@
 				5784B26A0B503F279A42BC75 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		66BFA9100BCCC1BAD489022F /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				6B566651E1BE2AE209E010CA /* Galmuri11.ttf */,
+			);
+			name = Fonts;
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		673E3F5E08351D0A78BD3671 /* SaharaWidget */ = {
@@ -410,6 +424,7 @@
 			files = (
 				48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */,
 				41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */,
+				BD5C855FC80B0130F8B96F44 /* Galmuri11.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
