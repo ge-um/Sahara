@@ -9,73 +9,77 @@ import FirebaseAnalytics
 import Foundation
 
 enum AnalyticsEvent: String {
-    case cardSaveSuccess = "card_save_success"
-    case cardDelete = "card_delete"
-    case cardEdit = "card_edit"
-
-    case photoSourceSelected = "photo_source_selected"
     case photoEditToolUsed = "photo_edit_tool_used"
     case photoEditComplete = "photo_edit_complete"
 
     case galleryViewChanged = "gallery_view_changed"
-    case calendarDateRangeViewed = "calendar_date_range_viewed"
 
     case biometricEnabled = "biometric_enabled"
     case biometricAuthResult = "biometric_auth_result"
 
-    case locationSearchUsed = "location_search_used"
-    case locationSaved = "location_saved"
-    case mapLocationViewed = "map_location_viewed"
-
     case firstCardCreated = "first_card_created"
-    case firstLocationAdded = "first_location_added"
 
     case usageStreak = "usage_streak"
-    case dailyCardsCreated = "daily_cards_created"
 
-    case photoLoadError = "photo_load_error"
-    case locationPermissionDenied = "location_permission_denied"
-    case biometricPermissionDenied = "biometric_permission_denied"
-
-    case tabSelected = "tab_selected"
-
-    case notificationOpened = "notification_opened"
     case notificationSettingChanged = "notification_setting_changed"
-    case fcmTokenRegistered = "fcm_token_registered"
 }
 
 enum AnalyticsParameter: String {
-    case hasPhoto = "has_photo"
-    case hasMemo = "has_memo"
-    case hasLocation = "has_location"
-    case isLocked = "is_locked"
-    case editType = "edit_type"
-
-    case source = "source"
     case tool = "tool"
     case toolsUsedCount = "tools_used_count"
 
     case viewType = "view_type"
-    case year = "year"
-    case month = "month"
 
     case type = "type"
     case success = "success"
     case feature = "feature"
 
-    case cardsCount = "cards_count"
     case days = "days"
-    case count = "count"
-
-    case errorType = "error_type"
-
-    case tabName = "tab_name"
+    case daysSinceInstall = "days_since_install"
 }
 
 final class AnalyticsService {
     static let shared = AnalyticsService()
 
+    private enum Keys {
+        static let lastActiveDate = "analytics_last_active_date"
+        static let usageStreakCount = "analytics_usage_streak"
+        static let appFirstLaunchDate = "analytics_app_first_launch_date"
+    }
+
     private init() {}
+
+    func registerFirstLaunchDateIfNeeded() {
+        if UserDefaults.standard.object(forKey: Keys.appFirstLaunchDate) == nil {
+            UserDefaults.standard.set(Date(), forKey: Keys.appFirstLaunchDate)
+        }
+    }
+
+    func trackDailyUsage() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let lastActive = UserDefaults.standard.object(forKey: Keys.lastActiveDate) as? Date
+
+        if let lastActive = lastActive {
+            let lastActiveDay = calendar.startOfDay(for: lastActive)
+            if lastActiveDay == today { return }
+
+            if let yesterday = calendar.date(byAdding: .day, value: -1, to: today),
+               lastActiveDay == yesterday {
+                let streak = UserDefaults.standard.integer(forKey: Keys.usageStreakCount) + 1
+                UserDefaults.standard.set(streak, forKey: Keys.usageStreakCount)
+                logUsageStreak(days: streak)
+            } else {
+                UserDefaults.standard.set(1, forKey: Keys.usageStreakCount)
+                logUsageStreak(days: 1)
+            }
+        } else {
+            UserDefaults.standard.set(1, forKey: Keys.usageStreakCount)
+            logUsageStreak(days: 1)
+        }
+
+        UserDefaults.standard.set(today, forKey: Keys.lastActiveDate)
+    }
 
     func logEvent(_ event: AnalyticsEvent, parameters: [AnalyticsParameter: Any]? = nil) {
         var firebaseParameters: [String: Any]? = nil
@@ -85,27 +89,6 @@ final class AnalyticsService {
         }
 
         Analytics.logEvent(event.rawValue, parameters: firebaseParameters)
-    }
-
-    func logCardSave(hasPhoto: Bool, hasMemo: Bool, hasLocation: Bool, isLocked: Bool) {
-        logEvent(.cardSaveSuccess, parameters: [
-            .hasPhoto: hasPhoto,
-            .hasMemo: hasMemo,
-            .hasLocation: hasLocation,
-            .isLocked: isLocked
-        ])
-    }
-
-    func logCardDelete() {
-        logEvent(.cardDelete)
-    }
-
-    func logCardEdit(editType: String) {
-        logEvent(.cardEdit, parameters: [.editType: editType])
-    }
-
-    func logPhotoSourceSelected(source: String) {
-        logEvent(.photoSourceSelected, parameters: [.source: source])
     }
 
     func logPhotoEditToolUsed(tool: String) {
@@ -120,13 +103,6 @@ final class AnalyticsService {
         logEvent(.galleryViewChanged, parameters: [.viewType: viewType])
     }
 
-    func logCalendarDateRangeViewed(year: Int, month: Int) {
-        logEvent(.calendarDateRangeViewed, parameters: [
-            .year: year,
-            .month: month
-        ])
-    }
-
     func logBiometricEnabled(type: String) {
         logEvent(.biometricEnabled, parameters: [.type: type])
     }
@@ -138,62 +114,25 @@ final class AnalyticsService {
         ])
     }
 
-    func logLocationSearchUsed() {
-        logEvent(.locationSearchUsed)
-    }
-
-    func logLocationSaved(source: String) {
-        logEvent(.locationSaved, parameters: [.source: source])
-    }
-
-    func logMapLocationViewed(cardsCount: Int) {
-        logEvent(.mapLocationViewed, parameters: [.cardsCount: cardsCount])
-    }
-
     func logFirstCardCreated() {
         logEvent(.firstCardCreated)
-    }
-
-    func logFirstLocationAdded() {
-        logEvent(.firstLocationAdded)
     }
 
     func logUsageStreak(days: Int) {
         logEvent(.usageStreak, parameters: [.days: days])
     }
 
-    func logDailyCardsCreated(count: Int) {
-        logEvent(.dailyCardsCreated, parameters: [.count: count])
-    }
-
-    func logPhotoLoadError(errorType: String) {
-        logEvent(.photoLoadError, parameters: [.errorType: errorType])
-    }
-
-    func logLocationPermissionDenied() {
-        logEvent(.locationPermissionDenied)
-    }
-
-    func logBiometricPermissionDenied() {
-        logEvent(.biometricPermissionDenied)
-    }
-
-    func logTabSelected(tabName: String) {
-        logEvent(.tabSelected, parameters: [.tabName: tabName])
-    }
-
-    func logNotificationOpened(type: String) {
-        logEvent(.notificationOpened, parameters: [.type: type])
-    }
-
     func logNotificationSettingChanged(type: String, enabled: Bool) {
-        logEvent(.notificationSettingChanged, parameters: [
+        var params: [AnalyticsParameter: Any] = [
             .type: type,
             .success: enabled
-        ])
-    }
+        ]
 
-    func logFCMTokenRegistered() {
-        logEvent(.fcmTokenRegistered)
+        if let firstLaunchDate = UserDefaults.standard.object(forKey: Keys.appFirstLaunchDate) as? Date {
+            let daysSinceInstall = Calendar.current.dateComponents([.day], from: firstLaunchDate, to: Date()).day ?? 0
+            params[.daysSinceInstall] = daysSinceInstall
+        }
+
+        logEvent(.notificationSettingChanged, parameters: params)
     }
 }

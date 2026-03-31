@@ -173,6 +173,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
            syncService.isEnabled {
             syncService.fetchChangesIfNeeded()
         }
+
+        AnalyticsService.shared.trackDailyUsage()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -319,11 +321,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         switch type {
         case "weekly_report", "monthly_report":
             tabBarController.selectedIndex = 2
-            AnalyticsService.shared.logNotificationOpened(type: type)
 
         case "memory_reminder", "milestone":
             tabBarController.selectedIndex = 0
-            AnalyticsService.shared.logNotificationOpened(type: type)
 
         default:
             break

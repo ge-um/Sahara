@@ -5,9 +5,10 @@
 //  Created by 금가경 on 9/26/25.
 //
 
+import FirebaseCrashlytics
 import FirebaseCore
-import UIKit
 import FirebaseMessaging
+import UIKit
 import RealmSwift
 import Kingfisher
 
@@ -18,6 +19,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
+        #if DEBUG
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+        #endif
+        AnalyticsService.shared.registerFirstLaunchDateIfNeeded()
         configureRealm()
         configureCloudSync()
         configureKingfisher()
