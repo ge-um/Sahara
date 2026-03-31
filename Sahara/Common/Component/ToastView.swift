@@ -18,7 +18,7 @@ final class ToastView: UIView {
 
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.body)
+        label.font = .typography(.caption)
         label.textColor = .white
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -44,7 +44,7 @@ final class ToastView: UIView {
         }
 
         messageLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20))
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
         }
     }
 

@@ -62,7 +62,7 @@ final class DateSelectionCard: BaseCard {
         iconImageView.snp.makeConstraints { make in
             make.leading.equalToSuperview()
             make.top.equalToSuperview()
-            make.bottom.lessThanOrEqualToSuperview()
+            make.bottom.equalToSuperview()
             make.width.height.equalTo(16)
         }
 
@@ -78,10 +78,6 @@ final class DateSelectionCard: BaseCard {
         }
 
         addContentView(container)
-
-        contentContainer.snp.updateConstraints { make in
-            make.bottom.equalToSuperview().inset(12)
-        }
     }
 
     func bind(date: Driver<(date: Date, source: DateSource)>) {
