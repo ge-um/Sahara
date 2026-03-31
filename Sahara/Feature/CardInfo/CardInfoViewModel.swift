@@ -154,15 +154,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
     }
 
-    private func logCardSaveAnalytics(memo: String?, location: CLLocation?, isLocked: Bool) {
-        AnalyticsService.shared.logCardSave(
-            hasPhoto: editedImage != nil,
-            hasMemo: !(memo?.isEmpty ?? true),
-            hasLocation: location != nil,
-            isLocked: isLocked
-        )
-    }
-
     private func handleSaveAction(
         date: Date,
         memo: String?,
@@ -223,9 +214,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     input.isLocked
                 )
             )
-            .do(onNext: { [weak self] _, memo, _, location, isLocked in
-                self?.logCardSaveAnalytics(memo: memo, location: location, isLocked: isLocked)
-            })
             .flatMap { [weak self] date, memo, customFolder, location, isLocked -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
                 return self.handleSaveAction(
@@ -242,9 +230,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
-            .do(onNext: { _, _ in
-                AnalyticsService.shared.logCardDelete()
-            })
             .flatMap { [weak self] _, _ -> Observable<Void> in
                 guard let self = self else { return .just(()) }
                 return self.handleDeleteAction(shouldPopToListOnDeleteRelay: shouldPopToListOnDeleteRelay)
@@ -293,18 +278,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         case .searchView:
             return false
         }
-    }
-
-    private struct AnalyticsContext {
-        let isFirstCard: Bool
-        let hadLocationBefore: Bool
-    }
-
-    private func collectAnalyticsContext() -> AnalyticsContext {
-        let isFirstCard = realmManager.isEmpty(Card.self)
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-        return AnalyticsContext(isFirstCard: isFirstCard, hadLocationBefore: hadLocationBefore)
     }
 
     private func hasDayChanged(from old: Date, to new: Date) -> Bool {
@@ -357,20 +330,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         return card
     }
 
-    private func logSaveAnalytics(isFirstCard: Bool, hadLocationBefore: Bool, location: CLLocation?) {
-        if isFirstCard {
-            AnalyticsService.shared.logFirstCardCreated()
-        }
-        if !hadLocationBefore && location != nil {
-            AnalyticsService.shared.logFirstLocationAdded()
-        }
-    }
-
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
 
         let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
+        let isFirstCard = realmManager.isEmpty(Card.self)
 
         return prepareImage(from: editedImage)
             .observe(on: MainScheduler.instance)
@@ -390,7 +354,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 return self.realmManager.add(card)
                     .do(onNext: {
                         self.cardPostProcessor.process(cardId: card.id, imageData: imageData.editedImageData)
-                        self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
+                        if isFirstCard {
+                            AnalyticsService.shared.logFirstCardCreated()
+                        }
                         WidgetDataService.shared.refreshWidgetData()
                     })
             }
@@ -418,34 +384,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         case (nil, nil):
             return false
         }
-    }
-
-    private func trackEditTypes(
-        memoText: String?,
-        folderText: String?,
-        oldLocation: CLLocation?,
-        newLocation: CLLocation?,
-        isLocked: Bool
-    ) -> [String] {
-        var editTypes: [String] = []
-
-        if imageChanged {
-            editTypes.append("photo")
-        }
-        if initialMemo != memoText {
-            editTypes.append("memo")
-        }
-        if initialCustomFolder != folderText {
-            editTypes.append("folder")
-        }
-        if hasLocationChanged(from: oldLocation, to: newLocation, threshold: 1.0) {
-            editTypes.append("location")
-        }
-        if initialIsLocked != isLocked {
-            editTypes.append("lock")
-        }
-
-        return editTypes
     }
 
     private func updateCardInRealm(
@@ -498,15 +436,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         })
     }
 
-    private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
-        if !editTypes.isEmpty {
-            AnalyticsService.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-        }
-        if !hadLocationBefore && location != nil {
-            AnalyticsService.shared.logFirstLocationAdded()
-        }
-    }
-
     private func updateCardMetadataOnly(
         cardId: ObjectId,
         date: Date,
@@ -529,19 +458,9 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
     private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
+        guard realmManager.fetchObject(Card.self, forPrimaryKey: cardId) != nil else { return .empty() }
 
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
-
-        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
-        let editTypes = trackEditTypes(
-            memoText: sanitizedFields.memo,
-            folderText: sanitizedFields.customFolder,
-            oldLocation: oldLocation,
-            newLocation: location,
-            isLocked: isLocked
-        )
 
         if !imageChanged {
             return updateCardMetadataOnly(
@@ -552,10 +471,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 location: location,
                 isLocked: isLocked
             )
-            .do(onNext: { [weak self] in
-                guard let self = self else { return }
-                self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
-            })
         }
 
         return prepareImage(from: editedImage)
@@ -575,7 +490,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 )
                 .do(onNext: {
                     self.cardPostProcessor.process(cardId: cardId, imageData: imageData.editedImageData)
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
                 })
             }
     }
