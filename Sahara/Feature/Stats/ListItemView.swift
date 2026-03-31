@@ -27,9 +27,7 @@ final class ListItemView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = .token(.backgroundGlass)
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
 
         addSubview(stackView)
         stackView.snp.makeConstraints { make in

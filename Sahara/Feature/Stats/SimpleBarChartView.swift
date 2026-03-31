@@ -12,12 +12,14 @@ final class SimpleBarChartView: UIView {
     private var values: [CGFloat] = []
     private var gradientLayers: [CAGradientLayer] = []
     private var barGradient: DesignToken.Gradient = .warm
+    private var useNumericFont = false
+    private let yTickCount = 5
+    private let leftPadding: CGFloat = 26
+    private let rightPadding: CGFloat = 20
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .token(.backgroundGlass)
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
     }
 
     required init?(coder: NSCoder) {
@@ -26,6 +28,10 @@ final class SimpleBarChartView: UIView {
 
     func setBarGradient(_ gradient: DesignToken.Gradient) {
         self.barGradient = gradient
+    }
+
+    func setUseNumericFont(_ value: Bool) {
+        self.useNumericFont = value
     }
 
     func configure(labels: [String], values: [CGFloat]) {
@@ -47,12 +53,15 @@ final class SimpleBarChartView: UIView {
         guard !values.isEmpty, bounds.width > 0, bounds.height > 0 else { return }
 
         let maxValue = max(values.max() ?? 1, 1)
-        let barWidth = (bounds.width - 40) / CGFloat(values.count)
+        let maxInt = max(Int(ceil(maxValue)), 1)
+        let yAxisStep = max(1, Int(ceil(Double(maxInt) / Double(yTickCount - 1))))
+        let adjustedMax = CGFloat(yAxisStep * (yTickCount - 1))
+        let barWidth = (bounds.width - leftPadding - rightPadding) / CGFloat(values.count)
         let chartHeight = bounds.height - 60
 
         for (index, value) in values.enumerated() {
-            let barHeight = value > 0 ? max((value / maxValue) * chartHeight, 4) : 0
-            let x = 20 + CGFloat(index) * barWidth + barWidth * 0.1
+            let barHeight = value > 0 ? max((value / adjustedMax) * chartHeight, 4) : 0
+            let x = leftPadding + CGFloat(index) * barWidth + barWidth * 0.1
             let y = bounds.height - 40 - barHeight
             let width = barWidth * 0.8
 
@@ -77,16 +86,15 @@ final class SimpleBarChartView: UIView {
 
         let maxValue = max(values.max() ?? 1, 1)
         let chartHeight = rect.height - 60
-        let barWidth = (rect.width - 40) / CGFloat(values.count)
+        let barWidth = (rect.width - leftPadding - rightPadding) / CGFloat(values.count)
 
-        // Y축 라벨 표시 - 정수 단위로만
-        let maxInt = Int(ceil(maxValue))
-        let yAxisStep = max(1, maxInt / 5)
-        let adjustedMaxValue = CGFloat(((maxInt / yAxisStep) + (maxInt % yAxisStep == 0 ? 0 : 1)) * yAxisStep)
+        let maxInt = max(Int(ceil(maxValue)), 1)
+        let yAxisStep = max(1, Int(ceil(Double(maxInt) / Double(yTickCount - 1))))
+        let adjustedMaxValue = CGFloat(yAxisStep * (yTickCount - 1))
 
         let labelAttributes: [NSAttributedString.Key: Any] = [
             .font: DesignToken.Typography.small.numericFont,
-            .foregroundColor: UIColor.black.withAlphaComponent(0.6)
+            .foregroundColor: UIColor.token(.textSecondary)
         ]
 
         var currentValue = 0
@@ -96,7 +104,7 @@ final class SimpleBarChartView: UIView {
 
             let valueText = "\(currentValue)" as NSString
             let textSize = valueText.size(withAttributes: labelAttributes)
-            valueText.draw(at: CGPoint(x: 8, y: y - textSize.height / 2), withAttributes: labelAttributes)
+            valueText.draw(at: CGPoint(x: 14, y: y - textSize.height / 2), withAttributes: labelAttributes)
 
             currentValue += yAxisStep
         }
@@ -105,13 +113,13 @@ final class SimpleBarChartView: UIView {
         for (index, label) in labels.enumerated() {
             guard index < values.count else { break }
 
-            let x = 20 + CGFloat(index) * barWidth + barWidth * 0.1
+            let x = leftPadding + CGFloat(index) * barWidth + barWidth * 0.1
             let width = barWidth * 0.8
 
             let labelText = label as NSString
             let attributes: [NSAttributedString.Key: Any] = [
-                .font: DesignToken.Typography.caption.numericFont,
-                .foregroundColor: UIColor.token(.textPrimary)
+                .font: useNumericFont ? DesignToken.Typography.small.numericFont : DesignToken.Typography.small.font,
+                .foregroundColor: UIColor.token(.textSecondary)
             ]
             let labelSize = labelText.size(withAttributes: attributes)
             let labelX = x + (width - labelSize.width) / 2

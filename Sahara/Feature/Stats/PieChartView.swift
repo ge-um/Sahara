@@ -28,9 +28,7 @@ final class PieChartView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .token(.backgroundGlass)
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
     }
 
     required init?(coder: NSCoder) {

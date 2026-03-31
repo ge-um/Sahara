@@ -27,9 +27,7 @@ final class SearchViewController: UIViewController {
 
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
             textField.font = .typography(.label)
-            textField.backgroundColor = .backgroundGlass
-            textField.layer.cornerRadius = 10
-            textField.clipsToBounds = true
+            textField.applyGlassCardStyle(cornerRadius: 10)
         }
 
         return searchBar

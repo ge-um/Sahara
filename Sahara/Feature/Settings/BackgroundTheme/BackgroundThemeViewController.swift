@@ -62,7 +62,11 @@ final class BackgroundThemeViewController: UIViewController {
     private let colorGridView = UIView()
     private let gradientGridView = UIView()
     private let photoSelectionView = UIView()
-    private let dotPatternContainerView = UIView()
+    private let dotPatternContainerView: UIView = {
+        let v = UIView()
+        v.applyGlassCardStyle()
+        return v
+    }()
     private var dotPatternTopConstraints: [Constraint] = []
 
     private let dotPatternSwitch: UISwitch = {
@@ -74,7 +78,7 @@ final class BackgroundThemeViewController: UIViewController {
     private let dotPatternLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("background.dot_pattern", comment: "")
-        label.font = DesignToken.Typography.body.font
+        label.font = DesignToken.Typography.caption.font
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -228,9 +232,9 @@ final class BackgroundThemeViewController: UIViewController {
         dotPatternContainerView.addSubview(dotPatternSwitch)
 
         dotPatternContainerView.snp.makeConstraints { make in
-            let c0 = make.top.equalTo(colorGridView.snp.bottom).offset(24).constraint
-            let c1 = make.top.equalTo(gradientGridView.snp.bottom).offset(24).constraint
-            let c2 = make.top.equalTo(photoSelectionView.snp.bottom).offset(24).constraint
+            let c0 = make.top.equalTo(colorGridView.snp.bottom).offset(20).constraint
+            let c1 = make.top.equalTo(gradientGridView.snp.bottom).offset(20).constraint
+            let c2 = make.top.equalTo(photoSelectionView.snp.bottom).offset(20).constraint
             dotPatternTopConstraints = [c0, c1, c2]
             c1.deactivate()
             c2.deactivate()
@@ -239,11 +243,13 @@ final class BackgroundThemeViewController: UIViewController {
         }
 
         dotPatternLabel.snp.makeConstraints { make in
-            make.leading.centerY.equalToSuperview()
+            make.leading.equalToSuperview().inset(16)
+            make.centerY.equalToSuperview()
         }
 
         dotPatternSwitch.snp.makeConstraints { make in
-            make.trailing.centerY.equalToSuperview()
+            make.trailing.equalToSuperview().inset(16)
+            make.centerY.equalToSuperview()
         }
     }
 
@@ -325,7 +331,7 @@ final class BackgroundThemeViewController: UIViewController {
             if isPickerButton {
                 cell.backgroundColor = .token(.backgroundCard)
                 cell.layer.borderWidth = 1
-                cell.layer.borderColor = UIColor.token(.border).cgColor
+                cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 let icon = UIImageView(image: UIImage(systemName: "plus"))
                 icon.tintColor = .token(.textSecondary)
                 icon.contentMode = .scaleAspectFit
@@ -344,7 +350,7 @@ final class BackgroundThemeViewController: UIViewController {
 
                 if hex == "#FFFFFF" || hex == "#F9FFFF" || hex == "#FFFFC5" {
                     cell.layer.borderWidth = 1
-                    cell.layer.borderColor = UIColor.token(.border).cgColor
+                    cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 }
 
                 let tap = UITapGestureRecognizer()
@@ -398,7 +404,7 @@ final class BackgroundThemeViewController: UIViewController {
             if isPickerButton {
                 cell.backgroundColor = .token(.backgroundCard)
                 cell.layer.borderWidth = 1
-                cell.layer.borderColor = UIColor.token(.border).cgColor
+                cell.layer.borderColor = UIColor.token(.textSecondary).cgColor
                 let icon = UIImageView(image: UIImage(systemName: "plus"))
                 icon.tintColor = .token(.textSecondary)
                 icon.contentMode = .scaleAspectFit

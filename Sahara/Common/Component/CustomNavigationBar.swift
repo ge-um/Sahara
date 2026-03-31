@@ -136,7 +136,7 @@ final class CustomNavigationBar: UIView {
 
         if let title = title {
             button.setTitle(title, for: .normal)
-            button.titleLabel?.font = DesignToken.Typography.title.numericFont
+            button.titleLabel?.font = FontSystem.galmuri11(size: 28)
             button.setTitleColor(tintColor, for: .normal)
         }
 
@@ -144,6 +144,7 @@ final class CustomNavigationBar: UIView {
             var config = UIButton.Configuration.plain()
             config.image = image
             config.baseForegroundColor = tintColor
+            config.contentInsets = .zero
             button.configuration = config
         }
 

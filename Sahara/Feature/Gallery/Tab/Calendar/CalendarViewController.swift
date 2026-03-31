@@ -20,10 +20,8 @@ final class CalendarViewController: UIViewController {
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
             withReuseIdentifier: CalendarHeaderView.identifier
         )
-        collectionView.backgroundColor = .token(.backgroundGlass)
+        collectionView.applyGlassCardStyle()
         collectionView.isScrollEnabled = false
-        collectionView.layer.cornerRadius = 12
-        collectionView.clipsToBounds = true
         return collectionView
     }()
 
@@ -195,7 +193,8 @@ final class CalendarViewController: UIViewController {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 1
         layout.minimumLineSpacing = 1
-        layout.sectionInset = .zero
+        let sectionTopInset: CGFloat = 8
+        layout.sectionInset = UIEdgeInsets(top: sectionTopInset, left: 0, bottom: 0, right: 0)
 
         let headerHeight: CGFloat = 72
         layout.headerReferenceSize = CGSize(width: collectionView.bounds.width, height: headerHeight)
@@ -203,7 +202,7 @@ final class CalendarViewController: UIViewController {
         let collectionViewWidth = collectionView.bounds.width
         let itemWidth = ((collectionViewWidth - 6) / 7).rounded(.down)
 
-        let collectionViewHeight = collectionView.bounds.height - headerHeight
+        let collectionViewHeight = collectionView.bounds.height - headerHeight - sectionTopInset
         let itemHeight = ((collectionViewHeight - 5) / 6).rounded(.down)
 
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)

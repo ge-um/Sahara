@@ -29,7 +29,8 @@ final class WeekdayHeaderView: UICollectionReusableView, IsIdentifiable {
         addSubview(stackView)
 
         stackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.bottom.trailing.equalToSuperview()
+            make.leading.equalToSuperview().offset(4)
         }
 
         let weekdayKeys = ["weekday.sunday", "weekday.monday", "weekday.tuesday", "weekday.wednesday", "weekday.thursday", "weekday.friday", "weekday.saturday"]

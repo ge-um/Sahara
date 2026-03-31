@@ -11,8 +11,7 @@ import UIKit
 final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = .token(.backgroundGlass)
-        view.layer.cornerRadius = 12
+        view.applyGlassCardStyle()
         return view
     }()
 
