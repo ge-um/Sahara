@@ -49,6 +49,8 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             .bind { owner, _ in
                 guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
                 cardImageRelay.accept(card.resolvedImageData())
+                let cardAgeDays = Calendar.current.dateComponents([.day], from: card.date, to: Date()).day ?? 0
+                AnalyticsService.shared.logCardViewed(cardAgeDays: cardAgeDays)
             }
             .disposed(by: disposeBag)
 

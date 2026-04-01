@@ -25,13 +25,19 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
     private let userDefaults: UserDefaults
     private let baseDirectory: URL
     private let fileManager = FileManager.default
+    private var remoteConfigService: RemoteConfigServiceProtocol?
 
     private enum Keys {
         static let backgroundConfig = "background_config"
     }
 
-    init(userDefaults: UserDefaults = .standard, baseDirectory: URL? = nil) {
+    init(
+        userDefaults: UserDefaults = .standard,
+        baseDirectory: URL? = nil,
+        remoteConfigService: RemoteConfigServiceProtocol? = nil
+    ) {
         self.userDefaults = userDefaults
+        self.remoteConfigService = remoteConfigService
 
         if let baseDirectory {
             self.baseDirectory = baseDirectory
@@ -42,8 +48,20 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
 
         try? fileManager.createDirectory(at: self.baseDirectory, withIntermediateDirectories: true)
 
-        let config = Self.loadConfig(from: userDefaults)
+        let config = Self.loadConfig(from: userDefaults, remoteConfigService: remoteConfigService)
         self.currentConfig = BehaviorRelay(value: config)
+    }
+
+    func setRemoteConfigService(_ service: RemoteConfigServiceProtocol) {
+        self.remoteConfigService = service
+        guard !hasCustomizedTheme else { return }
+        let newConfig = Self.loadConfig(from: userDefaults, remoteConfigService: service)
+        guard newConfig != currentConfig.value else { return }
+        currentConfig.accept(newConfig)
+    }
+
+    var hasCustomizedTheme: Bool {
+        userDefaults.data(forKey: Keys.backgroundConfig) != nil
     }
 
     func updateTheme(_ theme: BackgroundTheme) {
@@ -87,11 +105,28 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
         currentConfig.accept(config)
     }
 
-    private static func loadConfig(from userDefaults: UserDefaults) -> BackgroundConfig {
+    private static func loadConfig(
+        from userDefaults: UserDefaults,
+        remoteConfigService: RemoteConfigServiceProtocol? = nil
+    ) -> BackgroundConfig {
         guard let data = userDefaults.data(forKey: Keys.backgroundConfig),
               let config = try? JSONDecoder().decode(BackgroundConfig.self, from: data) else {
-            return .default
+            return defaultConfig(for: remoteConfigService)
         }
         return config
+    }
+
+    private static func defaultConfig(for remoteConfigService: RemoteConfigServiceProtocol?) -> BackgroundConfig {
+        guard let remoteConfigService else { return .default }
+
+        switch remoteConfigService.fetchDefaultThemeVariant() {
+        case .gradient:
+            return .default
+        case .solidWhite:
+            return BackgroundConfig(
+                theme: .solidColor(hex: "#FFFFFF"),
+                isDotPatternEnabled: false
+            )
+        }
     }
 }

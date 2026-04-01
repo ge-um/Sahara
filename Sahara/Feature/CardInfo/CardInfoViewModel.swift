@@ -334,7 +334,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         guard let editedImage = editedImage else { return .empty() }
 
         let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let isFirstCard = realmManager.isEmpty(Card.self)
 
         return prepareImage(from: editedImage)
             .observe(on: MainScheduler.instance)
@@ -354,9 +353,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                 return self.realmManager.add(card)
                     .do(onNext: {
                         self.cardPostProcessor.process(cardId: card.id, imageData: imageData.editedImageData)
-                        if isFirstCard {
-                            AnalyticsService.shared.logFirstCardCreated()
-                        }
+                        let totalCardCount = self.realmManager.fetch(Card.self).count
+                        AnalyticsService.shared.logCardCreated(totalCardCount: totalCardCount)
                         WidgetDataService.shared.refreshWidgetData()
                     })
             }

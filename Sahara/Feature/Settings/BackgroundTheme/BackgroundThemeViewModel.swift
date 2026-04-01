@@ -92,8 +92,17 @@ final class BackgroundThemeViewModel: BaseViewModelProtocol {
         let applied = input.applyTapped
             .withLatestFrom(pendingConfig)
             .do(onNext: { [weak self] config in
-                self?.service.updateTheme(config.theme)
-                self?.service.updateDotPattern(enabled: config.isDotPatternEnabled)
+                guard let self else { return }
+                let previousTheme = self.service.currentConfig.value.theme
+                self.service.updateTheme(config.theme)
+                self.service.updateDotPattern(enabled: config.isDotPatternEnabled)
+
+                AnalyticsService.shared.logThemeChanged(
+                    previousTheme: previousTheme.analyticsName,
+                    newTheme: config.theme.analyticsName,
+                    previousDetail: previousTheme.analyticsDetail,
+                    newDetail: config.theme.analyticsDetail
+                )
             })
             .map { _ in }
             .asDriver(onErrorDriveWith: .empty())
