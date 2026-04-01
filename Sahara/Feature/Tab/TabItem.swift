@@ -30,13 +30,4 @@ enum TabItem: Int, CaseIterable {
         case .settings: return NSLocalizedString("tab.settings", comment: "")
         }
     }
-
-    var analyticsName: String {
-        switch self {
-        case .gallery: return "gallery"
-        case .search: return "search"
-        case .stats: return "stats"
-        case .settings: return "settings"
-        }
-    }
 }

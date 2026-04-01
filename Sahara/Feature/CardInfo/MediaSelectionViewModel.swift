@@ -129,17 +129,11 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         input.filePickerButtonTapped
-            .do(onNext: { _ in
-                AnalyticsService.shared.logPhotoSourceSelected(source: "file_picker")
-            })
             .bind(to: showFilePickerRelay)
             .disposed(by: disposeBag)
 
         input.photoSelected
             .withUnretained(self)
-            .do(onNext: { _ in
-                AnalyticsService.shared.logPhotoSourceSelected(source: "gallery")
-            })
             .flatMap { owner, asset -> Observable<(ImageSourceData, CLLocation?, Date?)> in
                 return owner.loadImage(from: asset)
             }
@@ -147,15 +141,6 @@ final class MediaSelectionViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
 
         input.imagePickerResult
-            .do(onNext: { _, _, _, source in
-                let sourceString: String
-                switch source {
-                case .camera: sourceString = "camera"
-                case .library: sourceString = "library"
-                case .filePicker: sourceString = "file_picker"
-                }
-                AnalyticsService.shared.logPhotoSourceSelected(source: sourceString)
-            })
             .map { imageSource, location, date, _ in (imageSource, location, date) }
             .bind(to: selectedMediaRelay)
             .disposed(by: disposeBag)

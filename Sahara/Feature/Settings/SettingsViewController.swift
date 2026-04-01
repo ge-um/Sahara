@@ -160,6 +160,7 @@ final class SettingsViewController: UIViewController {
 
         output.openBackgroundTheme
             .drive(with: self) { owner, _ in
+                AnalyticsService.shared.logThemeSettingsViewed()
                 let bgVC = BackgroundThemeViewController()
                 owner.navigationController?.pushViewController(bgVC, animated: true)
             }

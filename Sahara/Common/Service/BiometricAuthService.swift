@@ -38,12 +38,6 @@ final class BiometricAuthService {
 
         let canEvaluate = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
 
-        if !canEvaluate {
-            if let nsError = error, nsError.code == LAError.biometryNotAvailable.rawValue {
-                AnalyticsService.shared.logBiometricPermissionDenied()
-            }
-        }
-
         DispatchQueue.main.async {
             completion(canEvaluate, error)
         }
@@ -57,7 +51,6 @@ final class BiometricAuthService {
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
             if let nsError = error {
                 if nsError.code == LAError.biometryNotAvailable.rawValue {
-                    AnalyticsService.shared.logBiometricPermissionDenied()
                     let permissionError = NSError(
                         domain: "BiometricPermissionError",
                         code: nsError.code,

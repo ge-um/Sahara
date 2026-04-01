@@ -5,9 +5,11 @@
 //  Created by 금가경 on 9/26/25.
 //
 
+import FirebaseCrashlytics
 import FirebaseCore
-import UIKit
 import FirebaseMessaging
+import FirebaseRemoteConfig
+import UIKit
 import RealmSwift
 import Kingfisher
 
@@ -18,6 +20,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         FirebaseApp.configure()
+        #if DEBUG
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+        #endif
+        AnalyticsService.shared.registerFirstLaunchDateIfNeeded()
+        configureRemoteConfig()
         configureRealm()
         configureCloudSync()
         configureKingfisher()
@@ -28,6 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             if settings.authorizationStatus == .notDetermined {
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+                    AnalyticsService.shared.logNotificationSettingChanged(type: "initial_permission", enabled: granted)
                     if granted {
                         DispatchQueue.main.async {
                             application.registerForRemoteNotifications()
@@ -47,6 +55,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         WidgetDataService.shared.refreshWidgetData()
 
         return true
+    }
+
+    private func configureRemoteConfig() {
+        let remoteConfigService = RemoteConfigService.shared
+        AnalyticsService.shared.setHasCustomizedThemeProperty(
+            BackgroundThemeService.shared.hasCustomizedTheme
+        )
+
+        remoteConfigService.fetchAndActivateOnce { success in
+            if success {
+                BackgroundThemeService.shared.setRemoteConfigService(remoteConfigService)
+            } else {
+                AnalyticsService.shared.logEvent(.remoteConfigFetchFailed)
+            }
+        }
     }
 
     private func configureRealm() {
@@ -96,6 +119,14 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        let type = userInfo["type"] as? String ?? "unknown"
+
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let sceneDelegate = scene.delegate as? SceneDelegate {
+            sceneDelegate.handleNotification(type: type, userInfo: userInfo)
+        }
+
         completionHandler()
     }
 }

@@ -86,16 +86,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
             .bind(to: currentMonth)
             .disposed(by: disposeBag)
         
-        currentMonth
-            .skip(1)
-            .bind { month in
-                let calendar = Calendar.current
-                let year = calendar.component(.year, from: month)
-                let monthValue = calendar.component(.month, from: month)
-                AnalyticsService.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
-            }
-            .disposed(by: disposeBag)
-        
         input.viewTypeSelected
             .bind(to: selectedViewType)
             .disposed(by: disposeBag)

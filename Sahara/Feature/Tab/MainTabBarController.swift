@@ -314,7 +314,6 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
 
     private func tabSelected(_ item: TabItem) {
         selectedIndex = item.rawValue
-        AnalyticsService.shared.logTabSelected(tabName: item.analyticsName)
     }
 
     private func updateTabSelection() {

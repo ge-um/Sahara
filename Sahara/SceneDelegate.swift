@@ -13,6 +13,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
+    private enum OpenSource: String {
+        case organic, widget, notification
+    }
+
+    private var openSource: OpenSource = .organic
+    private var pendingURL: URL?
+    private var splashTimeoutWork: DispatchWorkItem?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
@@ -31,12 +38,80 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
 
-        window?.rootViewController = MainTabBarController()
+        if let url = connectionOptions.urlContexts.first?.url {
+            pendingURL = url
+        }
+
+        if RemoteConfigService.shared.isReady {
+            showMainScreen()
+        } else {
+            showSplashScreen()
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleRemoteConfigReady),
+                name: .remoteConfigDidBecomeReady,
+                object: nil
+            )
+            scheduleSplashTimeout()
+        }
 
         window?.makeKeyAndVisible()
+    }
 
-        if let url = connectionOptions.urlContexts.first?.url {
+    @objc private func handleRemoteConfigReady() {
+        splashTimeoutWork?.cancel()
+        splashTimeoutWork = nil
+        NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
+        showMainScreen()
+    }
+
+    private func scheduleSplashTimeout() {
+        let timeoutWork = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
+            self.splashTimeoutWork = nil
+            self.showMainScreen()
+        }
+        splashTimeoutWork = timeoutWork
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeoutWork)
+    }
+
+    private func showSplashScreen() {
+        let splashVC = UIViewController()
+        splashVC.view.backgroundColor = .white
+
+        let backgroundImageView = UIImageView(image: UIImage(named: "launchBackground"))
+        backgroundImageView.contentMode = .scaleToFill
+        splashVC.view.addSubview(backgroundImageView)
+        backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            backgroundImageView.topAnchor.constraint(equalTo: splashVC.view.topAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: splashVC.view.bottomAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.trailingAnchor)
+        ])
+
+        let iconImageView = UIImageView(image: UIImage(named: "button"))
+        iconImageView.contentMode = .scaleAspectFit
+        splashVC.view.addSubview(iconImageView)
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            iconImageView.centerXAnchor.constraint(equalTo: splashVC.view.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: splashVC.view.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 100),
+            iconImageView.heightAnchor.constraint(equalToConstant: 100)
+        ])
+
+        window?.rootViewController = splashVC
+    }
+
+    private func showMainScreen() {
+        window?.rootViewController = MainTabBarController()
+
+        if let url = pendingURL {
+            pendingURL = nil
             if url.scheme == AppGroupContainer.widgetURLScheme {
+                openSource = .widget
                 handleWidgetDeepLink(url: url)
             } else {
                 handleBackupFileImport(url: url)
@@ -48,6 +123,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let url = URLContexts.first?.url else { return }
 
         if url.scheme == AppGroupContainer.widgetURLScheme {
+            openSource = .widget
             handleWidgetDeepLink(url: url)
         } else {
             handleBackupFileImport(url: url)
@@ -173,6 +249,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
            syncService.isEnabled {
             syncService.fetchChangesIfNeeded()
         }
+
+        AnalyticsService.shared.trackDailyUsage()
+        AnalyticsService.shared.logAppOpenSource(source: openSource.rawValue)
+        AnalyticsService.shared.checkWidgetStatus()
+        openSource = .organic
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -314,16 +395,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func handleNotification(type: String, userInfo: [AnyHashable: Any]) {
+        openSource = .notification
         guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
 
         switch type {
         case "weekly_report", "monthly_report":
             tabBarController.selectedIndex = 2
-            AnalyticsService.shared.logNotificationOpened(type: type)
 
         case "memory_reminder", "milestone":
             tabBarController.selectedIndex = 0
-            AnalyticsService.shared.logNotificationOpened(type: type)
 
         default:
             break

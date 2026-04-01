@@ -31,6 +31,7 @@
 		AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */; };
 		B7A3E1F2C4D5A6B8E9F01234 /* NavigateWidgetPhotoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */; };
 		BD5C855FC80B0130F8B96F44 /* Galmuri11.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6B566651E1BE2AE209E010CA /* Galmuri11.ttf */; };
+		D0F5EC50C09CB958252E0715 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 0F53CC47FF1F6F4637C2A821 /* FirebaseRemoteConfig */; };
 		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
 		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
 		FCDBDE9C8938DB07A5B50AF6 /* WidgetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A0295F178A2885F15A30C0 /* WidgetEntryView.swift */; };
@@ -103,7 +104,7 @@
 		47CD2822568FA817EC45BEE9 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppGroupContainer.swift; path = Sahara/Common/Utility/AppGroupContainer.swift; sourceTree = SOURCE_ROOT; };
 		5784B26A0B503F279A42BC75 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		6B566651E1BE2AE209E010CA /* Galmuri11.ttf */ = {isa = PBXFileReference; includeInIndex = 1; path = Galmuri11.ttf; sourceTree = "<group>"; };
+		6B566651E1BE2AE209E010CA /* Galmuri11.ttf */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = Galmuri11.ttf; sourceTree = "<group>"; };
 		9A08EFBD5AC7A29DB84BAB22 /* SaharaWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidget.swift; sourceTree = "<group>"; };
 		9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SaharaWidgetBundle.swift; sourceTree = "<group>"; };
 		B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NavigateWidgetPhotoIntent.swift; sourceTree = "<group>"; };
@@ -126,8 +127,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0346946A2EA127BF0003065C /* SaharaTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = SaharaTests;
 			sourceTree = "<group>";
 		};
@@ -165,6 +164,7 @@
 				039745922E86DFD100BDA511 /* Alamofire in Frameworks */,
 				03E2B5DF2E866F4B00A8C8DA /* Kingfisher in Frameworks */,
 				03F1A0032EC3D00100B4C003 /* ZIPFoundation in Frameworks */,
+				D0F5EC50C09CB958252E0715 /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,7 +233,6 @@
 			children = (
 				6B566651E1BE2AE209E010CA /* Galmuri11.ttf */,
 			);
-			name = Fonts;
 			path = Fonts;
 			sourceTree = "<group>";
 		};
@@ -321,6 +320,7 @@
 				035A09132E90D2B900221B3E /* FirebaseAnalytics */,
 				035A09152E90D2B900221B3E /* FirebaseCrashlytics */,
 				0373CD562EA157EA001DD9A0 /* FirebaseMessaging */,
+				0F53CC47FF1F6F4637C2A821 /* FirebaseRemoteConfig */,
 				03F1A0022EC3D00100B4C002 /* ZIPFoundation */,
 			);
 			productName = Sahara;
@@ -1009,6 +1009,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 03F1A0012EC3D00100B4C001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
+		};
+		0F53CC47FF1F6F4637C2A821 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 035A09122E90D2B900221B3E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
