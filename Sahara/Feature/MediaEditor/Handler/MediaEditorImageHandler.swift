@@ -24,12 +24,7 @@ final class MediaEditorImageHandler {
             in: photoImageView.bounds.size
         )
 
-        let hasAlpha: Bool
-        if let alphaInfo = baseImage.cgImage?.alphaInfo {
-            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-        } else {
-            hasAlpha = false
-        }
+        let hasAlpha = baseImage.hasAlphaChannel
 
         let screenScale = photoImageView.window?.screen.scale ?? 2.0
         let format = UIGraphicsImageRendererFormat()
@@ -52,7 +47,7 @@ final class MediaEditorImageHandler {
         return image
     }
 
-    static func compositeStickersOnImage(_ baseImage: UIImage, stickers: [StickerDTO], editorViewSize: CGSize? = nil, completion: @escaping (UIImage, [Bool]) -> Void) {
+    static func compositeStickersOnImage(_ baseImage: UIImage, stickers: [StickerDTO], editorViewSize: CGSize? = nil, drawingData: Data? = nil, completion: @escaping (UIImage, [Bool]) -> Void) {
         let imageSize = baseImage.size
         let group = DispatchGroup()
         let syncQueue = DispatchQueue(label: "com.sahara.stickerSync")
@@ -110,14 +105,7 @@ final class MediaEditorImageHandler {
         }
 
         group.notify(queue: .global(qos: .userInitiated)) {
-            let viewSize: CGSize
-            if let editorSize = editorViewSize {
-                viewSize = editorSize
-            } else {
-                let screenWidth = (UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen.bounds.width) ?? 393
-                let standardCardWidth = min(screenWidth - 64, 400)
-                viewSize = CGSize(width: standardCardWidth, height: standardCardWidth * 2)
-            }
+            let viewSize = editorViewSize ?? Self.fallbackEditorViewSize()
             let displayRect = ImageCoordinateSpace.displayRect(
                 imageSize: imageSize,
                 in: viewSize
@@ -125,12 +113,7 @@ final class MediaEditorImageHandler {
             let displayToImageScale = imageSize.width / displayRect.width
             let baseStickerSize: CGFloat = 100
 
-            let hasAlpha: Bool
-            if let alphaInfo = baseImage.cgImage?.alphaInfo {
-                hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-            } else {
-                hasAlpha = false
-            }
+            let hasAlpha = baseImage.hasAlphaChannel
 
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1.0
@@ -175,12 +158,51 @@ final class MediaEditorImageHandler {
                     image.draw(in: rect)
                     context.cgContext.restoreGState()
                 }
+
+                if let drawingData, let drawing = try? PKDrawing(data: drawingData) {
+                    let drawingScale = imageSize.width / displayRect.width
+                    let drawingImage = drawing.image(from: displayRect, scale: drawingScale)
+                    drawingImage.draw(in: CGRect(origin: .zero, size: imageSize))
+                }
             }
 
             let isAnimatedFlags = stickerImages.map { $0.isAnimated }
             DispatchQueue.main.async {
                 completion(compositedImage, isAnimatedFlags)
             }
+        }
+    }
+
+    static func compositeDrawingOnImage(
+        _ baseImage: UIImage,
+        drawingData: Data,
+        editorViewSize: CGSize?
+    ) -> UIImage? {
+        guard let drawing = try? PKDrawing(data: drawingData) else { return nil }
+
+        let imageSize = baseImage.size
+        let viewSize = editorViewSize ?? Self.fallbackEditorViewSize()
+
+        let displayRect = ImageCoordinateSpace.displayRect(
+            imageSize: imageSize,
+            in: viewSize
+        )
+        let scale = imageSize.width / displayRect.width
+        let drawingImage = drawing.image(from: displayRect, scale: scale)
+
+        let hasAlpha = baseImage.hasAlphaChannel
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1.0
+        format.opaque = !hasAlpha
+
+        let renderer = UIGraphicsImageRenderer(size: imageSize, format: format)
+        return renderer.image { context in
+            if hasAlpha {
+                context.cgContext.clear(CGRect(origin: .zero, size: imageSize))
+            }
+            baseImage.draw(at: .zero)
+            drawingImage.draw(in: CGRect(origin: .zero, size: imageSize))
         }
     }
 
@@ -211,5 +233,13 @@ final class MediaEditorImageHandler {
         }
 
         return UIImage(cgImage: cgImage, scale: scale, orientation: .up)
+    }
+
+    private static func fallbackEditorViewSize() -> CGSize {
+        let screenWidth = (UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.screen.bounds.width) ?? 393
+        let standardCardWidth = min(screenWidth - 64, 400)
+        return CGSize(width: standardCardWidth, height: standardCardWidth * 2)
     }
 }

@@ -115,4 +115,15 @@ enum DesignToken {
         static let button: CGFloat = 8
     }
 
+    // MARK: - Overlay Tokens
+
+    enum Overlay {
+        static let border = UIColor.black.withAlphaComponent(0.06)
+        static let subtleBorder = UIColor.black.withAlphaComponent(0.15)
+        static let dimOverlay = UIColor.black.withAlphaComponent(0.3)
+        static let heavyOverlay = UIColor.black.withAlphaComponent(0.5)
+        static let toastBackground = UIColor.black.withAlphaComponent(0.85)
+        static let whiteButton = UIColor.white.withAlphaComponent(0.8)
+    }
+
 }

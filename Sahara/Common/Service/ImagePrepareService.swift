@@ -34,15 +34,33 @@ final class ImagePrepareService: ImagePrepareServiceProtocol {
         let stickers = metadata.stickers
         let sourceFormat = metadata.format
         let editorViewSize = metadata.editorViewSize
+        let drawingData = metadata.drawingData
+        let hasStickers = !stickers.isEmpty
 
-        if !stickers.isEmpty {
+        switch (drawingData, hasStickers) {
+        case (let drawing?, true):
+            return compositeStickersThenDrawingThenConvert(
+                baseImage: baseImage,
+                stickers: stickers,
+                drawingData: drawing,
+                sourceFormat: sourceFormat,
+                editorViewSize: editorViewSize
+            )
+        case (let drawing?, false):
+            return compositeDrawingThenConvert(
+                baseImage: baseImage,
+                drawingData: drawing,
+                sourceFormat: sourceFormat,
+                editorViewSize: editorViewSize
+            )
+        case (nil, true):
             return compositeThenConvert(
                 baseImage: baseImage,
                 stickers: stickers,
                 sourceFormat: sourceFormat,
                 editorViewSize: editorViewSize
             )
-        } else {
+        case (nil, false):
             return convertOnly(
                 baseImage: baseImage,
                 sourceFormat: sourceFormat,
@@ -80,6 +98,60 @@ final class ImagePrepareService: ImagePrepareServiceProtocol {
                     targetFormat: sourceFormat
                 )
                 Logger.imageMetadata.info("Prepared image: stickers=\(stickers.count), format=\(result.imageFormat)")
+                observer.onNext(PreparedImageData(
+                    editedImageData: result.editedImageData,
+                    imageFormat: result.imageFormat
+                ))
+                observer.onCompleted()
+            }
+            return Disposables.create()
+        }
+    }
+
+    private func compositeDrawingThenConvert(
+        baseImage: UIImage,
+        drawingData: Data,
+        sourceFormat: ImageSourceData.ImageFormat?,
+        editorViewSize: CGSize?
+    ) -> Observable<PreparedImageData> {
+        guard let compositedImage = MediaEditorImageHandler.compositeDrawingOnImage(
+            baseImage,
+            drawingData: drawingData,
+            editorViewSize: editorViewSize
+        ) else {
+            return convertOnly(baseImage: baseImage, sourceFormat: sourceFormat, originalData: nil)
+        }
+
+        let result = ImageFormatConverter.convertToFormat(
+            editedImage: compositedImage,
+            targetFormat: sourceFormat
+        )
+        Logger.imageMetadata.info("Prepared image: drawing=true, stickers=0, format=\(result.imageFormat)")
+        return Observable.just(PreparedImageData(
+            editedImageData: result.editedImageData,
+            imageFormat: result.imageFormat
+        ))
+    }
+
+    private func compositeStickersThenDrawingThenConvert(
+        baseImage: UIImage,
+        stickers: [StickerDTO],
+        drawingData: Data,
+        sourceFormat: ImageSourceData.ImageFormat?,
+        editorViewSize: CGSize?
+    ) -> Observable<PreparedImageData> {
+        return Observable.create { observer in
+            MediaEditorImageHandler.compositeStickersOnImage(
+                baseImage,
+                stickers: stickers,
+                editorViewSize: editorViewSize,
+                drawingData: drawingData
+            ) { compositedImage, _ in
+                let result = ImageFormatConverter.convertToFormat(
+                    editedImage: compositedImage,
+                    targetFormat: sourceFormat
+                )
+                Logger.imageMetadata.info("Prepared image: drawing=true, stickers=\(stickers.count), format=\(result.imageFormat)")
                 observer.onNext(PreparedImageData(
                     editedImageData: result.editedImageData,
                     imageFormat: result.imageFormat

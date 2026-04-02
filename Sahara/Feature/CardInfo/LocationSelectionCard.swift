@@ -27,7 +27,7 @@ final class LocationSelectionCard: BaseCard {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
         config.title = "✕"
-        config.baseBackgroundColor = UIColor(hex: "4D4D4D")
+        config.baseBackgroundColor = DesignToken.Overlay.heavyOverlay
         config.baseForegroundColor = .white
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)

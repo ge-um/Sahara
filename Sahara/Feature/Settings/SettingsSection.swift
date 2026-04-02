@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import RxDataSources
 
 enum SettingsSectionType {
     case general
@@ -40,10 +39,3 @@ struct SettingsSection {
     }
 }
 
-extension SettingsSection: SectionModelType {
-    typealias Item = SettingsMenuItem
-
-    init(original: SettingsSection, items: [SettingsMenuItem]) {
-        self = SettingsSection(type: original.type, items: items)
-    }
-}

@@ -7,7 +7,6 @@
 
 import MessageUI
 import RxCocoa
-import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
@@ -20,20 +19,22 @@ final class SettingsViewController: UIViewController {
 
     private let customNavigationBar = CustomNavigationBar()
 
-    private lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: SettingsGroupedLayout())
-        collectionView.backgroundColor = .clear
-        collectionView.register(SettingsMenuCell.self, forCellWithReuseIdentifier: SettingsMenuCell.identifier)
-        collectionView.register(
-            SettingsSectionHeader.self,
-            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: SettingsSectionHeader.identifier
-        )
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.contentInset.bottom = 80
-        collectionView.delegate = self
-        return collectionView
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.contentInset.bottom = 80
+        return scrollView
     }()
+
+    private let contentStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 24
+        stackView.alignment = .fill
+        return stackView
+    }()
+
+    private var sectionViews: [SettingsSectionView] = []
 
     init(viewModel: SettingsViewModel = SettingsViewModel()) {
         self.viewModel = viewModel
@@ -78,7 +79,8 @@ final class SettingsViewController: UIViewController {
         view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(collectionView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentStackView)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -86,53 +88,54 @@ final class SettingsViewController: UIViewController {
             make.height.equalTo(54)
         }
 
-        collectionView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+        scrollView.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom)
+            make.horizontalEdges.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        contentStackView.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview().inset(20)
             make.centerX.equalToSuperview()
             make.width.lessThanOrEqualTo(600)
-            make.horizontalEdges.equalToSuperview().inset(20).priority(.medium)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.width.equalTo(scrollView.snp.width).offset(-40).priority(.medium)
+        }
+
+        buildSections()
+    }
+
+    private func buildSections() {
+        let defaultSections = [
+            SettingsSection(type: .general, items: [.language, .backgroundTheme]),
+            SettingsSection(type: .dataManagement, items: [.exportPhotos, .exportBackup, .importBackup, .cloudSync]),
+            SettingsSection(type: .notifications, items: [.serviceNews]),
+            SettingsSection(type: .support, items: [.contactDeveloper]),
+            SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])
+        ]
+
+        for section in defaultSections {
+            let sectionView = SettingsSectionView(section: section)
+            sectionViews.append(sectionView)
+            contentStackView.addArrangedSubview(sectionView)
         }
     }
 
     private func bind() {
-        let dataSource = RxCollectionViewSectionedReloadDataSource<SettingsSection>(
-            configureCell: { [weak self] dataSource, collectionView, indexPath, item in
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: SettingsMenuCell.identifier,
-                    for: indexPath
-                ) as? SettingsMenuCell else {
-                    return UICollectionViewCell()
-                }
-                cell.configure(with: item)
+        let allItemViews = sectionViews.flatMap { $0.itemViews }
 
-                cell.onToggleChanged = { [weak self] isOn in
-                    self?.handleToggleChanged(for: item, isOn: isOn)
-                }
-
-                return cell
-            },
-            configureSupplementaryView: { dataSource, collectionView, kind, indexPath in
-                guard kind == UICollectionView.elementKindSectionHeader else {
-                    return UICollectionReusableView()
-                }
-
-                guard let header = collectionView.dequeueReusableSupplementaryView(
-                    ofKind: kind,
-                    withReuseIdentifier: SettingsSectionHeader.identifier,
-                    for: indexPath
-                ) as? SettingsSectionHeader else {
-                    return UICollectionReusableView()
-                }
-
-                let section = dataSource[indexPath.section]
-                header.configure(with: section.title)
-                return header
+        for itemView in allItemViews {
+            itemView.onToggleChanged = { [weak self] isOn in
+                self?.handleToggleChanged(for: itemView.item, isOn: isOn)
             }
-        )
+        }
 
-        let itemSelected = collectionView.rx.modelSelected(SettingsMenuItem.self)
-            .filter { $0.isSelectable }
+        let itemSelected = Observable.merge(
+            allItemViews
+                .filter { $0.item.isSelectable }
+                .map { itemView in
+                    itemView.tapSubject.map { itemView.item }.asObservable()
+                }
+        )
 
         let input = SettingsViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
@@ -142,7 +145,9 @@ final class SettingsViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.sections
-            .drive(collectionView.rx.items(dataSource: dataSource))
+            .drive(with: self) { owner, _ in
+                owner.sectionViews.forEach { $0.refresh() }
+            }
             .disposed(by: disposeBag)
 
         output.openMailComposer
@@ -440,16 +445,6 @@ final class SettingsViewController: UIViewController {
         ))
 
         present(alert, animated: true)
-    }
-}
-
-extension SettingsViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 60)
-    }
-
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 32)
     }
 }
 

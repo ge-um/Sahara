@@ -50,6 +50,10 @@ final class CustomNavigationBar: UIView {
             self, selector: #selector(floatingWindowStateChanged),
             name: .floatingWindowStateDidChange, object: nil
         )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(sidebarModeChanged),
+            name: .sidebarModeDidChange, object: nil
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -59,18 +63,34 @@ final class CustomNavigationBar: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         enableSwipeBackGesture()
-        updateLeadingForWindowControls(isFloating: isInFloatingWindow)
+        updateLeadingForWindowControls()
     }
 
     @objc private func floatingWindowStateChanged() {
-        updateLeadingForWindowControls(isFloating: isInFloatingWindow)
+        updateLeadingForWindowControls()
     }
 
-    private func updateLeadingForWindowControls(isFloating: Bool) {
+    @objc private func sidebarModeChanged() {
+        updateLeadingForWindowControls()
+    }
+
+    private var isInSidebarMode: Bool {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let toggler = next as? SidebarToggleable {
+                return toggler.isSidebarMode && toggler.isSidebarExpanded
+            }
+            responder = next
+        }
+        return false
+    }
+
+    private func updateLeadingForWindowControls() {
         #if targetEnvironment(macCatalyst)
         let leading: CGFloat = 16
         #else
-        let leading: CGFloat = isFloating ? 76 : 16
+        let needsOffset = isInFloatingWindow && !isInSidebarMode
+        let leading: CGFloat = needsOffset ? 76 : 16
         #endif
         contentLeadingConstraint?.update(offset: leading)
     }

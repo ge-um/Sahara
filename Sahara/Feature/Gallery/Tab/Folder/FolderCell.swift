@@ -47,7 +47,7 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private var imageViews: [UIImageView] = []
 
     private var thumbnailPixelSize: CGFloat {
-        ThumbnailCache.maxPixelSize(for: thumbnailContainerView.bounds.size, scale: traitCollection.displayScale)
+        ThumbnailCache.maxPixelSize(for: contentView.bounds.size, scale: traitCollection.displayScale)
     }
 
     override init(frame: CGRect) {

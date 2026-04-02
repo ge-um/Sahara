@@ -1,15 +1,18 @@
 //
-//  SettingsMenuCell.swift
+//  SettingsItemView.swift
 //  Sahara
 //
-//  Created by 금가경 on 1/11/25.
-//
 
+import RxCocoa
+import RxSwift
 import SnapKit
 import UIKit
 
-final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
+final class SettingsItemView: UIView {
+    let item: SettingsMenuItem
     var onToggleChanged: ((Bool) -> Void)?
+
+    private(set) var tapSubject = PublishRelay<Void>()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -48,7 +51,7 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
         return toggle
     }()
 
-    private var labelStackView: UIStackView = {
+    private let labelStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
         stack.spacing = 4
@@ -56,9 +59,16 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
         return stack
     }()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    init(item: SettingsMenuItem) {
+        self.item = item
+        super.init(frame: .zero)
         configureUI()
+        refresh()
+
+        if item.isSelectable {
+            let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+            addGestureRecognizer(tap)
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -71,10 +81,14 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
         labelStackView.addArrangedSubview(titleLabel)
         labelStackView.addArrangedSubview(descriptionLabel)
 
-        contentView.addSubview(labelStackView)
-        contentView.addSubview(subtitleLabel)
-        contentView.addSubview(chevronImageView)
-        contentView.addSubview(toggleSwitch)
+        addSubview(labelStackView)
+        addSubview(subtitleLabel)
+        addSubview(chevronImageView)
+        addSubview(toggleSwitch)
+
+        snp.makeConstraints { make in
+            make.height.equalTo(60)
+        }
 
         labelStackView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
@@ -97,14 +111,9 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
             make.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
-
     }
 
-    @objc private func toggleChanged() {
-        onToggleChanged?(toggleSwitch.isOn)
-    }
-
-    func configure(with item: SettingsMenuItem) {
+    func refresh() {
         titleLabel.text = item.title
 
         if item.hasToggle {
@@ -133,5 +142,13 @@ final class SettingsMenuCell: UICollectionViewCell, IsIdentifiable {
                 chevronImageView.isHidden = false
             }
         }
+    }
+
+    @objc private func toggleChanged() {
+        onToggleChanged?(toggleSwitch.isOn)
+    }
+
+    @objc private func handleTap() {
+        tapSubject.accept(())
     }
 }

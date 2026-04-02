@@ -10,7 +10,7 @@ extension UIView {
         backgroundColor = .token(.backgroundGlass)
         layer.cornerRadius = cornerRadius
         layer.borderWidth = 0.5
-        layer.borderColor = UIColor.black.withAlphaComponent(0.06).cgColor
+        layer.borderColor = DesignToken.Overlay.border.cgColor
         clipsToBounds = true
     }
 }

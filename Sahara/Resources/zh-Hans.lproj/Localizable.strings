@@ -19,8 +19,6 @@
 "gallery.theme_view" = "按主题";
 "gallery.folder_view" = "按文件夹";
 "gallery.month_format" = "yyyy年MM月";
-"gallery.empty_message" = "记录您的回忆吧！";
-"gallery.empty_button" = "创建卡片";
 
 /* Theme Categories */
 "theme.people" = "人物";

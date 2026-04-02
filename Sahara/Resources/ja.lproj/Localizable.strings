@@ -19,8 +19,6 @@
 "gallery.theme_view" = "テーマ順";
 "gallery.folder_view" = "フォルダ順";
 "gallery.month_format" = "yyyy年MM月";
-"gallery.empty_message" = "思い出をカードに残しましょう！";
-"gallery.empty_button" = "カード作成";
 
 /* Theme Categories */
 "theme.people" = "人物";

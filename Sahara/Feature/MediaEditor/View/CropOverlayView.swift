@@ -19,7 +19,7 @@ final class CropOverlayView: UIView {
 
     private let dimView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        view.backgroundColor = DesignToken.Overlay.heavyOverlay
         view.isUserInteractionEnabled = false
         return view
     }()

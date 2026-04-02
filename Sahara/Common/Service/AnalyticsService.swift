@@ -216,13 +216,8 @@ final class AnalyticsService {
                 let uniqueFamilies = Set(widgets.map { widget -> String in
                     switch widget.family {
                     case .systemSmall: return "small"
-                    case .systemMedium: return "medium"
                     case .systemLarge: return "large"
-                    case .systemExtraLarge: return "extraLarge"
-                    case .accessoryCircular: return "accessoryCircular"
-                    case .accessoryRectangular: return "accessoryRectangular"
-                    case .accessoryInline: return "accessoryInline"
-                    @unknown default: return "unknown"
+                    default: return "unknown"
                     }
                 }).sorted().joined(separator: ",")
 

@@ -67,6 +67,9 @@ final class CardInfoViewController: UIViewController {
         #if targetEnvironment(macCatalyst)
         setupDropInteraction()
         #endif
+        registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, _: UITraitCollection) in
+            self.updateContentLayout()
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -121,17 +124,31 @@ final class CardInfoViewController: UIViewController {
         contentView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
-            if UIDevice.current.userInterfaceIdiom == .phone {
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+        }
+        updateContentLayout()
+
+        contentView.scrollView.snp.remakeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateContentLayout() {
+        let isCompact = traitCollection.horizontalSizeClass == .compact
+        if isCompact {
+            contentView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom)
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
                 make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
-            } else {
+            }
+        } else {
+            contentView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom)
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
                 make.centerX.equalToSuperview()
                 make.width.lessThanOrEqualTo(600)
                 make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).priority(.medium)
             }
-        }
-
-        contentView.scrollView.snp.remakeConstraints { make in
-            make.edges.equalToSuperview()
         }
     }
 
@@ -340,12 +357,7 @@ extension CardInfoViewController {
             date: selectedDateRelay.map(\.date).asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
-                .map { owner, text in
-                    if owner.contentView.memoCard.textView.textColor == .token(.textSecondary) {
-                        return nil
-                    }
-                    return text
-                }
+                .map { owner, _ in owner.contentView.memoCard.currentMemo }
                 .asObservable(),
             customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
             location: locationOutput.location.asObservable(),

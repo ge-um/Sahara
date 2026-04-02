@@ -14,9 +14,8 @@ import UIKit
 
 final class PhotoCardView: UIView {
     private var isFrontCardVisible = true
-    private var photoImageHeightConstraint: Constraint?
     private let disposeBag = DisposeBag()
-    private let cardWidth: CGFloat
+    private var currentImage: UIImage?
 
     let swipeLeftRelay = PublishRelay<Void>()
     let swipeRightRelay = PublishRelay<Void>()
@@ -57,6 +56,8 @@ final class PhotoCardView: UIView {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 20
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         return imageView
     }()
 
@@ -112,7 +113,7 @@ final class PhotoCardView: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
         label.font = .typography(.caption)
-        label.textColor = .white.withAlphaComponent(0.8)
+        label.textColor = DesignToken.Overlay.whiteButton
         label.textAlignment = .right
         return label
     }()
@@ -143,8 +144,7 @@ final class PhotoCardView: UIView {
         return label
     }()
 
-    init(cardWidth: CGFloat) {
-        self.cardWidth = cardWidth
+    init() {
         super.init(frame: .zero)
         configureUI()
         setupGestures()
@@ -176,7 +176,7 @@ final class PhotoCardView: UIView {
 
         cardContainerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            photoImageHeightConstraint = make.height.equalTo(300).constraint
+            make.height.equalTo(300)
         }
 
         frontCardView.snp.makeConstraints { make in
@@ -271,12 +271,8 @@ final class PhotoCardView: UIView {
         photoImage
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
-                if let image = image {
-                    let imageHeight = image.heightForWidth(owner.cardWidth)
-                    let minimumHeight: CGFloat = 200
-                    let finalHeight = max(imageHeight, minimumHeight)
-                    owner.photoImageHeightConstraint?.update(offset: finalHeight)
-                }
+                owner.currentImage = image
+                owner.updateImageHeight()
             }
             .disposed(by: disposeBag)
 
@@ -303,6 +299,17 @@ final class PhotoCardView: UIView {
                 owner.flipToFront()
             }
             .disposed(by: disposeBag)
+    }
+
+    private func updateImageHeight() {
+        guard let image = currentImage else { return }
+        let aspectRatio = image.size.height / image.size.width
+
+        cardContainerView.snp.remakeConstraints { make in
+            make.edges.equalToSuperview()
+            make.height.equalTo(cardContainerView.snp.width).multipliedBy(aspectRatio)
+        }
+        layoutIfNeeded()
     }
 
     private func flipToBack() {

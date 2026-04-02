@@ -57,7 +57,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         let label = UILabel()
         label.text = "+"
         label.font = DesignToken.Typography.emphasis.numericFont
-        label.textColor = UIColor(hex: "#6D6D6D")
+        label.textColor = UIColor.token(.textTertiary)
         label.textAlignment = .center
         label.isHidden = true
         return label
@@ -110,8 +110,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
 
         dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(4)
-            make.leading.equalToSuperview().offset(4)
+            make.top.equalToSuperview().offset(6)
+            make.leading.equalToSuperview().offset(6)
         }
 
         addButton.snp.makeConstraints { make in
@@ -155,7 +155,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
             let shouldShowBorder = isTodayDate && sortedCards.isEmpty
 
-            contentView.layer.borderColor = shouldShowBorder ? UIColor(hex: "#6D6D6D").cgColor : nil
+            contentView.layer.borderColor = shouldShowBorder ? UIColor.token(.textTertiary).cgColor : nil
             contentView.layer.borderWidth = shouldShowBorder ? 2 : 0
 
             if sortedCards.isEmpty {

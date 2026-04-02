@@ -110,7 +110,7 @@ final class CloudSyncService: CloudSyncServiceProtocol {
         self.syncEngine = engine
 
         UserDefaults.standard.set(true, forKey: Keys.enabled)
-        updateSyncStatus(.upToDate)
+        updateSyncStatus(.syncing)
 
         ensureZoneExists()
         observeRealmChanges()

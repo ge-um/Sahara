@@ -36,11 +36,7 @@ final class CardDetailViewController: UIViewController {
         return view
     }()
 
-    private lazy var photoCardView: PhotoCardView = {
-        let availableWidth = view.bounds.width - 64
-        let cardWidth = UIDevice.current.userInterfaceIdiom == .phone ? availableWidth : min(availableWidth, 500)
-        return PhotoCardView(cardWidth: cardWidth)
-    }()
+    private let photoCardView = PhotoCardView()
 
     private let buttonContainerView: UIView = {
         let view = UIView()
@@ -82,7 +78,7 @@ final class CardDetailViewController: UIViewController {
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 13)
         config.imagePadding = 6
         config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
-        config.baseForegroundColor = UIColor(red: 142/255, green: 142/255, blue: 147/255, alpha: 1)
+        config.baseForegroundColor = .systemGray
         config.title = NSLocalizedString("widget.add_to_widget", comment: "")
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var outgoing = incoming
@@ -91,9 +87,9 @@ final class CardDetailViewController: UIViewController {
         }
         let button = UIButton(configuration: config)
         button.clipsToBounds = true
-        button.backgroundColor = UIColor(red: 242/255, green: 242/255, blue: 247/255, alpha: 1)
+        button.backgroundColor = .systemGray6
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor(red: 209/255, green: 209/255, blue: 214/255, alpha: 1).cgColor
+        button.layer.borderColor = UIColor.systemGray4.cgColor
         return button
     }()
 
@@ -180,13 +176,9 @@ final class CardDetailViewController: UIViewController {
 
         photoCardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(32)
-            if UIDevice.current.userInterfaceIdiom == .phone {
-                make.horizontalEdges.equalToSuperview().inset(32)
-            } else {
-                make.centerX.equalToSuperview()
-                make.width.lessThanOrEqualTo(500)
-                make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
-            }
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(500)
+            make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
         }
 
         buttonContainerView.snp.makeConstraints { make in
@@ -254,6 +246,12 @@ final class CardDetailViewController: UIViewController {
             }
             .disposed(by: disposeBag)
         #endif
+
+        output.showPhotoPermissionAlert
+            .drive(with: self) { owner, _ in
+                PermissionService.shared.showPermissionAlert(for: .photoLibrary, from: owner)
+            }
+            .disposed(by: disposeBag)
     }
 
     private func bind() {
@@ -342,7 +340,7 @@ final class CardDetailViewController: UIViewController {
             }
         } else {
             config.image = UIImage(systemName: "plus")
-            config.baseForegroundColor = UIColor(red: 142/255, green: 142/255, blue: 147/255, alpha: 1)
+            config.baseForegroundColor = .systemGray
             config.title = NSLocalizedString("widget.add_to_widget", comment: "")
             config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
@@ -359,19 +357,16 @@ final class CardDetailViewController: UIViewController {
             widgetToggleButton.layer.borderWidth = 0
 
             let gradient = CAGradientLayer()
-            gradient.colors = [
-                UIColor(red: 79/255, green: 123/255, blue: 254/255, alpha: 1).cgColor,
-                UIColor(red: 2/255, green: 19/255, blue: 204/255, alpha: 1).cgColor
-            ]
+            gradient.colors = DesignToken.Gradient.ctaBlue.colors
             gradient.startPoint = CGPoint(x: 0.5, y: 0)
             gradient.endPoint = CGPoint(x: 0.5, y: 1)
             gradient.frame = widgetToggleButton.bounds
             gradient.cornerRadius = widgetToggleButton.bounds.height / 2
             widgetToggleButton.layer.insertSublayer(gradient, at: 0)
         } else {
-            widgetToggleButton.backgroundColor = UIColor(red: 242/255, green: 242/255, blue: 247/255, alpha: 1)
+            widgetToggleButton.backgroundColor = .systemGray6
             widgetToggleButton.layer.borderWidth = 1
-            widgetToggleButton.layer.borderColor = UIColor(red: 209/255, green: 209/255, blue: 214/255, alpha: 1).cgColor
+            widgetToggleButton.layer.borderColor = UIColor.systemGray4.cgColor
         }
     }
 

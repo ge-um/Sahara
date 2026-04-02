@@ -33,6 +33,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         let shareImage: Driver<UIImage>
         let deleteCompleted: Driver<Void>
         let isWidgetPinned: Driver<Bool>
+        let showPhotoPermissionAlert: Driver<Void>
     }
 
     init(cardId: ObjectId, realmManager: RealmServiceProtocol = RealmService.shared) {
@@ -61,6 +62,7 @@ final class CardDetailViewModel: BaseViewModelProtocol {
         )
         let saveResult = saveAction.saveResult
         let saveFileURL = saveAction.saveFileURL
+        let showPhotoPermissionAlert = saveAction.showPhotoPermissionAlert
 
         let shareImage = input.shareButtonTapped
             .withLatestFrom(cardImage)
@@ -110,15 +112,17 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             saveFileURL: saveFileURL,
             shareImage: shareImage,
             deleteCompleted: deleteCompleted,
-            isWidgetPinned: isWidgetPinnedRelay.asDriver()
+            isWidgetPinned: isWidgetPinnedRelay.asDriver(),
+            showPhotoPermissionAlert: showPhotoPermissionAlert
         )
     }
 
     private func configureSaveAction(
         trigger: Observable<Void>, imageData: Observable<Data>
-    ) -> (saveResult: Driver<Result<Void, Error>>, saveFileURL: Driver<URL>) {
+    ) -> (saveResult: Driver<Result<Void, Error>>, saveFileURL: Driver<URL>, showPhotoPermissionAlert: Driver<Void>) {
         #if targetEnvironment(macCatalyst)
         let saveResult: Driver<Result<Void, Error>> = .empty()
+        let showPhotoPermissionAlert: Driver<Void> = .empty()
         let saveFileURL = trigger
             .withLatestFrom(imageData)
             .observe(on: ConcurrentDispatchQueueScheduler(qos: .userInitiated))
@@ -136,31 +140,75 @@ final class CardDetailViewModel: BaseViewModelProtocol {
             }
             .observe(on: MainScheduler.instance)
             .asDriver(onErrorDriveWith: .empty())
-        return (saveResult, saveFileURL)
+        return (saveResult, saveFileURL, showPhotoPermissionAlert)
         #else
+        let showPermissionAlertRelay = PublishRelay<Void>()
         let saveFileURL: Driver<URL> = .empty()
         let saveResult = trigger
             .withLatestFrom(imageData)
             .flatMap { imageData -> Observable<Result<Void, Error>> in
-                return Observable.create { observer in
-                    PHPhotoLibrary.shared().performChanges({
-                        let request = PHAssetCreationRequest.forAsset()
-                        request.addResource(with: .photo, data: imageData, options: nil)
-                    }) { success, error in
-                        if success {
-                            observer.onNext(.success(()))
-                        } else if let error = error {
-                            observer.onNext(.failure(error))
-                        } else {
-                            observer.onNext(.failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
+                let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+                switch status {
+                case .authorized:
+                    return Self.saveToPhotoLibrary(imageData: imageData)
+                case .notDetermined:
+                    return Self.requestPhotoAddPermission()
+                        .flatMap { granted -> Observable<Result<Void, Error>> in
+                            if granted {
+                                return Self.saveToPhotoLibrary(imageData: imageData)
+                            }
+                            showPermissionAlertRelay.accept(())
+                            return .empty()
                         }
-                        observer.onCompleted()
-                    }
-                    return Disposables.create()
+                default:
+                    showPermissionAlertRelay.accept(())
+                    return .empty()
                 }
             }
-            .asDriver(onErrorJustReturn: .failure(NSError(domain: "CardDetailViewModel", code: -1, userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")])))
-        return (saveResult, saveFileURL)
+            .asDriver(onErrorJustReturn: .failure(Self.saveError))
+        let showPhotoPermissionAlert = showPermissionAlertRelay.asDriver(onErrorJustReturn: ())
+        return (saveResult, saveFileURL, showPhotoPermissionAlert)
         #endif
+    }
+
+    private static func saveToPhotoLibrary(imageData: Data) -> Observable<Result<Void, Error>> {
+        Observable.create { observer in
+            PHPhotoLibrary.shared().performChanges({
+                let request = PHAssetCreationRequest.forAsset()
+                request.addResource(with: .photo, data: imageData, options: nil)
+            }) { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        observer.onNext(.success(()))
+                    } else if let error {
+                        observer.onNext(.failure(error))
+                    } else {
+                        observer.onNext(.failure(Self.saveError))
+                    }
+                    observer.onCompleted()
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
+    private static var saveError: NSError {
+        NSError(
+            domain: "CardDetailViewModel",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: NSLocalizedString("photo_detail.save_failed", comment: "")]
+        )
+    }
+
+    private static func requestPhotoAddPermission() -> Observable<Bool> {
+        Observable.create { observer in
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                DispatchQueue.main.async {
+                    observer.onNext(status == .authorized)
+                    observer.onCompleted()
+                }
+            }
+            return Disposables.create()
+        }
     }
 }

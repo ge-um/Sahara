@@ -18,4 +18,5 @@ extension UIView {
 
 extension Notification.Name {
     static let floatingWindowStateDidChange = Notification.Name("floatingWindowStateDidChange")
+    static let sidebarModeDidChange = Notification.Name("sidebarModeDidChange")
 }
