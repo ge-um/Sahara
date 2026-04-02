@@ -138,13 +138,6 @@ final class ImageFormatConverter {
     }
 
     private static func detectOptimalFormat(for image: UIImage) -> ImageSourceData.ImageFormat {
-        let hasAlpha: Bool
-        if let alphaInfo = image.cgImage?.alphaInfo {
-            hasAlpha = !(alphaInfo == .none || alphaInfo == .noneSkipFirst || alphaInfo == .noneSkipLast)
-        } else {
-            hasAlpha = false
-        }
-
-        return hasAlpha ? .png : .heic
+        image.hasAlphaChannel ? .png : .heic
     }
 }
