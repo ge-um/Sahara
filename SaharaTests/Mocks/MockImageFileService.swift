@@ -41,6 +41,8 @@ final class MockImageFileService: ImageFileServiceProtocol {
         FileManager.default.temporaryDirectory.appendingPathComponent(relativePath)
     }
 
+    func cleanOrphanedFiles(referencedPaths: Set<String>) {}
+
     func reset() {
         storage = [:]
         shouldFailSave = false

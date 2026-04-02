@@ -141,6 +141,10 @@ final class MockRealmService: RealmServiceProtocol {
 
     func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {}
 
+    func allImagePaths() -> Set<String> {
+        Set(mockCards.compactMap(\.imagePath))
+    }
+
     func reset() {
         addCalled = false
         fetchCalled = false
