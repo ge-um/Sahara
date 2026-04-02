@@ -36,11 +36,7 @@ final class CardDetailViewController: UIViewController {
         return view
     }()
 
-    private lazy var photoCardView: PhotoCardView = {
-        let availableWidth = view.bounds.width - 64
-        let cardWidth = UIDevice.current.userInterfaceIdiom == .phone ? availableWidth : min(availableWidth, 500)
-        return PhotoCardView(cardWidth: cardWidth)
-    }()
+    private let photoCardView = PhotoCardView()
 
     private let buttonContainerView: UIView = {
         let view = UIView()
@@ -180,13 +176,9 @@ final class CardDetailViewController: UIViewController {
 
         photoCardView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(32)
-            if UIDevice.current.userInterfaceIdiom == .phone {
-                make.horizontalEdges.equalToSuperview().inset(32)
-            } else {
-                make.centerX.equalToSuperview()
-                make.width.lessThanOrEqualTo(500)
-                make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
-            }
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(500)
+            make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
         }
 
         buttonContainerView.snp.makeConstraints { make in

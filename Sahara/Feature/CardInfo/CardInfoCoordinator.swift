@@ -76,7 +76,7 @@ final class CardInfoCoordinator: Coordinator, CardInfoCoordinatorProtocol {
         datePickerVC.onDateSelected = onDateSelected
 
         if let sheet = datePickerVC.sheetPresentationController {
-            sheet.detents = [.medium()]
+            sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
         }
         getPresentingViewController()?.present(datePickerVC, animated: true)

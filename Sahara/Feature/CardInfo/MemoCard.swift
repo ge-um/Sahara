@@ -30,6 +30,11 @@ final class MemoCard: BaseCard {
         return label
     }()
 
+    private var isShowingPlaceholder = false
+
+    var currentMemo: String? {
+        isShowingPlaceholder ? nil : textView.text
+    }
     private let disposeBag = DisposeBag()
     private let placeholderText = NSLocalizedString("card_info.memo_placeholder", comment: "")
 
@@ -66,9 +71,10 @@ final class MemoCard: BaseCard {
         textView.rx.didBeginEditing
             .withUnretained(self)
             .bind { owner, _ in
-                if owner.textView.textColor == .token(.textTertiary) {
+                if owner.isShowingPlaceholder {
                     owner.textView.text = ""
                     owner.textView.textColor = .token(.textPrimary)
+                    owner.isShowingPlaceholder = false
                 }
             }
             .disposed(by: disposeBag)
@@ -86,7 +92,7 @@ final class MemoCard: BaseCard {
             .orEmpty
             .withUnretained(self)
             .bind { owner, text in
-                let count = owner.textView.textColor == .token(.textTertiary) ? 0 : text.count
+                let count = owner.isShowingPlaceholder ? 0 : text.count
                 owner.characterCountLabel.text = "\(count)"
                 owner.characterCountLabel.textColor = .token(.textSecondary)
             }
@@ -94,6 +100,7 @@ final class MemoCard: BaseCard {
     }
 
     func showPlaceholder() {
+        isShowingPlaceholder = true
         textView.attributedText = NSAttributedString(
             string: placeholderText,
             attributes: [
@@ -106,6 +113,7 @@ final class MemoCard: BaseCard {
     }
 
     func setMemo(_ memo: String) {
+        isShowingPlaceholder = false
         textView.text = memo
         textView.textColor = .token(.textPrimary)
         characterCountLabel.text = "\(memo.count)"

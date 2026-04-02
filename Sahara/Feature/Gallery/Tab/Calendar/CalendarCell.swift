@@ -110,8 +110,8 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
         }
 
         dayLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(4)
-            make.leading.equalToSuperview().offset(4)
+            make.top.equalToSuperview().offset(6)
+            make.leading.equalToSuperview().offset(6)
         }
 
         addButton.snp.makeConstraints { make in
