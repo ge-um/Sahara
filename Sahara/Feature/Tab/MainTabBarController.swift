@@ -12,6 +12,7 @@ import SnapKit
 
 protocol SidebarToggleable: AnyObject {
     var isSidebarMode: Bool { get }
+    var isSidebarExpanded: Bool { get }
     func toggleSidebar()
 }
 
@@ -44,7 +45,7 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
     // MARK: - Sidebar State
 
     private(set) var isSidebarMode = false
-    private var isSidebarExpanded = true
+    private(set) var isSidebarExpanded = true
     private var wasFloating: Bool?
 
     private var shouldShowSidebar: Bool {
@@ -136,6 +137,7 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
             relayoutCurrentChild()
         }
         notifyChildrenOfModeChange()
+        NotificationCenter.default.post(name: .sidebarModeDidChange, object: nil)
     }
 
     // MARK: - Tab Bar
@@ -219,6 +221,8 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
             self.sidebarView.alpha = self.isSidebarExpanded ? 1 : 0
             self.view.layoutIfNeeded()
         }
+
+        NotificationCenter.default.post(name: .sidebarModeDidChange, object: nil)
     }
 
     // MARK: - Child VC Management
