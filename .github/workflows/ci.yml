@@ -99,7 +99,6 @@ jobs:
             -skipPackagePluginValidation \
             -skipMacroValidation \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            -enableCodeCoverage NO \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Test Results
