@@ -102,7 +102,7 @@ final class MediaSelectionViewController: UIViewController {
 
     private let dimView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.backgroundColor = DesignToken.Overlay.dimOverlay
         view.alpha = 0
         view.isHidden = true
         return view

@@ -11,7 +11,7 @@ import UIKit
 final class ToastView: UIView {
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.85)
+        view.backgroundColor = DesignToken.Overlay.toastBackground
         view.layer.cornerRadius = 12
         return view
     }()

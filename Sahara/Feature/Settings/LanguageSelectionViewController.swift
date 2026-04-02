@@ -91,7 +91,7 @@ final class LanguageSelectionViewController: UIViewController {
 
                 var bgConfig = UIBackgroundConfiguration.listGroupedCell()
                 bgConfig.backgroundColor = .token(.backgroundGlass)
-                bgConfig.strokeColor = UIColor.black.withAlphaComponent(0.06)
+                bgConfig.strokeColor = DesignToken.Overlay.border
                 bgConfig.strokeWidth = 0.5
                 cell.backgroundConfiguration = bgConfig
 

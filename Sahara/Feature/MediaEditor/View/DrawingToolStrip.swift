@@ -192,7 +192,7 @@ final class DrawingToolStrip: UIView {
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "plus.circle.fill")?
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 18))
-        config.baseForegroundColor = UIColor.black.withAlphaComponent(0.5)
+        config.baseForegroundColor = DesignToken.Overlay.heavyOverlay
         config.contentInsets = NSDirectionalEdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
         customButton.configuration = config
 
@@ -277,7 +277,7 @@ final class DrawingToolStrip: UIView {
 
     private func setupSeparator() {
         let separator = UIView()
-        separator.backgroundColor = UIColor.black.withAlphaComponent(0.15)
+        separator.backgroundColor = DesignToken.Overlay.subtleBorder
 
         separator.snp.makeConstraints { make in
             make.width.equalTo(1)
@@ -296,7 +296,7 @@ final class DrawingToolStrip: UIView {
         button.clipsToBounds = true
 
         if color == .white {
-            button.layer.borderColor = UIColor.black.withAlphaComponent(0.15).cgColor
+            button.layer.borderColor = DesignToken.Overlay.subtleBorder.cgColor
         }
 
         button.snp.makeConstraints { make in
@@ -360,7 +360,7 @@ final class DrawingToolStrip: UIView {
     private func deselectAllColorButtons() {
         for (index, button) in colorButtons.enumerated() {
             if colorPresets[index] == .white {
-                button.layer.borderColor = UIColor.black.withAlphaComponent(0.15).cgColor
+                button.layer.borderColor = DesignToken.Overlay.subtleBorder.cgColor
             } else {
                 button.layer.borderColor = UIColor.clear.cgColor
             }

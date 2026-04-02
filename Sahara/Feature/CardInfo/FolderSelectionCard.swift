@@ -140,7 +140,7 @@ final class FolderSelectionCard: BaseCard {
     private func createTagButton(title: String) -> UIButton {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.baseBackgroundColor = UIColor(hex: "#FBFBFB")
+        config.baseBackgroundColor = .token(.backgroundPrimary)
         config.baseForegroundColor = .token(.textSecondary)
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)

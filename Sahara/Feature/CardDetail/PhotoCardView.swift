@@ -113,7 +113,7 @@ final class PhotoCardView: UIView {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
         label.font = .typography(.caption)
-        label.textColor = .white.withAlphaComponent(0.8)
+        label.textColor = DesignToken.Overlay.whiteButton
         label.textAlignment = .right
         return label
     }()

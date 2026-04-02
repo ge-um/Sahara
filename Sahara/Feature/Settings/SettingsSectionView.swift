@@ -56,7 +56,7 @@ final class SettingsSectionView: UIView {
     private func createSeparator() -> UIView {
         let container = UIView()
         let line = UIView()
-        line.backgroundColor = UIColor.black.withAlphaComponent(0.06)
+        line.backgroundColor = DesignToken.Overlay.border
 
         container.addSubview(line)
 

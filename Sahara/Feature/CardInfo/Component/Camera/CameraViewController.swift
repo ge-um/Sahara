@@ -27,7 +27,7 @@ final class CameraViewController: UIViewController {
         let button = UIButton()
         button.setImage(UIImage(systemName: "camera.rotate"), for: .normal)
         button.tintColor = .white
-        button.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        button.backgroundColor = DesignToken.Overlay.dimOverlay
         button.layer.cornerRadius = 25
         return button
     }()
@@ -36,7 +36,7 @@ final class CameraViewController: UIViewController {
         let button = UIButton()
         button.setImage(UIImage(systemName: "xmark"), for: .normal)
         button.tintColor = .white
-        button.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        button.backgroundColor = DesignToken.Overlay.dimOverlay
         button.layer.cornerRadius = 20
         return button
     }()

@@ -91,7 +91,7 @@ final class MediaEditorViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
 
         button.configuration = config
-        button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        button.backgroundColor = DesignToken.Overlay.whiteButton
         button.layer.cornerRadius = 18
         button.clipsToBounds = true
         button.isHidden = true
@@ -108,7 +108,7 @@ final class MediaEditorViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
 
         button.configuration = config
-        button.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        button.backgroundColor = DesignToken.Overlay.whiteButton
         button.layer.cornerRadius = 18
         button.clipsToBounds = true
         button.isHidden = true
@@ -234,7 +234,7 @@ final class MediaEditorViewController: UIViewController {
 
     let cropDimOverlay: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.backgroundColor = DesignToken.Overlay.dimOverlay
         view.isHidden = true
         view.isUserInteractionEnabled = false
         return view
