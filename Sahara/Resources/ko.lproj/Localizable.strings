@@ -19,8 +19,6 @@
 "gallery.theme_view" = "주제별";
 "gallery.folder_view" = "폴더별";
 "gallery.month_format" = "yyyy년 MM월";
-"gallery.empty_message" = "추억을 카드로 남겨보세요!";
-"gallery.empty_button" = "카드 작성하기";
 
 /* Theme Categories */
 "theme.people" = "사람";

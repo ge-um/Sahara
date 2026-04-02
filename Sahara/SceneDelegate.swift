@@ -7,6 +7,7 @@
 
 import MessageUI
 import RealmSwift
+import SnapKit
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -20,6 +21,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private var openSource: OpenSource = .organic
     private var pendingURL: URL?
     private var splashTimeoutWork: DispatchWorkItem?
+    private weak var syncProgressView: SyncProgressView?
+    private var hasCleanedOrphanedFiles = false
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
@@ -56,6 +59,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         window?.makeKeyAndVisible()
+        installSyncProgressView()
     }
 
     @objc private func handleRemoteConfigReady() {
@@ -107,6 +111,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private func showMainScreen() {
         window?.rootViewController = MainTabBarController()
+        if let syncProgressView {
+            window?.bringSubviewToFront(syncProgressView)
+        }
 
         if let url = pendingURL {
             pendingURL = nil
@@ -235,6 +242,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         #endif
     }
 
+    private func installSyncProgressView() {
+        guard let window, syncProgressView == nil else { return }
+        let syncView = SyncProgressView()
+        self.syncProgressView = syncView
+        window.addSubview(syncView)
+        syncView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(window.safeAreaLayoutGuide.snp.top).offset(40)
+        }
+    }
+
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
         // This occurs shortly after the scene enters the background, or when its session is discarded.
@@ -248,6 +266,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if let syncService = CloudSyncService.current,
            syncService.isEnabled {
             syncService.fetchChangesIfNeeded()
+        }
+
+        if !hasCleanedOrphanedFiles {
+            hasCleanedOrphanedFiles = true
+            DispatchQueue.global(qos: .utility).async {
+                let referencedPaths = RealmService.shared.allImagePaths()
+                ImageFileService.shared.cleanOrphanedFiles(referencedPaths: referencedPaths)
+            }
         }
 
         AnalyticsService.shared.trackDailyUsage()

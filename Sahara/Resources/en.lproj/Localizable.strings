@@ -19,8 +19,6 @@
 "gallery.theme_view" = "By Theme";
 "gallery.folder_view" = "By Folder";
 "gallery.month_format" = "MMMM yyyy";
-"gallery.empty_message" = "Capture your memories as cards!";
-"gallery.empty_button" = "Create Card";
 
 /* Theme Categories */
 "theme.people" = "People";

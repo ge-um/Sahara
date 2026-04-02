@@ -17,8 +17,6 @@ import MapKit
 final class GalleryViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
-    private let emptyStateView = EmptyStateView()
-
     private let viewTypeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -142,14 +140,6 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.addRightButton(image: plusImage, tintColor: .token(.textPrimary)) { [weak self] in
             self?.addButtonTapped()
         }
-
-        emptyStateView.configure(
-            message: NSLocalizedString("gallery.empty_message", comment: ""),
-            buttonTitle: NSLocalizedString("gallery.empty_button", comment: "")
-        )
-        emptyStateView.onActionButtonTapped = { [weak self] in
-            self?.addButtonTapped()
-        }
     }
 
     @objc private func addButtonTapped() {
@@ -209,7 +199,6 @@ final class GalleryViewController: UIViewController {
         view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(emptyStateView)
         view.addSubview(viewTypeButtonStackView)
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
@@ -225,11 +214,6 @@ final class GalleryViewController: UIViewController {
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
             make.height.equalTo(54)
-        }
-
-        emptyStateView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
-            make.horizontalEdges.bottom.equalToSuperview()
         }
 
         viewTypeButtonStackView.snp.makeConstraints { make in
@@ -315,29 +299,17 @@ final class GalleryViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        Driver.combineLatest(output.isEmpty, output.selectedViewType)
-            .drive(with: self) { owner, data in
-                let (isEmpty, viewType) = data
-                owner.emptyStateView.isHidden = !isEmpty
-                owner.viewTypeButtonStackView.isHidden = isEmpty
-                owner.customNavigationBar.setRightButtonHidden(isEmpty)
+        output.selectedViewType
+            .drive(with: self) { owner, viewType in
+                owner.calendarContainerView.isHidden = viewType != .date
+                owner.mapView.isHidden = viewType != .location
+                owner.themeContainerView.isHidden = viewType != .theme
+                owner.folderContainerView.isHidden = viewType != .folder
 
-                if isEmpty {
-                    owner.calendarContainerView.isHidden = true
-                    owner.mapView.isHidden = true
-                    owner.themeContainerView.isHidden = true
-                    owner.folderContainerView.isHidden = true
-                } else {
-                    owner.calendarContainerView.isHidden = viewType != .date
-                    owner.mapView.isHidden = viewType != .location
-                    owner.themeContainerView.isHidden = viewType != .theme
-                    owner.folderContainerView.isHidden = viewType != .folder
-
-                    if viewType == .location {
-                        owner.loadMapAnnotations()
-                    } else if viewType == .theme {
-                        owner.themeVC.refreshData()
-                    }
+                if viewType == .location {
+                    owner.loadMapAnnotations()
+                } else if viewType == .theme {
+                    owner.themeVC.refreshData()
                 }
             }
             .disposed(by: disposeBag)

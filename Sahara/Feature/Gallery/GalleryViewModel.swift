@@ -31,7 +31,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let currentMonthTitle: Driver<String>
         let selectedViewType: Driver<GalleryViewType>
         let showCalendar: Driver<Bool>
-        let isEmpty: Driver<Bool>
     }
     
     func transform(input: Input) -> Output {
@@ -63,9 +62,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let showCalendar = selectedViewType
             .map { $0 == .date }
 
-        let isEmpty = realmManager.observeIsEmpty(Card.self)
-            .share(replay: 1, scope: .whileConnected)
-
         input.addButtonTapped
             .bind(to: showPhotoPicker)
             .disposed(by: disposeBag)
@@ -95,8 +91,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
             calendarItems: calendarItems.asDriver(onErrorJustReturn: []),
             currentMonthTitle: currentMonthTitle.asDriver(onErrorJustReturn: ""),
             selectedViewType: selectedViewType.asDriver(),
-            showCalendar: showCalendar.asDriver(onErrorJustReturn: true),
-            isEmpty: isEmpty.asDriver(onErrorJustReturn: true)
+            showCalendar: showCalendar.asDriver(onErrorJustReturn: true)
         )
     }
 
