@@ -321,3 +321,13 @@
 /* Widget */
 "widget.add_to_widget" = "Add to Widget";
 "widget.added_to_widget" = "Added to Widget";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "Now available on iPad and Mac";
+"release_note.2.0.0.2" = "View your favorite card instantly with the home screen widget";
+"release_note.2.0.0.3" = "Cards sync automatically across devices with iCloud";
+"release_note.2.0.0.4" = "Keep your memories safe with backup and restore";
+"release_note.2.0.0.5" = "Personalize your space with background themes";
+"release_note.2.0.0.6" = "Browse and pick photos by album";
+"release_note.2.0.0.7" = "Refined design throughout the app";
+"release_note.2.0.0.8" = "Improved stability";

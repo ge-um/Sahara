@@ -321,3 +321,13 @@
 /* Widget */
 "widget.add_to_widget" = "ウィジェットに追加";
 "widget.added_to_widget" = "ウィジェットに追加済み";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "iPadとMacでもサハラが使えます";
+"release_note.2.0.0.2" = "ホーム画面ウィジェットでお気に入りのカードをすぐ確認できます";
+"release_note.2.0.0.3" = "iCloudでデバイス間のカードが自動同期されます";
+"release_note.2.0.0.4" = "バックアップと復元で大切な記録を安全に保管できます";
+"release_note.2.0.0.5" = "背景テーマで自分だけの雰囲気を演出できます";
+"release_note.2.0.0.6" = "アルバムごとに写真を選んで追加できます";
+"release_note.2.0.0.7" = "全体的なデザインがより洗練されました";
+"release_note.2.0.0.8" = "アプリがより安定して動作します";

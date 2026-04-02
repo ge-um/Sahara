@@ -315,3 +315,13 @@
 /* Widget */
 "widget.add_to_widget" = "添加到小组件";
 "widget.added_to_widget" = "已添加到小组件";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "现已支持iPad和Mac";
+"release_note.2.0.0.2" = "通过主屏幕小组件即时查看心爱的卡片";
+"release_note.2.0.0.3" = "通过iCloud自动在设备间同步卡片";
+"release_note.2.0.0.4" = "通过备份与恢复安全保管珍贵记录";
+"release_note.2.0.0.5" = "用背景主题打造专属氛围";
+"release_note.2.0.0.6" = "按相册浏览并选择照片";
+"release_note.2.0.0.7" = "整体设计更加精致";
+"release_note.2.0.0.8" = "提升了应用稳定性";
