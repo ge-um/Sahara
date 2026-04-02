@@ -11,7 +11,7 @@ import UIKit
 final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.body)
+        label.font = .typography(.title)
         label.textColor = .token(.textPrimary)
         return label
     }()
@@ -93,7 +93,7 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
             let attributedString = NSAttributedString(
                 string: bulletPoints,
                 attributes: [
-                    .font: UIFont.typography(.body),
+                    .font: UIFont.typography(.label),
                     .foregroundColor: UIColor.token(.textSecondary),
                     .paragraphStyle: paragraphStyle
                 ]

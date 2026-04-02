@@ -18,6 +18,37 @@ struct ReleaseNote {
 
     static let allVersions: [ReleaseNote] = [
         ReleaseNote(
+            version: "2.0.0",
+            date: DateComponents(calendar: .current, year: 2026, month: 4, day: 2).date!,
+            changes: [
+                NSLocalizedString("release_note.2.0.0.1", comment: ""),
+                NSLocalizedString("release_note.2.0.0.2", comment: ""),
+                NSLocalizedString("release_note.2.0.0.3", comment: ""),
+                NSLocalizedString("release_note.2.0.0.4", comment: ""),
+                NSLocalizedString("release_note.2.0.0.5", comment: ""),
+                NSLocalizedString("release_note.2.0.0.6", comment: ""),
+                NSLocalizedString("release_note.2.0.0.7", comment: ""),
+                NSLocalizedString("release_note.2.0.0.8", comment: "")
+            ]
+        ),
+        ReleaseNote(
+            version: "1.6.1",
+            date: DateComponents(calendar: .current, year: 2026, month: 3, day: 4).date!,
+            changes: [
+                NSLocalizedString("release_note.1.6.1.1", comment: "")
+            ]
+        ),
+        ReleaseNote(
+            version: "1.6.0",
+            date: DateComponents(calendar: .current, year: 2026, month: 3, day: 3).date!,
+            changes: [
+                NSLocalizedString("release_note.1.6.0.1", comment: ""),
+                NSLocalizedString("release_note.1.6.0.2", comment: ""),
+                NSLocalizedString("release_note.1.6.0.3", comment: ""),
+                NSLocalizedString("release_note.1.6.0.4", comment: "")
+            ]
+        ),
+        ReleaseNote(
             version: "1.5.1",
             date: DateComponents(calendar: .current, year: 2026, month: 2, day: 10).date!,
             changes: [
