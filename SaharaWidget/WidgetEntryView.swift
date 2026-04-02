@@ -39,14 +39,17 @@ struct WidgetEntryView: View {
     }
 
     var body: some View {
-        if entry.isEmpty {
-            emptyView
-                .widgetURL(randomCardURL)
-        } else {
-            cardView
-                .overlay { navigationButtons }
-                .widgetURL(cardURL)
+        Group {
+            if entry.isEmpty {
+                emptyView
+                    .widgetURL(randomCardURL)
+            } else {
+                cardView
+                    .overlay { navigationButtons }
+                    .widgetURL(cardURL)
+            }
         }
+        .unredacted()
     }
 
     private var cardURL: URL? {
@@ -75,16 +78,14 @@ struct WidgetEntryView: View {
         .background(WidgetDesignToken.tabBarGradient)
     }
 
+    @ViewBuilder
     private var cardView: some View {
-        GeometryReader { geometry in
-            if let image = entry.thumbnailImage {
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
-                    .unredacted()
-            }
+        if let image = entry.thumbnailImage {
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
         }
     }
 
@@ -113,7 +114,10 @@ struct WidgetEntryView: View {
         Text(symbol)
             .font(.custom("Galmuri11", size: size * 0.7))
             .foregroundColor(WidgetDesignToken.TextColor.navigationButton)
-            .offset(x: symbol == "<" ? -size * 0.03 : size * 0.03)
+            .offset(
+                x: symbol == "<" ? -size * 0.04 : size * 0.05,
+                y: size * 0.03
+            )
             .frame(width: size, height: size)
             .background(WidgetDesignToken.tabBarGradient)
             .clipShape(Circle())

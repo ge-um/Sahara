@@ -21,12 +21,13 @@ struct SaharaWidgetEntry: TimelineEntry {
 
 struct SaharaWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> SaharaWidgetEntry {
-        SaharaWidgetEntry(
+        let imageName = context.family == .systemLarge ? "WidgetPreview2" : "WidgetPreview1"
+        return SaharaWidgetEntry(
             date: Date(),
             cardId: nil,
             cardDate: nil,
             memo: NSLocalizedString("widget.placeholder_memo", comment: ""),
-            thumbnailImage: nil,
+            thumbnailImage: Image(imageName),
             isOnThisDay: false,
             isEmpty: false,
             navigableCardCount: 0
