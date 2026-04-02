@@ -14,6 +14,7 @@ protocol ImageFileServiceProtocol {
     func loadImageFile(at relativePath: String) -> Data?
     func deleteImageFile(at relativePath: String)
     func imageFileURL(for relativePath: String) -> URL
+    func cleanOrphanedFiles(referencedPaths: Set<String>)
 }
 
 final class ImageFileService: ImageFileServiceProtocol {
@@ -21,6 +22,7 @@ final class ImageFileService: ImageFileServiceProtocol {
 
     private let baseDirectory: URL
     private let fileManager = FileManager.default
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Sahara", category: "ImageFileService")
 
     init(baseDirectory: URL? = nil) {
         if let baseDirectory = baseDirectory {
@@ -52,5 +54,20 @@ final class ImageFileService: ImageFileServiceProtocol {
 
     func imageFileURL(for relativePath: String) -> URL {
         return baseDirectory.appendingPathComponent(relativePath)
+    }
+
+    func cleanOrphanedFiles(referencedPaths: Set<String>) {
+        guard let files = try? fileManager.contentsOfDirectory(
+            at: baseDirectory,
+            includingPropertiesForKeys: nil
+        ) else { return }
+
+        for fileURL in files {
+            let fileName = fileURL.lastPathComponent
+            if !referencedPaths.contains(fileName) {
+                try? fileManager.removeItem(at: fileURL)
+                logger.info("Removed orphaned image: \(fileName)")
+            }
+        }
     }
 }

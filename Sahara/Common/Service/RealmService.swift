@@ -35,6 +35,7 @@ protocol RealmServiceProtocol {
     func deleteCard(forPrimaryKey key: ObjectId) -> Observable<Void>
     func createConfiguration() -> Realm.Configuration
     func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws
+    func allImagePaths() -> Set<String>
 }
 
 extension RealmServiceProtocol {
@@ -508,6 +509,12 @@ final class RealmService: RealmServiceProtocol {
             })
     }
 
+    func allImagePaths() -> Set<String> {
+        guard let realm = try? getRealm() else { return [] }
+        let cards = realm.objects(Card.self).filter("imagePath != nil")
+        return Set(cards.compactMap(\.imagePath))
+    }
+
     func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {
         let realm = try getRealm()
         let legacyCards = realm.objects(Card.self).filter("imagePath == nil AND editedImageData != nil")
@@ -653,4 +660,8 @@ final class MockRealmService: RealmServiceProtocol {
     }
 
     func migrateAllLegacyImagesToDisk(imageFileService: ImageFileServiceProtocol) throws {}
+
+    func allImagePaths() -> Set<String> {
+        return Set(objects.compactMap { ($0 as? Card)?.imagePath })
+    }
 }

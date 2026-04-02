@@ -29,6 +29,7 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
 
     private enum Keys {
         static let backgroundConfig = "background_config"
+        static let cachedDefaultThemeVariant = "cached_default_theme_variant"
     }
 
     init(
@@ -54,8 +55,11 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
 
     func setRemoteConfigService(_ service: RemoteConfigServiceProtocol) {
         self.remoteConfigService = service
+        let variant = service.fetchDefaultThemeVariant()
+        userDefaults.set(variant.rawValue, forKey: Keys.cachedDefaultThemeVariant)
+
         guard !hasCustomizedTheme else { return }
-        let newConfig = Self.loadConfig(from: userDefaults, remoteConfigService: service)
+        let newConfig = Self.defaultConfig(for: variant)
         guard newConfig != currentConfig.value else { return }
         currentConfig.accept(newConfig)
     }
@@ -111,15 +115,36 @@ final class BackgroundThemeService: BackgroundThemeServiceProtocol {
     ) -> BackgroundConfig {
         guard let data = userDefaults.data(forKey: Keys.backgroundConfig),
               let config = try? JSONDecoder().decode(BackgroundConfig.self, from: data) else {
-            return defaultConfig(for: remoteConfigService)
+            return defaultConfig(for: remoteConfigService, userDefaults: userDefaults)
         }
         return config
     }
 
-    private static func defaultConfig(for remoteConfigService: RemoteConfigServiceProtocol?) -> BackgroundConfig {
-        guard let remoteConfigService else { return .default }
+    private static func resolveVariant(
+        remoteConfigService: RemoteConfigServiceProtocol?,
+        userDefaults: UserDefaults
+    ) -> DefaultThemeVariant? {
+        if let remoteConfigService {
+            return remoteConfigService.fetchDefaultThemeVariant()
+        } else if let cached = userDefaults.string(forKey: Keys.cachedDefaultThemeVariant),
+                  let cached = DefaultThemeVariant(rawValue: cached) {
+            return cached
+        }
+        return nil
+    }
 
-        switch remoteConfigService.fetchDefaultThemeVariant() {
+    private static func defaultConfig(
+        for remoteConfigService: RemoteConfigServiceProtocol?,
+        userDefaults: UserDefaults
+    ) -> BackgroundConfig {
+        guard let variant = resolveVariant(remoteConfigService: remoteConfigService, userDefaults: userDefaults) else {
+            return .default
+        }
+        return defaultConfig(for: variant)
+    }
+
+    private static func defaultConfig(for variant: DefaultThemeVariant) -> BackgroundConfig {
+        switch variant {
         case .gradient:
             return .default
         case .solidWhite:
