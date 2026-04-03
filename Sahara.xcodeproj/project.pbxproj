@@ -329,8 +329,8 @@
 				03E2B5B22E8664AB00A8C8DA /* Frameworks */,
 				03E2B5B32E8664AB00A8C8DA /* Resources */,
 				0397458C2E86DEDA00BDA511 /* Embed Frameworks */,
-				035A09452E90D48500221B3E /* ShellScript */,
 				0CF3CF22A2FCCC42E0636E51 /* Embed Foundation Extensions */,
+				035A09452E90D48500221B3E /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -507,6 +507,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/firebase-crashlytics-upload",
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
