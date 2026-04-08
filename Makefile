@@ -1,4 +1,4 @@
-.PHONY: test test-ipad build help
+.PHONY: test test-ipad build screenshots screenshots-ios screenshots-mac help
 
 CLI_DERIVED_DATA = .build
 
@@ -44,11 +44,45 @@ build:
 		-skipPackagePluginValidation \
 		CODE_SIGNING_ALLOWED=NO
 
+SCREENSHOT_LANGUAGES = ko en-US ja zh-Hans
+SCREENSHOT_DIR = fastlane/screenshots
+MAC_CONTAINER_DIR = $(HOME)/Library/Containers/com.miya.SaharaUITests.xctrunner/Data/sahara-mac-screenshots
+
+screenshots: screenshots-ios screenshots-mac
+
+screenshots-ios:
+	bundle exec fastlane screenshots
+	@echo "📁 Organizing iPhone/iPad..."
+	@for lang in $(SCREENSHOT_LANGUAGES); do \
+		mkdir -p "$(SCREENSHOT_DIR)/$$lang/iphone" "$(SCREENSHOT_DIR)/$$lang/ipad"; \
+		mv "$(SCREENSHOT_DIR)/$$lang"/iPhone*.png "$(SCREENSHOT_DIR)/$$lang/iphone/" 2>/dev/null || true; \
+		mv "$(SCREENSHOT_DIR)/$$lang"/iPad*.png "$(SCREENSHOT_DIR)/$$lang/ipad/" 2>/dev/null || true; \
+	done
+
+screenshots-mac:
+	@rm -rf "$(MAC_CONTAINER_DIR)"
+	@for lang in $(SCREENSHOT_LANGUAGES); do \
+		echo "📸 Mac Catalyst: $$lang"; \
+		echo "$$lang" > /tmp/sahara-screenshot-lang.txt; \
+		while pgrep -q SaharaUITests-Runner; do sleep 0.5; done; \
+		xcodebuild -scheme Sahara -project ./Sahara.xcodeproj \
+			-destination "platform=macOS,variant=Mac Catalyst" \
+			-only-testing:SaharaUITests/ScreenshotTests \
+			-allowProvisioningUpdates \
+			FASTLANE_SNAPSHOT=YES \
+			build test 2>&1 | tail -5; \
+		mkdir -p "$(SCREENSHOT_DIR)/$$lang/mac"; \
+		cp "$(MAC_CONTAINER_DIR)/$$lang/"*.png "$(SCREENSHOT_DIR)/$$lang/mac/" 2>/dev/null || true; \
+	done
+
 help:
-	@echo "make test      - Run full test suite locally (iPhone)"
-	@echo "make test-ipad - Run full test suite locally (iPad)"
-	@echo "make build     - Build without running tests"
-	@echo "make help      - Show this help"
+	@echo "make test        - Run full test suite locally (iPhone)"
+	@echo "make test-ipad   - Run full test suite locally (iPad)"
+	@echo "make build       - Build without running tests"
+	@echo "make screenshots     - Capture all screenshots (iPhone+iPad+Mac)"
+	@echo "make screenshots-ios - iPhone + iPad only (fastlane)"
+	@echo "make screenshots-mac - Mac Catalyst only (xcodebuild)"
+	@echo "make help        - Show this help"
 	@echo ""
 	@echo "Branch: $(BRANCH) → Scheme: $(SCHEME)"
 	@echo "Override: make test SCHEME=Sahara"

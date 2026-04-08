@@ -1,0 +1,25 @@
+devices([
+  "iPhone 16 Pro Max",
+  "iPad Pro 13-inch (M4)"
+])
+
+languages([
+  "ko",
+  "en-US",
+  "ja",
+  "zh-Hans"
+])
+
+concurrent_simulators(false)
+scheme("Sahara")
+only_testing(["SaharaUITests/ScreenshotTests"])
+derived_data_path("./fastlane/derived_data")
+output_directory("./fastlane/screenshots")
+clear_previous_screenshots(false)
+stop_after_first_error(true)
+disable_slide_to_type(true)
+launch_arguments(["-SCREENSHOT_MODE"])
+skip_open_summary(true)
+override_status_bar(true)
+override_status_bar_arguments("--time 9:41 --batteryState charged --batteryLevel 100 --cellularMode active --cellularBars 4")
+xcargs("-parallel-testing-enabled NO")
