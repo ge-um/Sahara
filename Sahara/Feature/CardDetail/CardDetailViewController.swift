@@ -33,6 +33,7 @@ final class CardDetailViewController: UIViewController {
     private let contentView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
+        view.accessibilityIdentifier = "sahara.cardDetail.view"
         return view
     }()
 
@@ -139,7 +140,7 @@ final class CardDetailViewController: UIViewController {
                 original.draw(in: CGRect(origin: .zero, size: editIconSize))
             }.withRenderingMode(.alwaysTemplate)
         }
-        customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary)) { [weak self] in
+        customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary), accessibilityId: "sahara.cardDetail.edit") { [weak self] in
             self?.openEditView()
         }
     }

@@ -20,6 +20,7 @@ final class CustomNavigationBar: UIView {
         config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8)
         let button = UIButton(configuration: config)
+        button.accessibilityIdentifier = "sahara.nav.back"
         return button
     }()
 
@@ -154,8 +155,9 @@ final class CustomNavigationBar: UIView {
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), accessibilityId: String? = nil, action: @escaping () -> Void) {
         let button = UIButton()
+        button.accessibilityIdentifier = accessibilityId
 
         if let title = title {
             button.setTitle(title, for: .normal)

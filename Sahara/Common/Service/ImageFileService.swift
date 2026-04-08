@@ -18,7 +18,7 @@ protocol ImageFileServiceProtocol {
 }
 
 final class ImageFileService: ImageFileServiceProtocol {
-    static let shared = ImageFileService()
+    static var shared = ImageFileService()
 
     private let baseDirectory: URL
     private let fileManager = FileManager.default

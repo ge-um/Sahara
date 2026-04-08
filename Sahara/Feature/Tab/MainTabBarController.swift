@@ -148,13 +148,21 @@ final class MainTabBarController: UIViewController, SidebarToggleable {
         view.addSubview(customTabBar)
         customTabBar.addSubview(tabButtonStackView)
 
+        let maxLabelWidth = TabItem.allCases
+            .map { $0.title.size(withAttributes: [.font: UIFont.typography(.caption)]).width }
+            .max() ?? 0
+        let bgWidth = max(48, ceil(maxLabelWidth) + 16)
+
         for item in TabItem.allCases {
             let button = TabButton(icon: item.icon, title: item.title)
+            button.accessibilityIdentifier = item.accessibilityId
             button.onTap = { [weak self] in
                 self?.tabSelected(item)
             }
+            button.setBackgroundWidth(bgWidth)
             button.snp.makeConstraints { make in
-                make.width.height.equalTo(44)
+                make.width.equalTo(bgWidth)
+                make.height.equalTo(44)
             }
             tabButtonStackView.addArrangedSubview(button)
             tabBarButtons[item] = button

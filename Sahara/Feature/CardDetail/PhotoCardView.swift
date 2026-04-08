@@ -159,6 +159,9 @@ final class PhotoCardView: UIView {
         backgroundColor = .clear
         self.clipsToBounds = true
 
+        frontCardView.accessibilityIdentifier = "sahara.photoCard.front"
+        backCardView.accessibilityIdentifier = "sahara.photoCard.back"
+
         addSubview(cardContainerView)
         cardContainerView.addSubview(frontCardView)
         cardContainerView.addSubview(backCardView)

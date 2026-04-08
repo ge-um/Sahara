@@ -45,6 +45,7 @@ final class SidebarView: UIView {
 
         for item in TabItem.allCases {
             let button = TabButton(icon: item.icon, title: item.title)
+            button.accessibilityIdentifier = item.accessibilityId
             button.onTap = { [weak self] in
                 self?.onTabSelected?(item)
             }

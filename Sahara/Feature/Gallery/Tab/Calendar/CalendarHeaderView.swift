@@ -27,6 +27,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         button.setTitle("<", for: .normal)
         button.setTitleColor(.token(.textSecondary), for: .normal)
         button.titleLabel?.font = .typography(.body)
+        button.accessibilityIdentifier = "sahara.calendar.prev"
         return button
     }()
 

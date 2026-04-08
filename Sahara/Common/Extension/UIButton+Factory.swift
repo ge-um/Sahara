@@ -22,6 +22,7 @@ extension UIButton {
         button.configuration = config
         button.layer.cornerRadius = 6
         button.clipsToBounds = true
+        button.accessibilityIdentifier = "sahara.nav.save"
         return button
     }
 }

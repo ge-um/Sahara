@@ -347,6 +347,7 @@ final class BackgroundThemeViewController: UIViewController {
                 let hex = colors[index]
                 cell.backgroundColor = UIColor(hex: hex)
                 cell.tag = index
+                cell.accessibilityIdentifier = "sahara.bgTheme.solid.\(index)"
 
                 if hex == "#FFFFFF" || hex == "#F9FFFF" || hex == "#FFFFC5" {
                     cell.layer.borderWidth = 1
@@ -419,6 +420,7 @@ final class BackgroundThemeViewController: UIViewController {
             } else {
                 let gradient = gradients[index]
                 cell.applyGradient(gradient)
+                cell.accessibilityIdentifier = "sahara.bgTheme.gradient.\(index)"
 
                 let tap = UITapGestureRecognizer()
                 tap.rx.event

@@ -131,6 +131,7 @@ final class MediaEditorViewController: UIViewController {
         config.cornerStyle = .medium
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
+        button.accessibilityIdentifier = "sahara.mediaEditor.close"
         return button
     }()
 

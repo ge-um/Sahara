@@ -62,6 +62,7 @@ final class SettingsItemView: UIView {
     init(item: SettingsMenuItem) {
         self.item = item
         super.init(frame: .zero)
+        self.accessibilityIdentifier = "sahara.settings.\(item)"
         configureUI()
         refresh()
 

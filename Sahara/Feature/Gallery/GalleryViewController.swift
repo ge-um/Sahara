@@ -28,24 +28,28 @@ final class GalleryViewController: UIViewController {
     private lazy var dateButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.date_view", comment: ""))
         button.tag = 0
+        button.accessibilityIdentifier = "sahara.gallery.date"
         return button
     }()
 
     private lazy var locationButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.location_view", comment: ""))
         button.tag = 1
+        button.accessibilityIdentifier = "sahara.gallery.location"
         return button
     }()
 
     private lazy var themeButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.theme_view", comment: ""))
         button.tag = 2
+        button.accessibilityIdentifier = "sahara.gallery.theme"
         return button
     }()
 
     private lazy var folderButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.folder_view", comment: ""))
         button.tag = 3
+        button.accessibilityIdentifier = "sahara.gallery.folder"
         return button
     }()
     
