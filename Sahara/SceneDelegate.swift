@@ -238,7 +238,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     private func configureWindowSize(for scene: UIWindowScene) {
         #if targetEnvironment(macCatalyst)
         scene.title = "Sahara"
-        scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+
+        if ProcessInfo.processInfo.arguments.contains("-SCREENSHOT_MODE") {
+            let size = CGSize(width: 1870, height: 1169)
+            scene.sizeRestrictions?.minimumSize = size
+            scene.sizeRestrictions?.maximumSize = size
+        } else {
+            scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+        }
         #endif
     }
 
