@@ -9,7 +9,13 @@ import SnapKit
 import UIKit
 
 final class SidebarView: UIView {
-    static let width: CGFloat = 80
+    static let width: CGFloat = {
+        #if targetEnvironment(macCatalyst)
+        return 100
+        #else
+        return 80
+        #endif
+    }()
 
     private let stackView: UIStackView = {
         let stack = UIStackView()

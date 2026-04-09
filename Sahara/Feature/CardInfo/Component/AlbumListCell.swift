@@ -77,7 +77,7 @@ final class AlbumListCell: UITableViewCell {
         contentView.addSubview(checkmarkLabel)
 
         thumbnailImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(16)
+            make.leading.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(48)
         }
@@ -90,7 +90,7 @@ final class AlbumListCell: UITableViewCell {
 
         checkmarkLabel.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(20)
         }
     }
 

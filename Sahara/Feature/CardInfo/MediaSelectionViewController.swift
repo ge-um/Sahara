@@ -113,7 +113,7 @@ final class MediaSelectionViewController: UIViewController {
     // MARK: - Collection View
 
     private lazy var collectionView: UICollectionView = {
-        let layout = GridLayout(numberOfColumns: 3, cellSpacing: 2, minColumnWidth: 110)
+        let layout = GridLayout(numberOfColumns: 3, cellSpacing: 0, minColumnWidth: 110)
 
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
@@ -479,7 +479,7 @@ final class MediaSelectionViewController: UIViewController {
 
         albumSelectorBar.addSubview(albumBarStack)
         albumBarStack.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(16)
+            make.leading.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
 
@@ -503,8 +503,8 @@ final class MediaSelectionViewController: UIViewController {
             make.centerX.centerY.equalToSuperview()
             make.top.greaterThanOrEqualToSuperview().inset(10)
             make.bottom.lessThanOrEqualToSuperview().inset(10)
-            make.leading.greaterThanOrEqualToSuperview().inset(16)
-            make.trailing.lessThanOrEqualToSuperview().inset(16)
+            make.leading.greaterThanOrEqualToSuperview().inset(20)
+            make.trailing.lessThanOrEqualToSuperview().inset(20)
         }
 
         // Main stack: albumSelectorBar + limitedBanner + collectionView
@@ -523,7 +523,8 @@ final class MediaSelectionViewController: UIViewController {
 
         view.addSubview(contentStack)
         contentStack.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalToSuperview()
         }
 
         // Dim + overlay (above everything)

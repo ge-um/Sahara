@@ -23,6 +23,9 @@ final class ThemeViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.showsVerticalScrollIndicator = false
         tableView.showsHorizontalScrollIndicator = false
+        tableView.contentInset = .zero
+        tableView.contentInsetAdjustmentBehavior = .never
+        tableView.sectionHeaderTopPadding = 0
         return tableView
     }()
 

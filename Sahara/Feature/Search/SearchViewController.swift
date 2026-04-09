@@ -109,7 +109,7 @@ final class SearchViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
             make.horizontalEdges.equalToSuperview().inset(12)
             make.height.equalTo(36)
         }

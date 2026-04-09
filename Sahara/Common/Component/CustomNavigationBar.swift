@@ -123,7 +123,7 @@ final class CustomNavigationBar: UIView {
         }
 
         contentLeadingGuide.snp.makeConstraints { make in
-            contentLeadingConstraint = make.leading.equalToSuperview().offset(16).constraint
+            contentLeadingConstraint = make.leading.equalToSuperview().offset(20).constraint
             make.top.bottom.equalToSuperview()
             make.width.equalTo(0)
         }
@@ -139,7 +139,7 @@ final class CustomNavigationBar: UIView {
         }
 
         rightStackView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
 

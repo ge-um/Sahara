@@ -214,7 +214,7 @@ final class MediaEditorViewController: UIViewController {
         layout.scrollDirection = .horizontal
         layout.itemSize = CGSize(width: 100, height: 120)
         layout.minimumLineSpacing = 10
-        layout.sectionInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        layout.sectionInset = UIEdgeInsets(top: 12, left: 20, bottom: 12, right: 20)
 
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear

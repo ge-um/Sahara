@@ -229,13 +229,13 @@ final class GalleryViewController: UIViewController {
         calendarContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-24)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-24)
         }
 
         themeContainerView.snp.makeConstraints { make in

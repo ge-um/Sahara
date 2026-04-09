@@ -46,6 +46,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .fillEqually
+        stack.spacing = 1
         return stack
     }()
 
