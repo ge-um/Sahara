@@ -106,10 +106,14 @@ final class CardDetailViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private var isModalPresentation: Bool {
+        navigationController == nil || presentingViewController != nil
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationController?.setNavigationBarHidden(true, animated: false)
-        setupCustomNavigationBar()
+        navigationController?.setNavigationBarHidden(!isModalPresentation, animated: false)
+        setupNavigation()
         configureUI()
         bind()
         viewDidLoadRelay.accept(())
@@ -120,29 +124,52 @@ final class CardDetailViewController: UIViewController {
         viewDidLoadRelay.accept(())
     }
 
-    private func setupCustomNavigationBar() {
-        customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
+    private func setupNavigation() {
+        let iconSize = CGSize(width: 20, height: 20)
+        let editIcon = UIImage(named: "editBox")?
+            .resized(to: iconSize)
+            .withRenderingMode(.alwaysTemplate)
 
-        if navigationController != nil && presentingViewController == nil {
+        if isModalPresentation {
+            customNavigationBar.isHidden = true
+            configureModalNavigation(editIcon: editIcon)
+        } else {
+            customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
             customNavigationBar.onLeftButtonTapped = { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             }
-        } else {
-            customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
-            customNavigationBar.onLeftButtonTapped = { [weak self] in
-                self?.dismiss(animated: true)
+            customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary), accessibilityId: "sahara.cardDetail.edit") { [weak self] in
+                self?.openEditView()
             }
         }
+    }
 
-        let editIconSize = CGSize(width: 20, height: 20)
-        let editIcon = UIImage(named: "editBox").flatMap { original in
-            UIGraphicsImageRenderer(size: editIconSize).image { _ in
-                original.draw(in: CGRect(origin: .zero, size: editIconSize))
-            }.withRenderingMode(.alwaysTemplate)
-        }
-        customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary), accessibilityId: "sahara.cardDetail.edit") { [weak self] in
-            self?.openEditView()
-        }
+    private func configureModalNavigation(editIcon: UIImage?) {
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.typography(.body)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+        navigationItem.title = NSLocalizedString("card_detail.title", comment: "")
+
+        let xmarkImage = UIImage(named: "xmark")?
+            .resized(to: CGSize(width: 20, height: 20))
+            .withRenderingMode(.alwaysTemplate)
+        let closeButton = UIBarButtonItem(image: xmarkImage, style: .plain, target: self, action: #selector(closeTapped))
+        closeButton.tintColor = .token(.textPrimary)
+        navigationItem.leftBarButtonItem = closeButton
+
+        let editButton = UIBarButtonItem(image: editIcon, style: .plain, target: self, action: #selector(editButtonTapped))
+        editButton.tintColor = .token(.textPrimary)
+        editButton.accessibilityIdentifier = "sahara.cardDetail.edit"
+        navigationItem.rightBarButtonItem = editButton
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
+    }
+
+    @objc private func editButtonTapped() {
+        openEditView()
     }
 
     private func configureUI() {
@@ -166,7 +193,11 @@ final class CardDetailViewController: UIViewController {
         }
 
         scrollView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
+            if isModalPresentation {
+                make.top.equalTo(view.safeAreaLayoutGuide)
+            } else {
+                make.top.equalTo(customNavigationBar.snp.bottom)
+            }
             make.horizontalEdges.bottom.equalToSuperview()
         }
 
@@ -176,14 +207,14 @@ final class CardDetailViewController: UIViewController {
         }
 
         photoCardView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(32)
+            make.top.equalToSuperview().offset(20)
             make.centerX.equalToSuperview()
             make.width.lessThanOrEqualTo(500)
-            make.horizontalEdges.equalToSuperview().inset(32).priority(.medium)
+            make.horizontalEdges.equalToSuperview().inset(20).priority(.medium)
         }
 
         buttonContainerView.snp.makeConstraints { make in
-            make.top.equalTo(photoCardView.snp.bottom).offset(32)
+            make.top.equalTo(photoCardView.snp.bottom).offset(20)
             make.centerX.equalToSuperview()
             make.height.equalTo(70)
         }
@@ -191,7 +222,7 @@ final class CardDetailViewController: UIViewController {
         widgetToggleButton.snp.makeConstraints { make in
             make.top.equalTo(buttonContainerView.snp.bottom).offset(16)
             make.centerX.equalTo(buttonContainerView)
-            make.bottom.equalToSuperview().offset(-88)
+            make.bottom.equalToSuperview().offset(-20)
         }
 
 
@@ -303,10 +334,10 @@ final class CardDetailViewController: UIViewController {
 
         output.deleteCompleted
             .drive(with: self) { owner, _ in
-                if owner.navigationController != nil && owner.presentingViewController == nil {
-                    owner.navigationController?.popViewController(animated: true)
-                } else {
+                if owner.isModalPresentation {
                     owner.dismiss(animated: true)
+                } else {
+                    owner.navigationController?.popViewController(animated: true)
                 }
             }
             .disposed(by: disposeBag)
