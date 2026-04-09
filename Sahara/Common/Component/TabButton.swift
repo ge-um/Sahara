@@ -40,6 +40,8 @@ final class TabButton: UIView {
         return label
     }()
 
+    private var backgroundWidthConstraint: Constraint?
+
     var onTap: (() -> Void)?
 
     init(icon: UIImage?, title: String) {
@@ -62,7 +64,8 @@ final class TabButton: UIView {
 
         backgroundView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(48)
+            make.height.equalTo(48)
+            backgroundWidthConstraint = make.width.equalTo(48).constraint
         }
 
         stackView.snp.makeConstraints { make in
@@ -76,6 +79,8 @@ final class TabButton: UIView {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         addGestureRecognizer(tapGesture)
         isUserInteractionEnabled = true
+        isAccessibilityElement = true
+        accessibilityTraits = .button
     }
 
     override func layoutSubviews() {
@@ -107,6 +112,10 @@ final class TabButton: UIView {
 
     @objc private func handleTap() {
         onTap?()
+    }
+
+    func setBackgroundWidth(_ width: CGFloat) {
+        backgroundWidthConstraint?.update(offset: width)
     }
 
     func setSelected(_ isSelected: Bool) {

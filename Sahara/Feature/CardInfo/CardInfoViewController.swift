@@ -34,6 +34,7 @@ final class CardInfoViewController: UIViewController {
         config.cornerStyle = .medium
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
+        button.accessibilityIdentifier = "sahara.cardInfo.close"
         return button
     }()
 

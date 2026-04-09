@@ -20,6 +20,7 @@ final class CustomNavigationBar: UIView {
         config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8)
         let button = UIButton(configuration: config)
+        button.accessibilityIdentifier = "sahara.nav.back"
         return button
     }()
 
@@ -122,7 +123,7 @@ final class CustomNavigationBar: UIView {
         }
 
         contentLeadingGuide.snp.makeConstraints { make in
-            contentLeadingConstraint = make.leading.equalToSuperview().offset(16).constraint
+            contentLeadingConstraint = make.leading.equalToSuperview().offset(20).constraint
             make.top.bottom.equalToSuperview()
             make.width.equalTo(0)
         }
@@ -138,7 +139,7 @@ final class CustomNavigationBar: UIView {
         }
 
         rightStackView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
 
@@ -154,8 +155,9 @@ final class CustomNavigationBar: UIView {
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), accessibilityId: String? = nil, action: @escaping () -> Void) {
         let button = UIButton()
+        button.accessibilityIdentifier = accessibilityId
 
         if let title = title {
             button.setTitle(title, for: .normal)

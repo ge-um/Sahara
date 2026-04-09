@@ -30,4 +30,8 @@ enum TabItem: Int, CaseIterable {
         case .settings: return NSLocalizedString("tab.settings", comment: "")
         }
     }
+
+    var accessibilityId: String {
+        return "sahara.tab.\(self)"
+    }
 }

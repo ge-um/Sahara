@@ -51,8 +51,8 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         contentView.addSubview(countLabel)
 
         thumbnailImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
+            make.leading.equalToSuperview()
+            make.top.equalToSuperview()
             make.width.height.equalTo(80)
         }
 
@@ -62,14 +62,14 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
         titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(thumbnailImageView.snp.trailing).offset(16)
-            make.top.equalTo(thumbnailImageView).offset(10)
-            make.trailing.equalToSuperview().inset(16)
+            make.top.equalTo(thumbnailImageView).offset(2)
+            make.trailing.equalToSuperview()
         }
 
         countLabel.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview()
         }
     }
 

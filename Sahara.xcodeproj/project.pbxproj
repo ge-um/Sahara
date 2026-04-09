@@ -27,10 +27,13 @@
 		40509515DF5217AEC51F227B /* SaharaWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7F687188F77FC625DD9732CC /* Localizable.strings */; };
 		48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAF3F6268F7FE8A9ADB1A7EB /* Assets.xcassets */; };
+		515E58B43570B05B3FBE5D33 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5784B26A0B503F279A42BC75 /* Foundation.framework */; };
+		78EB9D436B415D0FD68A6A03 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015BB6FA6426E53AFDB16638 /* SnapshotHelper.swift */; };
 		9716DC354EDCBBF970FC7B1C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5784B26A0B503F279A42BC75 /* Foundation.framework */; };
 		AD85792DE201FA8468B3E41E /* OnThisDaySelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */; };
 		B7A3E1F2C4D5A6B8E9F01234 /* NavigateWidgetPhotoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A3E1F2C4D5A6B8E9F05678 /* NavigateWidgetPhotoIntent.swift */; };
 		BD5C855FC80B0130F8B96F44 /* Galmuri11.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6B566651E1BE2AE209E010CA /* Galmuri11.ttf */; };
+		C83C835A9CB24AD04038B700 /* ScreenshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AAABBE5F32721D578EF91B /* ScreenshotTests.swift */; };
 		D0F5EC50C09CB958252E0715 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 0F53CC47FF1F6F4637C2A821 /* FirebaseRemoteConfig */; };
 		EA52C3608F29D4B30139A488 /* WidgetCardEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */; };
 		F6478EED89A88C5C9B8679BF /* SaharaWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC5D9D4D4DD259374C87E64 /* SaharaWidgetBundle.swift */; };
@@ -39,6 +42,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		0346946D2EA127BF0003065C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 03E2B5AD2E8664AB00A8C8DA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 03E2B5B42E8664AB00A8C8DA;
+			remoteInfo = Sahara;
+		};
+		7EE990CDFB0B7EFAE39E8E67 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 03E2B5AD2E8664AB00A8C8DA /* Project object */;
 			proxyType = 1;
@@ -91,15 +101,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		015BB6FA6426E53AFDB16638 /* SnapshotHelper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SnapshotHelper.swift; sourceTree = "<group>"; };
 		034694692EA127BF0003065C /* SaharaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SaharaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5B52E8664AB00A8C8DA /* Sahara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Sahara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		03E2B5CD2E8664E400A8C8DA /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		057047B11365593A61F992FF /* SaharaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SaharaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1116F65DEB3596628C0C1D92 /* WidgetCardEntry.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WidgetCardEntry.swift; path = Sahara/Common/Model/WidgetCardEntry.swift; sourceTree = SOURCE_ROOT; };
 		1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SaharaWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2248A9DE1AE24A3DFBF50CFE /* zh-Hans */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		2FFA727C3FD2CBCD02C8459C /* ja */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		42B47BDB082DFD3FB45AC439 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4301DA729761C01C60469C92 /* SaharaWidget.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = SaharaWidget.entitlements; sourceTree = "<group>"; };
+		43AAABBE5F32721D578EF91B /* ScreenshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenshotTests.swift; sourceTree = "<group>"; };
 		44A26D12CF118BD5052ABBF6 /* OnThisDaySelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnThisDaySelector.swift; path = Sahara/Common/Utility/OnThisDaySelector.swift; sourceTree = SOURCE_ROOT; };
 		47CD2822568FA817EC45BEE9 /* en */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4C9971CF5130426575EB86B8 /* AppGroupContainer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppGroupContainer.swift; path = Sahara/Common/Utility/AppGroupContainer.swift; sourceTree = SOURCE_ROOT; };
@@ -168,6 +181,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		101C530F189659E80A0905ED /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				515E58B43570B05B3FBE5D33 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		99971638BA62160923E272A2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -198,6 +219,7 @@
 				03E2B5B62E8664AB00A8C8DA /* Products */,
 				673E3F5E08351D0A78BD3671 /* SaharaWidget */,
 				C1BA6AAC55D437A4B615D5FB /* Sahara */,
+				C93DDE4306C68D1B1BFDF6F4 /* SaharaUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -207,6 +229,7 @@
 				03E2B5B52E8664AB00A8C8DA /* Sahara.app */,
 				034694692EA127BF0003065C /* SaharaTests.xctest */,
 				1DB96372ED38F2E168CE54D0 /* SaharaWidget.appex */,
+				057047B11365593A61F992FF /* SaharaUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -259,6 +282,15 @@
 			children = (
 			);
 			path = Sahara;
+			sourceTree = "<group>";
+		};
+		C93DDE4306C68D1B1BFDF6F4 /* SaharaUITests */ = {
+			isa = PBXGroup;
+			children = (
+				43AAABBE5F32721D578EF91B /* ScreenshotTests.swift */,
+				015BB6FA6426E53AFDB16638 /* SnapshotHelper.swift */,
+			);
+			path = SaharaUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -326,6 +358,24 @@
 			productName = Sahara;
 			productReference = 03E2B5B52E8664AB00A8C8DA /* Sahara.app */;
 			productType = "com.apple.product-type.application";
+		};
+		3290F434D94902E4AB0F4C3E /* SaharaUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FCF3C6324FFDB7EC1F59C13E /* Build configuration list for PBXNativeTarget "SaharaUITests" */;
+			buildPhases = (
+				9386BC61757EDCFE31299BE6 /* Sources */,
+				101C530F189659E80A0905ED /* Frameworks */,
+				913E23DB0DBE57085D5B141B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				376EED59366FA1834D3B9E14 /* PBXTargetDependency */,
+			);
+			name = SaharaUITests;
+			productName = SaharaUITests;
+			productReference = 057047B11365593A61F992FF /* SaharaUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		E45FD418C3D55D51C662192E /* SaharaWidget */ = {
 			isa = PBXNativeTarget;
@@ -398,6 +448,7 @@
 				03E2B5B42E8664AB00A8C8DA /* Sahara */,
 				034694682EA127BF0003065C /* SaharaTests */,
 				E45FD418C3D55D51C662192E /* SaharaWidget */,
+				3290F434D94902E4AB0F4C3E /* SaharaUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -425,6 +476,13 @@
 				48B972EDA01A0D7DFAC497C8 /* Assets.xcassets in Resources */,
 				41F9CBFF45B2A7276A014737 /* Localizable.strings in Resources */,
 				BD5C855FC80B0130F8B96F44 /* Galmuri11.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		913E23DB0DBE57085D5B141B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -485,6 +543,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9386BC61757EDCFE31299BE6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C83C835A9CB24AD04038B700 /* ScreenshotTests.swift in Sources */,
+				78EB9D436B415D0FD68A6A03 /* SnapshotHelper.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -492,6 +559,12 @@
 			isa = PBXTargetDependency;
 			target = 03E2B5B42E8664AB00A8C8DA /* Sahara */;
 			targetProxy = 0346946D2EA127BF0003065C /* PBXContainerItemProxy */;
+		};
+		376EED59366FA1834D3B9E14 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Sahara;
+			target = 03E2B5B42E8664AB00A8C8DA /* Sahara */;
+			targetProxy = 7EE990CDFB0B7EFAE39E8E67 /* PBXContainerItemProxy */;
 		};
 		D25225EE73375F974FEA3678 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -784,6 +857,51 @@
 			};
 			name = Release;
 		};
+		2991EA49BB561385AD8D3279 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.SaharaUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Sahara;
+			};
+			name = Debug;
+		};
+		2CA37A59A04685319032F701 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = RFZY2ACQ74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.miya.SaharaUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Sahara;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		30D85514C2ABA88B1B791834 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -809,9 +927,13 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -840,9 +962,13 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -882,6 +1008,15 @@
 			buildConfigurations = (
 				71432FE0BBF79E6C7B525E45 /* Release */,
 				30D85514C2ABA88B1B791834 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FCF3C6324FFDB7EC1F59C13E /* Build configuration list for PBXNativeTarget "SaharaUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CA37A59A04685319032F701 /* Release */,
+				2991EA49BB561385AD8D3279 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

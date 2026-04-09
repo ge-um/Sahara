@@ -11,7 +11,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Check Branch-Scheme Match"
-               scriptText = "BRANCH=$(git -C &quot;${SRCROOT}&quot; rev-parse --abbrev-ref HEAD 2&gt;/dev/null)&#10;if [[ &quot;$BRANCH&quot; == feature/* || &quot;$BRANCH&quot; == &quot;develop&quot; ]]; then&#10;    echo &quot;error: Use SaharaDev scheme on feature/develop branches (current: $BRANCH)&quot;&#10;    exit 1&#10;fi&#10;">
+               scriptText = "if [[ &quot;${FASTLANE_SNAPSHOT}&quot; == &quot;YES&quot; ]]; then&#10;    exit 0&#10;fi&#10;BRANCH=$(git -C &quot;${SRCROOT}&quot; rev-parse --abbrev-ref HEAD 2&gt;/dev/null)&#10;if [[ &quot;$BRANCH&quot; == feature/* || &quot;$BRANCH&quot; == &quot;develop&quot; ]]; then&#10;    echo &quot;error: Use SaharaDev scheme on feature/develop branches (current: $BRANCH)&quot;&#10;    exit 1&#10;fi&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -42,7 +42,7 @@
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
@@ -56,6 +56,17 @@
                BlueprintIdentifier = "034694682EA127BF0003065C"
                BuildableName = "SaharaTests.xctest"
                BlueprintName = "SaharaTests"
+               ReferencedContainer = "container:Sahara.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3290F434D94902E4AB0F4C3E"
+               BuildableName = "SaharaUITests.xctest"
+               BlueprintName = "SaharaUITests"
                ReferencedContainer = "container:Sahara.xcodeproj">
             </BuildableReference>
          </TestableReference>

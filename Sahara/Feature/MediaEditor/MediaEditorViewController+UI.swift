@@ -81,6 +81,7 @@ extension MediaEditorViewController {
     }
 
     func configureUI() {
+        view.accessibilityIdentifier = "sahara.mediaEditor.view"
         view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(cropDimOverlay)

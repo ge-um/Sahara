@@ -49,6 +49,7 @@ final class CardInfoView: UIView {
 
     lazy var photoEditButton: UIButton = {
         let button = UIButton()
+        button.accessibilityIdentifier = "sahara.cardInfo.photoEdit"
         var config = UIButton.Configuration.filled()
         let iconSize = CGSize(width: 20, height: 20)
         config.image = UIImage(named: "editBox").flatMap { original in

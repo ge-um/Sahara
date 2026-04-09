@@ -147,7 +147,7 @@ final class StickerModalViewController: UIViewController {
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview().inset(20)
+            make.horizontalEdges.equalToSuperview().inset(12)
             make.height.equalTo(36)
         }
 

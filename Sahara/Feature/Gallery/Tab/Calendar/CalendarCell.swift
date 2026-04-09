@@ -98,6 +98,7 @@ final class CalendarCell: UICollectionViewCell, IsIdentifiable {
 
     private func configureUI() {
         contentView.backgroundColor = .clear
+        accessibilityIdentifier = "sahara.calendar.cell"
 
         addSubview(containerView)
         addSubview(dayLabel)

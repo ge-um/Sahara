@@ -212,8 +212,7 @@ final class BackgroundThemeViewController: UIViewController {
         addButton.setTitle("  " + NSLocalizedString("background.select_photo", comment: ""), for: .normal)
         addButton.titleLabel?.font = DesignToken.Typography.caption.font
         addButton.setTitleColor(.token(.textSecondary), for: .normal)
-        addButton.backgroundColor = .token(.backgroundCard)
-        addButton.layer.cornerRadius = DesignToken.CornerRadius.card
+        addButton.applyGlassCardStyle()
         addButton.rx.tap
             .subscribe(onNext: { [weak self] in self?.presentPhotoPicker() })
             .disposed(by: disposeBag)
@@ -243,12 +242,12 @@ final class BackgroundThemeViewController: UIViewController {
         }
 
         dotPatternLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(16)
+            make.leading.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
 
         dotPatternSwitch.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
     }
@@ -347,6 +346,7 @@ final class BackgroundThemeViewController: UIViewController {
                 let hex = colors[index]
                 cell.backgroundColor = UIColor(hex: hex)
                 cell.tag = index
+                cell.accessibilityIdentifier = "sahara.bgTheme.solid.\(index)"
 
                 if hex == "#FFFFFF" || hex == "#F9FFFF" || hex == "#FFFFC5" {
                     cell.layer.borderWidth = 1
@@ -419,6 +419,7 @@ final class BackgroundThemeViewController: UIViewController {
             } else {
                 let gradient = gradients[index]
                 cell.applyGradient(gradient)
+                cell.accessibilityIdentifier = "sahara.bgTheme.gradient.\(index)"
 
                 let tap = UITapGestureRecognizer()
                 tap.rx.event

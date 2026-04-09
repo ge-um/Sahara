@@ -30,11 +30,7 @@ final class PhotoCardView: UIView {
     private let frontCardView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
+        view.clipsToBounds = true
         return view
     }()
 
@@ -42,11 +38,7 @@ final class PhotoCardView: UIView {
         let view = UIView()
         view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
+        view.clipsToBounds = true
         view.isHidden = true
         return view
     }()
@@ -54,8 +46,6 @@ final class PhotoCardView: UIView {
     private let photoImageView: AnimatedImageView = {
         let imageView = AnimatedImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 20
         imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         return imageView
@@ -89,8 +79,6 @@ final class PhotoCardView: UIView {
     private let overlayView: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.token(.backgroundCard).withAlphaComponent(0.6)
-        view.layer.cornerRadius = 20
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         return view
     }()
 
@@ -159,6 +147,9 @@ final class PhotoCardView: UIView {
         backgroundColor = .clear
         self.clipsToBounds = true
 
+        frontCardView.accessibilityIdentifier = "sahara.photoCard.front"
+        backCardView.accessibilityIdentifier = "sahara.photoCard.back"
+
         addSubview(cardContainerView)
         cardContainerView.addSubview(frontCardView)
         cardContainerView.addSubview(backCardView)
@@ -219,7 +210,7 @@ final class PhotoCardView: UIView {
 
         memoScrollView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(40)
-            make.horizontalEdges.equalToSuperview().inset(30)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalTo(backSwipeHintLabel.snp.top).offset(-20)
         }
 

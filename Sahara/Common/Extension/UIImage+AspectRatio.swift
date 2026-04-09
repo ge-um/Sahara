@@ -14,6 +14,12 @@ extension UIImage {
         return width * aspectRatio
     }
 
+    func resized(to targetSize: CGSize) -> UIImage {
+        UIGraphicsImageRenderer(size: targetSize).image { _ in
+            draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+
     func normalizedOrientation() -> UIImage {
         guard imageOrientation != .up else { return self }
 

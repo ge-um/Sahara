@@ -170,7 +170,7 @@ final class LocationSearchViewController: UIViewController {
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.horizontalEdges.equalToSuperview().inset(12)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.height.equalTo(36)
         }
 

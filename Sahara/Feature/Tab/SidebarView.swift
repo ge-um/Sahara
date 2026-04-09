@@ -9,7 +9,13 @@ import SnapKit
 import UIKit
 
 final class SidebarView: UIView {
-    static let width: CGFloat = 80
+    static let width: CGFloat = {
+        #if targetEnvironment(macCatalyst)
+        return 100
+        #else
+        return 80
+        #endif
+    }()
 
     private let stackView: UIStackView = {
         let stack = UIStackView()
@@ -45,6 +51,7 @@ final class SidebarView: UIView {
 
         for item in TabItem.allCases {
             let button = TabButton(icon: item.icon, title: item.title)
+            button.accessibilityIdentifier = item.accessibilityId
             button.onTap = { [weak self] in
                 self?.onTabSelected?(item)
             }

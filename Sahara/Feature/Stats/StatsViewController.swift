@@ -114,7 +114,14 @@ final class StatsViewController: UIViewController {
 
         container.addSubview(textLabel)
         textLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+            make.top.greaterThanOrEqualToSuperview().inset(12)
+            make.bottom.lessThanOrEqualToSuperview().inset(12)
+            make.centerY.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(20)
+        }
+
+        container.snp.makeConstraints { make in
+            make.height.greaterThanOrEqualTo(60)
         }
 
         return container

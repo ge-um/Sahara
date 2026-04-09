@@ -140,8 +140,8 @@ final class CardListViewController: UIViewController {
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
-            make.horizontalEdges.equalToSuperview().inset(24)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
