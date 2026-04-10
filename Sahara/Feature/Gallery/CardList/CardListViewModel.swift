@@ -19,7 +19,7 @@ final class CardListViewModel: BaseViewModelProtocol {
 
     struct Input {
         let itemSelected: Observable<IndexPath>
-        let closeButtonTapped: Observable<Void>
+        let backButtonTapped: Observable<Void>
     }
 
     struct Output {
@@ -51,7 +51,7 @@ final class CardListViewModel: BaseViewModelProtocol {
             .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
-        let dismiss = input.closeButtonTapped
+        let dismiss = input.backButtonTapped
             .asDriver(onErrorJustReturn: ())
 
         return Output(
