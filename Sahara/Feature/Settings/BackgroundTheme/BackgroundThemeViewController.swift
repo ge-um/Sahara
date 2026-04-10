@@ -87,6 +87,11 @@ final class BackgroundThemeViewController: UIViewController {
 
     private var colorCells: [UIView] = []
     private var gradientCells: [UIView] = []
+    private var presetColors: [String] = []
+    private var lastColorGridWidth: CGFloat = 0
+    private var colorGridDisposeBag = DisposeBag()
+    private var colorGridHeightConstraint: Constraint?
+    private var currentBackgroundConfig: BackgroundConfig?
 
     init(viewModel: BackgroundThemeViewModel = BackgroundThemeViewModel()) {
         self.viewModel = viewModel
@@ -106,6 +111,7 @@ final class BackgroundThemeViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         saveButton.applyGradient(.ctaPink, removeExisting: true)
+        rebuildColorGridIfNeeded()
     }
 
     private func setupCustomNavigationBar() {
@@ -298,6 +304,7 @@ final class BackgroundThemeViewController: UIViewController {
 
         output.currentConfig
             .drive(onNext: { [weak self] config in
+                self?.currentBackgroundConfig = config
                 self?.updatePreview(config: config)
                 self?.updateSelection(config: config)
                 self?.dotPatternSwitch.isOn = config.isDotPatternEnabled
@@ -312,17 +319,30 @@ final class BackgroundThemeViewController: UIViewController {
     }
 
     private func buildColorGrid(colors: [String]) {
+        presetColors = colors
+        lastColorGridWidth = 0
+        rebuildColorGridIfNeeded()
+    }
+
+    private func rebuildColorGridIfNeeded() {
+        let width = scrollView.bounds.width - 40
+        guard width > 0, !presetColors.isEmpty, width != lastColorGridWidth else { return }
+        lastColorGridWidth = width
+        rebuildColorGrid(width: width)
+    }
+
+    private func rebuildColorGrid(width: CGFloat) {
         colorGridView.subviews.forEach { $0.removeFromSuperview() }
         colorCells.removeAll()
+        colorGridDisposeBag = DisposeBag()
 
-        let columns = 5
         let spacing: CGFloat = 12
         let cellSize: CGFloat = 48
-        let allItems = colors.count + 1
+        let columns = max(1, Int((width + spacing) / (cellSize + spacing)))
+        let allItems = presetColors.count + 1
 
-        var lastView: UIView?
         for index in 0..<allItems {
-            let isPickerButton = index == colors.count
+            let isPickerButton = index == presetColors.count
             let cell = UIView()
             cell.layer.cornerRadius = cellSize / 2
             cell.clipsToBounds = true
@@ -340,10 +360,10 @@ final class BackgroundThemeViewController: UIViewController {
                 let tap = UITapGestureRecognizer()
                 tap.rx.event
                     .subscribe(onNext: { [weak self] _ in self?.presentSolidColorPicker() })
-                    .disposed(by: disposeBag)
+                    .disposed(by: colorGridDisposeBag)
                 cell.addGestureRecognizer(tap)
             } else {
-                let hex = colors[index]
+                let hex = presetColors[index]
                 cell.backgroundColor = UIColor(hex: hex)
                 cell.tag = index
                 cell.accessibilityIdentifier = "sahara.bgTheme.solid.\(index)"
@@ -357,7 +377,7 @@ final class BackgroundThemeViewController: UIViewController {
                 tap.rx.event
                     .map { _ in hex }
                     .bind(to: solidColorRelay)
-                    .disposed(by: disposeBag)
+                    .disposed(by: colorGridDisposeBag)
                 cell.addGestureRecognizer(tap)
                 colorCells.append(cell)
             }
@@ -372,14 +392,17 @@ final class BackgroundThemeViewController: UIViewController {
                 make.leading.equalToSuperview().offset(CGFloat(col) * (cellSize + spacing))
                 make.top.equalToSuperview().offset(CGFloat(row) * (cellSize + spacing))
             }
-
-            lastView = cell
         }
 
-        if let lastView {
-            colorGridView.snp.makeConstraints { make in
-                make.bottom.greaterThanOrEqualTo(lastView.snp.bottom)
-            }
+        let totalRows = (allItems + columns - 1) / columns
+        let gridHeight = CGFloat(totalRows) * cellSize + CGFloat(max(0, totalRows - 1)) * spacing
+        colorGridHeightConstraint?.deactivate()
+        colorGridView.snp.makeConstraints { make in
+            colorGridHeightConstraint = make.height.equalTo(gridHeight).constraint
+        }
+
+        if let config = currentBackgroundConfig {
+            updateSelection(config: config)
         }
     }
 
