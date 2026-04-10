@@ -9,11 +9,8 @@ import SnapKit
 import UIKit
 
 final class TabButton: UIView {
-    private let backgroundView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .token(.tabBackground)
-        view.layer.cornerRadius = 8
-        view.clipsToBounds = true
+    private let backgroundView: TabBackgroundView = {
+        let view = TabBackgroundView()
         view.alpha = 0
         return view
     }()
@@ -81,33 +78,6 @@ final class TabButton: UIView {
         isUserInteractionEnabled = true
         isAccessibilityElement = true
         accessibilityTraits = .button
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        updateInnerShadow()
-    }
-
-    private func updateInnerShadow() {
-        backgroundView.layer.sublayers?.removeAll(where: { $0.name == "innerShadow" })
-
-        let innerShadow = CALayer()
-        innerShadow.name = "innerShadow"
-        innerShadow.frame = backgroundView.bounds
-
-        let path = UIBezierPath(roundedRect: backgroundView.bounds.insetBy(dx: -20, dy: -20), cornerRadius: 8)
-        let cutout = UIBezierPath(roundedRect: backgroundView.bounds, cornerRadius: 8).reversing()
-        path.append(cutout)
-
-        innerShadow.shadowPath = path.cgPath
-        innerShadow.masksToBounds = true
-        innerShadow.shadowColor = UIColor.black.cgColor
-        innerShadow.shadowOffset = CGSize(width: 0, height: 4)
-        innerShadow.shadowOpacity = 0.25
-        innerShadow.shadowRadius = 4
-        innerShadow.cornerRadius = 8
-
-        backgroundView.layer.addSublayer(innerShadow)
     }
 
     @objc private func handleTap() {
