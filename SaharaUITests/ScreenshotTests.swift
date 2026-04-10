@@ -156,14 +156,32 @@ class ScreenshotTests: XCTestCase {
         editButton.tap()
         _ = app.buttons["sahara.cardInfo.photoEdit"].waitForExistence(timeout: 3)
         takeScreenshot("04_날짜_장소_메모를_기록하고")
+    }
 
-        // #02 editor
-        app.buttons["sahara.cardInfo.photoEdit"].tap()
+    // #02 editor — 3/13 편집 화면 (그리기 탭)
+    func test_02b_editor() {
+        navigateToMarch()
+
+        let cell13 = app.cells.matching(identifier: "sahara.calendar.cell").element(boundBy: 12)
+        guard cell13.waitForExistence(timeout: 3) else { return }
+        cell13.tap()
+
+        let cardCell = app.cells.firstMatch
+        guard cardCell.waitForExistence(timeout: 3) else { return }
+        cardCell.tap()
+
+        let editBtn = app.buttons["sahara.cardDetail.edit"]
+        guard editBtn.waitForExistence(timeout: 3) else { return }
+        editBtn.tap()
+
+        let photoEditBtn = app.buttons["sahara.cardInfo.photoEdit"]
+        guard photoEditBtn.waitForExistence(timeout: 3) else { return }
+        photoEditBtn.tap()
+
         _ = app.otherElements["sahara.mediaEditor.view"].waitForExistence(timeout: 2)
-        let modeButtons = app.otherElements["sahara.mediaEditor.view"].buttons
-        if modeButtons.count >= 2 {
-            modeButtons.element(boundBy: 1).tap()
-        }
+        let drawingBtn = app.buttons["sahara.mediaEditor.mode.drawing"]
+        guard drawingBtn.waitForExistence(timeout: 2) else { return }
+        drawingBtn.tap()
         takeScreenshot("02_사진을_자유롭게_편집하고")
     }
 
@@ -205,10 +223,15 @@ class ScreenshotTests: XCTestCase {
         let toggle = syncItem.switches.firstMatch
         if toggle.exists {
             toggle.tap()
-            let alertBtn = app.alerts.buttons.firstMatch
-            if alertBtn.waitForExistence(timeout: 3) {
-                alertBtn.tap()
+            sleep(1)
+            if app.alerts.buttons.firstMatch.waitForExistence(timeout: 3) {
+                app.alerts.buttons.firstMatch.tap()
+            } else if app.dialogs.buttons.firstMatch.waitForExistence(timeout: 1) {
+                app.dialogs.buttons.firstMatch.tap()
+            } else if app.sheets.buttons.firstMatch.waitForExistence(timeout: 1) {
+                app.sheets.buttons.firstMatch.tap()
             }
+            sleep(1)
         }
         takeScreenshot("09_동기화로_소중한_추억을_지켜주세요")
     }
