@@ -32,15 +32,33 @@ extension MediaEditorViewController {
     }
 
     func setupModeButtons() {
-        let buttonConfigs: [(button: UIButton, imageName: String, titleKey: String)] = [
-            (stickerModeButton, "sticker", "media_editor.sticker"),
-            (drawingModeButton, "pencil", "media_editor.drawing"),
-            (filterModeButton, "sliders", "media_editor.filter"),
-            (photoModeButton, "image", "media_editor.photo"),
-            (cropModeButton, "crop", "media_editor.crop")
+        let buttonConfigs: [(button: UIButton, imageName: String, titleKey: String, identifier: String)] = [
+            (stickerModeButton, "sticker", "media_editor.sticker", "sahara.mediaEditor.mode.sticker"),
+            (drawingModeButton, "pencil", "media_editor.drawing", "sahara.mediaEditor.mode.drawing"),
+            (filterModeButton, "sliders", "media_editor.filter", "sahara.mediaEditor.mode.filter"),
+            (photoModeButton, "image", "media_editor.photo", "sahara.mediaEditor.mode.photo"),
+            (cropModeButton, "crop", "media_editor.crop", "sahara.mediaEditor.mode.crop")
         ]
 
+        let maxLabelWidth = buttonConfigs
+            .map { NSLocalizedString($0.titleKey, comment: "").size(withAttributes: [.font: UIFont.typography(.caption)]).width }
+            .max() ?? 0
+        let bgWidth = max(48, ceil(maxLabelWidth) + 16)
+
         for config in buttonConfigs {
+            config.button.accessibilityIdentifier = config.identifier
+
+            let backgroundView = TabBackgroundView()
+            backgroundView.alpha = 0
+            backgroundView.isUserInteractionEnabled = false
+            config.button.addSubview(backgroundView)
+            backgroundView.snp.makeConstraints { make in
+                make.center.equalToSuperview()
+                make.width.equalTo(bgWidth)
+                make.height.equalTo(48)
+            }
+            modeButtonBackgrounds[config.button] = backgroundView
+
             let stack = UIStackView()
             stack.axis = .vertical
             stack.alignment = .center
@@ -73,7 +91,13 @@ extension MediaEditorViewController {
 
             config.button.addSubview(stack)
             stack.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
+                make.center.equalToSuperview()
+            }
+            modeButtonContentStacks[config.button] = stack
+
+            config.button.snp.makeConstraints { make in
+                make.width.equalTo(bgWidth)
+                make.height.equalTo(44)
             }
 
             modeButtonStackView.addArrangedSubview(config.button)
@@ -102,8 +126,7 @@ extension MediaEditorViewController {
         view.addSubview(undoButton)
         view.addSubview(redoButton)
 
-        toolBarContainer.addSubview(toolBarScrollView)
-        toolBarScrollView.addSubview(modeButtonStackView)
+        toolBarContainer.addSubview(modeButtonStackView)
 
         toolBarContainer.applyGradient(.tabBar)
 
@@ -113,19 +136,17 @@ extension MediaEditorViewController {
             make.height.equalTo(54)
         }
 
+        modeButtonStackView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(400)
+            make.horizontalEdges.equalToSuperview().inset(48).priority(.medium)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
+        }
+
         toolBarContainer.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
-            make.height.equalTo(88)
-        }
-
-        toolBarScrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        modeButtonStackView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 8, right: 20))
-            make.height.equalTo(54)
+            make.top.equalTo(modeButtonStackView.snp.top).offset(-10)
         }
 
         photoImageView.snp.makeConstraints { make in
