@@ -5,7 +5,6 @@
 //  Created by 금가경 on 9/26/25.
 //
 
-import Alamofire
 import Foundation
 import OSLog
 import RxCocoa
@@ -50,7 +49,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let navigateToMetadata: Driver<UIImage>
         let dismiss: Driver<Void>
         let errorMessage: Driver<String>
-        let networkErrorMessage: Driver<String>
         let shouldShowStickerModal: Driver<Void>
         let addedStickers: Driver<[(sticker: KlipySticker, position: CGPoint, scale: CGFloat)]>
         let initialStickers: [StickerDTO]
@@ -75,7 +73,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         let filteredImageRelay = BehaviorRelay<UIImage?>(value: nil)
         let isLoadingMoreRelay = BehaviorRelay<Bool>(value: false)
         let errorRelay = PublishRelay<String>()
-        let networkErrorRelay = PublishRelay<String>()
         let shouldShowStickerModalRelay = PublishRelay<Void>()
 
         bindStickerSearch(
@@ -83,7 +80,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             stickersRelay: stickersRelay,
             isLoadingMoreRelay: isLoadingMoreRelay,
             errorRelay: errorRelay,
-            networkErrorRelay: networkErrorRelay,
             shouldShowStickerModalRelay: shouldShowStickerModalRelay
         )
 
@@ -95,7 +91,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             filteredImageRelay: filteredImageRelay,
             isLoadingMoreRelay: isLoadingMoreRelay,
             errorRelay: errorRelay,
-            networkErrorRelay: networkErrorRelay,
             shouldShowStickerModalRelay: shouldShowStickerModalRelay
         )
     }
@@ -105,19 +100,10 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         stickersRelay: BehaviorRelay<[KlipySticker]>,
         isLoadingMoreRelay: BehaviorRelay<Bool>,
         errorRelay: PublishRelay<String>,
-        networkErrorRelay: PublishRelay<String>,
         shouldShowStickerModalRelay: PublishRelay<Void>
     ) {
         input.stickerButtonTapped
-            .withUnretained(self)
-            .bind { owner, _ in
-                let isConnected = NetworkReachabilityManager()?.isReachable ?? false
-                if isConnected {
-                    shouldShowStickerModalRelay.accept(())
-                } else {
-                    networkErrorRelay.accept(NSLocalizedString("media_editor.network_error", comment: ""))
-                }
-            }
+            .bind(to: shouldShowStickerModalRelay)
             .disposed(by: disposeBag)
 
         input.searchQuery
@@ -134,6 +120,7 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             .do(onNext: { owner, _ in
                 owner.currentPageRelay.accept(1)
                 owner.hasNextRelay.accept(true)
+                owner.currentQueryRelay.accept("")
             })
             .flatMapLatest { owner, _ in
                 owner.networkManager.callRequest(
@@ -312,7 +299,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
         filteredImageRelay: BehaviorRelay<UIImage?>,
         isLoadingMoreRelay: BehaviorRelay<Bool>,
         errorRelay: PublishRelay<String>,
-        networkErrorRelay: PublishRelay<String>,
         shouldShowStickerModalRelay: PublishRelay<Void>
     ) -> Output {
         let selectedSticker = input.stickerSelected
@@ -340,7 +326,6 @@ final class MediaEditorViewModel: BaseViewModelProtocol {
             navigateToMetadata: navigateToMetadata,
             dismiss: dismiss,
             errorMessage: errorRelay.asDriver(onErrorJustReturn: ""),
-            networkErrorMessage: networkErrorRelay.asDriver(onErrorJustReturn: ""),
             shouldShowStickerModal: shouldShowStickerModalRelay.asDriver(onErrorDriveWith: .empty()),
             addedStickers: addedStickersRelay.asDriver(),
             initialStickers: originalImageSource.stickers,

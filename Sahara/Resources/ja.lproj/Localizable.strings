@@ -123,7 +123,8 @@
 "media_editor.tool.monoline" = "モノライン";
 "media_editor.tool.eraser" = "消しゴム";
 "media_editor.tool.lasso" = "選択";
-"media_editor.network_error" = "ネットワークに接続できません";
+"media_editor.sticker_load_failed" = "ステッカーを読み込めません";
+"media_editor.retry" = "再試行";
 
 /* Filters */
 "filter.original" = "オリジナル";

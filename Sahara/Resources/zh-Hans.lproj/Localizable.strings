@@ -123,7 +123,8 @@
 "media_editor.tool.monoline" = "等线笔";
 "media_editor.tool.eraser" = "橡皮擦";
 "media_editor.tool.lasso" = "套索";
-"media_editor.network_error" = "无法连接到网络";
+"media_editor.sticker_load_failed" = "无法加载贴纸";
+"media_editor.retry" = "重试";
 
 /* Filters */
 "filter.original" = "原图";

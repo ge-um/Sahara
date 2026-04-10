@@ -123,7 +123,8 @@
 "media_editor.tool.monoline" = "모노라인";
 "media_editor.tool.eraser" = "지우개";
 "media_editor.tool.lasso" = "선택";
-"media_editor.network_error" = "네트워크에 연결할 수 없어요";
+"media_editor.sticker_load_failed" = "스티커를 불러올 수 없어요";
+"media_editor.retry" = "다시 시도";
 
 /* Filters */
 "filter.original" = "원본";
