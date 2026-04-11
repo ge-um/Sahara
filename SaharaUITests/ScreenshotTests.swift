@@ -4,6 +4,13 @@ import XCTest
 class ScreenshotTests: XCTestCase {
     var app: XCUIApplication!
 
+    #if targetEnvironment(macCatalyst)
+    private static let macScreenshotLang: String = {
+        (try? String(contentsOfFile: "/tmp/sahara-screenshot-lang.txt", encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? "ko"
+    }()
+    #endif
+
     private var isMac: Bool {
         #if targetEnvironment(macCatalyst)
         return true
@@ -27,7 +34,10 @@ class ScreenshotTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments.append("-SCREENSHOT_MODE")
 
-        #if !targetEnvironment(macCatalyst)
+        #if targetEnvironment(macCatalyst)
+        let lang = Self.macScreenshotLang
+        app.launchArguments += ["-AppleLanguages", "(\(lang))", "-AppleLocale", lang]
+        #else
         setupSnapshot(app, waitForAnimations: false)
         #endif
 
@@ -67,8 +77,7 @@ class ScreenshotTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
 
-        let lang = (try? String(contentsOfFile: "/tmp/sahara-screenshot-lang.txt", encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "ko"
-        let dir = NSHomeDirectory() + "/sahara-mac-screenshots/\(lang)"
+        let dir = NSHomeDirectory() + "/sahara-mac-screenshots/\(Self.macScreenshotLang)"
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         try? screenshot.pngRepresentation.write(to: URL(fileURLWithPath: "\(dir)/Mac (2880x1800)-\(name).png"))
         #else
@@ -211,29 +220,6 @@ class ScreenshotTests: XCTestCase {
 
         _ = app.cells.firstMatch.waitForExistence(timeout: 3)
         takeScreenshot("05_한_눈에_모아보세요")
-    }
-
-    func test_05_settings() {
-        let settingsTab = app.buttons["sahara.tab.settings"]
-        guard settingsTab.waitForExistence(timeout: 5) else { return }
-        settingsTab.tap()
-
-        let syncItem = app.otherElements["sahara.settings.cloudSync"]
-        guard syncItem.waitForExistence(timeout: 3) else { return }
-        let toggle = syncItem.switches.firstMatch
-        if toggle.exists {
-            toggle.tap()
-            sleep(1)
-            if app.alerts.buttons.firstMatch.waitForExistence(timeout: 3) {
-                app.alerts.buttons.firstMatch.tap()
-            } else if app.dialogs.buttons.firstMatch.waitForExistence(timeout: 1) {
-                app.dialogs.buttons.firstMatch.tap()
-            } else if app.sheets.buttons.firstMatch.waitForExistence(timeout: 1) {
-                app.sheets.buttons.firstMatch.tap()
-            }
-            sleep(1)
-        }
-        takeScreenshot("09_동기화로_소중한_추억을_지켜주세요")
     }
 
     func test_06_backgroundTheme() {
