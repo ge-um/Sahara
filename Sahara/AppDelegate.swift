@@ -84,6 +84,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func configureRealmForScreenshots() {
+        BackgroundThemeService.shared.updateTheme(.gradient(gradientId: "primary"))
+
         let fileManager = FileManager.default
         let tempDir = fileManager.temporaryDirectory.appendingPathComponent("sahara-screenshots-\(UUID().uuidString)")
         try? fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
