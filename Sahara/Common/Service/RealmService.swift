@@ -124,6 +124,7 @@ final class RealmService: RealmServiceProtocol {
         config.fileURL = resolveRealmFileURL()
         config.schemaVersion = schemaVersion
         config.migrationBlock = migrationBlock ?? defaultMigrationBlock
+        config.objectTypes = [Card.self, Sticker.self]
         return config
     }
 
