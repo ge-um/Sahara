@@ -19,21 +19,24 @@ protocol CardPostProcessorProtocol {
 final class CardPostProcessor: CardPostProcessorProtocol {
     static let shared = CardPostProcessor()
 
+    // 런칭 직후 수행되는 백그라운드 작업(레거시 이미지 디스크 이관, 미태깅 카드 후처리)을
+    // 한 queue에서 직렬화해 동시 실행 시 editedImageData 대량 로드가 겹쳐 발생하는 메모리 피크를 방지한다.
+    static let launchBackgroundQueue = DispatchQueue(label: "com.sahara.launchBackground", qos: .utility)
+
     private let realmConfiguration: Realm.Configuration
-    private let queue = DispatchQueue(label: "com.sahara.postProcessor", qos: .utility)
 
     init(realmConfiguration: Realm.Configuration? = nil) {
         self.realmConfiguration = realmConfiguration ?? RealmService.shared.createConfiguration()
     }
 
     func process(cardId: ObjectId, imageData: Data) {
-        queue.async { [weak self] in
+        Self.launchBackgroundQueue.async { [weak self] in
             self?.performProcess(cardId: cardId, imageData: imageData)
         }
     }
 
     func processUntaggedCards() {
-        queue.async { [weak self] in
+        Self.launchBackgroundQueue.async { [weak self] in
             self?.performProcessUntagged()
         }
     }
@@ -63,29 +66,31 @@ final class CardPostProcessor: CardPostProcessorProtocol {
         guard let realm = try? Realm(configuration: realmConfiguration) else { return }
 
         let allCards = realm.objects(Card.self)
-        let untaggedCards = allCards.filter { $0.visionTags.isEmpty }
+        let untaggedCardIds = allCards.filter { $0.visionTags.isEmpty }.map(\.id)
 
-        Logger.postProcessor.notice("[PostProcess] Untagged cards: \(untaggedCards.count)/\(allCards.count)")
+        Logger.postProcessor.notice("[PostProcess] Untagged cards: \(untaggedCardIds.count)/\(allCards.count)")
 
-        for card in untaggedCards {
-            guard let imageData = card.resolvedImageData() else { continue }
-            let cardId = card.id
+        for cardId in untaggedCardIds {
+            autoreleasepool {
+                guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId),
+                      let imageData = card.resolvedImageData() else { return }
 
-            let ocrText = recognizeTextSync(from: imageData)
-            let visionTags = classifyImageSync(from: imageData)
+                let ocrText = recognizeTextSync(from: imageData)
+                let visionTags = classifyImageSync(from: imageData)
 
-            guard let freshCard = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { continue }
+                guard let freshCard = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
 
-            do {
-                try realm.write {
-                    if freshCard.ocrText == nil {
-                        freshCard.ocrText = ocrText
+                do {
+                    try realm.write {
+                        if freshCard.ocrText == nil {
+                            freshCard.ocrText = ocrText
+                        }
+                        freshCard.visionTags.removeAll()
+                        freshCard.visionTags.append(objectsIn: visionTags)
                     }
-                    freshCard.visionTags.removeAll()
-                    freshCard.visionTags.append(objectsIn: visionTags)
+                } catch {
+                    Logger.postProcessor.error("[PostProcess] Batch write failed: \(error.localizedDescription)")
                 }
-            } catch {
-                Logger.postProcessor.error("[PostProcess] Batch write failed: \(error.localizedDescription)")
             }
         }
     }

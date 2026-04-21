@@ -69,31 +69,29 @@ final class ThemeViewModel: BaseViewModelProtocol {
         let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .utility)
 
         return realmManager.observeAllCards()
-            .map { cards in
-                cards.compactMap { card -> (id: ObjectId, visionTags: [VisionTag], imageData: Data?)? in
-                    let tags = Array(card.visionTags)
-                    if !tags.isEmpty {
-                        return (id: card.id, visionTags: tags, imageData: nil)
-                    }
-                    guard let data = card.resolvedImageData() else { return nil }
-                    return (id: card.id, visionTags: [], imageData: data)
-                }
+            .map { cards -> [(id: ObjectId, visionTags: [VisionTag])] in
+                cards.map { (id: $0.id, visionTags: Array($0.visionTags)) }
             }
             .observe(on: backgroundScheduler)
             .map { [weak self] items -> [ThemeGroup] in
                 guard let self = self else { return [] }
                 var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
+                let config = self.realmManager.createConfiguration()
+                guard let realm = try? Realm(configuration: config) else { return [] }
+
                 for item in items {
-                    let category: ThemeCategory
-                    if !item.visionTags.isEmpty {
-                        category = ThemeCategory.category(for: item.visionTags)
-                    } else if let imageData = item.imageData {
-                        category = self.classifyImage(from: imageData)
-                    } else {
-                        continue
+                    autoreleasepool {
+                        let category: ThemeCategory
+                        if !item.visionTags.isEmpty {
+                            category = ThemeCategory.category(for: item.visionTags)
+                        } else {
+                            guard let card = realm.object(ofType: Card.self, forPrimaryKey: item.id),
+                                  let imageData = card.resolvedImageData() else { return }
+                            category = self.classifyImage(from: imageData)
+                        }
+                        categoryDict[category, default: []].append(item.id)
                     }
-                    categoryDict[category, default: []].append(item.id)
                 }
 
                 return categoryDict.map { ThemeGroup(category: $0.key, cardIds: $0.value) }

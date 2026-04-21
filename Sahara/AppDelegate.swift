@@ -81,6 +81,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         RealmService.migrateRealmFileIfNeeded()
         let config = RealmService.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
+
+        migrateLegacyImagesInBackground()
+    }
+
+    private func migrateLegacyImagesInBackground() {
+        CardPostProcessor.launchBackgroundQueue.async {
+            try? RealmService.shared.migrateAllLegacyImagesToDisk(imageFileService: ImageFileService.shared)
+        }
     }
 
     private func configureRealmForScreenshots() {
