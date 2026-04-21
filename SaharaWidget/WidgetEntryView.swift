@@ -115,7 +115,7 @@ struct WidgetEntryView: View {
             .font(.custom("Galmuri11", size: size * 0.7))
             .foregroundColor(WidgetDesignToken.TextColor.navigationButton)
             .offset(
-                x: symbol == "<" ? -size * 0.04 : size * 0.05,
+                x: symbol == "<" ? -size * 0.03 : size * 0.05,
                 y: size * 0.03
             )
             .frame(width: size, height: size)

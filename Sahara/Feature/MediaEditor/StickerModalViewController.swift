@@ -41,10 +41,47 @@ final class StickerModalViewController: UIViewController {
         return collectionView
     }()
 
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = NSLocalizedString("media_editor.sticker_load_failed", comment: "")
+        label.font = .typography(.body)
+        label.textColor = .token(.textSecondary)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        return label
+    }()
+
+    private let retryButton: UIButton = {
+        let button = UIButton(type: .system)
+        var config = UIButton.Configuration.plain()
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20)
+        let attributedTitle = AttributedString(
+            NSLocalizedString("media_editor.retry", comment: ""),
+            attributes: AttributeContainer([
+                .font: UIFont.typography(.label),
+                .foregroundColor: UIColor.token(.textPrimary)
+            ])
+        )
+        config.attributedTitle = attributedTitle
+        button.configuration = config
+        button.applyGlassCardStyle(cornerRadius: DesignToken.CornerRadius.button)
+        return button
+    }()
+
+    private lazy var emptyStateContainer: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [emptyStateLabel, retryButton])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = DesignToken.Spacing.lg
+        stack.isHidden = true
+        return stack
+    }()
+
     private let viewModel: MediaEditorViewModel
     private let disposeBag = DisposeBag()
     private let viewWillAppearRelay = PublishRelay<Void>()
     private let loadMoreRelay = PublishRelay<Void>()
+    private let hasErrorRelay = BehaviorRelay<Bool>(value: false)
     var onStickerSelected: ((KlipySticker) -> Void)?
 
     init(viewModel: MediaEditorViewModel) {
@@ -119,6 +156,37 @@ final class StickerModalViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        output.stickers
+            .asObservable()
+            .filter { !$0.isEmpty }
+            .map { _ in false }
+            .bind(to: hasErrorRelay)
+            .disposed(by: disposeBag)
+
+        output.errorMessage
+            .asObservable()
+            .filter { !$0.isEmpty }
+            .withLatestFrom(output.stickers.asObservable())
+            .filter { $0.isEmpty }
+            .map { _ in true }
+            .bind(to: hasErrorRelay)
+            .disposed(by: disposeBag)
+
+        hasErrorRelay
+            .asDriver()
+            .drive(with: self) { owner, hasError in
+                owner.emptyStateContainer.isHidden = !hasError
+                owner.stickerCollectionView.isHidden = hasError
+            }
+            .disposed(by: disposeBag)
+
+        retryButton.rx.tap
+            .bind(with: self) { owner, _ in
+                owner.searchBar.text = nil
+                owner.viewWillAppearRelay.accept(())
+            }
+            .disposed(by: disposeBag)
+
         stickerCollectionView.rx.willDisplayCell
             .withLatestFrom(output.stickers.asObservable()) { cellInfo, stickers in
                 (cellInfo.at.item, stickers.count)
@@ -144,6 +212,7 @@ final class StickerModalViewController: UIViewController {
 
         view.addSubview(searchBar)
         view.addSubview(stickerCollectionView)
+        view.addSubview(emptyStateContainer)
 
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -154,6 +223,11 @@ final class StickerModalViewController: UIViewController {
         stickerCollectionView.snp.makeConstraints { make in
             make.top.equalTo(searchBar.snp.bottom).offset(10)
             make.horizontalEdges.bottom.equalToSuperview()
+        }
+
+        emptyStateContainer.snp.makeConstraints { make in
+            make.center.equalTo(stickerCollectionView)
+            make.horizontalEdges.equalToSuperview().inset(40)
         }
     }
 

@@ -54,6 +54,7 @@ screenshots-ios:
 	bundle exec fastlane screenshots
 	@echo "📁 Organizing iPhone/iPad..."
 	@for lang in $(SCREENSHOT_LANGUAGES); do \
+		rm -rf "$(SCREENSHOT_DIR)/$$lang/iphone" "$(SCREENSHOT_DIR)/$$lang/ipad"; \
 		mkdir -p "$(SCREENSHOT_DIR)/$$lang/iphone" "$(SCREENSHOT_DIR)/$$lang/ipad"; \
 		mv "$(SCREENSHOT_DIR)/$$lang"/iPhone*.png "$(SCREENSHOT_DIR)/$$lang/iphone/" 2>/dev/null || true; \
 		mv "$(SCREENSHOT_DIR)/$$lang"/iPad*.png "$(SCREENSHOT_DIR)/$$lang/ipad/" 2>/dev/null || true; \
@@ -61,6 +62,9 @@ screenshots-ios:
 
 screenshots-mac:
 	@rm -rf "$(MAC_CONTAINER_DIR)"
+	@echo "🫥 Hiding Dock for clean screenshots..."
+	@defaults write com.apple.dock autohide -bool true && killall Dock
+	@sleep 1
 	@for lang in $(SCREENSHOT_LANGUAGES); do \
 		echo "📸 Mac Catalyst: $$lang"; \
 		echo "$$lang" > /tmp/sahara-screenshot-lang.txt; \
@@ -71,6 +75,7 @@ screenshots-mac:
 			-allowProvisioningUpdates \
 			FASTLANE_SNAPSHOT=YES \
 			build test 2>&1 | tail -5; \
+		rm -rf "$(SCREENSHOT_DIR)/$$lang/mac"; \
 		mkdir -p "$(SCREENSHOT_DIR)/$$lang/mac"; \
 		cp "$(MAC_CONTAINER_DIR)/$$lang/"*.png "$(SCREENSHOT_DIR)/$$lang/mac/" 2>/dev/null || true; \
 	done

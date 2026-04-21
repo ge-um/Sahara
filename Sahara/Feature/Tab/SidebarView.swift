@@ -10,11 +10,18 @@ import UIKit
 
 final class SidebarView: UIView {
     static let width: CGFloat = {
-        #if targetEnvironment(macCatalyst)
-        return 100
-        #else
-        return 80
-        #endif
+        let maxLabelWidth = TabItem.allCases
+            .map { $0.title.size(withAttributes: [.font: UIFont.typography(.caption)]).width }
+            .max() ?? 0
+        let buttonSize = max(56, ceil(maxLabelWidth) + 16)
+        let padding: CGFloat = {
+            #if targetEnvironment(macCatalyst)
+            return 44
+            #else
+            return 24
+            #endif
+        }()
+        return buttonSize + padding
     }()
 
     private let stackView: UIStackView = {
@@ -49,14 +56,22 @@ final class SidebarView: UIView {
 
         addSubview(stackView)
 
+        let maxLabelWidth = TabItem.allCases
+            .map { $0.title.size(withAttributes: [.font: UIFont.typography(.caption)]).width }
+            .max() ?? 0
+        let bgWidth = max(48, ceil(maxLabelWidth) + 16)
+        let buttonSize = max(56, bgWidth)
+
         for item in TabItem.allCases {
             let button = TabButton(icon: item.icon, title: item.title)
             button.accessibilityIdentifier = item.accessibilityId
             button.onTap = { [weak self] in
                 self?.onTabSelected?(item)
             }
+            button.setBackgroundWidth(bgWidth)
             button.snp.makeConstraints { make in
-                make.width.height.equalTo(56)
+                make.width.equalTo(buttonSize)
+                make.height.equalTo(56)
             }
             stackView.addArrangedSubview(button)
             tabButtons[item] = button

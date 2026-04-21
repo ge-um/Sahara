@@ -83,10 +83,12 @@ extension MediaEditorViewController {
         let modes: [EditMode?] = [.sticker, .drawing, .filter, .photo, .crop]
 
         for (button, mode) in zip(buttons, modes) {
-            if mode == currentMode {
-                button.alpha = 1.0
-            } else {
-                button.alpha = 0.5
+            let isSelected = mode == currentMode
+            let backgroundView = modeButtonBackgrounds[button]
+            let contentStack = modeButtonContentStacks[button]
+            UIView.animate(withDuration: 0.2) {
+                backgroundView?.alpha = isSelected ? 1 : 0
+                contentStack?.alpha = isSelected ? 1.0 : 0.5
             }
         }
     }

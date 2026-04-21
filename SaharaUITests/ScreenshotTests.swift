@@ -4,6 +4,13 @@ import XCTest
 class ScreenshotTests: XCTestCase {
     var app: XCUIApplication!
 
+    #if targetEnvironment(macCatalyst)
+    private static let macScreenshotLang: String = {
+        (try? String(contentsOfFile: "/tmp/sahara-screenshot-lang.txt", encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? "ko"
+    }()
+    #endif
+
     private var isMac: Bool {
         #if targetEnvironment(macCatalyst)
         return true
@@ -27,7 +34,10 @@ class ScreenshotTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments.append("-SCREENSHOT_MODE")
 
-        #if !targetEnvironment(macCatalyst)
+        #if targetEnvironment(macCatalyst)
+        let lang = Self.macScreenshotLang
+        app.launchArguments += ["-AppleLanguages", "(\(lang))", "-AppleLocale", lang]
+        #else
         setupSnapshot(app, waitForAnimations: false)
         #endif
 
@@ -67,8 +77,7 @@ class ScreenshotTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
 
-        let lang = (try? String(contentsOfFile: "/tmp/sahara-screenshot-lang.txt", encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "ko"
-        let dir = NSHomeDirectory() + "/sahara-mac-screenshots/\(lang)"
+        let dir = NSHomeDirectory() + "/sahara-mac-screenshots/\(Self.macScreenshotLang)"
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
         try? screenshot.pngRepresentation.write(to: URL(fileURLWithPath: "\(dir)/Mac (2880x1800)-\(name).png"))
         #else
@@ -156,14 +165,32 @@ class ScreenshotTests: XCTestCase {
         editButton.tap()
         _ = app.buttons["sahara.cardInfo.photoEdit"].waitForExistence(timeout: 3)
         takeScreenshot("04_날짜_장소_메모를_기록하고")
+    }
 
-        // #02 editor
-        app.buttons["sahara.cardInfo.photoEdit"].tap()
+    // #02 editor — 3/13 편집 화면 (그리기 탭)
+    func test_02b_editor() {
+        navigateToMarch()
+
+        let cell13 = app.cells.matching(identifier: "sahara.calendar.cell").element(boundBy: 12)
+        guard cell13.waitForExistence(timeout: 3) else { return }
+        cell13.tap()
+
+        let cardCell = app.cells.firstMatch
+        guard cardCell.waitForExistence(timeout: 3) else { return }
+        cardCell.tap()
+
+        let editBtn = app.buttons["sahara.cardDetail.edit"]
+        guard editBtn.waitForExistence(timeout: 3) else { return }
+        editBtn.tap()
+
+        let photoEditBtn = app.buttons["sahara.cardInfo.photoEdit"]
+        guard photoEditBtn.waitForExistence(timeout: 3) else { return }
+        photoEditBtn.tap()
+
         _ = app.otherElements["sahara.mediaEditor.view"].waitForExistence(timeout: 2)
-        let modeButtons = app.otherElements["sahara.mediaEditor.view"].buttons
-        if modeButtons.count >= 2 {
-            modeButtons.element(boundBy: 1).tap()
-        }
+        let drawingBtn = app.buttons["sahara.mediaEditor.mode.drawing"]
+        guard drawingBtn.waitForExistence(timeout: 2) else { return }
+        drawingBtn.tap()
         takeScreenshot("02_사진을_자유롭게_편집하고")
     }
 
@@ -193,24 +220,6 @@ class ScreenshotTests: XCTestCase {
 
         _ = app.cells.firstMatch.waitForExistence(timeout: 3)
         takeScreenshot("05_한_눈에_모아보세요")
-    }
-
-    func test_05_settings() {
-        let settingsTab = app.buttons["sahara.tab.settings"]
-        guard settingsTab.waitForExistence(timeout: 5) else { return }
-        settingsTab.tap()
-
-        let syncItem = app.otherElements["sahara.settings.cloudSync"]
-        guard syncItem.waitForExistence(timeout: 3) else { return }
-        let toggle = syncItem.switches.firstMatch
-        if toggle.exists {
-            toggle.tap()
-            let alertBtn = app.alerts.buttons.firstMatch
-            if alertBtn.waitForExistence(timeout: 3) {
-                alertBtn.tap()
-            }
-        }
-        takeScreenshot("09_동기화로_소중한_추억을_지켜주세요")
     }
 
     func test_06_backgroundTheme() {

@@ -123,7 +123,8 @@
 "media_editor.tool.monoline" = "Monoline";
 "media_editor.tool.eraser" = "Eraser";
 "media_editor.tool.lasso" = "Lasso";
-"media_editor.network_error" = "Unable to connect to network";
+"media_editor.sticker_load_failed" = "Unable to load stickers";
+"media_editor.retry" = "Retry";
 
 /* Filters */
 "filter.original" = "Original";
@@ -274,10 +275,13 @@
 "language.japanese" = "日本語";
 "language.chinese" = "简体中文";
 
+"release_note.1.6.1.1" = "Improved app stability";
+
 /* Release Note Details */
 "release_note.1.6.0.1" = "Fixed slow photo loading";
 "release_note.1.6.0.2" = "Fixed photo quality degradation";
 "release_note.1.6.0.3" = "Fixed landscape photos appearing flipped";
+"release_note.1.6.1.1" = "Improved app stability";
 "release_note.1.6.0.4" = "Improved app stability";
 "release_note.1.5.1.1" = "Improved app stability";
 "release_note.1.5.0.1" = "Re-edit your saved photos";
@@ -321,3 +325,13 @@
 /* Widget */
 "widget.add_to_widget" = "Add to Widget";
 "widget.added_to_widget" = "Added to Widget";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "Now available on iPad and Mac";
+"release_note.2.0.0.2" = "View your favorite card instantly with the home screen widget";
+"release_note.2.0.0.3" = "Cards sync automatically across devices with iCloud";
+"release_note.2.0.0.4" = "Keep your memories safe with backup and restore";
+"release_note.2.0.0.5" = "Personalize your space with background themes";
+"release_note.2.0.0.6" = "Browse and pick photos by album";
+"release_note.2.0.0.7" = "Refined design throughout the app";
+"release_note.2.0.0.8" = "Improved stability";

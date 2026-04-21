@@ -44,19 +44,16 @@ final class MediaEditorViewController: UIViewController {
         return view
     }()
 
-    let toolBarScrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.showsHorizontalScrollIndicator = false
-        return scrollView
-    }()
-
     let modeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .equalSpacing
-        stackView.spacing = 52
+        stackView.alignment = .center
         return stackView
     }()
+
+    var modeButtonBackgrounds: [UIButton: TabBackgroundView] = [:]
+    var modeButtonContentStacks: [UIButton: UIStackView] = [:]
 
     lazy var stickerModeButton: UIButton = {
         let button = UIButton()
@@ -649,22 +646,6 @@ final class MediaEditorViewController: UIViewController {
         output.dismiss
             .drive(with: self) { owner, _ in
                 owner.coordinator?.cancelEditing()
-            }
-            .disposed(by: disposeBag)
-
-        output.errorMessage
-            .drive(with: self) { owner, message in
-                if !message.isEmpty {
-                    owner.showToast(message: message)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        output.networkErrorMessage
-            .drive(with: self) { owner, message in
-                if !message.isEmpty {
-                    owner.showToast(message: message)
-                }
             }
             .disposed(by: disposeBag)
 

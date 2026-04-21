@@ -123,7 +123,8 @@
 "media_editor.tool.monoline" = "모노라인";
 "media_editor.tool.eraser" = "지우개";
 "media_editor.tool.lasso" = "선택";
-"media_editor.network_error" = "네트워크에 연결할 수 없어요";
+"media_editor.sticker_load_failed" = "스티커를 불러올 수 없어요";
+"media_editor.retry" = "다시 시도";
 
 /* Filters */
 "filter.original" = "원본";
@@ -274,10 +275,13 @@
 "language.japanese" = "日本語";
 "language.chinese" = "简体中文";
 
+"release_note.1.6.1.1" = "앱이 더욱 안정적으로 작동해요";
+
 /* Release Notes */
 "release_note.1.6.0.1" = "사진 로딩이 길어지던 문제를 해결했어요";
 "release_note.1.6.0.2" = "사진 품질 저하 문제를 해결했어요";
 "release_note.1.6.0.3" = "가로 사진이 뒤집혀 보이던 문제를 해결했어요";
+"release_note.1.6.1.1" = "앱이 더욱 안정적으로 작동해요";
 "release_note.1.6.0.4" = "앱이 더욱 안정적으로 작동해요";
 "release_note.1.5.1.1" = "앱이 더욱 안정적으로 작동해요";
 "release_note.1.5.0.1" = "저장된 사진을 다시 편집할 수 있어요";
@@ -321,3 +325,13 @@
 /* Widget */
 "widget.add_to_widget" = "위젯에 추가";
 "widget.added_to_widget" = "위젯에 추가됨";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "iPad과 Mac에서도 사하라를 사용할 수 있어요";
+"release_note.2.0.0.2" = "홈 화면 위젯으로 소중한 카드를 바로 확인할 수 있어요";
+"release_note.2.0.0.3" = "iCloud로 기기 간 카드가 자동 동기화돼요";
+"release_note.2.0.0.4" = "백업과 복원으로 소중한 기록을 안전하게 보관할 수 있어요";
+"release_note.2.0.0.5" = "배경 테마로 나만의 분위기를 꾸밀 수 있어요";
+"release_note.2.0.0.6" = "앨범별로 사진을 골라서 추가할 수 있어요";
+"release_note.2.0.0.7" = "전체적인 디자인이 더 깔끔해졌어요";
+"release_note.2.0.0.8" = "앱이 더욱 안정적으로 작동해요";

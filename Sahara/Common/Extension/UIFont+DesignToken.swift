@@ -11,4 +11,8 @@ extension UIFont {
     static func typography(_ token: DesignToken.Typography) -> UIFont {
         token.font
     }
+
+    static func numericTypography(_ token: DesignToken.Typography) -> UIFont {
+        token.numericFont
+    }
 }

@@ -31,7 +31,7 @@ final class SettingsItemView: UIView {
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = .typography(.label)
+        label.font = .numericTypography(.caption)
         label.textColor = .token(.textSecondary)
         return label
     }()
