@@ -335,3 +335,6 @@
 "release_note.2.0.0.6" = "Browse and pick photos by album";
 "release_note.2.0.0.7" = "Refined design throughout the app";
 "release_note.2.0.0.8" = "Improved stability";
+
+/* Release Notes - 2.0.1 */
+"release_note.2.0.1.1" = "Improved app stability";
