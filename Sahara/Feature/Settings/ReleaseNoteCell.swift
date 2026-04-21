@@ -11,29 +11,29 @@ import UIKit
 final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
     private let versionLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriBold(size: 14)
-        label.textColor = ColorSystem.black
+        label.font = .numericTypography(.caption)
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.charcoal
+        label.font = .numericTypography(.caption)
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
     private let changesLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = ColorSystem.darkGray
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         label.numberOfLines = 0
         return label
     }()
 
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.lavender20
+        view.backgroundColor = .token(.backgroundOverlay)
         view.layer.cornerRadius = 12
         return view
     }()
@@ -93,8 +93,8 @@ final class ReleaseNoteCell: UITableViewCell, IsIdentifiable {
             let attributedString = NSAttributedString(
                 string: bulletPoints,
                 attributes: [
-                    .font: FontSystem.galmuriMono(size: 14),
-                    .foregroundColor: ColorSystem.darkGray,
+                    .font: UIFont.typography(.label),
+                    .foregroundColor: UIColor.token(.textSecondary),
                     .paragraphStyle: paragraphStyle
                 ]
             )

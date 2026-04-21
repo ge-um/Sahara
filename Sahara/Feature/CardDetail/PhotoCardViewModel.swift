@@ -15,7 +15,7 @@ import UIKit
 
 final class PhotoCardViewModel: BaseViewModelProtocol {
     private let cardId: ObjectId
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -33,7 +33,7 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
         let shouldFlipToFront: Driver<Void>
     }
 
-    init(cardId: ObjectId, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardId: ObjectId, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.cardId = cardId
         self.realmManager = realmManager
     }
@@ -45,10 +45,11 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
             .withUnretained(self)
             .observe(on: MainScheduler.instance)
             .bind { owner, _ in
-                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId) else { return }
+                guard let card = owner.realmManager.fetchObject(Card.self, forPrimaryKey: owner.cardId),
+                      let imageData = card.resolvedImageData() else { return }
 
                 let data = (
-                    image: card.editedImageData,
+                    image: imageData,
                     date: card.date,
                     latitude: card.latitude,
                     longitude: card.longitude,
@@ -62,8 +63,9 @@ final class PhotoCardViewModel: BaseViewModelProtocol {
 
         let photoImage = cardData
             .map { data -> UIImage? in
-                let screenScale = UIScreen.main.scale
-                let screenBounds = UIScreen.main.bounds
+                let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+                let screenScale = screen?.scale ?? 2.0
+                let screenBounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 393, height: 852)
                 let maxDim = max(screenBounds.width, screenBounds.height) * screenScale
                 return ImageDownsampler.downsample(data: data.image, maxDimension: maxDim)
             }

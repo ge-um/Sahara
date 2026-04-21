@@ -19,8 +19,6 @@
 "gallery.theme_view" = "按主题";
 "gallery.folder_view" = "按文件夹";
 "gallery.month_format" = "yyyy年MM月";
-"gallery.empty_message" = "记录您的回忆吧！";
-"gallery.empty_button" = "创建卡片";
 
 /* Theme Categories */
 "theme.people" = "人物";
@@ -89,7 +87,18 @@
 "media_selection.camera_permission_message" = "请在设置中允许相机权限";
 "media_selection.photo_permission_title" = "需要照片权限";
 "media_selection.photo_permission_message" = "请在设置中允许照片库权限";
+"media_selection.file" = "文件";
 "media_selection.go_to_settings" = "前往设置";
+"media_selection.all_photos" = "所有照片";
+"media_selection.allowed_photos" = "已允许的照片";
+"media_selection.add_photos" = "添加照片";
+"media_selection.limited_banner" = "仅允许访问部分照片";
+"media_selection.allow_all_photos" = "在设置中允许访问所有照片";
+"media_selection.photo_count" = "%d张";
+
+/* Camera */
+"camera.unavailable_title" = "无法使用相机";
+"camera.unavailable_message" = "此设备不支持相机功能。";
 
 /* Media Editor */
 "media_editor.title" = "照片编辑";
@@ -105,7 +114,17 @@
 "media_editor.sticker_modal_title" = "贴纸";
 "media_editor.undo" = "撤销";
 "media_editor.redo" = "重做";
-"media_editor.network_error" = "无法连接到网络";
+"media_editor.tool.pen" = "钢笔";
+"media_editor.tool.pencil" = "铅笔";
+"media_editor.tool.marker" = "马克笔";
+"media_editor.tool.fountain_pen" = "钢笔";
+"media_editor.tool.watercolor" = "水彩";
+"media_editor.tool.crayon" = "蜡笔";
+"media_editor.tool.monoline" = "等线笔";
+"media_editor.tool.eraser" = "橡皮擦";
+"media_editor.tool.lasso" = "套索";
+"media_editor.sticker_load_failed" = "无法加载贴纸";
+"media_editor.retry" = "重试";
 
 /* Filters */
 "filter.original" = "原图";
@@ -176,6 +195,7 @@
 "settings.section_about" = "关于";
 "settings.language" = "语言";
 "settings.language_desc" = "简体中文";
+"settings.background_theme" = "背景主题";
 "settings.service_news" = "服务动态";
 "settings.service_news_desc" = "新功能和更新消息";
 "settings.monthly_report" = "每月报告";
@@ -190,8 +210,39 @@
 "settings.version_info" = "版本信息";
 "settings.mail_error_title" = "无法发送邮件";
 "settings.mail_error_message" = "邮件应用不可用";
+"settings.macos_version" = "macOS版本";
 "settings.notification_denied_title" = "需要通知设置";
 "settings.notification_denied_message" = "请在设置中启用通知";
+"settings.section_data" = "数据管理";
+"settings.export_photos" = "导出照片";
+"settings.export_backup" = "应用备份";
+"settings.import_backup" = "导入备份";
+
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud同步";
+"settings.cloud_sync_desc" = "在不同设备间同步卡片";
+"sync.confirm_title" = "iCloud同步";
+"sync.confirm_message" = "将使用您的iCloud存储空间，是否开始同步？";
+"sync.account_unavailable_title" = "需要登录iCloud";
+"sync.account_unavailable_message" = "请在设置 > Apple ID中登录iCloud。";
+"sync.error_quota" = "iCloud存储空间已满";
+"sync.status_syncing" = "同步中...";
+"sync.status_up_to_date" = "已是最新";
+"sync.status_error" = "同步错误";
+"sync.last_sync" = "上次同步: %@";
+
+/* Backup */
+"backup.exporting" = "正在创建备份...";
+"backup.importing" = "正在恢复数据...";
+"backup.confirm_import_title" = "恢复数据";
+"backup.confirm_import_message" = "当前数据将被备份数据（%d张卡片）替换。是否继续？";
+"backup.confirm_import_action" = "恢复";
+"backup.export_success" = "备份创建完成";
+"backup.import_success" = "数据恢复完成";
+"backup.export_failed" = "备份创建失败";
+"backup.import_failed" = "数据恢复失败";
+"backup.invalid_file" = "无效的备份文件";
+"backup.version_mismatch" = "此备份由较新版本的应用创建，请更新应用。";
 
 /* Realm Error */
 "realm_error.title" = "无法加载数据";
@@ -224,6 +275,7 @@
 "release_note.1.6.0.1" = "修复了照片加载缓慢的问题";
 "release_note.1.6.0.2" = "修复了照片质量下降的问题";
 "release_note.1.6.0.3" = "修复了横向照片显示翻转的问题";
+"release_note.1.6.1.1" = "提升了应用稳定性";
 "release_note.1.6.0.4" = "提升了应用稳定性";
 "release_note.1.5.1.1" = "应用更加稳定";
 "release_note.1.5.0.1" = "可以重新编辑已保存的照片";
@@ -251,3 +303,29 @@
 "release_note.1.1.0.1" = "添加了卡片锁定功能";
 "release_note.1.1.0.2" = "位置编辑更加简便";
 "release_note.1.1.0.3" = "应用更加稳定";
+
+/* Background Theme */
+"background.title" = "背景主题";
+"background.solid_color" = "纯色";
+"background.gradient" = "渐变";
+"background.photo" = "照片";
+"background.dot_pattern" = "点状图案";
+"background.preview" = "预览";
+"background.select_photo" = "从相册选择";
+"background.apply" = "应用";
+"background.gradient_start" = "起始颜色";
+"background.gradient_end" = "结束颜色";
+
+/* Widget */
+"widget.add_to_widget" = "添加到小组件";
+"widget.added_to_widget" = "已添加到小组件";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "现已支持iPad和Mac";
+"release_note.2.0.0.2" = "通过主屏幕小组件即时查看心爱的卡片";
+"release_note.2.0.0.3" = "通过iCloud自动在设备间同步卡片";
+"release_note.2.0.0.4" = "通过备份与恢复安全保管珍贵记录";
+"release_note.2.0.0.5" = "用背景主题打造专属氛围";
+"release_note.2.0.0.6" = "按相册浏览并选择照片";
+"release_note.2.0.0.7" = "整体设计更加精致";
+"release_note.2.0.0.8" = "提升了应用稳定性";

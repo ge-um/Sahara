@@ -91,8 +91,9 @@ Dependencies/
 
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/**/*.png
+fastlane/screenshots/
 fastlane/test_output
+fastlane/derived_data/
 
 # Code Injection
 # After new code Injection tools there's a generated folder /iOSInjectionProject
@@ -104,4 +105,6 @@ iOSInjectionProject/
 
 
 GoogleService-Info.plist
-feature-photo-loading-optimization-plan.md
+feature-*-plan.md
+firebase-debug.log
+aso/

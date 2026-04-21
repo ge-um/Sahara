@@ -11,23 +11,22 @@ import UIKit
 final class FolderCell: UICollectionViewCell, IsIdentifiable {
     private let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.white30
-        view.layer.cornerRadius = 12
+        view.applyGlassCardStyle()
         return view
     }()
 
     private let folderIconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "folder.fill")
-        imageView.tintColor = ColorSystem.skyBlue
+        imageView.tintColor = .token(.accent)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
     private let folderNameLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.font = .typography(.label)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -46,6 +45,10 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
     }()
 
     private var imageViews: [UIImageView] = []
+
+    private var thumbnailPixelSize: CGFloat {
+        ThumbnailCache.maxPixelSize(for: contentView.bounds.size, scale: traitCollection.displayScale)
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -108,7 +111,7 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         imageViews.append(imageView)
         thumbnailContainerView.addSubview(imageView)
 
-        ThumbnailCache.shared.loadThumbnail(for: card.id, size: .small) { [weak imageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: card.id, maxPixelSize: thumbnailPixelSize) { [weak imageView] image in
             imageView?.image = image
         }
 
@@ -125,10 +128,10 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         thumbnailContainerView.addSubview(imageView1)
         thumbnailContainerView.addSubview(imageView2)
 
-        ThumbnailCache.shared.loadThumbnail(for: card1.id, size: .small) { [weak imageView1] image in
+        ThumbnailCache.shared.loadThumbnail(for: card1.id, maxPixelSize: thumbnailPixelSize) { [weak imageView1] image in
             imageView1?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: card2.id, size: .small) { [weak imageView2] image in
+        ThumbnailCache.shared.loadThumbnail(for: card2.id, maxPixelSize: thumbnailPixelSize) { [weak imageView2] image in
             imageView2?.image = image
         }
 
@@ -155,13 +158,13 @@ final class FolderCell: UICollectionViewCell, IsIdentifiable {
         thumbnailContainerView.addSubview(bottomLeftImageView)
         thumbnailContainerView.addSubview(bottomRightImageView)
 
-        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, size: .small) { [weak topImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[0].id, maxPixelSize: thumbnailPixelSize) { [weak topImageView] image in
             topImageView?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, size: .small) { [weak bottomLeftImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[1].id, maxPixelSize: thumbnailPixelSize) { [weak bottomLeftImageView] image in
             bottomLeftImageView?.image = image
         }
-        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, size: .small) { [weak bottomRightImageView] image in
+        ThumbnailCache.shared.loadThumbnail(for: cards[2].id, maxPixelSize: thumbnailPixelSize) { [weak bottomRightImageView] image in
             bottomRightImageView?.image = image
         }
 

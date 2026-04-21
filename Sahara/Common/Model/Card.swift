@@ -43,7 +43,8 @@ final class Card: Object {
     @Persisted var createdDate: Date
     @Persisted var modifiedDate: Date?
     
-    @Persisted var editedImageData: Data
+    @Persisted var editedImageData: Data?
+    @Persisted var imagePath: String?
     @Persisted var imageFormat: String?
     @Persisted var drawingData: Data?
     @Persisted var memo: String?
@@ -63,7 +64,7 @@ final class Card: Object {
     convenience init(
         date: Date,
         createdDate: Date,
-        editedImageData: Data,
+        editedImageData: Data? = nil,
         memo: String? = nil,
         latitude: Double? = nil,
         longitude: Double? = nil,
@@ -77,6 +78,19 @@ final class Card: Object {
         self.latitude = latitude
         self.longitude = longitude
         self.isLocked = isLocked
+    }
+}
+
+// MARK: - Image Loading
+
+extension Card {
+    func resolvedImageData() -> Data? {
+        if let imagePath = imagePath,
+           let diskData = ImageFileService.shared.loadImageFile(at: imagePath) {
+            return diskData
+        }
+        guard let data = editedImageData, !data.isEmpty else { return nil }
+        return data
     }
 }
 

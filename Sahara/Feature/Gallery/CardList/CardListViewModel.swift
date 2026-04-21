@@ -13,13 +13,13 @@ import RxSwift
 final class CardListViewModel: BaseViewModelProtocol {
     private let cardIds: [ObjectId]?
     private let folderName: String?
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
     struct Input {
         let itemSelected: Observable<IndexPath>
-        let closeButtonTapped: Observable<Void>
+        let backButtonTapped: Observable<Void>
     }
 
     struct Output {
@@ -28,13 +28,13 @@ final class CardListViewModel: BaseViewModelProtocol {
         let dismiss: Driver<Void>
     }
 
-    init(cardIds: [ObjectId], realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardIds: [ObjectId], realmManager: RealmServiceProtocol = RealmService.shared) {
         self.cardIds = cardIds
         self.folderName = nil
         self.realmManager = realmManager
     }
 
-    init(folderName: String, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(folderName: String, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.cardIds = nil
         self.folderName = folderName
         self.realmManager = realmManager
@@ -51,7 +51,7 @@ final class CardListViewModel: BaseViewModelProtocol {
             .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
 
-        let dismiss = input.closeButtonTapped
+        let dismiss = input.backButtonTapped
             .asDriver(onErrorJustReturn: ())
 
         return Output(

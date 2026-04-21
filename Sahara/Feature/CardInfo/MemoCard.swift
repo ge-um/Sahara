@@ -13,8 +13,8 @@ import UIKit
 final class MemoCard: BaseCard {
     let textView: UITextView = {
         let textView = UITextView()
-        textView.font = FontSystem.galmuriMono(size: 14)
-        textView.textColor = ColorSystem.charcoal
+        textView.font = .typography(.caption)
+        textView.textColor = .token(.textPrimary)
         textView.backgroundColor = .clear
         textView.textContainerInset = .zero
         textView.textContainer.lineFragmentPadding = 0
@@ -24,12 +24,17 @@ final class MemoCard: BaseCard {
     let characterCountLabel: UILabel = {
         let label = UILabel()
         label.text = "0"
-        label.font = FontSystem.galmuriMono(size: 13)
-        label.textColor = ColorSystem.darkGray
+        label.font = FontSystem.galmuri11(size: 10)
+        label.textColor = .token(.textSecondary)
         label.textAlignment = .right
         return label
     }()
 
+    private var isShowingPlaceholder = false
+
+    var currentMemo: String? {
+        isShowingPlaceholder ? nil : textView.text
+    }
     private let disposeBag = DisposeBag()
     private let placeholderText = NSLocalizedString("card_info.memo_placeholder", comment: "")
 
@@ -66,9 +71,10 @@ final class MemoCard: BaseCard {
         textView.rx.didBeginEditing
             .withUnretained(self)
             .bind { owner, _ in
-                if owner.textView.textColor == ColorSystem.darkGray {
+                if owner.isShowingPlaceholder {
                     owner.textView.text = ""
-                    owner.textView.textColor = ColorSystem.charcoal
+                    owner.textView.textColor = .token(.textPrimary)
+                    owner.isShowingPlaceholder = false
                 }
             }
             .disposed(by: disposeBag)
@@ -86,28 +92,30 @@ final class MemoCard: BaseCard {
             .orEmpty
             .withUnretained(self)
             .bind { owner, text in
-                let count = owner.textView.textColor == ColorSystem.darkGray ? 0 : text.count
+                let count = owner.isShowingPlaceholder ? 0 : text.count
                 owner.characterCountLabel.text = "\(count)"
-                owner.characterCountLabel.textColor = ColorSystem.darkGray
+                owner.characterCountLabel.textColor = .token(.textSecondary)
             }
             .disposed(by: disposeBag)
     }
 
     func showPlaceholder() {
+        isShowingPlaceholder = true
         textView.attributedText = NSAttributedString(
             string: placeholderText,
             attributes: [
-                .foregroundColor: ColorSystem.darkGray,
-                .font: FontSystem.galmuriMono(size: 14)
+                .foregroundColor: UIColor.token(.textTertiary),
+                .font: UIFont.typography(.caption)
             ]
         )
         characterCountLabel.text = "0"
-        characterCountLabel.textColor = ColorSystem.darkGray
+        characterCountLabel.textColor = .token(.textSecondary)
     }
 
     func setMemo(_ memo: String) {
+        isShowingPlaceholder = false
         textView.text = memo
-        textView.textColor = ColorSystem.charcoal
+        textView.textColor = .token(.textPrimary)
         characterCountLabel.text = "\(memo.count)"
     }
 }

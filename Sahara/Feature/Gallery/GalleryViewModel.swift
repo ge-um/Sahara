@@ -12,9 +12,9 @@ import RxSwift
 
 final class GalleryViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 
@@ -31,7 +31,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
         let currentMonthTitle: Driver<String>
         let selectedViewType: Driver<GalleryViewType>
         let showCalendar: Driver<Bool>
-        let isEmpty: Driver<Bool>
     }
     
     func transform(input: Input) -> Output {
@@ -44,7 +43,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
                 guard let self = self else { return .just((month, [])) }
                 return self.realmManager.observeCards(for: .month(month))
                     .map { (month, $0) }
-                    .startWith((month, []))
             }
             .share(replay: 1, scope: .whileConnected)
 
@@ -63,9 +61,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
 
         let showCalendar = selectedViewType
             .map { $0 == .date }
-
-        let isEmpty = realmManager.observeIsEmpty(Card.self)
-            .share(replay: 1, scope: .whileConnected)
 
         input.addButtonTapped
             .bind(to: showPhotoPicker)
@@ -87,16 +82,6 @@ final class GalleryViewModel: BaseViewModelProtocol {
             .bind(to: currentMonth)
             .disposed(by: disposeBag)
         
-        currentMonth
-            .skip(1)
-            .bind { month in
-                let calendar = Calendar.current
-                let year = calendar.component(.year, from: month)
-                let monthValue = calendar.component(.month, from: month)
-                AnalyticsManager.shared.logCalendarDateRangeViewed(year: year, month: monthValue)
-            }
-            .disposed(by: disposeBag)
-        
         input.viewTypeSelected
             .bind(to: selectedViewType)
             .disposed(by: disposeBag)
@@ -106,8 +91,7 @@ final class GalleryViewModel: BaseViewModelProtocol {
             calendarItems: calendarItems.asDriver(onErrorJustReturn: []),
             currentMonthTitle: currentMonthTitle.asDriver(onErrorJustReturn: ""),
             selectedViewType: selectedViewType.asDriver(),
-            showCalendar: showCalendar.asDriver(onErrorJustReturn: true),
-            isEmpty: isEmpty.asDriver(onErrorJustReturn: true)
+            showCalendar: showCalendar.asDriver(onErrorJustReturn: true)
         )
     }
 

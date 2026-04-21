@@ -56,7 +56,7 @@ final class LanguageSelectionViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(tableView)
@@ -86,14 +86,19 @@ final class LanguageSelectionViewController: UIViewController {
         output.languages
             .drive(tableView.rx.items(cellIdentifier: "LanguageCell")) { _, language, cell in
                 cell.textLabel?.text = language.localizedDescription
-                cell.textLabel?.font = FontSystem.galmuriMono(size: 16)
-                cell.backgroundColor = .clear
+                cell.textLabel?.font = .typography(.label)
                 cell.selectionStyle = .none
 
-                let currentLanguage = LanguageManager.shared.currentLanguage
+                var bgConfig = UIBackgroundConfiguration.listGroupedCell()
+                bgConfig.backgroundColor = .token(.backgroundGlass)
+                bgConfig.strokeColor = DesignToken.Overlay.border
+                bgConfig.strokeWidth = 0.5
+                cell.backgroundConfiguration = bgConfig
+
+                let currentLanguage = LanguageService.shared.currentLanguage
                 if language == currentLanguage {
                     cell.accessoryType = .checkmark
-                    cell.tintColor = ColorSystem.systemBlue
+                    cell.tintColor = .token(.textSecondary)
                 } else {
                     cell.accessoryType = .none
                 }

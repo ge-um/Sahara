@@ -7,10 +7,10 @@
 
 import MessageUI
 import RxCocoa
-import RxDataSources
 import RxSwift
 import SnapKit
 import UIKit
+import UniformTypeIdentifiers
 
 final class SettingsViewController: UIViewController {
     private let viewModel: SettingsViewModel
@@ -19,22 +19,22 @@ final class SettingsViewController: UIViewController {
 
     private let customNavigationBar = CustomNavigationBar()
 
-    private lazy var collectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 0
-        layout.minimumInteritemSpacing = 0
-
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .clear
-        collectionView.register(SettingsMenuCell.self, forCellWithReuseIdentifier: SettingsMenuCell.identifier)
-        collectionView.register(
-            SettingsSectionHeader.self,
-            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
-            withReuseIdentifier: SettingsSectionHeader.identifier
-        )
-        collectionView.delegate = self
-        return collectionView
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.contentInset.bottom = 80
+        return scrollView
     }()
+
+    private let contentStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 24
+        stackView.alignment = .fill
+        return stackView
+    }()
+
+    private var sectionViews: [SettingsSectionView] = []
 
     init(viewModel: SettingsViewModel = SettingsViewModel()) {
         self.viewModel = viewModel
@@ -60,14 +60,27 @@ final class SettingsViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("settings.title", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
+    }
+
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(collectionView)
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentStackView)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -75,51 +88,54 @@ final class SettingsViewController: UIViewController {
             make.height.equalTo(54)
         }
 
-        collectionView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
-            make.horizontalEdges.equalToSuperview().inset(20)
+        scrollView.snp.makeConstraints { make in
+            make.top.equalTo(customNavigationBar.snp.bottom)
+            make.horizontalEdges.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+
+        contentStackView.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview().inset(20)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(600)
+            make.width.equalTo(scrollView.snp.width).offset(-40).priority(.medium)
+        }
+
+        buildSections()
+    }
+
+    private func buildSections() {
+        let defaultSections = [
+            SettingsSection(type: .general, items: [.language, .backgroundTheme]),
+            SettingsSection(type: .dataManagement, items: [.exportPhotos, .exportBackup, .importBackup, .cloudSync]),
+            SettingsSection(type: .notifications, items: [.serviceNews]),
+            SettingsSection(type: .support, items: [.contactDeveloper]),
+            SettingsSection(type: .about, items: [.releaseNotes, .versionInfo])
+        ]
+
+        for section in defaultSections {
+            let sectionView = SettingsSectionView(section: section)
+            sectionViews.append(sectionView)
+            contentStackView.addArrangedSubview(sectionView)
         }
     }
 
     private func bind() {
-        let dataSource = RxCollectionViewSectionedReloadDataSource<SettingsSection>(
-            configureCell: { [weak self] _, collectionView, indexPath, item in
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: SettingsMenuCell.identifier,
-                    for: indexPath
-                ) as? SettingsMenuCell else {
-                    return UICollectionViewCell()
-                }
-                cell.configure(with: item)
+        let allItemViews = sectionViews.flatMap { $0.itemViews }
 
-                cell.onToggleChanged = { [weak self] isOn in
-                    self?.handleToggleChanged(for: item, isOn: isOn)
-                }
-
-                return cell
-            },
-            configureSupplementaryView: { dataSource, collectionView, kind, indexPath in
-                guard kind == UICollectionView.elementKindSectionHeader else {
-                    return UICollectionReusableView()
-                }
-
-                guard let header = collectionView.dequeueReusableSupplementaryView(
-                    ofKind: kind,
-                    withReuseIdentifier: SettingsSectionHeader.identifier,
-                    for: indexPath
-                ) as? SettingsSectionHeader else {
-                    return UICollectionReusableView()
-                }
-
-                let section = dataSource[indexPath.section]
-                header.configure(with: section.title)
-                return header
+        for itemView in allItemViews {
+            itemView.onToggleChanged = { [weak self] isOn in
+                self?.handleToggleChanged(for: itemView.item, isOn: isOn)
             }
-        )
+        }
 
-        let itemSelected = collectionView.rx.modelSelected(SettingsMenuItem.self)
-            .filter { $0.isSelectable }
+        let itemSelected = Observable.merge(
+            allItemViews
+                .filter { $0.item.isSelectable }
+                .map { itemView in
+                    itemView.tapSubject.map { itemView.item }.asObservable()
+                }
+        )
 
         let input = SettingsViewModel.Input(
             viewWillAppear: viewWillAppearRelay.asObservable(),
@@ -129,7 +145,9 @@ final class SettingsViewController: UIViewController {
         let output = viewModel.transform(input: input)
 
         output.sections
-            .drive(collectionView.rx.items(dataSource: dataSource))
+            .drive(with: self) { owner, _ in
+                owner.sectionViews.forEach { $0.refresh() }
+            }
             .disposed(by: disposeBag)
 
         output.openMailComposer
@@ -145,17 +163,46 @@ final class SettingsViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
+        output.openBackgroundTheme
+            .drive(with: self) { owner, _ in
+                AnalyticsService.shared.logThemeSettingsViewed()
+                let bgVC = BackgroundThemeViewController()
+                owner.navigationController?.pushViewController(bgVC, animated: true)
+            }
+            .disposed(by: disposeBag)
+
         output.openReleaseNotes
             .drive(with: self) { owner, _ in
                 let releaseNotesVC = ReleaseNotesViewController()
                 owner.navigationController?.pushViewController(releaseNotesVC, animated: true)
             }
             .disposed(by: disposeBag)
+
+        output.exportPhotos
+            .drive(with: self) { owner, _ in
+                owner.performExport(using: BackupService.shared.exportPhotosOnly)
+            }
+            .disposed(by: disposeBag)
+
+        output.exportBackup
+            .drive(with: self) { owner, _ in
+                owner.performExport(using: BackupService.shared.exportBackup)
+            }
+            .disposed(by: disposeBag)
+
+        output.importBackup
+            .drive(with: self) { owner, _ in
+                owner.presentDocumentPicker()
+            }
+            .disposed(by: disposeBag)
     }
 
     private func presentMailComposer(to email: String) {
+        #if targetEnvironment(macCatalyst)
+        openMailtoURL(to: email, subject: NSLocalizedString("settings.inquiry_subject", comment: ""), body: generateEmailBody())
+        #else
         guard MFMailComposeViewController.canSendMail() else {
-            showMailError()
+            copyEmailFallback(email: email)
             return
         }
 
@@ -166,12 +213,55 @@ final class SettingsViewController: UIViewController {
         mailComposer.setMessageBody(generateEmailBody(), isHTML: false)
 
         present(mailComposer, animated: true)
+        #endif
+    }
+
+    private func openMailtoURL(to email: String, subject: String, body: String) {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        guard let url = components.url else {
+            copyEmailFallback(email: email)
+            return
+        }
+
+        UIApplication.shared.open(url) { [weak self] success in
+            if !success {
+                self?.copyEmailFallback(email: email)
+            }
+        }
+    }
+
+    private func copyEmailFallback(email: String) {
+        UIPasteboard.general.string = email
+        let alert = UIAlertController(
+            title: NSLocalizedString("settings.mail_error_title", comment: ""),
+            message: NSLocalizedString("realm_error.email_copied", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        present(alert, animated: true)
     }
 
     private func generateEmailBody() -> String {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let iosVersion = UIDevice.current.systemVersion
-        let deviceModel = getDeviceModel()
+        let osVersionLabel: String
+        let osVersion: String
+        let deviceModel = DeviceInfo.displayName
+
+        #if targetEnvironment(macCatalyst)
+        osVersionLabel = NSLocalizedString("settings.macos_version", comment: "")
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        osVersion = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        #else
+        osVersionLabel = NSLocalizedString("settings.ios_version", comment: "")
+        osVersion = UIDevice.current.systemVersion
+        #endif
 
         return """
         \(NSLocalizedString("settings.inquiry_message_placeholder", comment: ""))
@@ -179,57 +269,9 @@ final class SettingsViewController: UIViewController {
         ---
         \(NSLocalizedString("settings.device_info_title", comment: ""))
         - \(NSLocalizedString("settings.app_version", comment: "")): \(appVersion)
-        - \(NSLocalizedString("settings.ios_version", comment: "")): \(iosVersion)
+        - \(osVersionLabel): \(osVersion)
         - \(NSLocalizedString("settings.device_model", comment: "")): \(deviceModel)
         """
-    }
-
-    private func getDeviceModel() -> String {
-        var systemInfo = utsname()
-        uname(&systemInfo)
-        let modelCode = withUnsafePointer(to: &systemInfo.machine) {
-            $0.withMemoryRebound(to: CChar.self, capacity: 1) {
-                String(validatingUTF8: $0)
-            }
-        }
-
-        guard let code = modelCode else {
-            return UIDevice.current.model
-        }
-
-        let deviceModelMap: [String: String] = [
-            "iPhone14,2": "iPhone 13 Pro",
-            "iPhone14,3": "iPhone 13 Pro Max",
-            "iPhone14,4": "iPhone 13 mini",
-            "iPhone14,5": "iPhone 13",
-            "iPhone14,6": "iPhone SE (3rd generation)",
-            "iPhone14,7": "iPhone 14",
-            "iPhone14,8": "iPhone 14 Plus",
-            "iPhone15,2": "iPhone 14 Pro",
-            "iPhone15,3": "iPhone 14 Pro Max",
-            "iPhone15,4": "iPhone 15",
-            "iPhone15,5": "iPhone 15 Plus",
-            "iPhone16,1": "iPhone 15 Pro",
-            "iPhone16,2": "iPhone 15 Pro Max",
-            "iPhone17,1": "iPhone 16 Pro",
-            "iPhone17,2": "iPhone 16 Pro Max",
-            "iPhone17,3": "iPhone 16",
-            "iPhone17,4": "iPhone 16 Plus",
-            "arm64": "Simulator",
-            "x86_64": "Simulator"
-        ]
-
-        return deviceModelMap[code] ?? code
-    }
-
-    private func showMailError() {
-        let alert = UIAlertController(
-            title: NSLocalizedString("settings.mail_error_title", comment: ""),
-            message: NSLocalizedString("settings.mail_error_message", comment: ""),
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
-        present(alert, animated: true)
     }
 
     private func handleToggleChanged(for item: SettingsMenuItem, isOn: Bool) {
@@ -238,7 +280,7 @@ final class SettingsViewController: UIViewController {
                 NotificationSettings.shared.checkSystemNotificationPermission { [weak self] isAuthorized in
                     if isAuthorized {
                         NotificationSettings.shared.isServiceNewsEnabled = true
-                        AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: true)
+                        AnalyticsService.shared.logNotificationSettingChanged(type: "service_news", enabled: true)
                     } else {
                         NotificationSettings.shared.isServiceNewsEnabled = false
                         self?.showSettingsAlert()
@@ -247,9 +289,138 @@ final class SettingsViewController: UIViewController {
                 }
             } else {
                 NotificationSettings.shared.isServiceNewsEnabled = false
-                AnalyticsManager.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
+                AnalyticsService.shared.logNotificationSettingChanged(type: "service_news", enabled: false)
             }
         }
+
+        if case .cloudSync = item {
+            if isOn {
+                showCloudSyncConfirmation()
+            } else {
+                CloudSyncService.current?.stopSync()
+                viewWillAppearRelay.accept(())
+            }
+        }
+    }
+
+    // MARK: - Cloud Sync
+
+    private func showCloudSyncConfirmation() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("sync.confirm_title", comment: ""),
+            message: NSLocalizedString("sync.confirm_message", comment: ""),
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ) { [weak self] _ in
+            self?.startCloudSync()
+        })
+
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ) { [weak self] _ in
+            self?.viewWillAppearRelay.accept(())
+        })
+
+        present(alert, animated: true)
+    }
+
+    private func startCloudSync() {
+        guard let syncService = CloudSyncService.current else { return }
+
+        syncService.checkAccountStatus { [weak self] isAvailable in
+            guard let self else { return }
+
+            if isAvailable {
+                syncService.startSync()
+                syncService.triggerFullSync()
+                self.viewWillAppearRelay.accept(())
+            } else {
+                self.showCloudAccountUnavailableAlert()
+                self.viewWillAppearRelay.accept(())
+            }
+        }
+    }
+
+    private func showCloudAccountUnavailableAlert() {
+        let alert = UIAlertController(
+            title: NSLocalizedString("sync.account_unavailable_title", comment: ""),
+            message: NSLocalizedString("sync.account_unavailable_message", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ))
+        present(alert, animated: true)
+    }
+
+    // MARK: - Backup & Restore
+
+    private func performExport(using operation: @escaping (@escaping (Double) -> Void) throws -> URL) {
+        let progressAlert = createProgressAlert(title: NSLocalizedString("backup.exporting", comment: ""))
+        present(progressAlert.alert, animated: true)
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                let url = try operation { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.presentShareSheet(for: url)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showBackupError(title: NSLocalizedString("backup.export_failed", comment: ""), error: error)
+                    }
+                }
+            }
+        }
+    }
+
+    private func presentDocumentPicker() {
+        let saharaType = UTType("com.miya.sahara.backup") ?? .data
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [saharaType])
+        picker.delegate = self
+        picker.allowsMultipleSelection = false
+        present(picker, animated: true)
+    }
+
+    private func createProgressAlert(title: String) -> (alert: UIAlertController, progressView: UIProgressView) {
+        UIAlertController.progressAlert(title: title)
+    }
+
+    private func presentShareSheet(for url: URL) {
+        #if targetEnvironment(macCatalyst)
+        let picker = UIDocumentPickerViewController(forExporting: [url])
+        present(picker, animated: true)
+        #else
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        present(activityVC, animated: true)
+        #endif
+    }
+
+    private func showBackupError(title: String, error: Error) {
+        let alert = UIAlertController(
+            title: title,
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        present(alert, animated: true)
     }
 
     private func showSettingsAlert() {
@@ -277,18 +448,110 @@ final class SettingsViewController: UIViewController {
     }
 }
 
-extension SettingsViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 60)
-    }
-
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.frame.width, height: 40)
-    }
-}
-
 extension SettingsViewController: MFMailComposeViewControllerDelegate {
     func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
         controller.dismiss(animated: true)
+    }
+}
+
+extension SettingsViewController: UIDocumentPickerDelegate {
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+
+        do {
+            let (tempURL, metadata) = try BackupService.shared.prepareForImport(from: url)
+            showImportConfirmation(metadata: metadata, fileURL: tempURL)
+        } catch {
+            showBackupError(title: NSLocalizedString("backup.import_failed", comment: ""), error: error)
+        }
+    }
+
+    private func showImportConfirmation(metadata: BackupMetadata, fileURL: URL) {
+        let title = NSLocalizedString("backup.confirm_import_title", comment: "")
+        let message = String(
+            format: NSLocalizedString("backup.confirm_import_message", comment: ""),
+            metadata.cardCount
+        )
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("backup.confirm_import_action", comment: ""),
+            style: .destructive
+        ) { [weak self] _ in
+            self?.performImport(from: fileURL)
+        })
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ))
+        present(alert, animated: true)
+    }
+
+    private func performImport(from url: URL) {
+        let progressAlert = createProgressAlert(title: NSLocalizedString("backup.importing", comment: ""))
+        present(progressAlert.alert, animated: true)
+
+        CloudSyncService.current?.stopSyncForBackupRestore()
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try BackupService.shared.importBackup(from: url) { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
+                    progressAlert.alert.dismiss(animated: true) {
+                        guard let self else { return }
+                        let alert = UIAlertController(
+                            title: NSLocalizedString("backup.import_success", comment: ""),
+                            message: nil,
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(
+                            title: NSLocalizedString("common.ok", comment: ""),
+                            style: .default
+                        ))
+                        self.present(alert, animated: true)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showBackupError(
+                            title: NSLocalizedString("backup.import_failed", comment: ""),
+                            error: error
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension UIAlertController {
+    static func progressAlert(title: String) -> (alert: UIAlertController, progressView: UIProgressView) {
+        let alert = UIAlertController(title: title, message: "\n\n", preferredStyle: .alert)
+        let progressView = UIProgressView(progressViewStyle: .default)
+        alert.view.addSubview(progressView)
+        progressView.snp.makeConstraints { make in
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(45)
+        }
+        return (alert, progressView)
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension SettingsViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
     }
 }

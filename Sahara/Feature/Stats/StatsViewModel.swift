@@ -39,7 +39,7 @@ struct MoodData {
 }
 
 final class StatsViewModel: BaseViewModelProtocol {
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
     struct Input {
@@ -56,7 +56,7 @@ final class StatsViewModel: BaseViewModelProtocol {
         let thisMonthInsight: Driver<String>
     }
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 
@@ -136,10 +136,9 @@ final class StatsViewModel: BaseViewModelProtocol {
             .map { data -> String in
                 guard let mostFrequent = data.max(by: { $0.count < $1.count }),
                       mostFrequent.count > 0 else {
-                    return "🌙 " + NSLocalizedString("stats.no_data_time", comment: "")
+                    return NSLocalizedString("stats.no_data_time", comment: "")
                 }
-                let emoji = self.getTimeEmoji(for: mostFrequent.timeOfDay)
-                return emoji + " " + String(format: NSLocalizedString("stats.time_insight", comment: ""), mostFrequent.timeOfDay)
+                return String(format: NSLocalizedString("stats.time_insight", comment: ""), mostFrequent.timeOfDay)
             }
 
         let thisMonthInsightDriver = basicStatsDriver
@@ -331,23 +330,4 @@ final class StatsViewModel: BaseViewModelProtocol {
         return Array(moodData.prefix(5))
     }
 
-    private func getTimeEmoji(for timeOfDay: String) -> String {
-        let morningKey = NSLocalizedString("stats.time_morning", comment: "")
-        let afternoonKey = NSLocalizedString("stats.time_afternoon", comment: "")
-        let eveningKey = NSLocalizedString("stats.time_evening", comment: "")
-        let nightKey = NSLocalizedString("stats.time_night", comment: "")
-
-        switch timeOfDay {
-        case morningKey:
-            return "🌅"
-        case afternoonKey:
-            return "☀️"
-        case eveningKey:
-            return "🌆"
-        case nightKey:
-            return "🌙"
-        default:
-            return "🌙"
-        }
-    }
 }

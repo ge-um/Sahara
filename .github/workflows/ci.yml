@@ -39,23 +39,67 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Cache SPM
+      - name: Determine Scheme
+        id: scheme
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.base_ref }}"
+          else
+            BASE="${{ github.ref_name }}"
+          fi
+          if [[ "$BASE" == "develop" ]]; then
+            SCHEME="SaharaDev"
+          else
+            SCHEME="Sahara"
+          fi
+          echo "name=$SCHEME" >> "$GITHUB_OUTPUT"
+          echo "Branch target: $BASE → Scheme: $SCHEME"
+
+      - name: Cache DerivedData
         uses: actions/cache@v4
         with:
-          path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-dd-${{ steps.scheme.outputs.name }}-${{ hashFiles('**/*.swift', '**/project.pbxproj', '**/Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-
+            ${{ runner.os }}-dd-${{ steps.scheme.outputs.name }}-
+            ${{ runner.os }}-dd-
+
+      - name: Boot Simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for runtime, devs in devices.items():
+            if '18.2' in runtime:
+              for d in devs:
+                if d['name'] == 'iPhone 16':
+                  print(d['udid']); sys.exit()
+          ")
+          xcrun simctl boot "$DEVICE_ID" 2>/dev/null || true &
 
       - name: Build and Test
         run: |
           xcodebuild test \
-            -scheme Sahara \
+            -scheme ${{ steps.scheme.outputs.name }} \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
             -skipPackagePluginValidation \
+            -skipMacroValidation \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            -enableCodeCoverage NO \
             CODE_SIGNING_ALLOWED=NO \
             -resultBundlePath TestResults
+
+      - name: Build for iPad
+        run: |
+          xcodebuild build \
+            -scheme ${{ steps.scheme.outputs.name }} \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPad (10th generation),OS=18.2' \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Upload Test Results
         if: failure()

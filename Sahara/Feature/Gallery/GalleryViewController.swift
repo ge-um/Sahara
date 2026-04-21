@@ -17,8 +17,6 @@ import MapKit
 final class GalleryViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
-    private let emptyStateView = EmptyStateView()
-
     private let viewTypeButtonStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -30,24 +28,28 @@ final class GalleryViewController: UIViewController {
     private lazy var dateButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.date_view", comment: ""))
         button.tag = 0
+        button.accessibilityIdentifier = "sahara.gallery.date"
         return button
     }()
 
     private lazy var locationButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.location_view", comment: ""))
         button.tag = 1
+        button.accessibilityIdentifier = "sahara.gallery.location"
         return button
     }()
 
     private lazy var themeButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.theme_view", comment: ""))
         button.tag = 2
+        button.accessibilityIdentifier = "sahara.gallery.theme"
         return button
     }()
 
     private lazy var folderButton: GradientButton = {
         let button = GradientButton(title: NSLocalizedString("gallery.folder_view", comment: ""))
         button.tag = 3
+        button.accessibilityIdentifier = "sahara.gallery.folder"
         return button
     }()
     
@@ -93,12 +95,12 @@ final class GalleryViewController: UIViewController {
         return vc
     }()
 
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let viewModel: GalleryViewModel
     private let viewTypeRelay = BehaviorRelay<GalleryViewType>(value: .date)
 
-    init(viewModel: GalleryViewModel, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(viewModel: GalleryViewModel, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -136,17 +138,10 @@ final class GalleryViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("common.app_name", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
 
-        customNavigationBar.addRightButton(title: "+") { [weak self] in
-            self?.addButtonTapped()
-        }
-
-        emptyStateView.configure(
-            message: NSLocalizedString("gallery.empty_message", comment: ""),
-            buttonTitle: NSLocalizedString("gallery.empty_button", comment: "")
-        )
-        emptyStateView.onActionButtonTapped = { [weak self] in
+        let plusImage = UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(pointSize: 13, weight: .medium))
+        customNavigationBar.addRightButton(image: plusImage, tintColor: .token(.textPrimary)) { [weak self] in
             self?.addButtonTapped()
         }
     }
@@ -205,10 +200,9 @@ final class GalleryViewController: UIViewController {
     }
     
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
-        view.addSubview(emptyStateView)
         view.addSubview(viewTypeButtonStackView)
         viewTypeButtonStackView.addArrangedSubview(dateButton)
         viewTypeButtonStackView.addArrangedSubview(locationButton)
@@ -223,12 +217,7 @@ final class GalleryViewController: UIViewController {
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
             make.horizontalEdges.equalToSuperview()
-            make.height.equalTo(56)
-        }
-
-        emptyStateView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
-            make.horizontalEdges.bottom.equalToSuperview()
+            make.height.equalTo(54)
         }
 
         viewTypeButtonStackView.snp.makeConstraints { make in
@@ -240,26 +229,27 @@ final class GalleryViewController: UIViewController {
         calendarContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-24)
         }
 
         mapView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-24)
         }
 
         themeContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         folderContainerView.snp.makeConstraints { make in
             make.top.equalTo(viewTypeButtonStackView.snp.bottom).offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().inset(112)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
+
     }
     
     private func bind() {
@@ -297,7 +287,7 @@ final class GalleryViewController: UIViewController {
                 case .folder:
                     viewTypeString = "folder"
                 }
-                AnalyticsManager.shared.logGalleryViewChanged(viewType: viewTypeString)
+                AnalyticsService.shared.logGalleryViewChanged(viewType: viewTypeString)
             })
             .bind(with: self) { owner, viewType in
                 owner.updateButtonStyles(selectedType: viewType)
@@ -313,29 +303,17 @@ final class GalleryViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        Driver.combineLatest(output.isEmpty, output.selectedViewType)
-            .drive(with: self) { owner, data in
-                let (isEmpty, viewType) = data
-                owner.emptyStateView.isHidden = !isEmpty
-                owner.viewTypeButtonStackView.isHidden = isEmpty
-                owner.customNavigationBar.setRightButtonHidden(isEmpty)
+        output.selectedViewType
+            .drive(with: self) { owner, viewType in
+                owner.calendarContainerView.isHidden = viewType != .date
+                owner.mapView.isHidden = viewType != .location
+                owner.themeContainerView.isHidden = viewType != .theme
+                owner.folderContainerView.isHidden = viewType != .folder
 
-                if isEmpty {
-                    owner.calendarContainerView.isHidden = true
-                    owner.mapView.isHidden = true
-                    owner.themeContainerView.isHidden = true
-                    owner.folderContainerView.isHidden = true
-                } else {
-                    owner.calendarContainerView.isHidden = viewType != .date
-                    owner.mapView.isHidden = viewType != .location
-                    owner.themeContainerView.isHidden = viewType != .theme
-                    owner.folderContainerView.isHidden = viewType != .folder
-
-                    if viewType == .location {
-                        owner.loadMapAnnotations()
-                    } else if viewType == .theme {
-                        owner.themeVC.refreshData()
-                    }
+                if viewType == .location {
+                    owner.loadMapAnnotations()
+                } else if viewType == .theme {
+                    owner.themeVC.refreshData()
                 }
             }
             .disposed(by: disposeBag)
@@ -347,9 +325,9 @@ final class GalleryViewController: UIViewController {
 
         for (button, type) in zip(buttons, types) {
             if type == selectedType {
-                button.setGradient(.royalBlue, isSelected: true)
+                button.setGradient(.ctaBlue, isSelected: true)
             } else {
-                button.setGradient(.whiteToGray, isSelected: false)
+                button.setGradient(.tabBar, isSelected: false)
             }
         }
     }
@@ -402,7 +380,8 @@ extension GalleryViewController: MKMapViewDelegate {
             let sortedPhotos = allPhotos.sorted { !$0.isLocked && $1.isLocked }
 
             if let firstPhoto = sortedPhotos.first {
-                representativeImage = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small)
+                let annotationPixelSize = 50 * max(view.traitCollection.displayScale, 1)
+                representativeImage = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, maxPixelSize: annotationPixelSize)
                 isLocked = firstPhoto.isLocked
             }
 
@@ -425,9 +404,11 @@ extension GalleryViewController: MKMapViewDelegate {
         let photos = photoAnnotation.cardIds.compactMap { realmManager.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = photos.sorted { !$0.isLocked && $1.isLocked }
 
-        if let firstPhoto = sortedPhotos.first,
-           let image = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, size: .small) {
-            annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
+        if let firstPhoto = sortedPhotos.first {
+            let annotationPixelSize = 50 * max(view.traitCollection.displayScale, 1)
+            if let image = ThumbnailCache.shared.thumbnail(for: firstPhoto.id, maxPixelSize: annotationPixelSize) {
+                annotationView?.configure(with: image, isLocked: firstPhoto.isLocked)
+            }
         }
 
         return annotationView
@@ -456,9 +437,27 @@ extension GalleryViewController: MKMapViewDelegate {
         let title = String(format: NSLocalizedString("common.photo_count", comment: ""), photoCount)
         let cardIds = cards.map { $0.id }
 
-        AnalyticsManager.shared.logMapLocationViewed(cardsCount: photoCount)
-
         let galleryVC = CardListViewController(cardIds: cardIds, themeCategory: .others, customTitle: title)
         navigationController?.pushViewController(galleryVC, animated: true)
+    }
+
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension GalleryViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
     }
 }

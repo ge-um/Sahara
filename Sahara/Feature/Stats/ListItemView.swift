@@ -27,9 +27,7 @@ final class ListItemView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = ColorSystem.lavender20
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
 
         addSubview(stackView)
         stackView.snp.makeConstraints { make in
@@ -43,15 +41,15 @@ final class ListItemView: UIView {
         if items.isEmpty {
             let label = UILabel()
             label.text = NSLocalizedString("stats.no_data", comment: "")
-            label.font = FontSystem.galmuriMono(size: 12)
-            label.textColor = UIColor(hex: "#666666")
+            label.font = .typography(.caption)
+            label.textColor = .token(.textTertiary)
             stackView.addArrangedSubview(label)
         } else {
             for item in items {
                 let label = UILabel()
                 label.text = "• \(item)"
-                label.font = FontSystem.galmuriMono(size: 12)
-                label.textColor = .black
+                label.font = .typography(.caption)
+                label.textColor = .token(.textPrimary)
                 stackView.addArrangedSubview(label)
             }
         }

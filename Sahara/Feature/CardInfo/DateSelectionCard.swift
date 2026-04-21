@@ -10,11 +10,17 @@ import RxSwift
 import SnapKit
 import UIKit
 
+enum DateSource {
+    case exif
+    case userPicked
+    case initial
+}
+
 final class DateSelectionCard: BaseCard {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "calendar")
-        imageView.tintColor = ColorSystem.darkGray
+        imageView.tintColor = .token(.textSecondary)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -25,8 +31,8 @@ final class DateSelectionCard: BaseCard {
         formatter.locale = Locale.current
         formatter.dateStyle = .long
         label.text = formatter.string(from: Date())
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.font = DesignToken.Typography.caption.numericFont
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -54,15 +60,17 @@ final class DateSelectionCard: BaseCard {
         container.addSubview(selectButton)
 
         iconImageView.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview()
-            make.width.height.equalTo(20)
+            make.leading.equalToSuperview()
+            make.top.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.width.height.equalTo(16)
         }
 
         valueLabel.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview()
+            make.centerY.equalTo(iconImageView)
             make.leading.equalTo(iconImageView.snp.trailing).offset(8)
             make.trailing.lessThanOrEqualToSuperview()
-            make.centerY.equalTo(iconImageView)
+            make.bottom.lessThanOrEqualToSuperview()
         }
 
         selectButton.snp.makeConstraints { make in
@@ -70,19 +78,22 @@ final class DateSelectionCard: BaseCard {
         }
 
         addContentView(container)
-
-        cardView.snp.makeConstraints { make in
-            make.height.equalTo(90)
-        }
     }
 
-    func bind(date: Driver<Date>) {
+    func bind(date: Driver<(date: Date, source: DateSource)>) {
         date
-            .drive(with: self) { owner, date in
+            .drive(with: self) { owner, value in
                 let formatter = DateFormatter()
                 formatter.locale = Locale.current
                 formatter.dateStyle = .long
-                owner.valueLabel.text = formatter.string(from: date)
+                owner.valueLabel.text = formatter.string(from: value.date)
+
+                switch value.source {
+                case .exif, .initial:
+                    owner.valueLabel.textColor = .token(.textTertiary)
+                case .userPicked:
+                    owner.valueLabel.textColor = .token(.textSecondary)
+                }
             }
             .disposed(by: disposeBag)
     }

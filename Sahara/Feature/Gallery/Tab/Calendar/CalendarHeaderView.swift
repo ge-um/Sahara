@@ -13,8 +13,8 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     private let monthLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuri14(size: 14)
-        label.textColor = .black
+        label.font = DesignToken.Typography.caption.numericFont
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .left
         return label
     }()
@@ -22,22 +22,23 @@ final class CalendarHeaderView: UICollectionReusableView {
     private let previousMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle("<", for: .normal)
-        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
-        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        button.setTitleColor(.token(.textSecondary), for: .normal)
+        button.titleLabel?.font = .typography(.body)
+        button.accessibilityIdentifier = "sahara.calendar.prev"
         return button
     }()
 
     private let nextMonthButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = 14
         button.clipsToBounds = true
         button.setTitle(">", for: .normal)
-        button.setTitleColor(ColorSystem.mediumGray, for: .normal)
-        button.titleLabel?.font = FontSystem.galmuri14(size: 14)
+        button.setTitleColor(.token(.textSecondary), for: .normal)
+        button.titleLabel?.font = .typography(.body)
         return button
     }()
 
@@ -45,6 +46,7 @@ final class CalendarHeaderView: UICollectionReusableView {
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.distribution = .fillEqually
+        stack.spacing = 1
         return stack
     }()
 
@@ -69,29 +71,26 @@ final class CalendarHeaderView: UICollectionReusableView {
         addSubview(nextMonthButton)
         addSubview(weekdayStackView)
 
-        monthLabel.snp.makeConstraints { make in
+        nextMonthButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
-            make.leading.equalToSuperview().offset(20)
-            make.height.equalTo(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.size.equalTo(28)
         }
 
         previousMonthButton.snp.makeConstraints { make in
-            make.centerY.equalTo(monthLabel)
+            make.centerY.equalTo(nextMonthButton)
             make.trailing.equalTo(nextMonthButton.snp.leading).offset(-8)
-            make.width.equalTo(40)
-            make.height.equalTo(28)
+            make.size.equalTo(28)
         }
 
-        nextMonthButton.snp.makeConstraints { make in
-            make.centerY.equalTo(monthLabel)
-            make.trailing.equalToSuperview().offset(-20)
-            make.width.equalTo(40)
-            make.height.equalTo(28)
+        monthLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(nextMonthButton)
+            make.leading.equalToSuperview().offset(20)
         }
 
         weekdayStackView.snp.makeConstraints { make in
             make.top.equalTo(monthLabel.snp.bottom).offset(12)
-            make.horizontalEdges.equalToSuperview()
+            make.horizontalEdges.equalToSuperview().inset(8)
             make.bottom.equalToSuperview()
         }
 
@@ -105,13 +104,18 @@ final class CalendarHeaderView: UICollectionReusableView {
             let weekdayText = NSLocalizedString(key, comment: "")
 
             // Galmuri14, font size 10, letter spacing -6%
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.firstLineHeadIndent = 4
+
             let attributedString = weekdayText.attributedString(
-                font: FontSystem.galmuri14(size: 10),
+                font: UIFont.typography(.small),
                 letterSpacing: -6,
                 color: index == 0 ? .systemRed : (index == 6 ? .systemBlue : .label)
             )
-            label.attributedText = attributedString
-            label.textAlignment = .center
+            let mutable = NSMutableAttributedString(attributedString: attributedString)
+            mutable.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: mutable.length))
+            label.attributedText = mutable
+            label.textAlignment = .left
             weekdayStackView.addArrangedSubview(label)
         }
     }
@@ -131,8 +135,8 @@ final class CalendarHeaderView: UICollectionReusableView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        previousMonthButton.applyGradient(.whiteToGray, removeExisting: true)
-        nextMonthButton.applyGradient(.whiteToGray, removeExisting: true)
+        previousMonthButton.applyGradient(.tabBar, removeExisting: true)
+        nextMonthButton.applyGradient(.tabBar, removeExisting: true)
     }
 
     func configure(monthTitle: String) {

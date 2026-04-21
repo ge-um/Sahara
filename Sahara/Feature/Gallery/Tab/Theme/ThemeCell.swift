@@ -20,13 +20,13 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 16)
+        label.font = .typography(.label)
         return label
     }()
 
     private let countLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = DesignToken.Typography.caption.numericFont
         label.textColor = .secondaryLabel
         return label
     }()
@@ -51,8 +51,8 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         contentView.addSubview(countLabel)
 
         thumbnailImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
+            make.leading.equalToSuperview()
+            make.top.equalToSuperview()
             make.width.height.equalTo(80)
         }
 
@@ -62,14 +62,14 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
 
         titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(thumbnailImageView.snp.trailing).offset(16)
-            make.top.equalTo(thumbnailImageView).offset(10)
-            make.trailing.equalToSuperview().inset(16)
+            make.top.equalTo(thumbnailImageView).offset(2)
+            make.trailing.equalToSuperview()
         }
 
         countLabel.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview()
         }
     }
 
@@ -77,12 +77,13 @@ final class ThemeCell: UITableViewCell, IsIdentifiable {
         titleLabel.text = group.category.localizedName
         countLabel.text = String(format: NSLocalizedString("common.photo_count", comment: ""), group.cardIds.count)
 
-        let cards = group.cardIds.compactMap { RealmManager.shared.fetchObject(Card.self, forPrimaryKey: $0) }
+        let cards = group.cardIds.compactMap { RealmService.shared.fetchObject(Card.self, forPrimaryKey: $0) }
         let sortedPhotos = cards.sorted { !$0.isLocked && $1.isLocked }
 
         if let firstPhoto = sortedPhotos.first {
             blurEffectView.isHidden = !firstPhoto.isLocked
-            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, size: .small) { [weak self] image in
+            let pixelSize = 80 * max(traitCollection.displayScale, 1)
+            ThumbnailCache.shared.loadThumbnail(for: firstPhoto.id, maxPixelSize: pixelSize) { [weak self] image in
                 self?.thumbnailImageView.image = image
             }
         }

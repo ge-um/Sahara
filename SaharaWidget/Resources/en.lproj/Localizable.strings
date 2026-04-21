@@ -1,0 +1,7 @@
+/* Widget */
+"widget.display_name" = "Sahara";
+"widget.description" = "Set your favorite photo as a widget!";
+"widget.empty_message" = "Create your first card";
+"widget.placeholder_memo" = "Today's memory";
+"widget.date_format" = "MMMM d, yyyy";
+"widget.select_photo" = "Select a photo";

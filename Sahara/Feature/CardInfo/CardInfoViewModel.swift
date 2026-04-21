@@ -22,8 +22,8 @@ enum EditSourceType {
 
 final class CardInfoViewModel: BaseViewModelProtocol {
     private let disposeBag = DisposeBag()
-    private let realmManager: RealmManagerProtocol
-    private let ocrManager: OCRManagerProtocol
+    private let realmManager: RealmServiceProtocol
+    private let cardPostProcessor: CardPostProcessorProtocol
     private let imagePrepareService: ImagePrepareServiceProtocol
     private var editedImage: UIImage?
     private var imageSourceData: ImageSourceData?
@@ -68,18 +68,18 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let shouldPopToListOnDelete: Driver<Bool>
     }
 
-    init(editedImage: UIImage?, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(editedImage: UIImage?, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
-        self.ocrManager = ocrManager
+        self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
         self.editedImage = editedImage
         self.cardToEditId = nil
         self.sourceType = nil
     }
 
-    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(initialDate: Date, sourceType: EditSourceType, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
-        self.ocrManager = ocrManager
+        self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
         self.editedImage = nil
         self.cardToEditId = nil
@@ -87,11 +87,12 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         self.sourceType = sourceType
     }
 
-    private func loadCardData(from card: Card) {
-        let screenScale = UIScreen.main.scale
-        let screenBounds = UIScreen.main.bounds
+    private func loadCardData(from card: Card, imageData: Data) {
+        let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+        let screenScale = screen?.scale ?? 2.0
+        let screenBounds = screen?.bounds ?? CGRect(x: 0, y: 0, width: 393, height: 852)
         let maxDim = max(screenBounds.width, screenBounds.height) * screenScale * 2
-        self.editedImage = ImageDownsampler.downsample(data: card.editedImageData, maxDimension: maxDim)
+        self.editedImage = ImageDownsampler.downsample(data: imageData, maxDimension: maxDim)
         self.originalDate = card.date
         self.initialMemo = card.memo
         self.initialIsLocked = card.isLocked
@@ -102,14 +103,14 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func createImageSourceData(from card: Card, editedImage: UIImage) -> ImageSourceData {
+    private func createImageSourceData(from card: Card, editedImage: UIImage, imageData: Data) -> ImageSourceData {
         let format = card.imageFormat.flatMap { ImageSourceData.ImageFormat(rawValue: $0) }
-        return ImageSourceData(image: editedImage, format: format)
+        return ImageSourceData(image: editedImage, originalData: imageData, format: format)
     }
 
-    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmManagerProtocol = RealmManager.shared, ocrManager: OCRManagerProtocol = OCRManager.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
+    init(cardToEdit cardId: ObjectId, sourceType: EditSourceType, realmManager: RealmServiceProtocol = RealmService.shared, cardPostProcessor: CardPostProcessorProtocol = CardPostProcessor.shared, imagePrepareService: ImagePrepareServiceProtocol = ImagePrepareService()) {
         self.realmManager = realmManager
-        self.ocrManager = ocrManager
+        self.cardPostProcessor = cardPostProcessor
         self.imagePrepareService = imagePrepareService
         self.cardToEditId = cardId
         self.sourceType = sourceType
@@ -118,10 +119,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             return
         }
 
-        loadCardData(from: card)
+        guard let imageData = card.resolvedImageData() else { return }
+        loadCardData(from: card, imageData: imageData)
 
         if let editedImage = self.editedImage {
-            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage)
+            self.imageSourceData = createImageSourceData(from: card, editedImage: editedImage, imageData: imageData)
         }
     }
 
@@ -152,15 +154,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             .disposed(by: disposeBag)
     }
 
-    private func logCardSaveAnalytics(memo: String?, location: CLLocation?, isLocked: Bool) {
-        AnalyticsManager.shared.logCardSave(
-            hasPhoto: editedImage != nil,
-            hasMemo: !(memo?.isEmpty ?? true),
-            hasLocation: location != nil,
-            isLocked: isLocked
-        )
-    }
-
     private func handleSaveAction(
         date: Date,
         memo: String?,
@@ -179,13 +172,8 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             let shouldPop = shouldPopToList(newDate: date, newLocation: location)
             shouldPopToListRelay.accept(shouldPop)
 
-            if shouldPop {
-                return replaceCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                    .map { true }
-            } else {
-                return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
-                    .map { true }
-            }
+            return updateCardObservable(cardId: cardId, date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
+                .map { true }
         } else {
             shouldPopToListRelay.accept(false)
             return saveToRealmObservable(date: date, memo: memo, customFolder: customFolder, location: location, isLocked: isLocked)
@@ -196,10 +184,11 @@ final class CardInfoViewModel: BaseViewModelProtocol {
     private func handleDeleteAction(shouldPopToListOnDeleteRelay: PublishRelay<Bool>) -> Observable<Void> {
         guard let cardId = cardToEditId else { return .just(()) }
 
-        return realmManager.delete(Card.self, forPrimaryKey: cardId)
+        return realmManager.deleteCard(forPrimaryKey: cardId)
             .do(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 shouldPopToListOnDeleteRelay.accept(self.sourceType != nil)
+                WidgetDataService.shared.refreshWidgetData()
             })
     }
 
@@ -225,9 +214,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
                     input.isLocked
                 )
             )
-            .do(onNext: { [weak self] _, memo, _, location, isLocked in
-                self?.logCardSaveAnalytics(memo: memo, location: location, isLocked: isLocked)
-            })
             .flatMap { [weak self] date, memo, customFolder, location, isLocked -> Observable<Bool> in
                 guard let self = self else { return .just(false) }
                 return self.handleSaveAction(
@@ -244,9 +230,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
 
         let deleted = input.deleteButtonTapped
             .withUnretained(self)
-            .do(onNext: { _, _ in
-                AnalyticsManager.shared.logCardDelete()
-            })
             .flatMap { [weak self] _, _ -> Observable<Void> in
                 guard let self = self else { return .just(()) }
                 return self.handleDeleteAction(shouldPopToListOnDeleteRelay: shouldPopToListOnDeleteRelay)
@@ -297,18 +280,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private struct AnalyticsContext {
-        let isFirstCard: Bool
-        let hadLocationBefore: Bool
-    }
-
-    private func collectAnalyticsContext() -> AnalyticsContext {
-        let isFirstCard = realmManager.isEmpty(Card.self)
-        let allCards = realmManager.fetch(Card.self)
-        let hadLocationBefore = allCards.contains { $0.latitude != nil && $0.longitude != nil }
-        return AnalyticsContext(isFirstCard: isFirstCard, hadLocationBefore: hadLocationBefore)
-    }
-
     private func hasDayChanged(from old: Date, to new: Date) -> Bool {
         let calendar = Calendar.current
         let oldComponents = calendar.dateComponents([.year, .month, .day], from: old)
@@ -333,7 +304,7 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         let card = Card(
             date: date,
             createdDate: Date(),
-            editedImageData: imageData.editedImageData,
+            editedImageData: nil,
             memo: memo,
             latitude: location?.coordinate.latitude,
             longitude: location?.coordinate.longitude,
@@ -342,50 +313,49 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         card.customFolder = customFolder
         card.ocrText = ocrText
         card.imageFormat = imageData.imageFormat
-        return card
-    }
 
-    private func logSaveAnalytics(isFirstCard: Bool, hadLocationBefore: Bool, location: CLLocation?) {
-        if isFirstCard {
-            AnalyticsManager.shared.logFirstCardCreated()
+        do {
+            let fileName = try ImageFileService.shared.saveImageFile(
+                data: imageData.editedImageData,
+                cardId: card.id,
+                format: imageData.imageFormat
+            )
+            card.imagePath = fileName
+            Logger.database.notice("[ImageStorage] Saved to disk: \(fileName) (\(imageData.editedImageData.count / 1024)KB)")
+        } catch {
+            card.editedImageData = imageData.editedImageData
+            Logger.database.error("[ImageStorage] Disk save failed, fallback to Realm: \(error.localizedDescription)")
         }
-        if !hadLocationBefore && location != nil {
-            AnalyticsManager.shared.logFirstLocationAdded()
-        }
+
+        return card
     }
 
     private func saveToRealmObservable(date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
 
         let sanitized = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
-        let stickers = imageSourceData?.stickers ?? []
 
-        Logger.database.info("Save: stickers=\(stickers.count)")
-
-        let imageData$ = prepareImage(from: editedImage)
-        let ocr$ = ocrManager.recognizeText(from: editedImage)
-
-        return Observable.zip(imageData$, ocr$)
+        return prepareImage(from: editedImage)
             .observe(on: MainScheduler.instance)
-            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
+            .flatMap { [weak self] imageData -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
                 let card = self.createCard(
                     date: date,
                     imageData: imageData,
-                    ocrText: ocrText,
+                    ocrText: nil,
                     memo: sanitized.memo,
                     customFolder: sanitized.customFolder,
                     location: location,
                     isLocked: isLocked
                 )
 
-                Logger.database.notice("Saved card: stickers=\(stickers.count)")
-
                 return self.realmManager.add(card)
                     .do(onNext: {
-                        self.logSaveAnalytics(isFirstCard: analyticsCtx.isFirstCard, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
+                        self.cardPostProcessor.process(cardId: card.id, imageData: imageData.editedImageData)
+                        let totalCardCount = self.realmManager.fetch(Card.self).count
+                        AnalyticsService.shared.logCardCreated(totalCardCount: totalCardCount)
+                        WidgetDataService.shared.refreshWidgetData()
                     })
             }
     }
@@ -414,34 +384,6 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         }
     }
 
-    private func trackEditTypes(
-        memoText: String?,
-        folderText: String?,
-        oldLocation: CLLocation?,
-        newLocation: CLLocation?,
-        isLocked: Bool
-    ) -> [String] {
-        var editTypes: [String] = []
-
-        if imageChanged {
-            editTypes.append("photo")
-        }
-        if initialMemo != memoText {
-            editTypes.append("memo")
-        }
-        if initialCustomFolder != folderText {
-            editTypes.append("folder")
-        }
-        if hasLocationChanged(from: oldLocation, to: newLocation, threshold: 1.0) {
-            editTypes.append("location")
-        }
-        if initialIsLocked != isLocked {
-            editTypes.append("lock")
-        }
-
-        return editTypes
-    }
-
     private func updateCardInRealm(
         cardId: ObjectId,
         date: Date,
@@ -452,10 +394,28 @@ final class CardInfoViewModel: BaseViewModelProtocol {
         location: CLLocation?,
         isLocked: Bool
     ) -> Observable<Void> {
+        let oldImagePath = realmManager.fetchObject(Card.self, forPrimaryKey: cardId)?.imagePath
+
+        var newImagePath: String?
+        do {
+            newImagePath = try ImageFileService.shared.saveImageFile(
+                data: imageData.editedImageData,
+                cardId: cardId,
+                format: imageData.imageFormat
+            )
+        } catch {
+            newImagePath = nil
+        }
+
         return realmManager.update { realm in
             guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
             card.date = date
-            card.editedImageData = imageData.editedImageData
+            if let newImagePath = newImagePath {
+                card.imagePath = newImagePath
+                card.editedImageData = nil
+            } else {
+                card.editedImageData = imageData.editedImageData
+            }
             card.imageFormat = imageData.imageFormat
             card.memo = memoText
             card.customFolder = folderText
@@ -463,131 +423,73 @@ final class CardInfoViewModel: BaseViewModelProtocol {
             card.latitude = location?.coordinate.latitude
             card.longitude = location?.coordinate.longitude
             card.ocrText = ocrText
+            card.modifiedDate = Date()
         }
+        .do(onNext: {
+            if let oldPath = oldImagePath, oldPath != newImagePath {
+                ImageFileService.shared.deleteImageFile(at: oldPath)
+            }
+            ThumbnailCache.shared.invalidate(for: cardId)
+            WidgetDataService.shared.refreshWidgetData()
+        })
     }
 
-    private func logUpdateAnalytics(editTypes: [String], hadLocationBefore: Bool, location: CLLocation?) {
-        if !editTypes.isEmpty {
-            AnalyticsManager.shared.logCardEdit(editType: editTypes.joined(separator: ","))
-        }
-        if !hadLocationBefore && location != nil {
-            AnalyticsManager.shared.logFirstLocationAdded()
+    private func updateCardMetadataOnly(
+        cardId: ObjectId,
+        date: Date,
+        memoText: String?,
+        folderText: String?,
+        location: CLLocation?,
+        isLocked: Bool
+    ) -> Observable<Void> {
+        return realmManager.update { realm in
+            guard let card = realm.object(ofType: Card.self, forPrimaryKey: cardId) else { return }
+            card.date = date
+            card.memo = memoText
+            card.customFolder = folderText
+            card.isLocked = isLocked
+            card.latitude = location?.coordinate.latitude
+            card.longitude = location?.coordinate.longitude
+            card.modifiedDate = Date()
         }
     }
 
     private func updateCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
         guard let editedImage = editedImage else { return .empty() }
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
+        guard realmManager.fetchObject(Card.self, forPrimaryKey: cardId) != nil else { return .empty() }
 
         let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
-        let stickers = imageSourceData?.stickers ?? []
 
-        Logger.database.info("Update: stickers=\(stickers.count)")
+        if !imageChanged {
+            return updateCardMetadataOnly(
+                cardId: cardId,
+                date: date,
+                memoText: sanitizedFields.memo,
+                folderText: sanitizedFields.customFolder,
+                location: location,
+                isLocked: isLocked
+            )
+        }
 
-        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
-        let editTypes = trackEditTypes(
-            memoText: sanitizedFields.memo,
-            folderText: sanitizedFields.customFolder,
-            oldLocation: oldLocation,
-            newLocation: location,
-            isLocked: isLocked
-        )
-
-        let imageData$ = prepareImage(from: editedImage)
-        let ocr$ = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
-
-        return Observable.zip(imageData$, ocr$)
+        return prepareImage(from: editedImage)
             .observe(on: MainScheduler.instance)
-            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
+            .flatMap { [weak self] imageData -> Observable<Void> in
                 guard let self = self else { return .empty() }
 
                 return self.updateCardInRealm(
                     cardId: cardId,
                     date: date,
                     imageData: imageData,
-                    ocrText: ocrText,
+                    ocrText: nil,
                     memoText: sanitizedFields.memo,
                     folderText: sanitizedFields.customFolder,
                     location: location,
                     isLocked: isLocked
                 )
                 .do(onNext: {
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
+                    self.cardPostProcessor.process(cardId: cardId, imageData: imageData.editedImageData)
                 })
             }
     }
 
-    private func createNewCardAndReplaceOld(
-        cardId: ObjectId,
-        date: Date,
-        imageData: PreparedImageData,
-        ocrText: String?,
-        memoText: String?,
-        folderText: String?,
-        location: CLLocation?,
-        isLocked: Bool
-    ) -> Observable<Void> {
-        let newCard = createCard(
-            date: date,
-            imageData: imageData,
-            ocrText: ocrText,
-            memo: memoText,
-            customFolder: folderText,
-            location: location,
-            isLocked: isLocked
-        )
-
-        Logger.database.notice("Replaced card")
-
-        return realmManager.update { realm in
-            realm.add(newCard)
-            if let cardToDelete = realm.object(ofType: Card.self, forPrimaryKey: cardId) {
-                realm.delete(cardToDelete)
-            }
-        }
-    }
-
-    private func replaceCardObservable(cardId: ObjectId, date: Date, memo: String?, customFolder: String?, location: CLLocation?, isLocked: Bool = false) -> Observable<Void> {
-        guard let editedImage = editedImage else { return .empty() }
-        guard let card = realmManager.fetchObject(Card.self, forPrimaryKey: cardId) else { return .empty() }
-
-        let sanitizedFields = sanitizeTextFields(memo: memo, customFolder: customFolder)
-        let analyticsCtx = collectAnalyticsContext()
-        let stickers = imageSourceData?.stickers ?? []
-
-        Logger.database.info("Replace: stickers=\(stickers.count)")
-
-        let oldLocation = (card.latitude != nil && card.longitude != nil) ? CLLocation(latitude: card.latitude!, longitude: card.longitude!) : nil
-        let editTypes = trackEditTypes(
-            memoText: sanitizedFields.memo,
-            folderText: sanitizedFields.customFolder,
-            oldLocation: oldLocation,
-            newLocation: location,
-            isLocked: isLocked
-        )
-
-        let imageData$ = prepareImage(from: editedImage)
-        let ocr$ = imageChanged ? ocrManager.recognizeText(from: editedImage) : Observable.just(card.ocrText)
-
-        return Observable.zip(imageData$, ocr$)
-            .observe(on: MainScheduler.instance)
-            .flatMap { [weak self] imageData, ocrText -> Observable<Void> in
-                guard let self = self else { return .empty() }
-
-                return self.createNewCardAndReplaceOld(
-                    cardId: cardId,
-                    date: date,
-                    imageData: imageData,
-                    ocrText: ocrText,
-                    memoText: sanitizedFields.memo,
-                    folderText: sanitizedFields.customFolder,
-                    location: location,
-                    isLocked: isLocked
-                )
-                .do(onNext: {
-                    self.logUpdateAnalytics(editTypes: editTypes, hadLocationBefore: analyticsCtx.hadLocationBefore, location: location)
-                })
-            }
-    }
 }

@@ -8,12 +8,14 @@
 import UIKit
 
 final class GridLayout: UICollectionViewFlowLayout {
-    private let numberOfColumns: Int
+    private(set) var numberOfColumns: Int
     private let cellSpacing: CGFloat
+    private let minColumnWidth: CGFloat?
 
-    init(numberOfColumns: Int, cellSpacing: CGFloat) {
+    init(numberOfColumns: Int, cellSpacing: CGFloat, minColumnWidth: CGFloat? = nil) {
         self.numberOfColumns = numberOfColumns
         self.cellSpacing = cellSpacing
+        self.minColumnWidth = minColumnWidth
         super.init()
 
         self.minimumInteritemSpacing = cellSpacing
@@ -31,6 +33,11 @@ final class GridLayout: UICollectionViewFlowLayout {
         guard let collectionView = collectionView else { return }
 
         let availableWidth = collectionView.bounds.width - sectionInset.left - sectionInset.right
+
+        if let minColumnWidth = minColumnWidth {
+            numberOfColumns = max(2, Int(availableWidth / minColumnWidth))
+        }
+
         let totalSpacing = cellSpacing * CGFloat(numberOfColumns - 1)
         let itemWidth = ((availableWidth - totalSpacing) / CGFloat(numberOfColumns)).rounded(.down)
 

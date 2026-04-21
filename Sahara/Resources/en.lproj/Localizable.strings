@@ -19,8 +19,6 @@
 "gallery.theme_view" = "By Theme";
 "gallery.folder_view" = "By Folder";
 "gallery.month_format" = "MMMM yyyy";
-"gallery.empty_message" = "Capture your memories as cards!";
-"gallery.empty_button" = "Create Card";
 
 /* Theme Categories */
 "theme.people" = "People";
@@ -89,7 +87,18 @@
 "media_selection.camera_permission_message" = "Please allow camera access in Settings";
 "media_selection.photo_permission_title" = "Photo Access Required";
 "media_selection.photo_permission_message" = "Please allow photo library access in Settings";
+"media_selection.file" = "File";
 "media_selection.go_to_settings" = "Go to Settings";
+"media_selection.all_photos" = "All Photos";
+"media_selection.allowed_photos" = "Allowed Photos";
+"media_selection.add_photos" = "Add Photos";
+"media_selection.limited_banner" = "You have granted access to selected photos only";
+"media_selection.allow_all_photos" = "Allow access to all photos in Settings";
+"media_selection.photo_count" = "%d";
+
+/* Camera */
+"camera.unavailable_title" = "Camera Unavailable";
+"camera.unavailable_message" = "Camera is not available on this device.";
 
 /* Media Editor */
 "media_editor.title" = "Photo Editor";
@@ -105,7 +114,17 @@
 "media_editor.sticker_modal_title" = "Stickers";
 "media_editor.undo" = "Undo";
 "media_editor.redo" = "Redo";
-"media_editor.network_error" = "Unable to connect to network";
+"media_editor.tool.pen" = "Pen";
+"media_editor.tool.pencil" = "Pencil";
+"media_editor.tool.marker" = "Marker";
+"media_editor.tool.fountain_pen" = "Fountain Pen";
+"media_editor.tool.watercolor" = "Watercolor";
+"media_editor.tool.crayon" = "Crayon";
+"media_editor.tool.monoline" = "Monoline";
+"media_editor.tool.eraser" = "Eraser";
+"media_editor.tool.lasso" = "Lasso";
+"media_editor.sticker_load_failed" = "Unable to load stickers";
+"media_editor.retry" = "Retry";
 
 /* Filters */
 "filter.original" = "Original";
@@ -176,6 +195,7 @@
 "settings.section_about" = "About";
 "settings.language" = "Language";
 "settings.language_desc" = "English";
+"settings.background_theme" = "Background Theme";
 "settings.service_news" = "Service News";
 "settings.service_news_desc" = "New features and updates";
 "settings.monthly_report" = "Monthly Report";
@@ -197,7 +217,38 @@
 "settings.device_info_title" = "Device Information";
 "settings.app_version" = "App Version";
 "settings.ios_version" = "iOS Version";
+"settings.macos_version" = "macOS Version";
 "settings.device_model" = "Device Model";
+"settings.section_data" = "Data Management";
+"settings.export_photos" = "Export Photos";
+"settings.export_backup" = "App Backup";
+"settings.import_backup" = "Import Backup";
+
+/* Cloud Sync */
+"settings.cloud_sync" = "iCloud Sync";
+"settings.cloud_sync_desc" = "Sync cards across devices";
+"sync.confirm_title" = "iCloud Sync";
+"sync.confirm_message" = "This will use your iCloud storage. Would you like to start syncing?";
+"sync.account_unavailable_title" = "iCloud Sign-in Required";
+"sync.account_unavailable_message" = "Please sign in to iCloud in Settings > Apple ID.";
+"sync.error_quota" = "iCloud storage is full";
+"sync.status_syncing" = "Syncing...";
+"sync.status_up_to_date" = "Up to date";
+"sync.status_error" = "Sync error";
+"sync.last_sync" = "Last synced: %@";
+
+/* Backup */
+"backup.exporting" = "Creating backup...";
+"backup.importing" = "Restoring data...";
+"backup.confirm_import_title" = "Restore Data";
+"backup.confirm_import_message" = "Your current data will be replaced with the backup data (%d cards). Continue?";
+"backup.confirm_import_action" = "Restore";
+"backup.export_success" = "Backup created";
+"backup.import_success" = "Data restored";
+"backup.export_failed" = "Backup failed";
+"backup.import_failed" = "Restore failed";
+"backup.invalid_file" = "Invalid backup file";
+"backup.version_mismatch" = "This backup was created by a newer version of the app. Please update the app.";
 
 /* Realm Error */
 "realm_error.title" = "Unable to Load Data";
@@ -230,6 +281,7 @@
 "release_note.1.6.0.1" = "Fixed slow photo loading";
 "release_note.1.6.0.2" = "Fixed photo quality degradation";
 "release_note.1.6.0.3" = "Fixed landscape photos appearing flipped";
+"release_note.1.6.1.1" = "Improved app stability";
 "release_note.1.6.0.4" = "Improved app stability";
 "release_note.1.5.1.1" = "Improved app stability";
 "release_note.1.5.0.1" = "Re-edit your saved photos";
@@ -257,3 +309,29 @@
 "release_note.1.1.0.1" = "Card lock feature added";
 "release_note.1.1.0.2" = "Easier location editing";
 "release_note.1.1.0.3" = "Improved app stability";
+
+/* Background Theme */
+"background.title" = "Background Theme";
+"background.solid_color" = "Solid Color";
+"background.gradient" = "Gradient";
+"background.photo" = "Photo";
+"background.dot_pattern" = "Dot Pattern";
+"background.preview" = "Preview";
+"background.select_photo" = "Select from Album";
+"background.apply" = "Apply";
+"background.gradient_start" = "Start Color";
+"background.gradient_end" = "End Color";
+
+/* Widget */
+"widget.add_to_widget" = "Add to Widget";
+"widget.added_to_widget" = "Added to Widget";
+
+/* Release Notes - 2.0.0 */
+"release_note.2.0.0.1" = "Now available on iPad and Mac";
+"release_note.2.0.0.2" = "View your favorite card instantly with the home screen widget";
+"release_note.2.0.0.3" = "Cards sync automatically across devices with iCloud";
+"release_note.2.0.0.4" = "Keep your memories safe with backup and restore";
+"release_note.2.0.0.5" = "Personalize your space with background themes";
+"release_note.2.0.0.6" = "Browse and pick photos by album";
+"release_note.2.0.0.7" = "Refined design throughout the app";
+"release_note.2.0.0.8" = "Improved stability";

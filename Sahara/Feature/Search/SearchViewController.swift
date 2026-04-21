@@ -23,9 +23,11 @@ final class SearchViewController: UIViewController {
         searchBar.placeholder = NSLocalizedString("search.placeholder", comment: "")
         searchBar.searchBarStyle = .minimal
         searchBar.backgroundColor = .clear
+        searchBar.setSearchFieldBackgroundImage(UIImage(), for: .normal)
 
         if let textField = searchBar.value(forKey: "searchField") as? UITextField {
-            textField.font = FontSystem.galmuriMono(size: 14)
+            textField.font = .typography(.label)
+            textField.applyGlassCardStyle(cornerRadius: 10)
         }
 
         return searchBar
@@ -49,8 +51,8 @@ final class SearchViewController: UIViewController {
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .black
+        label.font = .typography(.body)
+        label.textColor = .token(.textPrimary)
         label.isHidden = true
         return label
     }()
@@ -67,7 +69,19 @@ final class SearchViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: NSLocalizedString("tab.search", comment: ""))
-        customNavigationBar.hideLeftButton()
+        updateLeftButtonForCurrentMode()
+    }
+
+    private func updateLeftButtonForCurrentMode() {
+        if let toggler = navigationController?.parent as? SidebarToggleable, toggler.isSidebarMode {
+            customNavigationBar.showLeftButton()
+            customNavigationBar.setLeftButtonImage(UIImage(systemName: "sidebar.leading"))
+            customNavigationBar.onLeftButtonTapped = { [weak toggler] in
+                toggler?.toggleSidebar()
+            }
+        } else {
+            customNavigationBar.hideLeftButton()
+        }
     }
 
     private func setupKeyboardDismiss() {
@@ -81,7 +95,7 @@ final class SearchViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(searchBar)
@@ -95,15 +109,15 @@ final class SearchViewController: UIViewController {
         }
 
         searchBar.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(8)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(48)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
+            make.horizontalEdges.equalToSuperview().inset(12)
+            make.height.equalTo(36)
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchBar.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(24)
-            make.bottom.equalToSuperview().inset(90)
+            make.top.equalTo(searchBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
         }
 
         emptyStateLabel.snp.makeConstraints { make in
@@ -157,7 +171,7 @@ final class SearchViewController: UIViewController {
                 guard let card = owner.viewModel.getCard(by: cardId) else { return }
 
                 if card.isLocked {
-                    BiometricAuthManager.shared.authenticate { success, error in
+                    BiometricAuthService.shared.authenticate { success, error in
                         if success {
                             let detailVC = CardDetailViewController(cardId: cardId, sourceType: .searchView)
                             owner.navigationController?.pushViewController(detailVC, animated: true)
@@ -190,7 +204,15 @@ extension SearchViewController: PinterestLayoutDelegate {
         guard size.width > 0 else { return 180 }
 
         let aspectRatio = size.height / size.width
-        let cellWidth = (collectionView.bounds.width - 8) / 2
+        let cellWidth = collectionView.bounds.width / CGFloat(pinterestLayout.columnCount) - 8
         return cellWidth * aspectRatio
+    }
+}
+
+// MARK: - SidebarModeObserver
+
+extension SearchViewController: SidebarModeObserver {
+    func sidebarModeDidChange() {
+        updateLeftButtonForCurrentMode()
     }
 }

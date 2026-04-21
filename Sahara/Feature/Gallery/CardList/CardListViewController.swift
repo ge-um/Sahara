@@ -12,26 +12,12 @@ import SnapKit
 import UIKit
 
 final class CardListViewController: UIViewController {
-    enum NavigationType {
-        case close
-        case back
-    }
-
     private let viewModel: any BaseViewModelProtocol
-    private let navigationType: NavigationType
     private let sourceType: EditSourceType
     private let disposeBag = DisposeBag()
 
     private let customNavigationBar = CustomNavigationBar()
-
-    private lazy var closeButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(named: "chevronLeft")
-        config.baseForegroundColor = .black
-        button.configuration = config
-        return button
-    }()
+    private let backTapped = PublishRelay<Void>()
 
     private var pinterestLayout: PinterestLayout!
 
@@ -67,7 +53,6 @@ final class CardListViewController: UIViewController {
 
     init(cardIds: [ObjectId], themeCategory: ThemeCategory, customTitle: String? = nil) {
         self.viewModel = CardListViewModel(cardIds: cardIds)
-        self.navigationType = .close
         self.sourceType = themeCategory == .others ? .locationView : .themeView
         self.navigationTitle = customTitle ?? themeCategory.localizedName
         super.init(nibName: nil, bundle: nil)
@@ -75,7 +60,6 @@ final class CardListViewController: UIViewController {
 
     init(folderName: String) {
         self.viewModel = CardListViewModel(folderName: folderName)
-        self.navigationType = .close
         self.sourceType = .locationView
         self.navigationTitle = folderName
         super.init(nibName: nil, bundle: nil)
@@ -83,7 +67,6 @@ final class CardListViewController: UIViewController {
 
     init(date: Date) {
         self.viewModel = CalendarDetailViewModel(date: date)
-        self.navigationType = .back
         self.sourceType = .dateView
 
         let formatter = DateFormatter()
@@ -108,27 +91,13 @@ final class CardListViewController: UIViewController {
 
     private func setupCustomNavigationBar() {
         customNavigationBar.configure(title: navigationTitle)
-
-        switch navigationType {
-        case .close:
-            customNavigationBar.hideLeftButton()
-            view.addSubview(closeButton)
-
-            closeButton.snp.makeConstraints { make in
-                make.leading.equalTo(customNavigationBar).offset(8)
-                make.centerY.equalTo(customNavigationBar)
-                make.width.equalTo(44)
-                make.height.equalTo(44)
-            }
-        case .back:
-            customNavigationBar.onLeftButtonTapped = { [weak self] in
-                self?.navigationController?.popViewController(animated: true)
-            }
+        customNavigationBar.onLeftButtonTapped = { [weak self] in
+            self?.backTapped.accept(())
         }
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(collectionView)
@@ -140,8 +109,8 @@ final class CardListViewController: UIViewController {
         }
 
         collectionView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom).offset(24)
-            make.horizontalEdges.equalToSuperview().inset(24)
+            make.top.equalTo(customNavigationBar.snp.bottom).offset(20)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 80, right: 0)
@@ -158,7 +127,7 @@ final class CardListViewController: UIViewController {
     private func bindCardListViewModel(_ viewModel: CardListViewModel) {
         let input = CardListViewModel.Input(
             itemSelected: collectionView.rx.itemSelected.asObservable(),
-            closeButtonTapped: closeButton.rx.tap.asObservable()
+            backButtonTapped: backTapped.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -183,6 +152,12 @@ final class CardListViewController: UIViewController {
     }
 
     private func bindCalendarDetailViewModel(_ viewModel: CalendarDetailViewModel) {
+        backTapped
+            .subscribe(with: self) { owner, _ in
+                owner.navigationController?.popViewController(animated: true)
+            }
+            .disposed(by: disposeBag)
+
         let input = CalendarDetailViewModel.Input(
             itemSelected: collectionView.rx.itemSelected.asObservable(),
             itemDeleted: Observable.never()
@@ -204,6 +179,9 @@ final class CardListViewController: UIViewController {
                 var snapshot = NSDiffableDataSourceSnapshot<Int, ObjectId>()
                 snapshot.appendSections([0])
                 snapshot.appendItems(cardIds)
+                let existing = Set(dataSource.snapshot().itemIdentifiers)
+                let toReconfigure = cardIds.filter { existing.contains($0) }
+                snapshot.reconfigureItems(toReconfigure)
                 dataSource.apply(snapshot, animatingDifferences: true) {
                     owner.pinterestLayout.invalidateLayout()
                 }
@@ -221,7 +199,7 @@ final class CardListViewController: UIViewController {
         guard let item = getCard(by: cardId) else { return }
 
         if item.isLocked {
-            BiometricAuthManager.shared.authenticate { [weak self] success, error in
+            BiometricAuthService.shared.authenticate { [weak self] success, error in
                 guard let self = self else { return }
                 if success {
                     let detailVC = CardDetailViewController(cardId: cardId, sourceType: self.sourceType)
@@ -279,7 +257,7 @@ extension CardListViewController: PinterestLayoutDelegate {
             return 180
         }
 
-        let columnWidth = collectionView.bounds.width / 2
+        let columnWidth = collectionView.bounds.width / CGFloat(pinterestLayout.columnCount)
         let calculatedHeight = columnWidth * aspectRatio
 
         return calculatedHeight.isFinite && calculatedHeight > 0 ? calculatedHeight : 180

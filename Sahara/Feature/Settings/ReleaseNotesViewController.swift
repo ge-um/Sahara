@@ -53,7 +53,6 @@ final class ReleaseNotesViewController: UIViewController {
         customNavigationBar.configure(title: NSLocalizedString("release_notes.title", comment: ""))
 
         if navigationController != nil && presentingViewController == nil {
-            customNavigationBar.setLeftButtonImage(UIImage(named: "chevronLeft"))
             customNavigationBar.onLeftButtonTapped = { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             }
@@ -66,7 +65,7 @@ final class ReleaseNotesViewController: UIViewController {
     }
 
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: ColorSystem.white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(tableView)

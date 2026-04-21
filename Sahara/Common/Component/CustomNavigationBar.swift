@@ -16,16 +16,17 @@ final class CustomNavigationBar: UIView {
 
     private let leftButton: UIButton = {
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "chevron.left")
-        config.baseForegroundColor = .black
+        config.image = UIImage(named: "chevronLeft")
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8)
         let button = UIButton(configuration: config)
+        button.accessibilityIdentifier = "sahara.nav.back"
         return button
     }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .black
+        label.textColor = .token(.textPrimary)
         label.textAlignment = .center
         return label
     }()
@@ -38,27 +39,61 @@ final class CustomNavigationBar: UIView {
         return stackView
     }()
 
+    let contentLeadingGuide = UILayoutGuide()
+
     var onLeftButtonTapped: (() -> Void)?
+    private var contentLeadingConstraint: Constraint?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(floatingWindowStateChanged),
+            name: .floatingWindowStateDidChange, object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(sidebarModeChanged),
+            name: .sidebarModeDidChange, object: nil
+        )
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        if containerView.layer.sublayers?.first as? CAGradientLayer == nil {
-            containerView.applyGradient(.paleBlueToGray)
-        }
-    }
-
     override func didMoveToWindow() {
         super.didMoveToWindow()
         enableSwipeBackGesture()
+        updateLeadingForWindowControls()
+    }
+
+    @objc private func floatingWindowStateChanged() {
+        updateLeadingForWindowControls()
+    }
+
+    @objc private func sidebarModeChanged() {
+        updateLeadingForWindowControls()
+    }
+
+    private var isInSidebarMode: Bool {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let toggler = next as? SidebarToggleable {
+                return toggler.isSidebarMode && toggler.isSidebarExpanded
+            }
+            responder = next
+        }
+        return false
+    }
+
+    private func updateLeadingForWindowControls() {
+        #if targetEnvironment(macCatalyst)
+        let leading: CGFloat = 16
+        #else
+        let needsOffset = isInFloatingWindow && !isInSidebarMode
+        let leading: CGFloat = needsOffset ? 76 : 16
+        #endif
+        contentLeadingConstraint?.update(offset: leading)
     }
 
     private func enableSwipeBackGesture() {
@@ -76,7 +111,9 @@ final class CustomNavigationBar: UIView {
     private func setupUI() {
         backgroundColor = .clear
 
+        addLayoutGuide(contentLeadingGuide)
         addSubview(containerView)
+        containerView.applyGradient(.tabBar)
         containerView.addSubview(leftButton)
         containerView.addSubview(titleLabel)
         containerView.addSubview(rightStackView)
@@ -85,8 +122,14 @@ final class CustomNavigationBar: UIView {
             make.edges.equalToSuperview()
         }
 
+        contentLeadingGuide.snp.makeConstraints { make in
+            contentLeadingConstraint = make.leading.equalToSuperview().offset(20).constraint
+            make.top.bottom.equalToSuperview()
+            make.width.equalTo(0)
+        }
+
         leftButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalTo(contentLeadingGuide.snp.trailing)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(44)
         }
@@ -96,7 +139,7 @@ final class CustomNavigationBar: UIView {
         }
 
         rightStackView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(20)
             make.centerY.equalToSuperview()
         }
 
@@ -108,16 +151,17 @@ final class CustomNavigationBar: UIView {
     }
 
     func configure(title: String) {
-        titleLabel.font = FontSystem.galmuriMono(size: 14)
+        titleLabel.font = .typography(.body)
         titleLabel.text = title
     }
 
-    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .black, action: @escaping () -> Void) {
+    func addRightButton(title: String? = nil, image: UIImage? = nil, tintColor: UIColor = .token(.textPrimary), accessibilityId: String? = nil, action: @escaping () -> Void) {
         let button = UIButton()
+        button.accessibilityIdentifier = accessibilityId
 
         if let title = title {
             button.setTitle(title, for: .normal)
-            button.titleLabel?.font = FontSystem.galmuriMono(size: 16)
+            button.titleLabel?.font = FontSystem.galmuri11(size: 28)
             button.setTitleColor(tintColor, for: .normal)
         }
 
@@ -125,6 +169,7 @@ final class CustomNavigationBar: UIView {
             var config = UIButton.Configuration.plain()
             config.image = image
             config.baseForegroundColor = tintColor
+            config.contentInsets = .zero
             button.configuration = config
         }
 
@@ -140,6 +185,10 @@ final class CustomNavigationBar: UIView {
 
     func hideLeftButton() {
         leftButton.isHidden = true
+    }
+
+    func showLeftButton() {
+        leftButton.isHidden = false
     }
 
     func setLeftButtonImage(_ image: UIImage?) {

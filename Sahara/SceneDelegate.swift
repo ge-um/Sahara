@@ -6,19 +6,33 @@
 //
 
 import MessageUI
+import RealmSwift
+import SnapKit
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
+    private enum OpenSource: String {
+        case organic, widget, notification
+    }
+
+    private var openSource: OpenSource = .organic
+    private var pendingURL: URL?
+    private var splashTimeoutWork: DispatchWorkItem?
+    private weak var syncProgressView: SyncProgressView?
+    private var hasCleanedOrphanedFiles = false
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 
         guard let scene = (scene as? UIWindowScene) else { return }
+
+        configureWindowSize(for: scene)
+
         window = UIWindow(windowScene: scene)
 
-        if RealmManager.validateRealm() != nil {
+        if RealmService.validateRealm() != nil {
             let errorVC = UIViewController()
             errorVC.view.backgroundColor = .white
             window?.rootViewController = errorVC
@@ -27,10 +41,100 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             return
         }
 
-        let mainTabBarController = MainTabBarController()
-        window?.rootViewController = mainTabBarController
+        if let url = connectionOptions.urlContexts.first?.url {
+            pendingURL = url
+        }
+
+        if RemoteConfigService.shared.isReady {
+            showMainScreen()
+        } else {
+            showSplashScreen()
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleRemoteConfigReady),
+                name: .remoteConfigDidBecomeReady,
+                object: nil
+            )
+            scheduleSplashTimeout()
+        }
 
         window?.makeKeyAndVisible()
+        installSyncProgressView()
+    }
+
+    @objc private func handleRemoteConfigReady() {
+        splashTimeoutWork?.cancel()
+        splashTimeoutWork = nil
+        NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
+        showMainScreen()
+    }
+
+    private func scheduleSplashTimeout() {
+        let timeoutWork = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
+            self.splashTimeoutWork = nil
+            self.showMainScreen()
+        }
+        splashTimeoutWork = timeoutWork
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeoutWork)
+    }
+
+    private func showSplashScreen() {
+        let splashVC = UIViewController()
+        splashVC.view.backgroundColor = .white
+
+        let backgroundImageView = UIImageView(image: UIImage(named: "launchBackground"))
+        backgroundImageView.contentMode = .scaleToFill
+        splashVC.view.addSubview(backgroundImageView)
+        backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            backgroundImageView.topAnchor.constraint(equalTo: splashVC.view.topAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: splashVC.view.bottomAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.trailingAnchor)
+        ])
+
+        let iconImageView = UIImageView(image: UIImage(named: "button"))
+        iconImageView.contentMode = .scaleAspectFit
+        splashVC.view.addSubview(iconImageView)
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            iconImageView.centerXAnchor.constraint(equalTo: splashVC.view.centerXAnchor),
+            iconImageView.centerYAnchor.constraint(equalTo: splashVC.view.centerYAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 100),
+            iconImageView.heightAnchor.constraint(equalToConstant: 100)
+        ])
+
+        window?.rootViewController = splashVC
+    }
+
+    private func showMainScreen() {
+        window?.rootViewController = MainTabBarController()
+        if let syncProgressView {
+            window?.bringSubviewToFront(syncProgressView)
+        }
+
+        if let url = pendingURL {
+            pendingURL = nil
+            if url.scheme == AppGroupContainer.widgetURLScheme {
+                openSource = .widget
+                handleWidgetDeepLink(url: url)
+            } else {
+                handleBackupFileImport(url: url)
+            }
+        }
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+
+        if url.scheme == AppGroupContainer.widgetURLScheme {
+            openSource = .widget
+            handleWidgetDeepLink(url: url)
+        } else {
+            handleBackupFileImport(url: url)
+        }
     }
 
     private func showRealmFailureAlert(on viewController: UIViewController) {
@@ -54,35 +158,107 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     private func presentRealmErrorMail(on viewController: UIViewController) {
+        let email = "gageum0@gmail.com"
+        let subject = NSLocalizedString("realm_error.mail_subject", comment: "")
+        let body = generateRealmErrorMailBody()
+
+        #if targetEnvironment(macCatalyst)
+        openMailtoURL(to: email, subject: subject, body: body, fallbackPresenter: viewController)
+        #else
         guard MFMailComposeViewController.canSendMail() else {
-            UIPasteboard.general.string = "gageum0@gmail.com"
-            let fallback = UIAlertController(
-                title: NSLocalizedString("settings.mail_error_title", comment: ""),
-                message: NSLocalizedString("realm_error.email_copied", comment: ""),
-                preferredStyle: .alert
-            )
-            fallback.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
-            viewController.present(fallback, animated: true)
+            copyEmailFallback(email: email, presenter: viewController)
             return
         }
 
         let mailComposer = MFMailComposeViewController()
         mailComposer.mailComposeDelegate = self
-        mailComposer.setToRecipients(["gageum0@gmail.com"])
-        mailComposer.setSubject(NSLocalizedString("realm_error.mail_subject", comment: ""))
+        mailComposer.setToRecipients([email])
+        mailComposer.setSubject(subject)
+        mailComposer.setMessageBody(body, isHTML: false)
 
+        viewController.present(mailComposer, animated: true)
+        #endif
+    }
+
+    private func generateRealmErrorMailBody() -> String {
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let iosVersion = UIDevice.current.systemVersion
-        let body = """
+        let osVersionLabel: String
+        let osVersion: String
+
+        #if targetEnvironment(macCatalyst)
+        osVersionLabel = NSLocalizedString("settings.macos_version", comment: "")
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        osVersion = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
+        #else
+        osVersionLabel = NSLocalizedString("settings.ios_version", comment: "")
+        osVersion = UIDevice.current.systemVersion
+        #endif
+
+        return """
         \(NSLocalizedString("realm_error.mail_body", comment: ""))
 
         ---
         \(NSLocalizedString("settings.app_version", comment: "")): \(appVersion)
-        \(NSLocalizedString("settings.ios_version", comment: "")): \(iosVersion)
+        \(osVersionLabel): \(osVersion)
         """
-        mailComposer.setMessageBody(body, isHTML: false)
+    }
 
-        viewController.present(mailComposer, animated: true)
+    private func openMailtoURL(to email: String, subject: String, body: String, fallbackPresenter: UIViewController) {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = email
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+
+        guard let url = components.url else {
+            copyEmailFallback(email: email, presenter: fallbackPresenter)
+            return
+        }
+
+        UIApplication.shared.open(url) { [weak self] success in
+            if !success {
+                self?.copyEmailFallback(email: email, presenter: fallbackPresenter)
+            }
+        }
+    }
+
+    private func copyEmailFallback(email: String, presenter: UIViewController) {
+        UIPasteboard.general.string = email
+        let alert = UIAlertController(
+            title: NSLocalizedString("settings.mail_error_title", comment: ""),
+            message: NSLocalizedString("realm_error.email_copied", comment: ""),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        presenter.present(alert, animated: true)
+    }
+
+    private func configureWindowSize(for scene: UIWindowScene) {
+        #if targetEnvironment(macCatalyst)
+        scene.title = ""
+        scene.titlebar?.titleVisibility = .hidden
+
+        if ProcessInfo.processInfo.arguments.contains("-SCREENSHOT_MODE") {
+            let size = CGSize(width: 1870, height: 1169)
+            scene.sizeRestrictions?.minimumSize = size
+            scene.sizeRestrictions?.maximumSize = size
+        } else {
+            scene.sizeRestrictions?.minimumSize = CGSize(width: 600, height: 500)
+        }
+        #endif
+    }
+
+    private func installSyncProgressView() {
+        guard let window, syncProgressView == nil else { return }
+        let syncView = SyncProgressView()
+        self.syncProgressView = syncView
+        window.addSubview(syncView)
+        syncView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(window.safeAreaLayoutGuide.snp.top).offset(40)
+        }
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -93,8 +269,25 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        // Called when the scene has moved from an inactive state to an active state.
-        // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
+        CardPostProcessor.shared.processUntaggedCards()
+
+        if let syncService = CloudSyncService.current,
+           syncService.isEnabled {
+            syncService.fetchChangesIfNeeded()
+        }
+
+        if !hasCleanedOrphanedFiles {
+            hasCleanedOrphanedFiles = true
+            DispatchQueue.global(qos: .utility).async {
+                let referencedPaths = RealmService.shared.allImagePaths()
+                ImageFileService.shared.cleanOrphanedFiles(referencedPaths: referencedPaths)
+            }
+        }
+
+        AnalyticsService.shared.trackDailyUsage()
+        AnalyticsService.shared.logAppOpenSource(source: openSource.rawValue)
+        AnalyticsService.shared.checkWidgetStatus()
+        openSource = .organic
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
@@ -103,24 +296,148 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
-        UIApplication.shared.applicationIconBadgeNumber = 0
+        UNUserNotificationCenter.current().setBadgeCount(0)
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        WidgetDataService.shared.refreshWidgetData()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
     }
 
+    private func handleWidgetDeepLink(url: URL) {
+        guard url.host == "card",
+              let cardIdString = url.pathComponents.last else { return }
+
+        guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
+        tabBarController.selectedIndex = 0
+
+        guard let navController = tabBarController.selectedViewController as? UINavigationController else { return }
+        navController.popToRootViewController(animated: false)
+
+        if cardIdString == "random" {
+            let cards = RealmService.shared.fetch(Card.self, filter: "isLocked == false", sortKey: "date", ascending: false)
+            guard let randomCard = cards.randomElement() else { return }
+            let detailVC = CardDetailViewController(cardId: randomCard.id)
+            navController.pushViewController(detailVC, animated: true)
+            return
+        }
+
+        guard let objectId = try? ObjectId(string: cardIdString) else { return }
+        let detailVC = CardDetailViewController(cardId: objectId)
+        navController.pushViewController(detailVC, animated: true)
+    }
+
+    private func handleBackupFileImport(url: URL) {
+        do {
+            let (tempURL, metadata) = try BackupService.shared.prepareForImport(from: url)
+            showImportConfirmation(metadata: metadata, fileURL: tempURL)
+        } catch {
+            showImportError(error)
+        }
+    }
+
+    private func showImportConfirmation(metadata: BackupMetadata, fileURL: URL) {
+        guard let rootVC = window?.rootViewController else { return }
+
+        let title = NSLocalizedString("backup.confirm_import_title", comment: "")
+        let message = String(
+            format: NSLocalizedString("backup.confirm_import_message", comment: ""),
+            metadata.cardCount
+        )
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("backup.confirm_import_action", comment: ""),
+            style: .destructive
+        ) { _ in
+            self.performImport(from: fileURL)
+        })
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.cancel", comment: ""),
+            style: .cancel
+        ))
+
+        let presenter = rootVC.presentedViewController ?? rootVC
+        presenter.present(alert, animated: true)
+    }
+
+    private func performImport(from url: URL) {
+        guard let rootVC = window?.rootViewController else { return }
+
+        let progressAlert = UIAlertController.progressAlert(
+            title: NSLocalizedString("backup.importing", comment: "")
+        )
+
+        let presenter = rootVC.presentedViewController ?? rootVC
+        presenter.present(progressAlert.alert, animated: true)
+
+        CloudSyncService.current?.stopSyncForBackupRestore()
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                try BackupService.shared.importBackup(from: url) { progress in
+                    DispatchQueue.main.async {
+                        progressAlert.progressView.setProgress(Float(progress), animated: true)
+                    }
+                }
+                DispatchQueue.main.async {
+                    WidgetDataService.shared.refreshWidgetData()
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showImportSuccess()
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    if CloudSyncService.current?.isEnabled == true {
+                        CloudSyncService.current?.restartSyncAfterBackupRestore()
+                    }
+                    progressAlert.alert.dismiss(animated: true) {
+                        self?.showImportError(error)
+                    }
+                }
+            }
+        }
+    }
+
+    private func showImportSuccess() {
+        guard let rootVC = window?.rootViewController else { return }
+        let alert = UIAlertController(
+            title: NSLocalizedString("backup.import_success", comment: ""),
+            message: nil,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(
+            title: NSLocalizedString("common.ok", comment: ""),
+            style: .default
+        ))
+        rootVC.present(alert, animated: true)
+    }
+
+    private func showImportError(_ error: Error) {
+        guard let rootVC = window?.rootViewController else { return }
+        let presenter = rootVC.presentedViewController ?? rootVC
+        let alert = UIAlertController(
+            title: NSLocalizedString("backup.import_failed", comment: ""),
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("common.ok", comment: ""), style: .default))
+        presenter.present(alert, animated: true)
+    }
+
     func handleNotification(type: String, userInfo: [AnyHashable: Any]) {
+        openSource = .notification
         guard let tabBarController = window?.rootViewController as? MainTabBarController else { return }
 
         switch type {
         case "weekly_report", "monthly_report":
             tabBarController.selectedIndex = 2
-            AnalyticsManager.shared.logNotificationOpened(type: type)
 
         case "memory_reminder", "milestone":
             tabBarController.selectedIndex = 0
-            AnalyticsManager.shared.logNotificationOpened(type: type)
 
         default:
             break

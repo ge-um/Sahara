@@ -13,10 +13,10 @@ import UIKit
 import Vision
 
 final class ThemeViewModel: BaseViewModelProtocol {
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 
@@ -66,11 +66,18 @@ final class ThemeViewModel: BaseViewModelProtocol {
     }
 
     private func observeAndAnalyzePhotos(themeGroupsRelay: BehaviorRelay<[ThemeGroup]>) -> Observable<Void> {
-        let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .userInitiated)
+        let backgroundScheduler = ConcurrentDispatchQueueScheduler(qos: .utility)
 
         return realmManager.observeAllCards()
             .map { cards in
-                cards.map { (id: $0.id, imageData: $0.editedImageData) }
+                cards.compactMap { card -> (id: ObjectId, visionTags: [VisionTag], imageData: Data?)? in
+                    let tags = Array(card.visionTags)
+                    if !tags.isEmpty {
+                        return (id: card.id, visionTags: tags, imageData: nil)
+                    }
+                    guard let data = card.resolvedImageData() else { return nil }
+                    return (id: card.id, visionTags: [], imageData: data)
+                }
             }
             .observe(on: backgroundScheduler)
             .map { [weak self] items -> [ThemeGroup] in
@@ -78,10 +85,14 @@ final class ThemeViewModel: BaseViewModelProtocol {
                 var categoryDict: [ThemeCategory: [ObjectId]] = [:]
 
                 for item in items {
-                    guard let image = ImageDownsampler.downsample(data: item.imageData, maxDimension: 500),
-                          let cgImage = image.cgImage else { continue }
-
-                    let category = self.classifyImage(cgImage)
+                    let category: ThemeCategory
+                    if !item.visionTags.isEmpty {
+                        category = ThemeCategory.category(for: item.visionTags)
+                    } else if let imageData = item.imageData {
+                        category = self.classifyImage(from: imageData)
+                    } else {
+                        continue
+                    }
                     categoryDict[category, default: []].append(item.id)
                 }
 
@@ -98,20 +109,21 @@ final class ThemeViewModel: BaseViewModelProtocol {
             }
     }
 
+    private func classifyImage(from imageData: Data) -> ThemeCategory {
+        guard let image = ImageDownsampler.downsample(data: imageData, maxDimension: 500),
+              let cgImage = image.cgImage else {
+            return .others
+        }
 
-    private func classifyImage(_ cgImage: CGImage) -> ThemeCategory {
         let request = VNClassifyImageRequest()
-
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         do {
             try handler.perform([request])
-
             if let observations = request.results {
                 let topLabels = observations.prefix(5).map { $0.identifier }
                 return ThemeCategory.category(for: topLabels)
             }
-        } catch {
-        }
+        } catch {}
 
         return .others
     }

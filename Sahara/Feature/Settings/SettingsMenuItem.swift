@@ -9,6 +9,11 @@ import Foundation
 
 enum SettingsMenuItem: CaseIterable {
     case language
+    case backgroundTheme
+    case cloudSync
+    case exportPhotos
+    case exportBackup
+    case importBackup
     case serviceNews
     case contactDeveloper
     case releaseNotes
@@ -18,6 +23,16 @@ enum SettingsMenuItem: CaseIterable {
         switch self {
         case .language:
             return NSLocalizedString("settings.language", comment: "")
+        case .backgroundTheme:
+            return NSLocalizedString("settings.background_theme", comment: "")
+        case .cloudSync:
+            return NSLocalizedString("settings.cloud_sync", comment: "")
+        case .exportPhotos:
+            return NSLocalizedString("settings.export_photos", comment: "")
+        case .exportBackup:
+            return NSLocalizedString("settings.export_backup", comment: "")
+        case .importBackup:
+            return NSLocalizedString("settings.import_backup", comment: "")
         case .serviceNews:
             return NSLocalizedString("settings.service_news", comment: "")
         case .contactDeveloper:
@@ -32,7 +47,11 @@ enum SettingsMenuItem: CaseIterable {
     var subtitle: String? {
         switch self {
         case .language:
-            return LanguageManager.shared.currentLanguageDescription
+            return LanguageService.shared.currentLanguageDescription
+        case .backgroundTheme:
+            return nil
+        case .cloudSync:
+            return NSLocalizedString("settings.cloud_sync_desc", comment: "")
         case .serviceNews:
             return NSLocalizedString("settings.service_news_desc", comment: "")
         case .versionInfo:
@@ -44,16 +63,16 @@ enum SettingsMenuItem: CaseIterable {
 
     var isSelectable: Bool {
         switch self {
-        case .language, .contactDeveloper, .releaseNotes:
+        case .language, .backgroundTheme, .contactDeveloper, .releaseNotes, .exportPhotos, .exportBackup, .importBackup:
             return true
-        case .serviceNews, .versionInfo:
+        case .cloudSync, .serviceNews, .versionInfo:
             return false
         }
     }
 
     var hasToggle: Bool {
         switch self {
-        case .serviceNews:
+        case .cloudSync, .serviceNews:
             return true
         default:
             return false

@@ -1,0 +1,7 @@
+/* Widget */
+"widget.display_name" = "사하라";
+"widget.description" = "남기고 싶은 사진을 위젯으로 설정해보세요!";
+"widget.empty_message" = "카드를 만들어보세요";
+"widget.placeholder_memo" = "오늘의 기억";
+"widget.date_format" = "yyyy년 MM월 dd일";
+"widget.select_photo" = "사진을 선택해주세요";

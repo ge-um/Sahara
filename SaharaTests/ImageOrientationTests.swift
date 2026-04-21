@@ -70,7 +70,7 @@ final class ImageOrientationTests: XCTestCase {
 
     func test_convertToFormat_heicWithRightOrientation_producesCorrectPixels() {
         let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
-        let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .heic)
+        let result = ImageFormatConverter.convertToFormat(editedImage: image, targetFormat: .heic)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
             XCTFail("Could not reload HEIC data as UIImage")
@@ -83,7 +83,7 @@ final class ImageOrientationTests: XCTestCase {
 
     func test_convertToFormat_pngWithRightOrientation_producesCorrectPixels() {
         let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
-        let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .png)
+        let result = ImageFormatConverter.convertToFormat(editedImage: image, targetFormat: .png)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
             XCTFail("Could not reload PNG data as UIImage")
@@ -96,7 +96,7 @@ final class ImageOrientationTests: XCTestCase {
 
     func test_convertToFormat_jpegWithRightOrientation_producesCorrectPixels() {
         let image = createImageWithOrientation(.right, size: CGSize(width: 100, height: 200))
-        let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .jpeg)
+        let result = ImageFormatConverter.convertToFormat(editedImage: image, targetFormat: .jpeg)
 
         guard let reloaded = UIImage(data: result.editedImageData) else {
             XCTFail("Could not reload JPEG data as UIImage")
@@ -109,7 +109,7 @@ final class ImageOrientationTests: XCTestCase {
 
     func test_downsample_afterConvertToFormat_preservesOrientation() {
         let image = createImageWithOrientation(.right, size: CGSize(width: 200, height: 400))
-        let result = ImageFormatHelper.convertToFormat(editedImage: image, targetFormat: .heic)
+        let result = ImageFormatConverter.convertToFormat(editedImage: image, targetFormat: .heic)
 
         guard let downsampled = ImageDownsampler.downsample(data: result.editedImageData, maxDimension: 200) else {
             XCTFail("Downsample returned nil")

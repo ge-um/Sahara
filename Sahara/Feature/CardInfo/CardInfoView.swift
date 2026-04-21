@@ -34,19 +34,31 @@ final class CardInfoView: UIView {
 
     lazy var photoSelectButton: UIButton = {
         let button = UIButton()
-        button.setImage(UIImage(named: "editBox"), for: .normal)
+        let iconSize = CGSize(width: 20, height: 20)
+        let resizedImage = UIImage(named: "editBox").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        button.setImage(resizedImage, for: .normal)
+        button.tintColor = .token(.textPrimary)
         button.imageView?.contentMode = .scaleAspectFit
-        button.layer.cornerRadius = 16
-        button.clipsToBounds = true
+        button.applyGlassCardStyle(cornerRadius: 16)
         return button
     }()
 
     lazy var photoEditButton: UIButton = {
         let button = UIButton()
+        button.accessibilityIdentifier = "sahara.cardInfo.photoEdit"
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "editBox")?.withRenderingMode(.alwaysTemplate)
-        config.baseBackgroundColor = ColorSystem.white.withAlphaComponent(0.9)
-        config.baseForegroundColor = ColorSystem.black
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "editBox").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        config.baseBackgroundColor = .token(.backgroundPrimary).withAlphaComponent(0.9)
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
         button.layer.cornerRadius = 8
@@ -73,6 +85,13 @@ final class CardInfoView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private let cardStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 12
+        return stackView
+    }()
+
     private func configureUI() {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -81,12 +100,11 @@ final class CardInfoView: UIView {
         photoContainer.addSubview(photoImageView)
         photoContainer.addSubview(photoEditButton)
         contentView.addSubview(photoSelectButton)
-        contentView.addSubview(dateCard)
-        contentView.addSubview(memoCard)
-        contentView.addSubview(folderCard)
-        contentView.addSubview(locationCard)
-        contentView.addSubview(biometricLockCard)
-        contentView.addSubview(deleteCard)
+        contentView.addSubview(cardStackView)
+
+        [dateCard, memoCard, folderCard, locationCard, biometricLockCard, deleteCard].forEach {
+            cardStackView.addArrangedSubview($0)
+        }
 
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -100,7 +118,7 @@ final class CardInfoView: UIView {
         photoContainer.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            photoImageHeightConstraint = make.height.equalTo(300).constraint
+            photoImageHeightConstraint = make.height.equalTo(150).constraint
         }
 
         photoImageView.snp.makeConstraints { make in
@@ -109,44 +127,19 @@ final class CardInfoView: UIView {
 
         photoEditButton.snp.makeConstraints { make in
             make.top.leading.equalToSuperview().inset(12)
-            make.width.height.equalTo(40)
+            make.width.height.equalTo(36)
         }
 
         photoSelectButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(300)
+            make.height.equalTo(150)
         }
 
-        dateCard.snp.makeConstraints { make in
-            make.top.equalTo(photoContainer.snp.bottom).offset(20)
+        cardStackView.snp.makeConstraints { make in
+            make.top.equalTo(photoContainer.snp.bottom).offset(12)
             make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        memoCard.snp.makeConstraints { make in
-            make.top.equalTo(dateCard.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        folderCard.snp.makeConstraints { make in
-            make.top.equalTo(memoCard.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        locationCard.snp.makeConstraints { make in
-            make.top.equalTo(folderCard.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        biometricLockCard.snp.makeConstraints { make in
-            make.top.equalTo(locationCard.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-        }
-
-        deleteCard.snp.makeConstraints { make in
-            make.top.equalTo(biometricLockCard.snp.bottom).offset(16)
-            make.horizontalEdges.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-100)
+            make.bottom.equalToSuperview().offset(-40)
         }
     }
 
@@ -166,14 +159,22 @@ final class CardInfoView: UIView {
         photoContainer.snp.remakeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.horizontalEdges.equalToSuperview().inset(20)
-            make.height.equalTo(300)
+            make.height.equalTo(150)
         }
 
         layoutIfNeeded()
     }
 
+    func addPhotoContainerInteraction(_ interaction: UIInteraction) {
+        photoContainer.addInteraction(interaction)
+    }
+
+    func setDropHighlight(_ highlighted: Bool) {
+        photoContainer.layer.borderWidth = highlighted ? 2 : 0
+        photoContainer.layer.borderColor = highlighted ? UIColor.token(.accent).cgColor : nil
+    }
+
     func applyGradients() {
-        photoSelectButton.applyGradient(.paleBlueToGray)
-        locationCard.searchButton.applyGradient(.lemonToLime)
+        locationCard.searchButton.applyGradient(.fresh)
     }
 }

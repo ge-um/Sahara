@@ -8,9 +8,8 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>Galmuri11.ttf</string>
 		<string>GalmuriMono11.ttf</string>
-		<string>Galmuri11-Bold.ttf</string>
-		<string>Galmuri14.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
@@ -45,6 +44,55 @@
 	<string></string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string></string>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.archive</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Sahara Backup</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.miya.sahara.backup</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>sahara</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Sahara Backup</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.miya.sahara.backup</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>saharaapp</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.miya.Sahara.widget</string>
+		</dict>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleLocalizations</key>

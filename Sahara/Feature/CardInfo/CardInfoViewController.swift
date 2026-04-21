@@ -13,37 +13,28 @@ import RxCocoa
 import RxSwift
 import SnapKit
 import UIKit
+import UniformTypeIdentifiers
 
 final class CardInfoViewController: UIViewController {
     private let customNavigationBar = CustomNavigationBar()
 
-    let saveButton: UIButton = {
-        let button = UIButton()
-        var config = UIButton.Configuration.filled()
-        config.title = NSLocalizedString("common.save", comment: "")
-        config.baseBackgroundColor = .clear
-        config.baseForegroundColor = .white
-        config.cornerStyle = .medium
-        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-
-        var titleAttr = AttributeContainer()
-        titleAttr.font = FontSystem.galmuriMono(size: 14)
-        config.attributedTitle = AttributedString(config.title ?? "", attributes: titleAttr)
-
-        button.configuration = config
-        button.layer.cornerRadius = 8
-        button.clipsToBounds = true
-        return button
-    }()
+    let saveButton: UIButton = .makeSaveButton()
 
     let cancelButton: UIButton = {
         let button = UIButton()
         var config = UIButton.Configuration.filled()
-        config.image = UIImage(named: "xmark")
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
         config.baseBackgroundColor = .white
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .token(.textPrimary)
         config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
+        button.accessibilityIdentifier = "sahara.cardInfo.close"
         return button
     }()
 
@@ -51,9 +42,11 @@ final class CardInfoViewController: UIViewController {
     let coordinator: CardInfoCoordinatorProtocol
     let viewModel: CardInfoViewModel
     let disposeBag = DisposeBag()
-    let selectedDateRelay = BehaviorRelay<Date>(value: Date())
+    let selectedDateRelay = BehaviorRelay<(date: Date, source: DateSource)>(value: (Date(), .initial))
     let deleteConfirmedRelay = PublishRelay<Void>()
     let imageSourceDataRelay = BehaviorRelay<ImageSourceData?>(value: nil)
+    private let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
+    private let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
 
     init(viewModel: CardInfoViewModel, coordinator: CardInfoCoordinatorProtocol) {
         self.viewModel = viewModel
@@ -72,17 +65,23 @@ final class CardInfoViewController: UIViewController {
         setupCustomNavigationBar()
         bind()
         setupKeyboardHandling()
+        #if targetEnvironment(macCatalyst)
+        setupDropInteraction()
+        #endif
+        registerForTraitChanges([UITraitHorizontalSizeClass.self]) { (self: Self, _: UITraitCollection) in
+            self.updateContentLayout()
+        }
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.hotPink)
+        saveButton.applyGradient(.ctaPink)
         contentView.applyGradients()
     }
 
     private func setupCustomNavigationBar() {
         let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: FontSystem.galmuriMono(size: 14),
+            .font: UIFont.typography(.body),
             .kern: -0.84
         ]
         let attributedTitle = NSAttributedString(
@@ -95,24 +94,24 @@ final class CardInfoViewController: UIViewController {
         view.addSubview(saveButton)
 
         cancelButton.snp.makeConstraints { make in
-            make.leading.equalTo(customNavigationBar).offset(16)
+            make.leading.equalTo(customNavigationBar.contentLeadingGuide.snp.trailing)
             make.centerY.equalTo(customNavigationBar)
-            make.width.equalTo(48)
-            make.height.equalTo(44)
+            make.width.equalTo(36)
+            make.height.equalTo(36)
         }
 
         saveButton.snp.makeConstraints { make in
             make.trailing.equalTo(customNavigationBar).inset(16)
             make.centerY.equalTo(customNavigationBar)
-            make.width.greaterThanOrEqualTo(48)
-            make.height.equalTo(44)
+            make.width.greaterThanOrEqualTo(40)
+            make.height.equalTo(36)
         }
 
         customNavigationBar.hideLeftButton()
     }
 
     private func configureUI() {
-        view.applyGradient(.mintToOrange)
+        view.applyBackgroundConfig(BackgroundThemeService.shared.currentConfig.value)
 
         view.addSubview(customNavigationBar)
         view.addSubview(contentView)
@@ -125,19 +124,37 @@ final class CardInfoViewController: UIViewController {
 
         contentView.snp.makeConstraints { make in
             make.top.equalTo(customNavigationBar.snp.bottom)
-            make.horizontalEdges.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
         }
+        updateContentLayout()
 
         contentView.scrollView.snp.remakeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
-            make.horizontalEdges.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateContentLayout() {
+        let isCompact = traitCollection.horizontalSizeClass == .compact
+        if isCompact {
+            contentView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom)
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
+                make.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
+            }
+        } else {
+            contentView.snp.remakeConstraints { make in
+                make.top.equalTo(customNavigationBar.snp.bottom)
+                make.bottom.equalTo(view.safeAreaLayoutGuide)
+                make.centerX.equalToSuperview()
+                make.width.lessThanOrEqualTo(600)
+                make.horizontalEdges.equalTo(view.safeAreaLayoutGuide).priority(.medium)
+            }
         }
     }
 
     private func bind() {
-        let initialLocationRelay = BehaviorSubject<CLLocation?>(value: nil)
         let selectedLocationSubject = PublishSubject<(coordinate: CLLocationCoordinate2D, address: String)>()
-        let selectedImageSubject = BehaviorSubject<UIImage?>(value: nil)
 
         let locationOutput = bindLocationCard(
             initialLocationRelay: initialLocationRelay,
@@ -231,7 +248,7 @@ extension CardInfoViewController {
             .bind(with: self) { owner, result in
                 let (coordinate, address) = result
                 owner.contentView.locationCard.locationLabel.text = address
-                owner.contentView.locationCard.locationLabel.textColor = ColorSystem.charcoal
+                owner.contentView.locationCard.locationLabel.textColor = .token(.textPrimary)
                 owner.contentView.locationCard.removeButton.isHidden = false
                 owner.contentView.locationCard.updateMapView(with: coordinate)
             }
@@ -269,8 +286,8 @@ extension CardInfoViewController {
     private func bindDateCard() {
         contentView.dateCard.selectButton.rx.tap
             .subscribe(with: self) { owner, _ in
-                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value) { date in
-                    owner.selectedDateRelay.accept(date)
+                owner.coordinator.presentDatePicker(initialDate: owner.selectedDateRelay.value.date) { date in
+                    owner.selectedDateRelay.accept((date, .userPicked))
                 }
             }
             .disposed(by: disposeBag)
@@ -297,7 +314,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -338,15 +355,10 @@ extension CardInfoViewController {
         return CardInfoViewModel.Input(
             selectedImage: selectedImageSubject.asObservable(),
             imageSourceData: imageSourceDataRelay.asObservable(),
-            date: selectedDateRelay.asObservable(),
+            date: selectedDateRelay.map(\.date).asObservable(),
             memo: contentView.memoCard.textView.rx.text
                 .withUnretained(self)
-                .map { owner, text in
-                    if owner.contentView.memoCard.textView.textColor == ColorSystem.darkGray {
-                        return nil
-                    }
-                    return text
-                }
+                .map { owner, _ in owner.contentView.memoCard.currentMemo }
                 .asObservable(),
             customFolder: contentView.folderCard.selectedFolderRelay.asObservable(),
             location: locationOutput.location.asObservable(),
@@ -361,7 +373,7 @@ extension CardInfoViewController {
         _ output: CardInfoViewModel.Output,
         initialLocationRelay: BehaviorSubject<CLLocation?>
     ) {
-        selectedDateRelay.accept(output.initialDate)
+        selectedDateRelay.accept((output.initialDate, .initial))
         contentView.biometricLockCard.lockSwitch.isOn = output.initialIsLocked
 
         if output.isEditMode {
@@ -477,7 +489,7 @@ extension CardInfoViewController {
                     owner.imageSourceDataRelay.accept(imageSource)
 
                     if let date = date {
-                        owner.selectedDateRelay.accept(date)
+                        owner.selectedDateRelay.accept((date, .exif))
                     }
 
                     if let location = location {
@@ -500,6 +512,13 @@ extension CardInfoViewController {
             .disposed(by: disposeBag)
     }
 
+    #if targetEnvironment(macCatalyst)
+    private func setupDropInteraction() {
+        contentView.addPhotoContainerInteraction(UIDropInteraction(delegate: self))
+        contentView.photoSelectButton.addInteraction(UIDropInteraction(delegate: self))
+    }
+    #endif
+
     private func presentBiometricPermissionAlert() {
         let alert = UIAlertController(
             title: NSLocalizedString("biometric.permission_required", comment: ""),
@@ -513,5 +532,76 @@ extension CardInfoViewController {
         })
         alert.addAction(UIAlertAction(title: NSLocalizedString("common.cancel", comment: ""), style: .cancel))
         present(alert, animated: true)
+    }
+}
+
+#if targetEnvironment(macCatalyst)
+extension CardInfoViewController: UIDropInteractionDelegate {
+    func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
+        session.canLoadObjects(ofClass: UIImage.self)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+        UIDropProposal(operation: .copy)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnter session: UIDropSession) {
+        contentView.setDropHighlight(true)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidExit session: UIDropSession) {
+        contentView.setDropHighlight(false)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, concludeDrop session: UIDropSession) {
+        contentView.setDropHighlight(false)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+        guard let item = session.items.first else { return }
+        let provider = item.itemProvider
+
+        let imageType = provider.registeredTypeIdentifiers
+            .compactMap { UTType($0) }
+            .first { $0.conforms(to: .image) }
+            ?? .image
+
+        _ = provider.loadDataRepresentation(for: imageType) { [weak self] data, error in
+            if let data, let result = ImageFormatConverter.createImageSourceData(from: data) {
+                DispatchQueue.main.async {
+                    self?.applyDroppedImage(result: result)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self?.loadDroppedImageFallback(from: session)
+                }
+            }
+        }
+    }
+
+    private func loadDroppedImageFallback(from session: UIDropSession) {
+        _ = session.loadObjects(ofClass: UIImage.self) { [weak self] images in
+            guard let image = images.first as? UIImage else { return }
+            DispatchQueue.main.async {
+                let imageSource = ImageSourceData(image: image)
+                self?.selectedImageSubject.onNext(image)
+                self?.imageSourceDataRelay.accept(imageSource)
+            }
+        }
+    }
+}
+#endif
+
+extension CardInfoViewController {
+    func applyDroppedImage(result: ImageFormatConverter.ImageSourceResult) {
+        selectedImageSubject.onNext(result.imageSource.image)
+        imageSourceDataRelay.accept(result.imageSource)
+
+        if let date = result.metadata.date {
+            selectedDateRelay.accept((date, .exif))
+        }
+        if let location = result.metadata.location {
+            initialLocationRelay.onNext(location)
+        }
     }
 }

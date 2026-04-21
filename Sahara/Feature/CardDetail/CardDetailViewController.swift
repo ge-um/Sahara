@@ -14,7 +14,7 @@ import UIKit
 final class CardDetailViewController: UIViewController {
     private let viewModel: CardDetailViewModel
     private let photoCardViewModel: PhotoCardViewModel
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let sourceType: EditSourceType
 
@@ -33,13 +33,11 @@ final class CardDetailViewController: UIViewController {
     private let contentView: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
+        view.accessibilityIdentifier = "sahara.cardDetail.view"
         return view
     }()
 
-    private lazy var photoCardView: PhotoCardView = {
-        let cardWidth = view.bounds.width - 64
-        return PhotoCardView(cardWidth: cardWidth)
-    }()
+    private let photoCardView = PhotoCardView()
 
     private let buttonContainerView: UIView = {
         let view = UIView()
@@ -53,9 +51,9 @@ final class CardDetailViewController: UIViewController {
         button.layer.cornerRadius = 35
         button.clipsToBounds = true
 
-        let font = FontSystem.galmuriMono(size: 12)
+        let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.save", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
@@ -66,15 +64,37 @@ final class CardDetailViewController: UIViewController {
         button.layer.cornerRadius = 35
         button.clipsToBounds = true
 
-        let font = FontSystem.galmuriMono(size: 12)
+        let font = UIFont.typography(.caption)
         let title = NSLocalizedString("common.share", comment: "")
-        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .black), for: .normal)
+        button.setAttributedTitle(title.attributedString(font: font, letterSpacing: -6, color: .token(.textPrimary)), for: .normal)
 
         return button
     }()
 
+    private let widgetToggleButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.cornerStyle = .capsule
+        config.buttonSize = .small
+        config.image = UIImage(systemName: "plus")
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 13)
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+        config.baseForegroundColor = .systemGray
+        config.title = NSLocalizedString("widget.add_to_widget", comment: "")
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = UIFont.typography(.caption)
+            return outgoing
+        }
+        let button = UIButton(configuration: config)
+        button.clipsToBounds = true
+        button.backgroundColor = .systemGray6
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.systemGray4.cgColor
+        return button
+    }()
 
-    init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(cardId: ObjectId, sourceType: EditSourceType = .dateView, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
         self.viewModel = CardDetailViewModel(cardId: cardId, realmManager: realmManager)
         self.photoCardViewModel = PhotoCardViewModel(cardId: cardId, realmManager: realmManager)
@@ -86,10 +106,14 @@ final class CardDetailViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private var isModalPresentation: Bool {
+        navigationController == nil || presentingViewController != nil
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationController?.setNavigationBarHidden(true, animated: false)
-        setupCustomNavigationBar()
+        navigationController?.setNavigationBarHidden(!isModalPresentation, animated: false)
+        setupNavigation()
         configureUI()
         bind()
         viewDidLoadRelay.accept(())
@@ -100,34 +124,56 @@ final class CardDetailViewController: UIViewController {
         viewDidLoadRelay.accept(())
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        saveButton.applyGradient(.yellowGreen)
-        shareButton.applyGradient(.yellowGreen)
-    }
+    private func setupNavigation() {
+        let iconSize = CGSize(width: 20, height: 20)
+        let editIcon = UIImage(named: "editBox")?
+            .resized(to: iconSize)
+            .withRenderingMode(.alwaysTemplate)
 
-    private func setupCustomNavigationBar() {
-        customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
-
-        if navigationController != nil && presentingViewController == nil {
-            customNavigationBar.setLeftButtonImage(UIImage(named: "chevronLeft"))
+        if isModalPresentation {
+            customNavigationBar.isHidden = true
+            configureModalNavigation(editIcon: editIcon)
+        } else {
+            customNavigationBar.configure(title: NSLocalizedString("card_detail.title", comment: ""))
             customNavigationBar.onLeftButtonTapped = { [weak self] in
                 self?.navigationController?.popViewController(animated: true)
             }
-        } else {
-            customNavigationBar.setLeftButtonImage(UIImage(systemName: "xmark"))
-            customNavigationBar.onLeftButtonTapped = { [weak self] in
-                self?.dismiss(animated: true)
+            customNavigationBar.addRightButton(image: editIcon, tintColor: .token(.textPrimary), accessibilityId: "sahara.cardDetail.edit") { [weak self] in
+                self?.openEditView()
             }
-        }
-
-        customNavigationBar.addRightButton(image: UIImage(named: "editBox"), tintColor: .black) { [weak self] in
-            self?.openEditView()
         }
     }
 
+    private func configureModalNavigation(editIcon: UIImage?) {
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.typography(.body)
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+        navigationItem.title = NSLocalizedString("card_detail.title", comment: "")
+
+        let xmarkImage = UIImage(named: "xmark")?
+            .resized(to: CGSize(width: 20, height: 20))
+            .withRenderingMode(.alwaysTemplate)
+        let closeButton = UIBarButtonItem(image: xmarkImage, style: .plain, target: self, action: #selector(closeTapped))
+        closeButton.tintColor = .token(.textPrimary)
+        navigationItem.leftBarButtonItem = closeButton
+
+        let editButton = UIBarButtonItem(image: editIcon, style: .plain, target: self, action: #selector(editButtonTapped))
+        editButton.tintColor = .token(.textPrimary)
+        editButton.accessibilityIdentifier = "sahara.cardDetail.edit"
+        navigationItem.rightBarButtonItem = editButton
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
+    }
+
+    @objc private func editButtonTapped() {
+        openEditView()
+    }
+
     private func configureUI() {
-        view.applyGradientWithDots(.pinkToBlue, dotSize: 5, spacing: 32, dotColor: .white)
+        view.bindBackgroundTheme(disposedBy: disposeBag)
 
         view.addSubview(customNavigationBar)
         view.addSubview(scrollView)
@@ -138,6 +184,7 @@ final class CardDetailViewController: UIViewController {
 
         buttonContainerView.addSubview(saveButton)
         buttonContainerView.addSubview(shareButton)
+        contentView.addSubview(widgetToggleButton)
 
         customNavigationBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
@@ -146,7 +193,11 @@ final class CardDetailViewController: UIViewController {
         }
 
         scrollView.snp.makeConstraints { make in
-            make.top.equalTo(customNavigationBar.snp.bottom)
+            if isModalPresentation {
+                make.top.equalTo(view.safeAreaLayoutGuide)
+            } else {
+                make.top.equalTo(customNavigationBar.snp.bottom)
+            }
             make.horizontalEdges.bottom.equalToSuperview()
         }
 
@@ -156,16 +207,24 @@ final class CardDetailViewController: UIViewController {
         }
 
         photoCardView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(32)
-            make.horizontalEdges.equalToSuperview().inset(32)
+            make.top.equalToSuperview().offset(20)
+            make.centerX.equalToSuperview()
+            make.width.lessThanOrEqualTo(500)
+            make.horizontalEdges.equalToSuperview().inset(20).priority(.medium)
         }
 
         buttonContainerView.snp.makeConstraints { make in
-            make.top.equalTo(photoCardView.snp.bottom).offset(32)
+            make.top.equalTo(photoCardView.snp.bottom).offset(20)
             make.centerX.equalToSuperview()
             make.height.equalTo(70)
-            make.bottom.equalToSuperview().offset(-88)
         }
+
+        widgetToggleButton.snp.makeConstraints { make in
+            make.top.equalTo(buttonContainerView.snp.bottom).offset(16)
+            make.centerX.equalTo(buttonContainerView)
+            make.bottom.equalToSuperview().offset(-20)
+        }
+
 
         saveButton.snp.makeConstraints { make in
             make.leading.equalToSuperview()
@@ -198,6 +257,35 @@ final class CardDetailViewController: UIViewController {
         present(navController, animated: true)
     }
 
+    private func bindSaveOutput(_ output: CardDetailViewModel.Output) {
+        #if targetEnvironment(macCatalyst)
+        output.saveFileURL
+            .drive(with: self) { owner, url in
+                let picker = UIDocumentPickerViewController(forExporting: [url])
+                owner.present(picker, animated: true)
+            }
+            .disposed(by: disposeBag)
+        #else
+        output.saveResult
+            .drive(with: self) { owner, result in
+                switch result {
+                case .success:
+                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
+                    owner.showToast(message: message)
+                case .failure(let error):
+                    owner.showToast(message: error.localizedDescription)
+                }
+            }
+            .disposed(by: disposeBag)
+        #endif
+
+        output.showPhotoPermissionAlert
+            .drive(with: self) { owner, _ in
+                PermissionService.shared.showPermissionAlert(for: .photoLibrary, from: owner)
+            }
+            .disposed(by: disposeBag)
+    }
+
     private func bind() {
         photoCardView.deleteButtonTappedRelay
             .bind(with: self) { owner, _ in
@@ -226,40 +314,104 @@ final class CardDetailViewController: UIViewController {
             viewDidLoad: viewDidLoadRelay.asObservable(),
             saveButtonTapped: saveButton.rx.tap.asObservable(),
             shareButtonTapped: shareButton.rx.tap.asObservable(),
-            deleteConfirmed: deleteConfirmedRelay.asObservable()
+            deleteConfirmed: deleteConfirmedRelay.asObservable(),
+            widgetToggleTapped: widgetToggleButton.rx.tap.asObservable()
         )
 
         let output = viewModel.transform(input: input)
 
-        output.saveResult
-            .drive(with: self) { owner, result in
-                switch result {
-                case .success:
-                    let message = NSLocalizedString("photo_detail.save_success_message", comment: "")
-                    owner.showToast(message: message)
-                case .failure(let error):
-                    owner.showToast(message: error.localizedDescription)
-                }
-            }
-            .disposed(by: disposeBag)
+        bindSaveOutput(output)
 
         output.shareImage
             .drive(with: self) { owner, image in
                 let itemSource = ShareActivityItemSource(image: image)
                 let activityVC = UIActivityViewController(activityItems: [itemSource], applicationActivities: nil)
                 activityVC.popoverPresentationController?.sourceView = owner.shareButton
+                activityVC.popoverPresentationController?.sourceRect = owner.shareButton.bounds
                 owner.present(activityVC, animated: true)
             }
             .disposed(by: disposeBag)
 
         output.deleteCompleted
             .drive(with: self) { owner, _ in
-                if owner.navigationController != nil && owner.presentingViewController == nil {
-                    owner.navigationController?.popViewController(animated: true)
-                } else {
+                if owner.isModalPresentation {
                     owner.dismiss(animated: true)
+                } else {
+                    owner.navigationController?.popViewController(animated: true)
                 }
             }
             .disposed(by: disposeBag)
+
+        output.isWidgetPinned
+            .drive(with: self) { owner, isPinned in
+                owner.updateWidgetToggleAppearance(isPinned: isPinned)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func updateWidgetToggleAppearance(isPinned: Bool) {
+        widgetToggleButton.layer.sublayers?
+            .filter { $0 is CAGradientLayer }
+            .forEach { $0.removeFromSuperlayer() }
+
+        var config = UIButton.Configuration.plain()
+        config.cornerStyle = .capsule
+        config.buttonSize = .small
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 13)
+
+        if isPinned {
+            config.image = UIImage(systemName: "checkmark")
+            config.baseForegroundColor = .white
+            config.title = NSLocalizedString("widget.added_to_widget", comment: "")
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.typography(.caption)
+                return outgoing
+            }
+        } else {
+            config.image = UIImage(systemName: "plus")
+            config.baseForegroundColor = .systemGray
+            config.title = NSLocalizedString("widget.add_to_widget", comment: "")
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.typography(.caption)
+                return outgoing
+            }
+        }
+
+        widgetToggleButton.configuration = config
+        widgetToggleButton.layoutIfNeeded()
+
+        if isPinned {
+            widgetToggleButton.backgroundColor = nil
+            widgetToggleButton.layer.borderWidth = 0
+
+            let gradient = CAGradientLayer()
+            gradient.colors = DesignToken.Gradient.ctaBlue.colors
+            gradient.startPoint = CGPoint(x: 0.5, y: 0)
+            gradient.endPoint = CGPoint(x: 0.5, y: 1)
+            gradient.frame = widgetToggleButton.bounds
+            gradient.cornerRadius = widgetToggleButton.bounds.height / 2
+            widgetToggleButton.layer.insertSublayer(gradient, at: 0)
+        } else {
+            widgetToggleButton.backgroundColor = .systemGray6
+            widgetToggleButton.layer.borderWidth = 1
+            widgetToggleButton.layer.borderColor = UIColor.systemGray4.cgColor
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        saveButton.applyGradient(.highlight)
+        shareButton.applyGradient(.highlight)
+
+        let h = widgetToggleButton.bounds.height
+        widgetToggleButton.layer.cornerRadius = h / 2
+        for layer in widgetToggleButton.layer.sublayers ?? [] where layer is CAGradientLayer {
+            layer.frame = widgetToggleButton.bounds
+            layer.cornerRadius = h / 2
+        }
     }
 }

@@ -9,11 +9,8 @@ import SnapKit
 import UIKit
 
 final class TabButton: UIView {
-    private let backgroundView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor(hex: "#D2D1E4")
-        view.layer.cornerRadius = 8
-        view.clipsToBounds = true
+    private let backgroundView: TabBackgroundView = {
+        let view = TabBackgroundView()
         view.alpha = 0
         return view
     }()
@@ -29,16 +26,18 @@ final class TabButton: UIView {
     private let iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .black
+        imageView.tintColor = .token(.textPrimary)
         return imageView
     }()
 
     private let label: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 10)
-        label.textColor = .black
+        label.font = .typography(.caption)
+        label.textColor = .token(.textPrimary)
         return label
     }()
+
+    private var backgroundWidthConstraint: Constraint?
 
     var onTap: (() -> Void)?
 
@@ -62,7 +61,8 @@ final class TabButton: UIView {
 
         backgroundView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(48)
+            make.height.equalTo(48)
+            backgroundWidthConstraint = make.width.equalTo(48).constraint
         }
 
         stackView.snp.makeConstraints { make in
@@ -76,42 +76,22 @@ final class TabButton: UIView {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         addGestureRecognizer(tapGesture)
         isUserInteractionEnabled = true
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        updateInnerShadow()
-    }
-
-    private func updateInnerShadow() {
-        backgroundView.layer.sublayers?.removeAll(where: { $0.name == "innerShadow" })
-
-        let innerShadow = CALayer()
-        innerShadow.name = "innerShadow"
-        innerShadow.frame = backgroundView.bounds
-
-        let path = UIBezierPath(roundedRect: backgroundView.bounds.insetBy(dx: -20, dy: -20), cornerRadius: 8)
-        let cutout = UIBezierPath(roundedRect: backgroundView.bounds, cornerRadius: 8).reversing()
-        path.append(cutout)
-
-        innerShadow.shadowPath = path.cgPath
-        innerShadow.masksToBounds = true
-        innerShadow.shadowColor = UIColor.black.cgColor
-        innerShadow.shadowOffset = CGSize(width: 0, height: 4)
-        innerShadow.shadowOpacity = 0.25
-        innerShadow.shadowRadius = 4
-        innerShadow.cornerRadius = 8
-
-        backgroundView.layer.addSublayer(innerShadow)
+        isAccessibilityElement = true
+        accessibilityTraits = .button
     }
 
     @objc private func handleTap() {
         onTap?()
     }
 
+    func setBackgroundWidth(_ width: CGFloat) {
+        backgroundWidthConstraint?.update(offset: width)
+    }
+
     func setSelected(_ isSelected: Bool) {
         UIView.animate(withDuration: 0.2) {
             self.backgroundView.alpha = isSelected ? 1 : 0
+            self.stackView.alpha = isSelected ? 1.0 : 0.5
         }
     }
 }

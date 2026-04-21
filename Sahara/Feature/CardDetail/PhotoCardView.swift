@@ -14,9 +14,8 @@ import UIKit
 
 final class PhotoCardView: UIView {
     private var isFrontCardVisible = true
-    private var photoImageHeightConstraint: Constraint?
     private let disposeBag = DisposeBag()
-    private let cardWidth: CGFloat
+    private var currentImage: UIImage?
 
     let swipeLeftRelay = PublishRelay<Void>()
     let swipeRightRelay = PublishRelay<Void>()
@@ -31,11 +30,7 @@ final class PhotoCardView: UIView {
     private let frontCardView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
+        view.clipsToBounds = true
         return view
     }()
 
@@ -43,11 +38,7 @@ final class PhotoCardView: UIView {
         let view = UIView()
         view.backgroundColor = .systemBackground
         view.layer.cornerRadius = 20
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 4)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.1
-        view.clipsToBounds = false
+        view.clipsToBounds = true
         view.isHidden = true
         return view
     }()
@@ -55,20 +46,25 @@ final class PhotoCardView: UIView {
     private let photoImageView: AnimatedImageView = {
         let imageView = AnimatedImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 20
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         return imageView
     }()
 
     private let deleteButton: UIButton = {
         let button = UIButton()
-        button.backgroundColor = ColorSystem.white.withAlphaComponent(0.9)
+        button.backgroundColor = UIColor.token(.backgroundPrimary).withAlphaComponent(0.9)
         button.layer.cornerRadius = 18
         button.clipsToBounds = true
 
         var config = UIButton.Configuration.plain()
-        config.image = UIImage(named: "xmark")
-        config.baseForegroundColor = ColorSystem.black
+        let iconSize = CGSize(width: 20, height: 20)
+        config.image = UIImage(named: "xmark").flatMap { original in
+            UIGraphicsImageRenderer(size: iconSize).image { _ in
+                original.draw(in: CGRect(origin: .zero, size: iconSize))
+            }.withRenderingMode(.alwaysTemplate)
+        }
+        config.baseForegroundColor = .token(.textPrimary)
         config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = config
 
@@ -82,22 +78,20 @@ final class PhotoCardView: UIView {
 
     private let overlayView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20.withAlphaComponent(0.6)
-        view.layer.cornerRadius = 20
-        view.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        view.backgroundColor = UIColor.token(.backgroundCard).withAlphaComponent(0.6)
         return view
     }()
 
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = DesignToken.Typography.body.numericFont
         label.textColor = .white
         return label
     }()
 
     private let locationLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
+        label.font = .typography(.body)
         label.textColor = .white
         label.numberOfLines = 2
         return label
@@ -106,8 +100,8 @@ final class PhotoCardView: UIView {
     private lazy var swipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_left_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = .white.withAlphaComponent(0.8)
+        label.font = .typography(.caption)
+        label.textColor = DesignToken.Overlay.whiteButton
         label.textAlignment = .right
         return label
     }()
@@ -122,7 +116,7 @@ final class PhotoCardView: UIView {
 
     private let memoLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 18)
+        label.font = .typography(.body)
         label.textColor = .label
         label.numberOfLines = 0
         label.textAlignment = .left
@@ -132,14 +126,13 @@ final class PhotoCardView: UIView {
     private lazy var backSwipeHintLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("photo_detail.swipe_right_hint", comment: "")
-        label.font = FontSystem.galmuriMono(size: 12)
+        label.font = .typography(.caption)
         label.textColor = .secondaryLabel
         label.textAlignment = .right
         return label
     }()
 
-    init(cardWidth: CGFloat) {
-        self.cardWidth = cardWidth
+    init() {
         super.init(frame: .zero)
         configureUI()
         setupGestures()
@@ -153,6 +146,9 @@ final class PhotoCardView: UIView {
     private func configureUI() {
         backgroundColor = .clear
         self.clipsToBounds = true
+
+        frontCardView.accessibilityIdentifier = "sahara.photoCard.front"
+        backCardView.accessibilityIdentifier = "sahara.photoCard.back"
 
         addSubview(cardContainerView)
         cardContainerView.addSubview(frontCardView)
@@ -171,7 +167,7 @@ final class PhotoCardView: UIView {
 
         cardContainerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            photoImageHeightConstraint = make.height.equalTo(300).constraint
+            make.height.equalTo(300)
         }
 
         frontCardView.snp.makeConstraints { make in
@@ -214,7 +210,7 @@ final class PhotoCardView: UIView {
 
         memoScrollView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(40)
-            make.horizontalEdges.equalToSuperview().inset(30)
+            make.horizontalEdges.equalToSuperview().inset(20)
             make.bottom.equalTo(backSwipeHintLabel.snp.top).offset(-20)
         }
 
@@ -266,12 +262,8 @@ final class PhotoCardView: UIView {
         photoImage
             .drive(with: self) { owner, image in
                 owner.photoImageView.image = image
-                if let image = image {
-                    let imageHeight = image.heightForWidth(owner.cardWidth)
-                    let minimumHeight: CGFloat = 200
-                    let finalHeight = max(imageHeight, minimumHeight)
-                    owner.photoImageHeightConstraint?.update(offset: finalHeight)
-                }
+                owner.currentImage = image
+                owner.updateImageHeight()
             }
             .disposed(by: disposeBag)
 
@@ -298,6 +290,17 @@ final class PhotoCardView: UIView {
                 owner.flipToFront()
             }
             .disposed(by: disposeBag)
+    }
+
+    private func updateImageHeight() {
+        guard let image = currentImage else { return }
+        let aspectRatio = image.size.height / image.size.width
+
+        cardContainerView.snp.remakeConstraints { make in
+            make.edges.equalToSuperview()
+            make.height.equalTo(cardContainerView.snp.width).multipliedBy(aspectRatio)
+        }
+        layoutIfNeeded()
     }
 
     private func flipToBack() {

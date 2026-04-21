@@ -12,7 +12,7 @@ import RxSwift
 
 final class CalendarDetailViewModel: BaseViewModelProtocol {
     private let date: Date
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
     private let cardsRelay = BehaviorRelay<[CardListItemDTO]>(value: [])
 
@@ -27,7 +27,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
         let shouldPopIfEmpty: Driver<Bool>
     }
 
-    init(date: Date, realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(date: Date, realmManager: RealmServiceProtocol = RealmService.shared) {
         self.date = date
         self.realmManager = realmManager
     }
@@ -59,7 +59,7 @@ final class CalendarDetailViewModel: BaseViewModelProtocol {
                 let (index, cards) = data
                 guard index < cards.count else { return .empty() }
                 let cardId = cards[index].id
-                return owner.realmManager.delete(Card.self, forPrimaryKey: cardId)
+                return owner.realmManager.deleteCard(forPrimaryKey: cardId)
             }
             .share()
 

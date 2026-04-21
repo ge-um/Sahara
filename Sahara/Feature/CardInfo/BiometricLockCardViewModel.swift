@@ -43,9 +43,9 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
             }
             .do(onNext: { result in
                 if case .success = result {
-                    let biometricType = BiometricAuthManager.shared.biometricType
+                    let biometricType = BiometricAuthService.shared.biometricType
                     let biometricTypeString = biometricType == .faceID ? "faceID" : "touchID"
-                    AnalyticsManager.shared.logBiometricEnabled(type: biometricTypeString)
+                    AnalyticsService.shared.logBiometricEnabled(type: biometricTypeString)
                 }
             })
             .bind(with: self) { owner, result in
@@ -81,7 +81,7 @@ final class BiometricLockCardViewModel: BaseViewModelProtocol {
 
     private func checkBiometricPermission() -> Observable<AuthResult> {
         return Observable.create { observer in
-            let biometricType = BiometricAuthManager.shared.biometricType
+            let biometricType = BiometricAuthService.shared.biometricType
 
             if biometricType == .none {
                 observer.onNext(.noSupport)

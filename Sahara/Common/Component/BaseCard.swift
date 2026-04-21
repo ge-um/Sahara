@@ -11,15 +11,14 @@ import UIKit
 class BaseCard: UIView {
     let cardView: UIView = {
         let view = UIView()
-        view.backgroundColor = ColorSystem.purpleGray20
-        view.layer.cornerRadius = 12
+        view.applyGlassCardStyle()
         return view
     }()
 
     let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 15)
-        label.textColor = ColorSystem.black
+        label.font = .typography(.label)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
@@ -49,19 +48,21 @@ class BaseCard: UIView {
         }
 
         titleLabel.snp.makeConstraints { make in
-            make.top.leading.equalToSuperview().inset(16)
+            make.top.equalToSuperview().inset(16)
+            make.horizontalEdges.equalToSuperview().inset(20)
         }
 
         contentContainer.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(12)
-            make.horizontalEdges.bottom.equalToSuperview()
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.horizontalEdges.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().inset(16)
         }
     }
 
-    func addContentView(_ view: UIView, insets: UIEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 16, right: 16)) {
+    func addContentView(_ view: UIView) {
         contentContainer.addSubview(view)
         view.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(insets)
+            make.edges.equalToSuperview()
         }
     }
 }

@@ -14,13 +14,14 @@ final class BiometricLockCard: BaseCard {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("card_info.secret_description", comment: "")
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = ColorSystem.darkGray
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     let lockSwitch: UISwitch = {
         let switchControl = UISwitch()
+        switchControl.onTintColor = .token(.accent)
         return switchControl
     }()
 

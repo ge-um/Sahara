@@ -13,22 +13,22 @@ final class LocationSearchCell: UITableViewCell {
 
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 14)
-        label.textColor = .label
+        label.font = .typography(.label)
+        label.textColor = .token(.textPrimary)
         return label
     }()
 
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.font = FontSystem.galmuriMono(size: 12)
-        label.textColor = .secondaryLabel
+        label.font = .typography(.caption)
+        label.textColor = .token(.textSecondary)
         return label
     }()
 
     private let iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "mappin.circle.fill")
-        imageView.tintColor = .systemBlue
+        imageView.tintColor = .token(.textSecondary)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()

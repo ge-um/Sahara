@@ -28,9 +28,7 @@ final class PieChartView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = ColorSystem.lavender20
-        layer.cornerRadius = 12
-        clipsToBounds = true
+        applyGlassCardStyle()
     }
 
     required init?(coder: NSCoder) {
@@ -107,13 +105,13 @@ final class PieChartView: UIView {
             let labelText = "\(labels[index])\n\(Int(percent * 100))%"
             let textLayer = CATextLayer()
             textLayer.string = labelText
-            textLayer.font = FontSystem.galmuriMono(size: 12)
+            textLayer.font = DesignToken.Typography.caption.numericFont
             textLayer.fontSize = 12
-            textLayer.foregroundColor = ColorSystem.black.cgColor
+            textLayer.foregroundColor = UIColor.token(.textPrimary).cgColor
             textLayer.alignmentMode = .center
-            textLayer.contentsScale = UIScreen.main.scale
+            textLayer.contentsScale = window?.screen.scale ?? 2.0
 
-            let textSize = (labelText as NSString).size(withAttributes: [.font: FontSystem.galmuriMono(size: 12)])
+            let textSize = (labelText as NSString).size(withAttributes: [.font: DesignToken.Typography.caption.numericFont])
             textLayer.frame = CGRect(
                 x: labelX - textSize.width / 2,
                 y: labelY - textSize.height / 2,

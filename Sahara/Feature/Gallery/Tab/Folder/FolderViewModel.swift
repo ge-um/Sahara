@@ -16,10 +16,10 @@ struct FolderGroup {
 }
 
 final class FolderViewModel: BaseViewModelProtocol {
-    private let realmManager: RealmManagerProtocol
+    private let realmManager: RealmServiceProtocol
     private let disposeBag = DisposeBag()
 
-    init(realmManager: RealmManagerProtocol = RealmManager.shared) {
+    init(realmManager: RealmServiceProtocol = RealmService.shared) {
         self.realmManager = realmManager
     }
 
