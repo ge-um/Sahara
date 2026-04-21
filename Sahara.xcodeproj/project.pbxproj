@@ -1054,7 +1054,7 @@
 			repositoryURL = "https://github.com/realm/realm-swift.git";
 			requirement = {
 				kind = exactVersion;
-				version = 20.0.3;
+				version = 20.0.4;
 			};
 		};
 		03E2B5D22E866F0B00A8C8DA /* XCRemoteSwiftPackageReference "SnapKit" */ = {
