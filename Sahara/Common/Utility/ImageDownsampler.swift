@@ -48,4 +48,16 @@ final class ImageDownsampler {
 
         return CGSize(width: width, height: height)
     }
+
+    static func imageSize(from url: URL) -> CGSize? {
+        let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, sourceOptions as CFDictionary),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
+              let height = properties[kCGImagePropertyPixelHeight] as? CGFloat else {
+            return nil
+        }
+
+        return CGSize(width: width, height: height)
+    }
 }

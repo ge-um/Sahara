@@ -54,7 +54,21 @@ struct SearchCardDTO {
     init(from card: Card) {
         self.id = card.id
         self.isLocked = card.isLocked
-        self.imageSize = card.resolvedImageData().flatMap(ImageDownsampler.imageSize) ?? CGSize(width: 1, height: 1)
+        self.imageSize = Self.resolveImageSize(for: card)
+    }
+
+    private static func resolveImageSize(for card: Card) -> CGSize {
+        let fallback = CGSize(width: 1, height: 1)
+        if let imagePath = card.imagePath {
+            let url = ImageFileService.shared.imageFileURL(for: imagePath)
+            if let size = ImageDownsampler.imageSize(from: url) {
+                return size
+            }
+        }
+        if let data = card.editedImageData, !data.isEmpty {
+            return ImageDownsampler.imageSize(from: data) ?? fallback
+        }
+        return fallback
     }
 }
 
