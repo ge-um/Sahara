@@ -27,8 +27,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         AnalyticsService.shared.registerFirstLaunchDateIfNeeded()
         configureRemoteConfig()
         configureRealm()
-        configureCloudSync()
         configureKingfisher()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.configureCloudSync()
+        }
 
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
@@ -81,6 +84,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         RealmService.migrateRealmFileIfNeeded()
         let config = RealmService.createConfiguration()
         Realm.Configuration.defaultConfiguration = config
+
+        migrateLegacyImagesInBackground()
+    }
+
+    private func migrateLegacyImagesInBackground() {
+        CardPostProcessor.launchBackgroundQueue.async {
+            try? RealmService.shared.migrateAllLegacyImagesToDisk(imageFileService: ImageFileService.shared)
+        }
     }
 
     private func configureRealmForScreenshots() {

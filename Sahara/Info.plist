@@ -33,17 +33,15 @@
 		<string>remote-notification</string>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string></string>
+	<string>Please allow photo library access to create cards.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string></string>
+	<string>Please allow permission to save card images to your photo album.</string>
 	<key>NSCameraUsageDescription</key>
-	<string></string>
+	<string>Please allow camera access to create cards.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Please allow location access to record your current location.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string></string>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string></string>
+	<string>Face ID authentication is required to view secret cards.</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UTExportedTypeDeclarations</key>

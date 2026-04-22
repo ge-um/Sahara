@@ -329,3 +329,6 @@
 "release_note.2.0.0.6" = "按相册浏览并选择照片";
 "release_note.2.0.0.7" = "整体设计更加精致";
 "release_note.2.0.0.8" = "提升了应用稳定性";
+
+/* Release Notes - 2.0.1 */
+"release_note.2.0.1.1" = "提升了应用稳定性";

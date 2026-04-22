@@ -67,7 +67,7 @@ All dependencies are managed via Swift Package Manager:
 - RxDataSources (5.0.2+)
 - Kingfisher (8.5.0+)
 - Alamofire (5.10.2+)
-- RealmSwift (20.0.3 exact)
+- RealmSwift (20.0.4 exact)
 
 Dependencies are resolved automatically by Xcode. If needed, resolve manually:
 - Xcode → File → Packages → Resolve Package Versions

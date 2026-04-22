@@ -14,6 +14,3 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "需要Face ID认证以查看私密卡片。";
-
-/* Privacy - Notifications */
-"NSUserNotificationsUsageDescription" = "允许通知以接收服务动态和新功能更新";

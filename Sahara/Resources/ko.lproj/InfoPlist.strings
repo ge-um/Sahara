@@ -14,6 +14,3 @@
 
 /* Privacy - Face ID */
 "NSFaceIDUsageDescription" = "비밀 카드를 보기 위해 Face ID 인증이 필요해요";
-
-/* Privacy - Notifications */
-"NSUserNotificationsUsageDescription" = "서비스 소식과 새로운 기능 업데이트를 받으려면 알림을 허용해주세요";
