@@ -27,8 +27,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         AnalyticsService.shared.registerFirstLaunchDateIfNeeded()
         configureRemoteConfig()
         configureRealm()
-        configureCloudSync()
         configureKingfisher()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.configureCloudSync()
+        }
 
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
