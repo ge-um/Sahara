@@ -20,7 +20,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     private var openSource: OpenSource = .organic
     private var pendingURL: URL?
-    private var splashTimeoutWork: DispatchWorkItem?
     private weak var syncProgressView: SyncProgressView?
     private var hasCleanedOrphanedFiles = false
 
@@ -45,68 +44,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             pendingURL = url
         }
 
-        if RemoteConfigService.shared.isReady {
-            showMainScreen()
-        } else {
-            showSplashScreen()
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(handleRemoteConfigReady),
-                name: .remoteConfigDidBecomeReady,
-                object: nil
-            )
-            scheduleSplashTimeout()
-        }
+        showMainScreen()
 
         window?.makeKeyAndVisible()
         installSyncProgressView()
-    }
-
-    @objc private func handleRemoteConfigReady() {
-        splashTimeoutWork?.cancel()
-        splashTimeoutWork = nil
-        NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
-        showMainScreen()
-    }
-
-    private func scheduleSplashTimeout() {
-        let timeoutWork = DispatchWorkItem { [weak self] in
-            guard let self else { return }
-            NotificationCenter.default.removeObserver(self, name: .remoteConfigDidBecomeReady, object: nil)
-            self.splashTimeoutWork = nil
-            self.showMainScreen()
-        }
-        splashTimeoutWork = timeoutWork
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: timeoutWork)
-    }
-
-    private func showSplashScreen() {
-        let splashVC = UIViewController()
-        splashVC.view.backgroundColor = .white
-
-        let backgroundImageView = UIImageView(image: UIImage(named: "launchBackground"))
-        backgroundImageView.contentMode = .scaleToFill
-        splashVC.view.addSubview(backgroundImageView)
-        backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            backgroundImageView.topAnchor.constraint(equalTo: splashVC.view.topAnchor),
-            backgroundImageView.bottomAnchor.constraint(equalTo: splashVC.view.bottomAnchor),
-            backgroundImageView.leadingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.leadingAnchor),
-            backgroundImageView.trailingAnchor.constraint(equalTo: splashVC.view.safeAreaLayoutGuide.trailingAnchor)
-        ])
-
-        let iconImageView = UIImageView(image: UIImage(named: "button"))
-        iconImageView.contentMode = .scaleAspectFit
-        splashVC.view.addSubview(iconImageView)
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            iconImageView.centerXAnchor.constraint(equalTo: splashVC.view.centerXAnchor),
-            iconImageView.centerYAnchor.constraint(equalTo: splashVC.view.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 100),
-            iconImageView.heightAnchor.constraint(equalToConstant: 100)
-        ])
-
-        window?.rootViewController = splashVC
     }
 
     private func showMainScreen() {
